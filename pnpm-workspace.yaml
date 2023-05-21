@@ -1,0 +1,4 @@
+packages:
+  - "xsuite"
+  - "xsuite-cli"
+  - "contracts/*"
