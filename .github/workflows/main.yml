@@ -101,8 +101,11 @@ jobs:
       - name: Build xSuite-cli
         run: pnpm build-xsuite-cli
 
+      - name: Install xSuite-cli globally
+        run: cd xsuite-cli && npm install -g
+
       - name: xSuite setup Rust
-        run: pnpm xsuite setup-rust
+        run: xsuite setup-rust
 
       - name: xSuite build contracts
         run: pnpm build-contracts
@@ -112,3 +115,6 @@ jobs:
 
       - name: Test contracts
         run: pnpm test-contracts
+
+      - name: Create new blank contract
+        run: cd .. && xsuite contract-new --dir xsuite-blank-contract

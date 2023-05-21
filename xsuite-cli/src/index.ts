@@ -2,12 +2,12 @@ import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import readline from "node:readline";
-import { fileURLToPath } from "node:url";
 import { SignableMessage } from "@multiversx/sdk-core";
 import { NativeAuthClient } from "@multiversx/sdk-native-auth-client";
 import { Mnemonic, UserSigner, UserWallet } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
 import { Command } from "commander";
+import { downloadAndExtractContract } from "./helpers";
 
 const cwd = process.env["INIT_CWD"] ?? process.cwd();
 
@@ -80,23 +80,17 @@ const setupRustAction = () => {
   );
 };
 
-const contractNewAction = ({ dir }: { dir: string }) => {
+const contractNewAction = async ({ dir }: { dir: string }) => {
   console.log("Creating a new blank contract...");
-  const template = "blank";
-  const templatePath = path.join(
-    path.dirname(fileURLToPath(import.meta.url)),
-    "..",
-    "..",
-    "..",
-    "contracts",
-    template
-  );
+  const contract = "blank";
   const dirPath = path.resolve(cwd, dir);
   if (fs.existsSync(dirPath)) {
     console.log(chalk.red(`Contract already exists at ${dirPath}`));
     return;
+  } else {
+    fs.mkdirSync(dirPath, { recursive: true });
   }
-  copyFolderSync(templatePath, dirPath);
+  await downloadAndExtractContract(dirPath, contract);
   console.log(chalk.green(`Contract created at ${dirPath}`));
 };
 
@@ -211,21 +205,6 @@ const inputHidden = async (query: string): Promise<string> => {
   });
   rl.close();
   return answer;
-};
-
-const copyFolderSync = (source: string, destination: string) => {
-  if (!fs.existsSync(destination)) {
-    fs.mkdirSync(destination);
-  }
-  for (const file of fs.readdirSync(source)) {
-    const sourcePath = path.join(source, file);
-    const destinationPath = path.join(destination, file);
-    if (fs.statSync(sourcePath).isDirectory()) {
-      copyFolderSync(sourcePath, destinationPath);
-    } else {
-      fs.copyFileSync(sourcePath, destinationPath);
-    }
-  }
 };
 
 const runCommand = (command: string, args: string[], title: string) => {

@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "license": "MIT",
   "scripts": {
-    "build": "rimraf ./dist && tsc"
+    "build": "rimraf ./dist && ncc build ./src/index.ts -o ./dist/ --minify --no-cache --no-source-map-register"
   },
   "bin": {
     "xsuite": "index.js"
@@ -17,12 +17,14 @@
     "@multiversx/sdk-native-auth-client": "^1.0.2",
     "@multiversx/sdk-wallet": "^4.0.0",
     "chalk": "^5.2.0",
-    "commander": "^10.0.1"
+    "commander": "^10.0.1",
+    "tar": "^6.1.15"
   },
   "devDependencies": {
     "@types/node": "^18.7.18",
+    "@types/tar": "^6.1.5",
+    "@vercel/ncc": "^0.36.1",
     "rimraf": "^5.0.0",
     "typescript": "^5.0.4"
-  },
-  "type": "module"
+  }
 }

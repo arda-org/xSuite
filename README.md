@@ -1,9 +1,13 @@
 ```
-pnpm xsuite setup-rust
+npm install -g xsuite-cli
 ```
 
 ```
-pnpm xsuite contract-new --dir mycontract
+xsuite setup-rust
+```
+
+```
+xsuite contract-new --dir mycontract
 ```
 
 ```
@@ -11,11 +15,11 @@ cd mycontract
 ```
 
 ```
-pnpm xsuite wallet-new --path wallet.json
+xsuite wallet-new --path wallet.json
 ```
 
 ```
-pnpm xsuite wallet-request-xegld --path wallet.json
+xsuite wallet-request-xegld --path wallet.json
 ```
 
 ```
@@ -36,4 +40,4 @@ pnpm run deploy
 
 ---
 
-xSuite.js has been used by Arda since more than a year.
+xSuite.js has been internally used by Arda since more than a year.
