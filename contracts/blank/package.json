@@ -15,6 +15,6 @@
     "tsx": "^3.12.7",
     "typescript": "^5.0.4",
     "xsuite": "0.0.3",
-    "xsuite-cli": "0.0.1"
+    "xsuite-cli": "0.0.2"
   }
 }
