@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { Mnemonic, UserWallet } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
-import { cwd, inputHidden } from "./helpers";
+import { inputHidden } from "./helpers";
 
 export const walletNewAction = async ({
   path: walletPath,
@@ -18,7 +18,7 @@ export const walletNewAction = async ({
     return;
   }
   const keystore = UserWallet.fromMnemonic({ mnemonic, password }).toJSON();
-  const filePath = path.resolve(cwd, walletPath);
+  const filePath = path.resolve(process.cwd(), walletPath);
   if (fs.existsSync(filePath)) {
     console.log(chalk.red(`Wallet already exists at ${filePath}`));
     return;

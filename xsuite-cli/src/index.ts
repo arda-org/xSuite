@@ -6,6 +6,10 @@ import { setupRustAction } from "./setupRustAction";
 import { walletNewAction } from "./walletNewAction";
 import { walletRequestXegldAction } from "./walletRequestXegldAction";
 
+if (process.env["INIT_CWD"]) {
+  process.chdir(process.env["INIT_CWD"]);
+}
+
 const program = new Command();
 
 program

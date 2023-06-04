@@ -1,32 +1,25 @@
-import { runCommand } from "./helpers";
+import { logTitle, runCommand } from "./helpers";
 
 export const setupRustAction = () => {
-  runCommand(
-    "curl",
-    [
-      "--proto",
-      "'=https'",
-      "--tlsv1.2",
-      "-sSf",
-      "https://sh.rustup.rs",
-      "|",
-      "sh",
-      "-s",
-      "--",
-      "--default-toolchain",
-      "nightly-2023-03-14",
-      "-y",
-    ],
-    "Installing Rust nightly..."
-  );
-  runCommand(
-    "rustup",
-    ["target", "add", "wasm32-unknown-unknown"],
-    "Installing wasm32-unknown-unknown target..."
-  );
-  runCommand(
-    "cargo",
-    ["install", "multiversx-sc-meta"],
-    "Installing multiversx-sc-meta crate..."
-  );
+  logTitle("Installing Rust nightly...");
+  runCommand("curl", [
+    "--proto",
+    "'=https'",
+    "--tlsv1.2",
+    "-sSf",
+    "https://sh.rustup.rs",
+    "|",
+    "sh",
+    "-s",
+    "--",
+    "--default-toolchain",
+    "nightly-2023-03-14",
+    "-y",
+  ]);
+  console.log();
+  logTitle("Installing wasm32-unknown-unknown target...");
+  runCommand("rustup", ["target", "add", "wasm32-unknown-unknown"]);
+  console.log();
+  logTitle("Installing multiversx-sc-meta crate...");
+  runCommand("cargo", ["install", "multiversx-sc-meta"]);
 };

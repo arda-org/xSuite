@@ -1,5 +1,6 @@
-import { runCommand } from "./helpers";
+import { logTitle, runCommand } from "./helpers";
 
 export const contractBuildAction = (args: string[]) => {
-  runCommand("sc-meta", ["all", "build", ...args], "Building contract...");
+  logTitle("Building contract...");
+  runCommand("sc-meta", ["all", "build", ...args]);
 };

@@ -4,14 +4,14 @@ import { SignableMessage } from "@multiversx/sdk-core";
 import { NativeAuthClient } from "@multiversx/sdk-native-auth-client";
 import { UserSigner } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
-import { cwd, inputHidden } from "./helpers";
+import { inputHidden } from "./helpers";
 
 export const walletRequestXegldAction = async ({
   path: walletPath,
 }: {
   path: string;
 }) => {
-  const filePath = path.resolve(cwd, walletPath);
+  const filePath = path.resolve(process.cwd(), walletPath);
   const keystore = JSON.parse(fs.readFileSync(filePath, "utf8"));
   const password = await inputHidden("Enter password: ");
   const signer = UserSigner.fromWallet(keystore, password);
