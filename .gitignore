@@ -1,5 +1,1 @@
-**/node_modules/
-**/target/
-**/.DS_Store
-**/__pycache__
-keyfile.json
+node_modules/
