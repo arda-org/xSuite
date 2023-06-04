@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "build": "xsuite contract-build",
+    "build": "xsuite build",
     "test": "jest tests/",
     "deploy": "tsx interactions/deploy.ts",
     "typecheck": "tsc --noEmit"

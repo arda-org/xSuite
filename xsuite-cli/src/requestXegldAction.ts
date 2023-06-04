@@ -6,10 +6,10 @@ import { UserSigner } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
 import { inputHidden } from "./helpers";
 
-export const walletRequestXegldAction = async ({
-  path: walletPath,
+export const requestXegldAction = async ({
+  wallet: walletPath,
 }: {
-  path: string;
+  wallet: string;
 }) => {
   const filePath = path.resolve(process.cwd(), walletPath);
   const keystore = JSON.parse(fs.readFileSync(filePath, "utf8"));

@@ -9,7 +9,7 @@ import chalk from "chalk";
 import tar from "tar";
 import { logTitle, runCommand } from "./helpers";
 
-export const contractNewAction = async ({ dir }: { dir: string }) => {
+export const newAction = async ({ dir }: { dir: string }) => {
   const contract = "blank";
   const dirPath = path.resolve(process.cwd(), dir);
   logTitle(

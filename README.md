@@ -11,7 +11,7 @@ xsuite setup-rust
 ```
 
 ```
-xsuite contract-new --dir mycontract
+xsuite new --dir mycontract
 ```
 
 ```
@@ -19,27 +19,23 @@ cd mycontract
 ```
 
 ```
-xsuite wallet-new --path wallet.json
+xsuite new-wallet --path wallet.json
 ```
 
 ```
-xsuite wallet-request-xegld --path wallet.json
+xsuite request-xegld --wallet wallet.json
 ```
 
 ```
-pnpm install
+npm run build
 ```
 
 ```
-pnpm run build
+npm run test
 ```
 
 ```
-pnpm run test
-```
-
-```
-pnpm run deploy
+npm run deploy
 ```
 
 ---

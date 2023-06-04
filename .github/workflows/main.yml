@@ -120,4 +120,4 @@ jobs:
         run: pnpm test-contracts
 
       - name: Create new blank contract
-        run: cd .. && xsuite contract-new --dir xsuite-blank-contract
+        run: cd .. && xsuite new --dir xsuite-blank-contract

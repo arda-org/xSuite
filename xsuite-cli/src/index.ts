@@ -1,10 +1,10 @@
 import { Command } from "commander";
-import { contractBuildAction } from "./contractBuildAction";
-import { contractNewAction } from "./contractNewAction";
-import { contractTestRustAction } from "./contractTestRustAction";
+import { buildAction } from "./buildAction";
+import { newAction } from "./newAction";
+import { newWalletAction } from "./newWalletAction";
+import { requestXegldAction } from "./requestXegldAction";
 import { setupRustAction } from "./setupRustAction";
-import { walletNewAction } from "./walletNewAction";
-import { walletRequestXegldAction } from "./walletRequestXegldAction";
+import { testRustAction } from "./testRustAction";
 
 if (process.env["INIT_CWD"]) {
   process.chdir(process.env["INIT_CWD"]);
@@ -20,32 +20,32 @@ program
   .action(() => setupRustAction());
 
 program
-  .command("contract-new")
+  .command("new")
   .description("Create a new blank contract.")
   .requiredOption("--dir <dir>", "Contract dir")
-  .action((options) => contractNewAction(options));
+  .action((options) => newAction(options));
 
 program
-  .command("contract-build [args...]")
+  .command("build [args...]")
   .description("Build contract.")
   .allowUnknownOption()
-  .action((args) => contractBuildAction(args));
+  .action((args) => buildAction(args));
 
 program
-  .command("contract-test-rust")
+  .command("test-rust")
   .description("Test contract with Rust tests.")
-  .action(() => contractTestRustAction());
+  .action(() => testRustAction());
 
 program
-  .command("wallet-new")
+  .command("new-wallet")
   .description("Create a new wallet.")
   .requiredOption("--path <path>", "Wallet path")
-  .action((options) => walletNewAction(options));
+  .action((options) => newWalletAction(options));
 
 program
-  .command("wallet-request-xegld")
+  .command("request-xegld")
   .description("Request 30 xEGLD (once per day).")
-  .requiredOption("--path <path>", "Wallet path")
-  .action((options) => walletRequestXegldAction(options));
+  .requiredOption("--wallet <path>", "Wallet path")
+  .action((options) => requestXegldAction(options));
 
 program.parse(process.argv);

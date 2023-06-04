@@ -4,7 +4,7 @@ import { Mnemonic, UserWallet } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
 import { inputHidden } from "./helpers";
 
-export const walletNewAction = async ({
+export const newWalletAction = async ({
   path: walletPath,
 }: {
   path: string;

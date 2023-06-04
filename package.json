@@ -6,7 +6,7 @@
     "test-xsuite": "pnpm --filter ./xsuite test",
     "build-xsuite-cli": "pnpm --filter ./xsuite-cli build",
     "typecheck-xsuite-cli": "pnpm --filter ./xsuite-cli typecheck",
-    "build-contracts": "cd contracts && pnpm xsuite contract-build --target-dir $PWD/target",
+    "build-contracts": "cd contracts && pnpm xsuite build --target-dir $PWD/target",
     "typecheck-contracts": "pnpm --filter ./contracts/** typecheck",
     "test-contracts": "pnpm --filter ./contracts/** test"
   },
