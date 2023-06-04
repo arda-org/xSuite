@@ -1,4 +1,4 @@
-> :warning: **Warning**: This library must not be used yet!
+> :warning: **This library must not be used yet!**
 
 ---
 
