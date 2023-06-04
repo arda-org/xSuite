@@ -101,6 +101,9 @@ jobs:
       - name: Build xSuite-cli
         run: pnpm build-xsuite-cli
 
+      - name: Typecheck xSuite-cli
+        run: pnpm typecheck-xsuite-cli
+
       - name: Install xSuite-cli globally
         run: cd xsuite-cli && npm install -g
 

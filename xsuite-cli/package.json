@@ -3,7 +3,8 @@
   "version": "0.0.2",
   "license": "MIT",
   "scripts": {
-    "build": "rimraf ./dist && ncc build ./src/index.ts -o ./dist/ --minify --no-cache --no-source-map-register"
+    "build": "rimraf ./dist && ncc build ./src/index.ts -o ./dist/ --minify --no-cache --no-source-map-register",
+    "typecheck": "tsc --noEmit"
   },
   "bin": {
     "xsuite": "index.js"
