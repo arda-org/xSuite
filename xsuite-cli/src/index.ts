@@ -1,15 +1,16 @@
-import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
-import readline from "node:readline";
 import { SignableMessage } from "@multiversx/sdk-core";
 import { NativeAuthClient } from "@multiversx/sdk-native-auth-client";
 import { Mnemonic, UserSigner, UserWallet } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
 import { Command } from "commander";
-import { downloadAndExtractContract } from "./helpers";
-
-const cwd = process.env["INIT_CWD"] ?? process.cwd();
+import {
+  cwd,
+  downloadAndExtractContract,
+  inputHidden,
+  runCommand,
+} from "./helpers";
 
 const program = new Command();
 
@@ -175,49 +176,6 @@ const walletRequestXegldAction = async ({
   }
 
   console.log(chalk.green("Wallet well received 30 xEGLD."));
-};
-
-const inputHidden = async (query: string): Promise<string> => {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  const answer = await new Promise<string>((resolve) => {
-    const onData = (char: string | Buffer) => {
-      char = char + "";
-      switch (char) {
-        case "\n":
-        case "\r":
-        case "\u0004":
-          process.stdin.off("data", onData);
-          break;
-        default:
-          process.stdout.clearLine(0);
-          process.stdout.cursorTo(0);
-          process.stdout.write(query + Array(rl.line.length + 1).join("*"));
-          break;
-      }
-    };
-
-    process.stdin.on("data", onData);
-
-    rl.question(query, resolve);
-  });
-  rl.close();
-  return answer;
-};
-
-const runCommand = (command: string, args: string[], title: string) => {
-  console.log(chalk.green(`\n${title}`));
-  console.log(chalk.blue(`> ${command} ${args.join(" ")}`));
-  const result = spawnSync(command, args, {
-    stdio: "inherit",
-    shell: true,
-    cwd,
-  });
-  if (result.error) {
-    throw result.error;
-  }
 };
 
 const getDevnetBalance = (address: string) =>
