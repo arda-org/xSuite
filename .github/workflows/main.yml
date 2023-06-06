@@ -14,10 +14,10 @@ jobs:
 
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Cache pnpm modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
@@ -25,7 +25,7 @@ jobs:
             ${{ runner.os }}-pnpm-
 
       - name: Cache Go modules
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
@@ -33,7 +33,7 @@ jobs:
             ${{ runner.os }}-go-
 
       - name: Cache Go build cache
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ~/.cache/go-build
           key: ${{ runner.os }}-go-build-${{ github.sha }}
@@ -41,7 +41,7 @@ jobs:
             ${{ runner.os }}-go-build-
 
       - name: Cache Rust toolchain
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.rustup/toolchains
@@ -50,7 +50,7 @@ jobs:
             ${{ runner.os }}-rustup
 
       - name: Cache Rust dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             ~/.cargo/registry
@@ -61,7 +61,7 @@ jobs:
             ${{ runner.os }}-cargo-
 
       - name: Cache Rust target folders
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: contracts/target
           key: ${{ runner.os }}-cargo-target-${{ hashFiles('contracts/**/Cargo.lock') }}
@@ -69,12 +69,12 @@ jobs:
             ${{ runner.os }}-cargo-target-
 
       - name: Use Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: 18.x
 
       - name: Use Golang
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v4
         with:
           go-version: 1.19.x
 
