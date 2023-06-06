@@ -12,11 +12,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        node-version: [18.x]
-        go-version: [1.19.x]
-
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -73,15 +68,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-target-
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Use Node.js
         uses: actions/setup-node@v2
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 18.x
 
-      - name: Use Golang ${{ matrix.go-version }}
+      - name: Use Golang
         uses: actions/setup-go@v2
         with:
-          go-version: ${{ matrix.go-version }}
+          go-version: 1.19.x
 
       - name: Install pnpm
         run: npm install -g pnpm
@@ -93,7 +88,7 @@ jobs:
         run: pnpm lint
 
       - name: Build xSuite
-        run: pnpm build-xsuite
+        run: pnpm build-fproxy-linux-amd64 && pnpm build-xsuite
 
       - name: Test xSuite
         run: pnpm test-xsuite
@@ -104,11 +99,8 @@ jobs:
       - name: Typecheck xSuite-cli
         run: pnpm typecheck-xsuite-cli
 
-      - name: Install xSuite-cli globally
-        run: cd xsuite-cli && npm install -g
-
       - name: xSuite setup Rust
-        run: xsuite setup-rust
+        run: pnpm xsuite setup-rust
 
       - name: xSuite build contracts
         run: pnpm build-contracts
@@ -118,6 +110,3 @@ jobs:
 
       - name: Test contracts
         run: pnpm test-contracts
-
-      - name: Create new blank contract
-        run: cd .. && xsuite new --dir xsuite-blank-contract

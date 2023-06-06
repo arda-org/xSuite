@@ -3,9 +3,9 @@
   "version": "0.0.3",
   "license": "MIT",
   "scripts": {
-    "build": "pnpm build-fproxy && pnpm build-lib",
-    "build-fproxy": "cd fproxy && go build",
-    "build-lib": "rimraf ./dist && tsc",
+    "build-fproxy-linux-amd64": "cd fproxy && GOOS=linux GOARCH=amd64 go build -o fproxy-linux-amd64",
+    "build-fproxy-darwin-amd64": "cd fproxy && GOOS=darwin GOARCH=amd64 go build -o fproxy-darwin-amd64",
+    "build-xsuite": "rimraf ./dist && tsc",
     "test": "jest lib/"
   },
   "files": [

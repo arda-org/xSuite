@@ -143,7 +143,9 @@ export class FWorldContract extends AddressEncodable {
 
 const startFWorld = (): Promise<FWorld> =>
   new Promise((resolve, reject) => {
-    const server = spawn(path.join(__dirname, "..", "..", "fproxy", "fproxy"));
+    const server = spawn(
+      path.join(__dirname, "..", "..", "fproxy", "fproxy-linux-amd64")
+    );
 
     server.stdout.on("data", (data: Buffer) => {
       const addressRegex = /Server running on (http:\/\/[\w\d.:]+)/;
