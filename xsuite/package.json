@@ -3,8 +3,8 @@
   "version": "0.0.3",
   "license": "MIT",
   "scripts": {
-    "build-fproxy-linux-amd64": "cd fproxy && GOOS=linux GOARCH=amd64 go build -o fproxy-linux-amd64",
-    "build-fproxy-darwin-amd64": "cd fproxy && GOOS=darwin GOARCH=amd64 go build -o fproxy-darwin-amd64",
+    "build-fproxy-Linux": "cd fproxy && GOOS=linux GOARCH=amd64 LIBRARY_PATH=$(pwd) go build -o fproxy-Linux -ldflags \"-extldflags '-Wl,-rpath,\\$ORIGIN'\"",
+    "build-fproxy-macOS": "cd fproxy && GOOS=darwin GOARCH=amd64 go build -o fproxy-macOS",
     "build-xsuite": "rimraf ./dist && tsc",
     "test": "jest lib/"
   },
@@ -12,7 +12,8 @@
     "dist",
     "enc.js",
     "enc.d.ts",
-    "fproxy/fproxy",
+    "fproxy/fproxy-*",
+    "fproxy/libwasmer_*",
     "pairs.js",
     "pairs.d.ts",
     "proxy.js",

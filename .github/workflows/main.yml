@@ -10,10 +10,14 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Check out code
+      - name: Checkout
         uses: actions/checkout@v3
 
       - name: Cache pnpm modules
@@ -88,7 +92,7 @@ jobs:
         run: pnpm lint
 
       - name: Build xSuite
-        run: pnpm build-fproxy-linux-amd64 && pnpm build-xsuite
+        run: pnpm build-fproxy-${{ runner.os }} && pnpm build-xsuite
 
       - name: Test xSuite
         run: pnpm test-xsuite

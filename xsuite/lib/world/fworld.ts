@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import os from "node:os";
 import path from "node:path";
 import { AddressEncodable } from "../enc";
 import {
@@ -143,8 +144,17 @@ export class FWorldContract extends AddressEncodable {
 
 const startFWorld = (): Promise<FWorld> =>
   new Promise((resolve, reject) => {
+    let binaryName: string;
+    if (os.platform() === "linux") {
+      binaryName = "fproxy-Linux";
+    } else if (os.platform() === "darwin") {
+      binaryName = "fproxy-macOS";
+    } else {
+      throw new Error("Unsupported platform.");
+    }
+
     const server = spawn(
-      path.join(__dirname, "..", "..", "fproxy", "fproxy-linux-amd64")
+      path.join(__dirname, "..", "..", "fproxy", binaryName)
     );
 
     server.stdout.on("data", (data: Buffer) => {
