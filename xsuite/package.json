@@ -1,6 +1,6 @@
 {
   "name": "xsuite",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "license": "MIT",
   "scripts": {
     "build-fproxy-Linux": "cd fproxy && GOOS=linux GOARCH=amd64 LIBRARY_PATH=$(pwd) go build -o fproxy-Linux -ldflags \"-extldflags '-Wl,-rpath,\\$ORIGIN'\"",
