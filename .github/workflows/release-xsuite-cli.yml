@@ -25,11 +25,11 @@ jobs:
           node-version: 18.x
           registry-url: "https://registry.npmjs.org"
 
-      - name: Install pnpm
-        run: npm install -g pnpm
-
-      - name: Install dependencies
-        run: pnpm install
+      - name: Use pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: true
 
       - name: Build xSuite-cli
         run: pnpm build-xsuite-cli
