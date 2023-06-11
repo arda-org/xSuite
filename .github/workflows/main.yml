@@ -10,11 +10,7 @@ on:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -103,10 +99,10 @@ jobs:
       - name: Typecheck xSuite-cli
         run: pnpm typecheck-xsuite-cli
 
-      - name: xSuite setup Rust
+      - name: Setup Rust
         run: pnpm xsuite setup-rust
 
-      - name: xSuite build contracts
+      - name: Build contracts
         run: pnpm build-contracts
 
       - name: Typecheck contracts

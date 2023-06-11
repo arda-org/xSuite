@@ -1,0 +1,43 @@
+name: Release xSuite-cli
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cache pnpm modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Use Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build xSuite-cli
+        run: pnpm build-xsuite-cli
+
+      - name: Typecheck xSuite-cli
+        run: pnpm typecheck-xsuite-cli
+
+      - name: Publish xSuite-cli to NPM
+        run: git config core.fileMode false && cd xsuite-cli && pnpm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
