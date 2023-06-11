@@ -15,8 +15,8 @@ export const requestXegldAction = async ({
   const keystore = JSON.parse(fs.readFileSync(filePath, "utf8"));
   const password = await inputHidden("Enter password: ");
   const signer = UserSigner.fromWallet(keystore, password);
-  console.log(`Claiming 30 xEGLD for address ${signer.getAddress()} ...`);
   const address = signer.getAddress().bech32();
+  console.log(`Claiming 30 xEGLD for address ${address} ...`);
   const balance = await getDevnetBalance(address);
 
   const client = new NativeAuthClient({
