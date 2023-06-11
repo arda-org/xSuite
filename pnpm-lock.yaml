@@ -57,7 +57,7 @@ importers:
         specifier: ^5.0.4
         version: 5.0.4
       xsuite:
-        specifier: 0.0.3
+        specifier: 0.0.4
         version: link:../../xsuite
       xsuite-cli:
         specifier: 0.0.3
