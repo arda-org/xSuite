@@ -11,25 +11,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Cache pnpm modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
-
-      - name: Use Node.js
-        uses: actions/setup-node@v3
+      - name: Use Node.js & pnpm
+        uses: ./.github/actions/node-pnpm
         with:
           node-version: 18.x
           registry-url: "https://registry.npmjs.org"
-
-      - name: Use pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-          run_install: true
+          pnpm-version: 8
 
       - name: Build xSuite-cli
         run: pnpm build-xsuite-cli

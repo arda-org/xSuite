@@ -16,30 +16,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Cache pnpm modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-
-
-      - name: Cache Go modules
-        uses: actions/cache@v3
-        with:
-          path: ~/go/pkg/mod
-          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-          restore-keys: |
-            ${{ runner.os }}-go-
-
-      - name: Cache Go build cache
-        uses: actions/cache@v3
-        with:
-          path: ~/.cache/go-build
-          key: ${{ runner.os }}-go-build-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-go-build-
-
       - name: Cache Rust toolchain
         uses: actions/cache@v3
         with:
@@ -68,21 +44,17 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-cargo-target-
 
-      - name: Use Node.js
-        uses: actions/setup-node@v3
+      - name: Use Node.js & pnpm
+        uses: ./.github/actions/node-pnpm
         with:
           node-version: 18.x
-
-      - name: Use pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 8
-          run_install: true
+          pnpm-version: 8
 
       - name: Use Golang
         uses: actions/setup-go@v4
         with:
           go-version: 1.19.x
+          cache-dependency-path: xsuite/fproxy/go.sum
 
       - name: Lint
         run: pnpm lint
