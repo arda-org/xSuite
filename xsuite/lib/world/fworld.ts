@@ -153,9 +153,7 @@ const startFWorld = (): Promise<FWorld> =>
       throw new Error("Unsupported platform.");
     }
 
-    const server = spawn(
-      path.join(__dirname, "..", "..", "fproxy", binaryName)
-    );
+    const server = spawn(path.join(__dirname, "..", "..", "bin", binaryName));
 
     server.stdout.on("data", (data: Buffer) => {
       const addressRegex = /Server running on (http:\/\/[\w\d.:]+)/;
