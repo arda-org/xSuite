@@ -6,6 +6,7 @@ import {
   Address,
   Proxy,
 } from "../proxy";
+import { UpgradeContractTxParams } from "../proxy/proxy";
 import { Signer } from "./signer";
 
 export class World {
@@ -88,6 +89,25 @@ export class World {
     const deployedAddress = scDeployEvent.address;
     const returnData = getTxReturnData(txResult.tx);
     return { ...txResult, deployedAddress, returnData };
+  }
+
+  upgradeContract(
+    sender: Signer,
+    txParams: Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">
+  ): TxResultPromise<CallContractTxResult> {
+    return TxResultPromise.from(this.#upgradeContract(sender, txParams));
+  }
+
+  async #upgradeContract(
+    sender: Signer,
+    txParams: Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">
+  ): Promise<CallContractTxResult> {
+    const txResult = await this.#executeTx(
+      sender,
+      Transaction.getParamsToUpgradeContract({ sender, ...txParams })
+    );
+    const returnData = getTxReturnData(txResult.tx);
+    return { ...txResult, returnData };
   }
 
   callContract(

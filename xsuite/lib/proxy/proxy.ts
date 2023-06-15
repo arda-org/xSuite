@@ -195,7 +195,33 @@ export class Transaction {
       data: [
         code,
         "0500",
-        codeMetadataToHexString(codeMetadata ?? []),
+        codeMetadataToHexString(codeMetadata),
+        ...(codeArgs ?? []).map(hexToHexString),
+      ].join("@"),
+      ...txParams,
+    };
+  }
+
+  static upgradeContract(params: UpgradeContractTxParams) {
+    return new Transaction(Transaction.getParamsToUpgradeContract(params));
+  }
+
+  static getParamsToUpgradeContract<T>({
+    callee,
+    code,
+    codeMetadata,
+    codeArgs,
+    ...txParams
+  }: Pick<
+    UpgradeContractTxParams,
+    "callee" | "code" | "codeMetadata" | "codeArgs"
+  > &
+    T) {
+    return {
+      receiver: callee,
+      data: [
+        code,
+        codeMetadataToHexString(codeMetadata),
         ...(codeArgs ?? []).map(hexToHexString),
       ].join("@"),
       ...txParams,
@@ -372,7 +398,7 @@ export type DeployContractTxParams = {
   gasPrice?: number;
   gasLimit: number;
   code: string;
-  codeMetadata?: CodeMetadata;
+  codeMetadata: CodeMetadata;
   codeArgs?: Hex[];
   chainId: string;
   version?: number;
@@ -383,6 +409,20 @@ export type CodeMetadata = string | Encodable | CodeProperty[];
 type CodeProperty = "upgradeable" | "readable" | "payable" | "payableBySc";
 
 export type Hex = string | Encodable;
+
+export type UpgradeContractTxParams = {
+  nonce: number;
+  value?: bigint;
+  callee: Address;
+  sender: Address;
+  gasPrice?: number;
+  gasLimit: number;
+  code: string;
+  codeMetadata: CodeMetadata;
+  codeArgs?: Hex[];
+  chainId: string;
+  version?: number;
+};
 
 export type CallContractTxParams = {
   nonce: number;
