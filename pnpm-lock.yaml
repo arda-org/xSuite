@@ -93,6 +93,9 @@ importers:
       rimraf:
         specifier: 5.0.0
         version: 5.0.0
+      tsx:
+        specifier: ^3.12.7
+        version: 3.12.7
       typescript:
         specifier: 5.0.4
         version: 5.0.4
