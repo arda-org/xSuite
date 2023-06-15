@@ -319,7 +319,8 @@ const unrawRes = (res: any) => {
   if (res.code === "successful") {
     return res.data;
   } else {
-    throw new Error("Unsuccessful proxy request.");
+    const resStr = JSON.stringify(res, null, 2);
+    throw new Error(`Unsuccessful proxy request. Response: ${resStr}`);
   }
 };
 
