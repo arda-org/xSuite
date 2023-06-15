@@ -6,7 +6,7 @@ import {
   Address,
   Proxy,
 } from "../proxy";
-import { UpgradeContractTxParams } from "../proxy/proxy";
+import { TransferTxParams, UpgradeContractTxParams } from "../proxy/proxy";
 import { Signer } from "./signer";
 
 export class World {
@@ -108,6 +108,23 @@ export class World {
     );
     const returnData = getTxReturnData(txResult.tx);
     return { ...txResult, returnData };
+  }
+
+  transfer(
+    sender: Signer,
+    txParams: Omit<TransferTxParams, "sender" | "nonce" | "chainId">
+  ): TxResultPromise<TxResult> {
+    return TxResultPromise.from(this.#transfer(sender, txParams));
+  }
+
+  async #transfer(
+    sender: Signer,
+    txParams: Omit<TransferTxParams, "sender" | "nonce" | "chainId">
+  ): Promise<TxResult> {
+    return this.#executeTx(
+      sender,
+      Transaction.getParamsToTransfer({ sender, ...txParams })
+    );
   }
 
   callContract(

@@ -228,6 +228,39 @@ export class Transaction {
     };
   }
 
+  static transfer(params: TransferTxParams) {
+    return new Transaction(Transaction.getParamsToTransfer(params));
+  }
+
+  static getParamsToTransfer<T>({
+    callee,
+    sender,
+    esdts,
+    ...txParams
+  }: Pick<TransferTxParams, "sender" | "callee" | "esdts"> & T) {
+    const dataParts: string[] = [];
+    let receiver: string | AddressEncodable;
+    if (esdts?.length) {
+      receiver = sender;
+      dataParts.push("MultiESDTNFTTransfer");
+      dataParts.push(addressToHexString(callee));
+      dataParts.push(e.U(esdts.length).toTopHex());
+      for (const esdt of esdts) {
+        dataParts.push(e.Str(esdt.id).toTopHex());
+        dataParts.push(e.U(esdt.nonce ?? 0).toTopHex());
+        dataParts.push(e.U(esdt.amount).toTopHex());
+      }
+    } else {
+      receiver = callee;
+    }
+    return {
+      receiver,
+      sender,
+      data: dataParts.join("@"),
+      ...txParams,
+    };
+  }
+
   static callContract(params: CallContractTxParams) {
     return new Transaction(Transaction.getParamsToCallContract(params));
   }
@@ -420,6 +453,18 @@ export type UpgradeContractTxParams = {
   code: string;
   codeMetadata: CodeMetadata;
   codeArgs?: Hex[];
+  chainId: string;
+  version?: number;
+};
+
+export type TransferTxParams = {
+  nonce: number;
+  value?: bigint;
+  callee: Address;
+  sender: Address;
+  gasPrice?: number;
+  gasLimit: number;
+  esdts?: { id: string; nonce?: number; amount: bigint }[];
   chainId: string;
   version?: number;
 };
