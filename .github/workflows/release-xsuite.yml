@@ -91,7 +91,7 @@ jobs:
         uses: ./.github/actions/node-pnpm
         with:
           node-version: 18.x
-          registry-url: "https://registry.npmjs.org"
+          node-registry-url: "https://registry.npmjs.org"
           pnpm-version: 8
 
       - name: Publish xSuite to NPM

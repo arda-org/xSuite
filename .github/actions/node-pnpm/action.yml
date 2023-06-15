@@ -4,7 +4,7 @@ description: "Setup a Node.js environment with pnpm and cache"
 inputs:
   node-version:
     description: "Node.js version to use."
-  registry-url:
+  node-registry-url:
     description: "Optional registry to set up for auth."
   pnpm-version:
     description: "pnpm version to use."
