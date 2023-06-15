@@ -93,6 +93,7 @@ jobs:
           node-version: 18.x
           node-registry-url: "https://registry.npmjs.org"
           pnpm-version: 8
+          skip-install: true
 
       - name: Publish xSuite to NPM
         run: git config core.fileMode false && cd xsuite && pnpm publish

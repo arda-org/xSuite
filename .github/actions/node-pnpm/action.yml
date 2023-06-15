@@ -8,6 +8,10 @@ inputs:
     description: "Optional registry to set up for auth."
   pnpm-version:
     description: "pnpm version to use."
+  skip-install:
+    description: "Skip the installation step."
+    default: false
+    required: false
 
 runs:
   using: composite
@@ -27,3 +31,4 @@ runs:
     - name: Install dependencies
       shell: bash
       run: pnpm install
+      if: ${{ inputs.skip-install == 'false' }}
