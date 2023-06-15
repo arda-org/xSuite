@@ -220,6 +220,7 @@ export class Transaction {
     return {
       receiver: callee,
       data: [
+        "upgradeContract",
         code,
         codeMetadataToHexString(codeMetadata),
         ...(codeArgs ?? []).map(hexToHexString),
