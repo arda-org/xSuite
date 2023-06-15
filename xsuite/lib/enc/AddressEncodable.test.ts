@@ -2,12 +2,12 @@ import { describe, it, test, expect } from "@jest/globals";
 import { AddressEncodable } from "./AddressEncodable";
 
 describe("AddressEncodable", () => {
-  test("constructor - topEncode", () => {
+  test("top encoding", () => {
     const address = new Uint8Array(32);
     expect(new AddressEncodable(address).toTopBytes()).toEqual(address);
   });
 
-  test("constructor - nestEncode", () => {
+  test("nest encoding", () => {
     const address = new Uint8Array(32);
     expect(new AddressEncodable(address).toNestBytes()).toEqual(address);
   });

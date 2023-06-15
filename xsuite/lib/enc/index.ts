@@ -1,11 +1,11 @@
 import { AddressEncodable } from "./AddressEncodable";
 import { BooleanEncodable } from "./BooleanEncodable";
+import { BufferEncodable } from "./BufferEncodable";
 import { BytesEncodable } from "./BytesEncodable";
 import { Encodable } from "./Encodable";
 import { IntEncodable } from "./IntEncodable";
 import { ListEncodable } from "./ListEncodable";
 import { OptionEncodable } from "./OptionEncodable";
-import { StringEncodable } from "./StringEncodable";
 import { TupleEncodable } from "./TupleEncodable";
 import { UintEncodable } from "./UintEncodable";
 
@@ -15,8 +15,11 @@ export const e = {
   Bytes: (bytes: string | number[] | Uint8Array) => {
     return new BytesEncodable(bytes);
   },
+  Buffer: (bytes: string | number[] | Uint8Array) => {
+    return new BufferEncodable(bytes);
+  },
   Str: (string: string) => {
-    return new StringEncodable(string);
+    return new BufferEncodable(new TextEncoder().encode(string));
   },
   Bool: (boolean: boolean) => {
     return new BooleanEncodable(boolean);
