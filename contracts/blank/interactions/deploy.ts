@@ -7,6 +7,7 @@ const main = async () => {
     gasPrice: 1000000000,
     gasLimit: 20000000,
     code: readFileHex("output/contract.wasm"),
+    codeMetadata: [],
   });
   console.log(txResult);
 };
