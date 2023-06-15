@@ -238,10 +238,11 @@ export class Transaction {
     esdts,
     ...txParams
   }: Pick<TransferTxParams, "sender" | "receiver" | "esdts"> & T) {
-    const dataParts: string[] = [];
     let receiver: string | AddressEncodable;
+    let data: string | undefined;
     if (esdts?.length) {
       receiver = sender;
+      const dataParts: string[] = [];
       dataParts.push("MultiESDTNFTTransfer");
       dataParts.push(addressToHexString(_receiver));
       dataParts.push(e.U(esdts.length).toTopHex());
@@ -250,13 +251,14 @@ export class Transaction {
         dataParts.push(e.U(esdt.nonce ?? 0).toTopHex());
         dataParts.push(e.U(esdt.amount).toTopHex());
       }
+      data = dataParts.join("@");
     } else {
       receiver = _receiver;
     }
     return {
       receiver,
       sender,
-      data: dataParts.join("@"),
+      data,
       ...txParams,
     };
   }
