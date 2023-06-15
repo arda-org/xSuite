@@ -3,6 +3,8 @@ name: Release xSuite
 on:
   workflow_dispatch:
 
+concurrency: ci-${{ github.ref }}
+
 jobs:
   build:
     strategy:

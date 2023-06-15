@@ -3,6 +3,8 @@ name: Release xSuite-cli
 on:
   workflow_dispatch:
 
+concurrency: ci-${{ github.ref }}
+
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
