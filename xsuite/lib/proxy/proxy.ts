@@ -233,17 +233,17 @@ export class Transaction {
   }
 
   static getParamsToTransfer<T>({
-    callee,
+    receiver: _receiver,
     sender,
     esdts,
     ...txParams
-  }: Pick<TransferTxParams, "sender" | "callee" | "esdts"> & T) {
+  }: Pick<TransferTxParams, "sender" | "receiver" | "esdts"> & T) {
     const dataParts: string[] = [];
     let receiver: string | AddressEncodable;
     if (esdts?.length) {
       receiver = sender;
       dataParts.push("MultiESDTNFTTransfer");
-      dataParts.push(addressToHexString(callee));
+      dataParts.push(addressToHexString(_receiver));
       dataParts.push(e.U(esdts.length).toTopHex());
       for (const esdt of esdts) {
         dataParts.push(e.Str(esdt.id).toTopHex());
@@ -251,7 +251,7 @@ export class Transaction {
         dataParts.push(e.U(esdt.amount).toTopHex());
       }
     } else {
-      receiver = callee;
+      receiver = _receiver;
     }
     return {
       receiver,
@@ -460,7 +460,7 @@ export type UpgradeContractTxParams = {
 export type TransferTxParams = {
   nonce: number;
   value?: bigint;
-  callee: Address;
+  receiver: Address;
   sender: Address;
   gasPrice?: number;
   gasLimit: number;
