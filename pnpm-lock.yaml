@@ -1,4 +1,4 @@
-lockfileVersion: '6.1'
+lockfileVersion: '6.0'
 
 settings:
   autoInstallPeers: true
@@ -57,7 +57,7 @@ importers:
         specifier: ^5.0.4
         version: 5.0.4
       xsuite:
-        specifier: 0.0.9
+        specifier: 0.0.10
         version: link:../../xsuite
       xsuite-cli:
         specifier: 0.0.5
