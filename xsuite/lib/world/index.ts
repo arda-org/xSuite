@@ -1,8 +1,7 @@
 import fs from "node:fs";
-import path from "node:path";
 
-export const readFileHex = (...paths: string[]) => {
-  return fs.readFileSync(path.join(...paths), "hex");
+export const readFileHex = (path: string) => {
+  return fs.readFileSync(path, "hex");
 };
 
 export { FWorld, FWorldContract, FWorldWallet } from "./fworld";
