@@ -1,5 +1,4 @@
 import fs from "node:fs";
-import path from "node:path";
 import readline from "node:readline";
 import { UserSigner as BaseUserSigner } from "@multiversx/sdk-wallet";
 import { AddressEncodable } from "../enc";
@@ -28,12 +27,32 @@ export class UserSigner extends Signer {
       .then((b) => b.toString("hex"));
   }
 
-  static async fromKeystoreFile(...paths: string[]) {
-    const p = path.resolve(...paths);
-    console.log(`Loading keystore wallet at "${p}"...`);
-    const keystore = JSON.parse(fs.readFileSync(p, "utf8"));
-    const password = await inputHidden("Enter password: ");
-    return new UserSigner(BaseUserSigner.fromWallet(keystore, password));
+  static fromKeystoreFile(
+    filePath: string,
+    password: string,
+    addressIndex?: number
+  ): UserSigner;
+  static fromKeystoreFile(
+    filePath: string,
+    password?: undefined,
+    addressIndex?: number
+  ): Promise<UserSigner>;
+  static fromKeystoreFile(
+    filePath: string,
+    password?: string,
+    addressIndex?: number
+  ): UserSigner | Promise<UserSigner> {
+    if (password === undefined) {
+      console.log(`Loading keystore wallet at "${filePath}"...`);
+      return inputHidden("Enter password: ").then((password) => {
+        return this.fromKeystoreFile(filePath, password, addressIndex);
+      });
+    } else {
+      const keystore = JSON.parse(fs.readFileSync(filePath, "utf8"));
+      return new UserSigner(
+        BaseUserSigner.fromWallet(keystore, password, addressIndex)
+      );
+    }
   }
 }
 

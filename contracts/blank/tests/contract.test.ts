@@ -14,6 +14,6 @@ afterEach(() => {
 test("Test", async () => {
   await fworld.newWallet({ balance: 10_000_000_000n });
   await fworld.newContract({
-    code: readFileHex("output", "contract.wasm"),
+    code: readFileHex("output/contract.wasm"),
   });
 });
