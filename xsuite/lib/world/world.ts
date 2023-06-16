@@ -12,22 +12,32 @@ import { Signer } from "./signer";
 export class World {
   proxy: Proxy;
   #chainId: string;
+  #gasPrice?: number;
 
-  constructor({ proxy, chainId }: { proxy: Proxy; chainId: string }) {
+  constructor({
+    proxy,
+    chainId,
+    gasPrice,
+  }: {
+    proxy: Proxy;
+    chainId: string;
+    gasPrice?: number;
+  }) {
     this.proxy = proxy;
     this.#chainId = chainId;
+    this.#gasPrice = gasPrice;
   }
 
-  static devnet(proxyUrl: string) {
-    return new World({ proxy: new Proxy(proxyUrl), chainId: "D" });
-  }
-
-  static testnet(proxyUrl: string) {
-    return new World({ proxy: new Proxy(proxyUrl), chainId: "T" });
-  }
-
-  static mainnet(proxyUrl: string) {
-    return new World({ proxy: new Proxy(proxyUrl), chainId: "1" });
+  static new({
+    proxyUrl,
+    chainId,
+    gasPrice,
+  }: {
+    proxyUrl: string;
+    chainId: string;
+    gasPrice?: number;
+  }) {
+    return new World({ proxy: new Proxy(proxyUrl), chainId, gasPrice });
   }
 
   getAccountWithPairs(address: Address) {
@@ -43,10 +53,11 @@ export class World {
 
   async #executeTx(
     sender: Signer,
-    txParams: Omit<TxParams, "sender" | "nonce" | "chainId">
+    { gasPrice, ...txParams }: Omit<TxParams, "sender" | "nonce" | "chainId">
   ): Promise<TxResult> {
     const nonce = await this.proxy.getAccountNonce(sender);
     const tx = new Transaction({
+      gasPrice: gasPrice ?? this.#gasPrice,
       ...txParams,
       sender,
       nonce,

@@ -19,18 +19,47 @@ export class FWorld extends World {
   #walletCounter: number;
   #contractCounter: number;
 
-  constructor({ proxy }: { proxy: FProxy }) {
-    super({ proxy, chainId: "F" });
+  constructor({ proxy, gasPrice }: { proxy: FProxy; gasPrice?: number }) {
+    super({ proxy, chainId: "F", gasPrice });
     this.#walletCounter = 0;
     this.#contractCounter = 0;
   }
 
-  static new(proxyUrl: string) {
-    return new FWorld({ proxy: new FProxy(proxyUrl) });
+  static new({ proxyUrl, gasPrice }: { proxyUrl: string; gasPrice?: number }) {
+    return new FWorld({ proxy: new FProxy(proxyUrl), gasPrice });
   }
 
-  static start(): Promise<FWorld> {
-    return startFWorld();
+  static start({ gasPrice }: { gasPrice?: number } = {}): Promise<FWorld> {
+    return new Promise((resolve, reject) => {
+      let binaryName: string;
+      if (os.platform() === "linux") {
+        binaryName = "fproxy-Linux";
+      } else if (os.platform() === "darwin") {
+        binaryName = "fproxy-macOS";
+      } else {
+        throw new Error("Unsupported platform.");
+      }
+
+      const server = spawn(path.join(__dirname, "..", "..", "bin", binaryName));
+
+      server.stdout.on("data", (data: Buffer) => {
+        const addressRegex = /Server running on (http:\/\/[\w\d.:]+)/;
+        const match = data.toString().match(addressRegex);
+        if (match === null) {
+          reject(new Error("FProxy failed starting."));
+        } else {
+          resolve(FWorld.new({ proxyUrl: match[1], gasPrice }));
+        }
+      });
+
+      server.stderr.on("data", (data: Buffer) => {
+        reject(new Error(data.toString()));
+      });
+
+      server.on("error", (error) => {
+        reject(error);
+      });
+    });
   }
 
   newWallet(): FWorldWallet;
@@ -141,38 +170,6 @@ export class FWorldContract extends AddressEncodable {
     return this.world.getAccountWithPairs(this);
   }
 }
-
-const startFWorld = (): Promise<FWorld> =>
-  new Promise((resolve, reject) => {
-    let binaryName: string;
-    if (os.platform() === "linux") {
-      binaryName = "fproxy-Linux";
-    } else if (os.platform() === "darwin") {
-      binaryName = "fproxy-macOS";
-    } else {
-      throw new Error("Unsupported platform.");
-    }
-
-    const server = spawn(path.join(__dirname, "..", "..", "bin", binaryName));
-
-    server.stdout.on("data", (data: Buffer) => {
-      const addressRegex = /Server running on (http:\/\/[\w\d.:]+)/;
-      const match = data.toString().match(addressRegex);
-      if (match === null) {
-        reject(new Error("FProxy failed starting."));
-      } else {
-        resolve(new FWorld({ proxy: new FProxy(match[1]) }));
-      }
-    });
-
-    server.stderr.on("data", (data: Buffer) => {
-      reject(new Error(data.toString()));
-    });
-
-    server.on("error", (error) => {
-      reject(error);
-    });
-  });
 
 const systemAccountAddress =
   "erd1lllllllllllllllllllllllllllllllllllllllllllllllllllsckry7t";
