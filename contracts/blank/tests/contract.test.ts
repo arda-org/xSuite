@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, test } from "@jest/globals";
+import { test, beforeEach, afterEach } from "node:test";
 import { readFileHex, FWorld } from "xsuite/world";
 
 let fworld: FWorld;
