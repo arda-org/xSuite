@@ -1,1 +1,1 @@
-export { assertAccountWithPairs, assertTxReturnData } from "./asserts";
+export { assertAccount, assertTxReturnData } from "./asserts";
