@@ -115,7 +115,7 @@ export class Proxy {
   }
 
   static getAccountRaw(baseUrl: string, address: Address) {
-    return Proxy.fetchRaw(`${baseUrl}/address/${addressToBech32(address)}`);
+    return Proxy.fetchRaw(`${baseUrl}/address/${address}`);
   }
 
   getAccountRaw(address: Address) {
@@ -140,9 +140,7 @@ export class Proxy {
   }
 
   static getAccountNonceRaw(baseUrl: string, address: Address) {
-    return Proxy.fetchRaw(
-      `${baseUrl}/address/${addressToBech32(address)}/nonce`
-    );
+    return Proxy.fetchRaw(`${baseUrl}/address/${address}/nonce`);
   }
 
   getAccountNonceRaw(address: Address) {
@@ -159,9 +157,7 @@ export class Proxy {
   }
 
   static getAccountPairsRaw(baseUrl: string, address: Address) {
-    return Proxy.fetchRaw(
-      `${baseUrl}/address/${addressToBech32(address)}/keys`
-    );
+    return Proxy.fetchRaw(`${baseUrl}/address/${address}/keys`);
   }
 
   getAccountPairsRaw(address: Address) {
@@ -197,8 +193,8 @@ export class Transaction {
     this.unsignedRawTx = {
       nonce: params.nonce,
       value: (params.value ?? 0n).toString(),
-      receiver: addressToBech32(params.receiver),
-      sender: addressToBech32(params.sender),
+      receiver: params.receiver.toString(),
+      sender: params.sender.toString(),
       gasPrice: params.gasPrice ?? 0,
       gasLimit: params.gasLimit,
       data: params.data === undefined ? undefined : btoa(params.data),
@@ -366,17 +362,10 @@ const txToRawTx = (tx: Tx): RawTx => {
 };
 
 const queryToRawQuery = (query: Query): RawQuery => ({
-  scAddress: addressToBech32(query.scAddress),
+  scAddress: query.scAddress.toString(),
   funcName: query.funcName,
   args: query.args.map(hexToHexString),
 });
-
-export const addressToBech32 = (address: Address) => {
-  if (typeof address === "string") {
-    return address;
-  }
-  return address.toBech32();
-};
 
 const addressToHexString = (address: Address) => {
   if (typeof address === "string") {

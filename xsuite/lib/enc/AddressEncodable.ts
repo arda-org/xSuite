@@ -23,7 +23,7 @@ export class AddressEncodable extends Encodable {
     return this.toTopBytes();
   }
 
-  toBech32(): string {
+  toString(): string {
     return bytesToBech32(this.#bytes);
   }
 }

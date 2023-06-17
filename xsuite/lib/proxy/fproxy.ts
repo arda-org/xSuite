@@ -3,7 +3,6 @@ import {
   Address,
   CodeMetadata,
   Hex,
-  addressToBech32,
   codeMetadataToHexString,
   hexToHexString,
   Proxy,
@@ -51,7 +50,7 @@ const accountToRawAccount = (account: Account): RawAccount => {
     pairs = account.pairs;
   }
   return {
-    address: addressToBech32(account.address),
+    address: account.address.toString(),
     nonce: account.nonce,
     balance: account.balance?.toString(),
     pairs,
@@ -60,8 +59,7 @@ const accountToRawAccount = (account: Account): RawAccount => {
       account.codeMetadata !== undefined
         ? codeMetadataToHexString(account.codeMetadata)
         : undefined,
-    owner:
-      account.owner !== undefined ? addressToBech32(account.owner) : undefined,
+    owner: account.owner !== undefined ? account.owner.toString() : undefined,
   };
 };
 
