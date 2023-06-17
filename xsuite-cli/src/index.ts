@@ -1,4 +1,5 @@
 import { Command } from "commander";
+import { version } from "../package.json";
 import { buildAction } from "./buildAction";
 import { newAction } from "./newAction";
 import { newWalletAction } from "./newWalletAction";
@@ -11,6 +12,8 @@ if (process.env["INIT_CWD"]) {
 }
 
 const program = new Command();
+
+program.version(version);
 
 program
   .command("setup-rust")
