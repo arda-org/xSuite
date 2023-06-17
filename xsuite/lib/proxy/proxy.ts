@@ -1,4 +1,4 @@
-import { Encodable, e, AddressEncodable } from "../enc";
+import { Encodable, e, AddressEncodable, b64ToHex } from "../enc";
 
 export class Proxy {
   baseUrl: string;
@@ -85,6 +85,33 @@ export class Proxy {
 
   getCompletedTx(txHash: string) {
     return Proxy.getCompletedTx(this.baseUrl, txHash);
+  }
+
+  static queryRaw(baseUrl: string, query: Query) {
+    return Proxy.fetchRaw(`${baseUrl}/vm-values/query`, queryToRawQuery(query));
+  }
+
+  queryRaw(query: Query) {
+    return Proxy.queryRaw(this.baseUrl, query);
+  }
+
+  static async query(baseUrl: string, query: Query) {
+    const {
+      returnData,
+      ...data
+    }: {
+      returnData: string[];
+      returnCode: string;
+      returnMessage: string;
+    } = unrawRes(await Proxy.queryRaw(baseUrl, query)).data;
+    return {
+      returnData: returnData.map(b64ToHex),
+      ...data,
+    };
+  }
+
+  query(query: Query) {
+    return Proxy.query(this.baseUrl, query);
   }
 
   static getAccountRaw(baseUrl: string, address: Address) {
@@ -338,6 +365,12 @@ const txToRawTx = (tx: Tx): RawTx => {
   return tx;
 };
 
+const queryToRawQuery = (query: Query): RawQuery => ({
+  scAddress: addressToBech32(query.scAddress),
+  funcName: query.funcName,
+  args: query.args.map(hexToHexString),
+});
+
 export const addressToBech32 = (address: Address) => {
   if (typeof address === "string") {
     return address;
@@ -414,6 +447,18 @@ type RawTx = {
   signature: string;
   chainID: string;
   version: number;
+};
+
+type Query = {
+  scAddress: Address;
+  funcName: string;
+  args: Hex[];
+};
+
+type RawQuery = {
+  scAddress: string;
+  funcName: string;
+  args: string[];
 };
 
 export type TxParams = {
