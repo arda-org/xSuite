@@ -1,12 +1,20 @@
+import { AddressDecoder } from "./AddressDecoder";
 import { AddressEncodable } from "./AddressEncodable";
-import { BooleanEncodable } from "./BooleanEncodable";
+import { BufferDecoder } from "./BufferDecoder";
 import { BufferEncodable } from "./BufferEncodable";
+import { BytesDecoder } from "./BytesDecoder";
 import { BytesEncodable } from "./BytesEncodable";
+import { Decoder, postDecode } from "./Decoder";
 import { Encodable } from "./Encodable";
+import { IntDecoder } from "./IntDecoder";
 import { IntEncodable } from "./IntEncodable";
+import { ListDecoder } from "./ListDecoder";
 import { ListEncodable } from "./ListEncodable";
+import { OptionDecoder } from "./OptionDecoder";
 import { OptionEncodable } from "./OptionEncodable";
+import { DecoderMap, TupleDecoder } from "./TupleDecoder";
 import { TupleEncodable } from "./TupleEncodable";
+import { UintDecoder } from "./UintDecoder";
 import { UintEncodable } from "./UintEncodable";
 
 export { Encodable, AddressEncodable };
@@ -21,11 +29,11 @@ export const e = {
   Str: (string: string) => {
     return new BufferEncodable(new TextEncoder().encode(string));
   },
-  Bool: (boolean: boolean) => {
-    return new BooleanEncodable(boolean);
-  },
   Addr: (address: string | Uint8Array) => {
     return new AddressEncodable(address);
+  },
+  Bool: (boolean: boolean) => {
+    return new UintEncodable(Number(boolean), 1);
   },
   U8: (uint: number | bigint) => {
     return new UintEncodable(uint, 1);
@@ -65,6 +73,63 @@ export const e = {
   },
   Option: (optValue: Encodable | null) => {
     return new OptionEncodable(optValue);
+  },
+};
+
+export const d = {
+  Bytes: (byteLength?: number) => {
+    return new BytesDecoder(byteLength);
+  },
+  Buffer: () => {
+    return new BufferDecoder();
+  },
+  Str: () => {
+    return postDecode(new BufferDecoder(), (b) => new TextDecoder().decode(b));
+  },
+  Addr: () => {
+    return new AddressDecoder();
+  },
+  Bool: () => {
+    return postDecode(new UintDecoder(1), (n) => Boolean(n));
+  },
+  U8: () => {
+    return new UintDecoder(1);
+  },
+  U16: () => {
+    return new UintDecoder(2);
+  },
+  U32: () => {
+    return new UintDecoder(4);
+  },
+  U64: () => {
+    return new UintDecoder(8);
+  },
+  U: () => {
+    return new UintDecoder();
+  },
+  I8: () => {
+    return new IntDecoder(1);
+  },
+  I16: () => {
+    return new IntDecoder(2);
+  },
+  I32: () => {
+    return new IntDecoder(4);
+  },
+  I64: () => {
+    return new IntDecoder(8);
+  },
+  I: () => {
+    return new IntDecoder();
+  },
+  Tuple: <T extends DecoderMap<any>>(decoders: T) => {
+    return new TupleDecoder(decoders);
+  },
+  List: <T>(decoder: Decoder<T>) => {
+    return new ListDecoder(decoder);
+  },
+  Option: <T>(decoder: Decoder<T>) => {
+    return new OptionDecoder(decoder);
   },
 };
 

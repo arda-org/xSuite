@@ -27,8 +27,8 @@ export class IntEncodable extends Encodable {
   }
 
   toTopBytes(): Uint8Array {
-    const bytes = getUnambiguousBytes(this.#int);
-    return complementOfTwo(this.#int, bytes);
+    const numBytes = getUnambiguousNumBytes(this.#int);
+    return complementOfTwo(this.#int, numBytes);
   }
 
   toNestBytes(): Uint8Array {
@@ -42,39 +42,15 @@ export class IntEncodable extends Encodable {
   }
 }
 
-export class I8Encodable extends IntEncodable {
-  constructor(int: number | bigint) {
-    super(int, 1);
-  }
-}
-
-export class I16Encodable extends IntEncodable {
-  constructor(int: number | bigint) {
-    super(int, 2);
-  }
-}
-
-export class I32Encodable extends IntEncodable {
-  constructor(int: number | bigint) {
-    super(int, 4);
-  }
-}
-
-export class I64Encodable extends IntEncodable {
-  constructor(int: number | bigint) {
-    super(int, 8);
-  }
-}
-
-const complementOfTwo = (n: bigint, bytes: number) => {
+const complementOfTwo = (n: bigint, numBytes: number) => {
   let u = n;
   if (u < 0) {
-    u = u + 2n ** (8n * BigInt(bytes));
+    u += 2n ** (8n * BigInt(numBytes));
   }
-  return new UintEncodable(u, bytes).toNestBytes();
+  return new UintEncodable(u, numBytes).toNestBytes();
 };
 
-const getUnambiguousBytes = (n: bigint): number => {
+const getUnambiguousNumBytes = (n: bigint): number => {
   if (n === 0n) {
     return 0;
   }

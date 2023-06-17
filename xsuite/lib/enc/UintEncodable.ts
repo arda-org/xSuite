@@ -42,26 +42,8 @@ export class UintEncodable extends Encodable {
   }
 }
 
-export class U8Encodable extends UintEncodable {
-  constructor(uint: number | bigint) {
-    super(uint, 1);
-  }
-}
-
-export class U16Encodable extends UintEncodable {
-  constructor(uint: number | bigint) {
-    super(uint, 2);
-  }
-}
-
 export class U32Encodable extends UintEncodable {
   constructor(uint: number | bigint) {
     super(uint, 4);
-  }
-}
-
-export class U64Encodable extends UintEncodable {
-  constructor(uint: number | bigint) {
-    super(uint, 8);
   }
 }

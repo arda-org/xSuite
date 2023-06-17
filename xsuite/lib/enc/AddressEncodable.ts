@@ -28,7 +28,7 @@ export class AddressEncodable extends Encodable {
   }
 }
 
-const bytesToBech32 = (bytes: Uint8Array): string => {
+export const bytesToBech32 = (bytes: Uint8Array): string => {
   const words = bech32.toWords(bytes);
   return bech32.encode(HRP, words);
 };
@@ -41,6 +41,6 @@ const bech32ToBytes = (bechAddress: string): Uint8Array => {
   return Uint8Array.from(bech32.fromWords(words));
 };
 
-const addressByteLength = 32;
+export const addressByteLength = 32;
 
 const HRP = "erd";

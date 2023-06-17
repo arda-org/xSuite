@@ -1,17 +1,16 @@
 import { describe, expect, test } from "@jest/globals";
-
 import { OptionEncodable } from "./OptionEncodable";
-import { U16Encodable, UintEncodable } from "./UintEncodable";
+import { UintEncodable } from "./UintEncodable";
 
 describe("OptionEncodable", () => {
   test("Some(u16) - 5", () => {
-    const encodable = new OptionEncodable(new U16Encodable(5));
+    const encodable = new OptionEncodable(new UintEncodable(5, 2));
     expect(encodable.toTopHex()).toEqual("010005");
     expect(encodable.toNestHex()).toEqual("010005");
   });
 
   test("Some(u16) - 0", () => {
-    const encodable = new OptionEncodable(new U16Encodable(0));
+    const encodable = new OptionEncodable(new UintEncodable(0, 2));
     expect(encodable.toTopHex()).toEqual("010000");
     expect(encodable.toNestHex()).toEqual("010000");
   });
