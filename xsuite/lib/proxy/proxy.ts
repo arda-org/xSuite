@@ -346,8 +346,10 @@ export class Transaction {
     };
   }
 
-  async sign(signer: { sign: (message: string) => Promise<string> }) {
-    this.signature = await signer.sign(JSON.stringify(this.unsignedRawTx));
+  async sign(signer: { sign: (data: Buffer) => Promise<Buffer> }) {
+    this.signature = await signer
+      .sign(Buffer.from(JSON.stringify(this.unsignedRawTx)))
+      .then((b) => b.toString("hex"));
   }
 
   toRawTx(): RawTx {

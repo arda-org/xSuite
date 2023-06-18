@@ -4,12 +4,12 @@ import { UserSigner as BaseUserSigner } from "@multiversx/sdk-wallet";
 import { AddressEncodable } from "../enc";
 
 export abstract class Signer extends AddressEncodable {
-  abstract sign(message: string): Promise<string>;
+  abstract sign(data: Buffer): Promise<Buffer>;
 }
 
 export class DummySigner extends Signer {
   async sign() {
-    return "";
+    return Buffer.from("");
   }
 }
 
@@ -21,10 +21,8 @@ export class UserSigner extends Signer {
     this.#signer = signer;
   }
 
-  sign(message: string): Promise<string> {
-    return this.#signer
-      .sign(Buffer.from(message))
-      .then((b) => b.toString("hex"));
+  sign(data: Buffer): Promise<Buffer> {
+    return this.#signer.sign(data);
   }
 
   static fromKeystoreFile(

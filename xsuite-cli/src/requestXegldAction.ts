@@ -1,11 +1,9 @@
-import fs from "node:fs";
 import path from "node:path";
 import { SignableMessage } from "@multiversx/sdk-core";
 import { NativeAuthClient } from "@multiversx/sdk-native-auth-client";
-import { UserSigner } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
 import { Proxy } from "xsuite/proxy";
-import { inputHidden } from "./helpers";
+import { UserSigner } from "xsuite/world";
 
 export const requestXegldAction = async ({
   wallet: walletPath,
@@ -13,10 +11,8 @@ export const requestXegldAction = async ({
   wallet: string;
 }) => {
   const filePath = path.resolve(process.cwd(), walletPath);
-  const keystore = JSON.parse(fs.readFileSync(filePath, "utf8"));
-  const password = await inputHidden("Enter password: ");
-  const signer = UserSigner.fromWallet(keystore, password);
-  const address = signer.getAddress().bech32();
+  const signer = await UserSigner.fromKeystoreFile(filePath);
+  const address = signer.toString();
   console.log(`Claiming 30 xEGLD for address ${address} ...`);
   const balance = await devnetProxy.getAccountBalance(address);
 
