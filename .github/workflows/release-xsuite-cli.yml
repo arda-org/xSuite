@@ -18,6 +18,9 @@ jobs:
           node-registry-url: "https://registry.npmjs.org"
           pnpm-version: 8
 
+      - name: Build xSuite
+        run: pnpm build-xsuite
+
       - name: Build xSuite-cli
         run: pnpm build-xsuite-cli
 
