@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import path from "node:path";
 import readline from "node:readline";
 import { UserSigner as BaseUserSigner } from "@multiversx/sdk-wallet";
 import { AddressEncodable } from "../enc";
@@ -41,6 +42,7 @@ export class UserSigner extends Signer {
     addressIndex?: number
   ): UserSigner | Promise<UserSigner> {
     if (password === undefined) {
+      filePath = path.resolve(filePath);
       console.log(`Loading keystore wallet at "${filePath}"...`);
       return inputHidden("Enter password: ").then((password) => {
         return this.fromKeystoreFile(filePath, password, addressIndex);

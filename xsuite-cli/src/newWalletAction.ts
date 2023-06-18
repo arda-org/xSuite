@@ -9,6 +9,7 @@ export const newWalletAction = async ({
 }: {
   path: string;
 }) => {
+  walletPath = path.resolve(walletPath);
   console.log("Creating a new wallet...");
   const mnemonic = Mnemonic.generate().toString();
   const password = await inputHidden("Enter password: ");
@@ -18,11 +19,10 @@ export const newWalletAction = async ({
     return;
   }
   const keystore = UserWallet.fromMnemonic({ mnemonic, password }).toJSON();
-  const filePath = path.resolve(process.cwd(), walletPath);
-  if (fs.existsSync(filePath)) {
-    console.log(chalk.red(`Wallet already exists at ${filePath}`));
+  if (fs.existsSync(walletPath)) {
+    console.log(chalk.red(`Wallet already exists at ${walletPath}`));
     return;
   }
-  fs.writeFileSync(filePath, JSON.stringify(keystore), "utf8");
-  console.log(chalk.green(`Wallet created at ${filePath}`));
+  fs.writeFileSync(walletPath, JSON.stringify(keystore), "utf8");
+  console.log(chalk.green(`Wallet created at ${walletPath}`));
 };

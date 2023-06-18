@@ -9,9 +9,9 @@ import chalk from "chalk";
 import tar from "tar";
 import { logTitle, runCommand } from "./helpers";
 
-export const newAction = async ({ dir }: { dir: string }) => {
+export const newAction = async ({ dir: dirPath }: { dir: string }) => {
+  dirPath = path.resolve(dirPath);
   const contract = "blank";
-  const dirPath = path.resolve(process.cwd(), dir);
   logTitle(
     `Downloading contract ${chalk.cyan(contract)} in ${chalk.cyan(dirPath)}...`
   );
@@ -48,7 +48,7 @@ export const newAction = async ({ dir }: { dir: string }) => {
   console.log();
   console.log("We suggest that you begin by typing:");
   console.log();
-  console.log(chalk.cyan("  cd"), dir);
+  console.log(chalk.cyan("  cd"), dirPath);
   console.log(chalk.cyan("  npm run build"));
   console.log();
 };
