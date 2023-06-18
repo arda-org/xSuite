@@ -24,6 +24,7 @@
     "commander": "10.0.1",
     "rimraf": "5.0.0",
     "tar": "6.1.15",
-    "typescript": "5.0.4"
+    "typescript": "5.0.4",
+    "xsuite": "workspace:*"
   }
 }

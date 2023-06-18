@@ -4,6 +4,7 @@ import { SignableMessage } from "@multiversx/sdk-core";
 import { NativeAuthClient } from "@multiversx/sdk-native-auth-client";
 import { UserSigner } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
+import { Proxy } from "xsuite/proxy";
 import { inputHidden } from "./helpers";
 
 export const requestXegldAction = async ({
@@ -17,7 +18,7 @@ export const requestXegldAction = async ({
   const signer = UserSigner.fromWallet(keystore, password);
   const address = signer.getAddress().bech32();
   console.log(`Claiming 30 xEGLD for address ${address} ...`);
-  const balance = await getDevnetBalance(address);
+  const balance = await devnetProxy.getAccountBalance(address);
 
   const client = new NativeAuthClient({
     origin: "https://devnet-wallet.multiversx.com",
@@ -55,14 +56,11 @@ export const requestXegldAction = async ({
 
   let newBalance = balance;
   while (newBalance - balance < 30n * 10n ** 18n) {
-    newBalance = await getDevnetBalance(address);
+    newBalance = await devnetProxy.getAccountBalance(address);
     await new Promise((r) => setTimeout(r, 1000));
   }
 
   console.log(chalk.green("Wallet well received 30 xEGLD."));
 };
 
-const getDevnetBalance = (address: string) =>
-  fetch(`https://devnet-gateway.multiversx.com/address/${address}/balance`)
-    .then((r) => r.json())
-    .then((d) => BigInt(d["data"]["balance"]));
+const devnetProxy = new Proxy("https://devnet-gateway.multiversx.com");

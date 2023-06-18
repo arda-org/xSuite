@@ -156,6 +156,23 @@ export class Proxy {
     return Proxy.getAccountNonce(this.baseUrl, address);
   }
 
+  static getAccountBalanceRaw(baseUrl: string, address: Address) {
+    return Proxy.fetchRaw(`${baseUrl}/address/${address}/balance`);
+  }
+
+  getAccountBalanceRaw(address: Address) {
+    return Proxy.getAccountBalanceRaw(this.baseUrl, address);
+  }
+
+  static async getAccountBalance(baseUrl: string, address: Address) {
+    const res = unrawRes(await Proxy.getAccountBalanceRaw(baseUrl, address));
+    return BigInt(res.balance);
+  }
+
+  getAccountBalance(address: Address) {
+    return Proxy.getAccountBalance(this.baseUrl, address);
+  }
+
   static getAccountPairsRaw(baseUrl: string, address: Address) {
     return Proxy.fetchRaw(`${baseUrl}/address/${address}/keys`);
   }

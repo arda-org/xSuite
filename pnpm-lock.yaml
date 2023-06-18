@@ -123,6 +123,9 @@ importers:
       typescript:
         specifier: 5.0.4
         version: 5.0.4
+      xsuite:
+        specifier: workspace:*
+        version: link:../xsuite
 
 packages:
 
