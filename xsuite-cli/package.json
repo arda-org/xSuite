@@ -16,7 +16,6 @@
   "devDependencies": {
     "@multiversx/sdk-core": "12.2.0",
     "@multiversx/sdk-native-auth-client": "1.0.2",
-    "@multiversx/sdk-wallet": "4.2.0",
     "@types/node": "18.7.18",
     "@types/tar": "6.1.5",
     "@vercel/ncc": "0.36.1",

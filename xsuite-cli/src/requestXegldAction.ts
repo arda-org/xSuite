@@ -2,14 +2,14 @@ import { SignableMessage } from "@multiversx/sdk-core";
 import { NativeAuthClient } from "@multiversx/sdk-native-auth-client";
 import chalk from "chalk";
 import { Proxy } from "xsuite/proxy";
-import { UserSigner } from "xsuite/world";
+import { KeystoreSigner } from "xsuite/world";
 
 export const requestXegldAction = async ({
   wallet: walletPath,
 }: {
   wallet: string;
 }) => {
-  const signer = await UserSigner.fromKeystoreFile(walletPath);
+  const signer = await KeystoreSigner.fromFile(walletPath);
   const address = signer.toString();
   console.log(`Claiming 30 xEGLD for address ${address} ...`);
   const balance = await devnetProxy.getAccountBalance(address);

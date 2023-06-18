@@ -6,4 +6,4 @@ export const readFileHex = (path: string) => {
 
 export { FWorld, FWorldContract, FWorldWallet } from "./fworld";
 export { World } from "./world";
-export { UserSigner, inputHidden } from "./signer";
+export { UserSigner, KeystoreSigner } from "./signer";
