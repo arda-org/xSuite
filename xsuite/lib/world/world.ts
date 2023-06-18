@@ -190,7 +190,10 @@ export class WorldWallet extends AddressEncodable {
   deployContract(
     txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">
   ) {
-    return this.world.deployContract(this.signer, txParams);
+    return this.world.deployContract(this.signer, txParams).then((data) => ({
+      ...data,
+      deployedContract: new WorldContract(this.world, data.deployedAddress),
+    }));
   }
 
   upgradeContract(

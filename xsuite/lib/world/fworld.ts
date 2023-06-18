@@ -114,16 +114,6 @@ export class FWorld extends World {
   terminate() {
     return this.proxy.terminate();
   }
-
-  deployContract(
-    sender: Signer,
-    txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">
-  ) {
-    return super.deployContract(sender, txParams).then((data) => ({
-      ...data,
-      deployedContract: new FWorldContract(this, data.deployedAddress),
-    }));
-  }
 }
 
 export class FWorldWallet extends WorldWallet {
@@ -136,6 +126,15 @@ export class FWorldWallet extends WorldWallet {
 
   setAccount(account: Omit<HighlevelAccount, "address">) {
     return this.world.setAccount({ address: this, ...account });
+  }
+
+  deployContract(
+    txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">
+  ) {
+    return this.world.deployContract(this.signer, txParams).then((data) => ({
+      ...data,
+      deployedContract: new FWorldContract(this.world, data.deployedAddress),
+    }));
   }
 }
 
