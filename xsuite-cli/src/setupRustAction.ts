@@ -13,7 +13,7 @@ export const setupRustAction = () => {
     "-s",
     "--",
     "--default-toolchain",
-    "nightly",
+    "nightly-2023-06-15",
     "-y",
   ]);
   console.log();
