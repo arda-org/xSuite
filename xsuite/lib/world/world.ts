@@ -1,3 +1,4 @@
+import { AddressEncodable } from "../enc";
 import {
   CallContractTxParams,
   DeployContractTxParams,
@@ -38,6 +39,14 @@ export class World {
     gasPrice?: number;
   }) {
     return new World({ proxy: new Proxy(proxyUrl), chainId, gasPrice });
+  }
+
+  newWallet(signer: Signer) {
+    return new WorldWallet(this, signer);
+  }
+
+  newContract(address: string | Uint8Array) {
+    return new WorldContract(this, address);
   }
 
   getAccountWithPairs(address: Address) {
@@ -155,6 +164,68 @@ export class World {
     );
     const returnData = getTxReturnData(txResult.tx);
     return { ...txResult, returnData };
+  }
+}
+
+export class WorldWallet extends AddressEncodable {
+  world: World;
+  signer: Signer;
+
+  constructor(world: World, signer: Signer) {
+    super(signer.toTopBytes());
+    this.world = world;
+    this.signer = signer;
+  }
+
+  getAccountWithPairs() {
+    return this.world.getAccountWithPairs(this);
+  }
+
+  executeTx(
+    txParams: Omit<TxParams, "sender" | "nonce" | "chainId">
+  ): TxResultPromise<TxResult> {
+    return this.world.executeTx(this.signer, txParams);
+  }
+
+  deployContract(
+    txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">
+  ) {
+    return this.world.deployContract(this.signer, txParams);
+  }
+
+  upgradeContract(
+    txParams: Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">
+  ): TxResultPromise<CallContractTxResult> {
+    return this.world.upgradeContract(this.signer, txParams);
+  }
+
+  transfer(
+    txParams: Omit<TransferTxParams, "sender" | "nonce" | "chainId">
+  ): TxResultPromise<TxResult> {
+    return this.world.transfer(this.signer, txParams);
+  }
+
+  callContract(
+    callee: Address,
+    txParams: Omit<
+      CallContractTxParams,
+      "sender" | "nonce" | "chainId" | "callee"
+    >
+  ) {
+    return this.world.callContract(this.signer, { callee, ...txParams });
+  }
+}
+
+export class WorldContract extends AddressEncodable {
+  world: World;
+
+  constructor(world: World, address: string | Uint8Array) {
+    super(address);
+    this.world = world;
+  }
+
+  getAccountWithPairs() {
+    return this.world.getAccountWithPairs(this);
   }
 }
 

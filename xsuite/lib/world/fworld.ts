@@ -1,18 +1,15 @@
 import { spawn } from "node:child_process";
 import os from "node:os";
 import path from "node:path";
-import { AddressEncodable } from "../enc";
 import {
   HighlevelAccount,
   Block,
   FProxy,
-  Address,
   DeployContractTxParams,
-  CallContractTxParams,
 } from "../proxy";
 import { DummySigner, Signer } from "./signer";
 import { numberToBytesAddress } from "./utils";
-import { World } from "./world";
+import { World, WorldContract, WorldWallet } from "./world";
 
 export class FWorld extends World {
   declare proxy: FProxy;
@@ -62,25 +59,35 @@ export class FWorld extends World {
     });
   }
 
-  newWallet(): FWorldWallet;
-  newWallet(account: Omit<HighlevelAccount, "address">): Promise<FWorldWallet>;
-  newWallet(
+  newWallet(signer: Signer): FWorldWallet {
+    return new FWorldWallet(this, signer);
+  }
+
+  newContract(address: string | Uint8Array): FWorldContract {
+    return new FWorldContract(this, address);
+  }
+
+  createWallet(): FWorldWallet;
+  createWallet(
+    account: Omit<HighlevelAccount, "address">
+  ): Promise<FWorldWallet>;
+  createWallet(
     account?: Omit<HighlevelAccount, "address">
   ): FWorldWallet | Promise<FWorldWallet> {
     this.#walletCounter += 1;
-    const bytesAddress = numberToBytesAddress(this.#walletCounter, false);
-    const wallet = new FWorldWallet(this, bytesAddress);
+    const address = numberToBytesAddress(this.#walletCounter, false);
+    const wallet = new FWorldWallet(this, new DummySigner(address));
     if (account === undefined) {
       return wallet;
     }
     return wallet.setAccount(account).then(() => wallet);
   }
 
-  newContract(): FWorldContract;
-  newContract(
+  createContract(): FWorldContract;
+  createContract(
     account: Omit<HighlevelAccount, "address">
   ): Promise<FWorldContract>;
-  newContract(
+  createContract(
     account?: Omit<HighlevelAccount, "address">
   ): FWorldContract | Promise<FWorldContract> {
     this.#contractCounter += 1;
@@ -119,55 +126,29 @@ export class FWorld extends World {
   }
 }
 
-export class FWorldWallet extends AddressEncodable {
+export class FWorldWallet extends WorldWallet {
   world: FWorld;
-  signer: Signer;
 
-  constructor(world: FWorld, bytesAddress: Uint8Array) {
-    super(bytesAddress);
+  constructor(world: FWorld, signer: Signer) {
+    super(world, signer);
     this.world = world;
-    this.signer = new DummySigner(bytesAddress);
   }
 
   setAccount(account: Omit<HighlevelAccount, "address">) {
     return this.world.setAccount({ address: this, ...account });
-  }
-
-  getAccountWithPairs() {
-    return this.world.getAccountWithPairs(this);
-  }
-
-  deployContract(
-    txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">
-  ) {
-    return this.world.deployContract(this.signer, txParams);
-  }
-
-  callContract(
-    callee: Address,
-    txParams: Omit<
-      CallContractTxParams,
-      "sender" | "nonce" | "chainId" | "callee"
-    >
-  ) {
-    return this.world.callContract(this.signer, { callee, ...txParams });
   }
 }
 
-export class FWorldContract extends AddressEncodable {
+export class FWorldContract extends WorldContract {
   world: FWorld;
 
   constructor(world: FWorld, address: string | Uint8Array) {
-    super(address);
+    super(world, address);
     this.world = world;
   }
 
   setAccount(account: Omit<HighlevelAccount, "address">) {
     return this.world.setAccount({ address: this, ...account });
-  }
-
-  getAccountWithPairs() {
-    return this.world.getAccountWithPairs(this);
   }
 }
 
