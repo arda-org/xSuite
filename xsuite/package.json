@@ -26,7 +26,7 @@
   "dependencies": {
     "@multiversx/sdk-wallet": "4.2.0",
     "bech32": "2.0.0",
-    "chalk": "5.2.0",
+    "chalk": "4.1.2",
     "protobufjs": "7.0.0"
   },
   "devDependencies": {

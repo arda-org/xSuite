@@ -19,7 +19,7 @@
     "@types/node": "18.7.18",
     "@types/tar": "6.1.5",
     "@vercel/ncc": "0.36.1",
-    "chalk": "5.2.0",
+    "chalk": "4.1.2",
     "commander": "10.0.1",
     "rimraf": "5.0.0",
     "tar": "6.1.15",
