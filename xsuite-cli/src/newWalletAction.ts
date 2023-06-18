@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { Mnemonic, UserWallet } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
-import { inputHidden } from "./helpers";
+import { inputHidden } from "xsuite/world";
 
 export const newWalletAction = async ({
   path: walletPath,

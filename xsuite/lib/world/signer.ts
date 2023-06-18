@@ -56,7 +56,7 @@ export class UserSigner extends Signer {
   }
 }
 
-const inputHidden = async (query: string): Promise<string> => {
+export const inputHidden = async (query: string): Promise<string> => {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
