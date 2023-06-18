@@ -10,7 +10,7 @@
     "@types/node": "^18.16.18",
     "tsx": "^3.12.7",
     "typescript": "^5.0.4",
-    "xsuite": "0.0.13",
-    "xsuite-cli": "0.0.6"
+    "xsuite": "0.0.14",
+    "xsuite-cli": "0.0.7"
   }
 }
