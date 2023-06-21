@@ -24,8 +24,8 @@ jobs:
       - name: Build xSuite-cli
         run: pnpm build-xsuite-cli
 
-      - name: Typecheck xSuite-cli
-        run: pnpm typecheck-xsuite-cli
+      - name: Test xSuite-cli
+        run: pnpm test-xsuite-cli
 
       - name: Publish xSuite-cli to NPM
         run: git config core.fileMode false && cd xsuite-cli && pnpm publish

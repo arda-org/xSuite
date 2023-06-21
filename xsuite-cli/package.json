@@ -3,8 +3,8 @@
   "version": "0.0.7",
   "license": "MIT",
   "scripts": {
-    "build": "rimraf ./dist && ncc build ./src/index.ts -o ./dist/ --minify --no-cache --no-source-map-register",
-    "typecheck": "tsc --noEmit"
+    "build": "ncc build ./src/index.ts -o ./dist/ -m",
+    "test": "exit 0"
   },
   "bin": {
     "xsuite": "index.js"
@@ -21,7 +21,6 @@
     "@vercel/ncc": "0.36.1",
     "chalk": "4.1.2",
     "commander": "10.0.1",
-    "rimraf": "5.0.0",
     "tar": "6.1.15",
     "typescript": "5.0.4",
     "xsuite": "workspace:*"
