@@ -28,7 +28,7 @@ jobs:
           cache-dependency-path: xsuite/fproxy/go.sum
 
       - name: Build xSuite
-        run: pnpm build-fproxy-${{ runner.os }} && pnpm build-xsuite
+        run: pnpm build-xsuite
 
       - name: Upload package
         uses: actions/upload-artifact@v3

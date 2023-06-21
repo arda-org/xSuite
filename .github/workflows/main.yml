@@ -61,7 +61,7 @@ jobs:
         run: pnpm lint
 
       - name: Build xSuite
-        run: pnpm build-fproxy-${{ runner.os }} && pnpm build-xsuite
+        run: pnpm build-xsuite
 
       - name: Test xSuite
         run: pnpm test-xsuite
