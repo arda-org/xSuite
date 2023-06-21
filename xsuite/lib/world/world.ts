@@ -167,7 +167,7 @@ export class World {
   }
 }
 
-export class WorldWallet extends AddressEncodable {
+export class WorldWallet extends Signer {
   world: World;
   signer: Signer;
 
@@ -175,6 +175,10 @@ export class WorldWallet extends AddressEncodable {
     super(signer.toTopBytes());
     this.world = world;
     this.signer = signer;
+  }
+
+  sign(data: Buffer): Promise<Buffer> {
+    return this.signer.sign(data);
   }
 
   getAccountWithPairs() {
