@@ -4,7 +4,7 @@ import { AbstractDecoder } from "./Decoder";
 
 export class AddressDecoder extends AbstractDecoder<string> {
   _topDecode(r: ByteReader) {
-    const bytes = r.read(addressByteLength);
+    const bytes = r.readExact(addressByteLength);
     return bytesToBech32(bytes);
   }
 

@@ -9,6 +9,6 @@ export class BufferDecoder extends AbstractDecoder<Uint8Array> {
 
   _nestDecode(r: ByteReader) {
     const length = Number(new U32Decoder()._nestDecode(r));
-    return r.read(length);
+    return r.readExact(length);
   }
 }

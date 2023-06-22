@@ -10,6 +10,26 @@ describe("BufferEncodable", () => {
     test("non-empty hex string", () => {
       expect(new BufferEncodable("48656c6c").toTopHex()).toEqual("48656c6c");
     });
+
+    test("empty number array", () => {
+      expect(new BufferEncodable([]).toTopHex()).toEqual("");
+    });
+
+    test("non-empty number array", () => {
+      expect(new BufferEncodable([72, 101, 108, 108]).toTopHex()).toEqual(
+        "48656c6c"
+      );
+    });
+
+    test("empty Uint8Array", () => {
+      expect(new BufferEncodable(new Uint8Array([])).toTopHex()).toEqual("");
+    });
+
+    test("non-empty Uint8Array", () => {
+      expect(
+        new BufferEncodable(new Uint8Array([72, 101, 108, 108])).toTopHex()
+      ).toEqual("48656c6c");
+    });
   });
 
   describe("nest encoding", () => {

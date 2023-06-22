@@ -11,7 +11,9 @@ export class UintDecoder extends AbstractDecoder<bigint> {
 
   _topDecode(r: ByteReader) {
     const bytes =
-      this.#byteLength === undefined ? r.readAll() : r.read(this.#byteLength);
+      this.#byteLength === undefined
+        ? r.readAll()
+        : r.readAtMost(this.#byteLength);
     return decode(bytes);
   }
 
@@ -20,7 +22,7 @@ export class UintDecoder extends AbstractDecoder<bigint> {
       this.#byteLength === undefined
         ? Number(new U32Decoder()._nestDecode(r))
         : this.#byteLength;
-    return decode(r.read(length));
+    return decode(r.readExact(length));
   }
 }
 

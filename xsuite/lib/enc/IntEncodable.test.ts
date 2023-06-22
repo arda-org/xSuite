@@ -38,10 +38,12 @@ describe("IntEncodable success test cases", () => {
 
   successTestCases.forEach(([bytes, value, topEncoding, nestedEncoding]) => {
     test(`Bytes: ${bytes}, Value: ${value}, Top-encode`, () => {
-      expect(new IntEncodable(value, bytes).toTopHex()).toBe(topEncoding);
+      expect(new IntEncodable(value, bytes).toTopHex()).toEqual(topEncoding);
     });
     test(`Bytes: ${bytes}, Value: ${value}, Nest-encode`, () => {
-      expect(new IntEncodable(value, bytes).toNestHex()).toBe(nestedEncoding);
+      expect(new IntEncodable(value, bytes).toNestHex()).toEqual(
+        nestedEncoding
+      );
     });
   });
 });

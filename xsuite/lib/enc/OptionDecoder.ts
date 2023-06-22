@@ -13,7 +13,7 @@ export class OptionDecoder<T> extends AbstractDecoder<T | null> {
     if (r.length() === 0) {
       return null;
     }
-    if (r.read(1)[0] === 1) {
+    if (r.readExact(1)[0] === 1) {
       return this.#decoder.nestDecode(r);
     } else {
       throw new Error("Invalid Option top-encoding.");
@@ -21,7 +21,7 @@ export class OptionDecoder<T> extends AbstractDecoder<T | null> {
   }
 
   _nestDecode(r: ByteReader) {
-    const byte = r.read(1)[0];
+    const byte = r.readExact(1)[0];
     if (byte === 0) {
       return null;
     } else if (byte === 1) {

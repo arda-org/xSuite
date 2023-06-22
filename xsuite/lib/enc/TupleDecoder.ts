@@ -27,4 +27,6 @@ export type DecoderMap<T> = Record<string, Decoder<T>>;
 
 type DecoderMapToValueMap<T> = {
   [K in keyof T]: T[K] extends Decoder<infer U> ? U : never;
+} & {
+  // Pretiffy type: https://twitter.com/mattpocockuk/status/1622730173446557697
 };

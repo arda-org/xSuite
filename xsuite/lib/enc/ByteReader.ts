@@ -7,23 +7,26 @@ export class ByteReader {
     this.offset = 0;
   }
 
-  read(size: number): Uint8Array {
-    const end = this.offset + size;
-    if (end > this.bytes.length) throw new Error("No remaining byte to read.");
-    const result = this.bytes.slice(this.offset, end);
-    this.offset += size;
+  readExact(size: number): Uint8Array {
+    if (size > this.length()) throw new Error("No remaining byte to read.");
+    return this.readAtMost(size);
+  }
+
+  readAtMost(size: number): Uint8Array {
+    const result = this.bytes.slice(this.offset, this.offset + size);
+    this.offset += result.byteLength;
     return result;
   }
 
-  length() {
-    return this.bytes.length - this.offset;
+  readAll(): Uint8Array {
+    return this.readExact(this.length());
   }
 
-  readAll(): Uint8Array {
-    return this.read(this.length());
+  length() {
+    return this.bytes.byteLength - this.offset;
   }
 
   isConsumed(): boolean {
-    return this.offset == this.bytes.length;
+    return this.offset == this.bytes.byteLength;
   }
 }
