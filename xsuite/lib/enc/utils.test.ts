@@ -5,13 +5,13 @@ describe("bytesToHexString", () => {
   it("should convert bytes to a hex string", () => {
     const bytes = new Uint8Array([72, 101, 108, 108, 111]);
     const expectedHexString = "48656c6c6f";
-    expect(bytesToHexString(bytes)).toBe(expectedHexString);
+    expect(bytesToHexString(bytes)).toEqual(expectedHexString);
   });
 
   it("should return an empty string for an empty input", () => {
     const bytes = new Uint8Array([]);
     const expectedHexString = "";
-    expect(bytesToHexString(bytes)).toBe(expectedHexString);
+    expect(bytesToHexString(bytes)).toEqual(expectedHexString);
   });
 });
 

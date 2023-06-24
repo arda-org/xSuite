@@ -199,8 +199,8 @@ describe("Encoding Decoding Suite", () => {
   });
 
   test("b64ToHex", () => {
-    const b64 = "aGVsbG8=";
+    const actualHex = b64ToHex("aGVsbG8=");
     const expectedHex = "68656c6c6f";
-    expect(b64ToHex(b64)).toBe(expectedHex);
+    expect(actualHex).toEqual(expectedHex);
   });
 });
