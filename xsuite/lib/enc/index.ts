@@ -35,6 +35,12 @@ export const hexToEncodable = (hex: Hex) => {
   return hex;
 };
 
+export function b64ToHex(b64: string) {
+  return Array.from(atob(b64), function (char) {
+    return char.charCodeAt(0).toString(16).padStart(2, "0");
+  }).join("");
+}
+
 export const e = {
   Bytes: (bytes: string | number[] | Uint8Array) => {
     return new BytesEncodable(bytes);
@@ -148,9 +154,3 @@ export const d = {
     return new OptionDecoder(decoder);
   },
 };
-
-export function b64ToHex(b64: string) {
-  return Array.from(atob(b64), function (char) {
-    return char.charCodeAt(0).toString(16).padStart(2, "0");
-  }).join("");
-}

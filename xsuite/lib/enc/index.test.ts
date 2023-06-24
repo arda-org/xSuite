@@ -1,5 +1,13 @@
 import { describe, expect, test } from "@jest/globals";
-import { d, e, Encodable, AddressEncodable, b64ToHex } from "./index";
+import {
+  d,
+  e,
+  Encodable,
+  AddressEncodable,
+  b64ToHex,
+  hexToHexString,
+  hexToEncodable,
+} from "./index";
 
 describe("Encoding Decoding Suite", () => {
   test("Encodable", () => {
@@ -10,6 +18,22 @@ describe("Encoding Decoding Suite", () => {
   test("AddressEncodable", () => {
     const encodable = e.Addr(new Uint8Array(32));
     expect(encodable).toBeInstanceOf(AddressEncodable);
+  });
+
+  test("hexToHexString", () => {
+    expect(hexToHexString("12")).toEqual("12");
+    expect(hexToHexString(e.Bool(true))).toEqual("01");
+  });
+
+  test("hexToEncodable", () => {
+    expect(hexToEncodable("12")).toEqual(e.Bytes("12"));
+    expect(hexToEncodable(e.Bool(true))).toEqual(e.Bool(true));
+  });
+
+  test("b64ToHex", () => {
+    const actualHex = b64ToHex("aGVsbG8=");
+    const expectedHex = "68656c6c6f";
+    expect(actualHex).toEqual(expectedHex);
   });
 
   test("e.Bytes", () => {
@@ -196,11 +220,5 @@ describe("Encoding Decoding Suite", () => {
   test("d.Option", () => {
     const decoded = d.Option(d.U32()).topDecode("01000004d2");
     expect(decoded).toEqual(1234n);
-  });
-
-  test("b64ToHex", () => {
-    const actualHex = b64ToHex("aGVsbG8=");
-    const expectedHex = "68656c6c6f";
-    expect(actualHex).toEqual(expectedHex);
   });
 });
