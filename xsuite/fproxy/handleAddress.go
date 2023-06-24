@@ -53,7 +53,9 @@ func (ae *Executor) HandleAddressKeys(r *http.Request) (interface{}, error) {
 	account := ae.vmTestExecutor.World.AcctMap.GetAccount(address)
 	jPairs := map[string]string{}
 	for k, v := range account.Storage {
-		jPairs[hex.EncodeToString([]byte(k))] = hex.EncodeToString([]byte(v))
+		if len(v) > 0 {
+			jPairs[hex.EncodeToString([]byte(k))] = hex.EncodeToString(v)
+		}
 	}
 	jData := map[string]interface{}{
 		"data": map[string]interface{}{

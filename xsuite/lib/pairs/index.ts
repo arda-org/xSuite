@@ -1,3 +1,3 @@
-export { Esdt, getEsdtsPairs } from "./esdts";
-export { Pair } from "./pairs";
+export { Esdt, getEsdtsKvs } from "./esdts";
+export { Pairs, Kv, kvsToPairs } from "./pairs";
 export { s } from "./storage";

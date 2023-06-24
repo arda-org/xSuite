@@ -1,6 +1,6 @@
 import assert from "node:assert";
-import { Encodable } from "../enc";
-import { Pair, Esdt, getEsdtsPairs } from "../pairs";
+import { Encodable, hexToHexString } from "../enc";
+import { Esdt, Kv, getEsdtsKvs } from "../pairs";
 import { Proxy } from "../proxy";
 
 export const assertAccount = (
@@ -16,14 +16,16 @@ export const assertAccount = (
   if (balance !== undefined) {
     assert.strictEqual(actualAccount.balance, balance);
   }
-  if (containsEsdts !== undefined) {
-    getEsdtsPairs(...containsEsdts).forEach(([k, v]) =>
-      assert.strictEqual(actualAccount.pairs?.[k.toTopHex()], v.toTopHex())
-    );
-  }
-  if (containsStorage !== undefined) {
-    containsStorage.forEach(([k, v]) =>
-      assert.strictEqual(actualAccount.pairs?.[k.toTopHex()], v.toTopHex())
+  const kvs = [
+    ...(containsEsdts ? getEsdtsKvs(containsEsdts) : []),
+    ...(containsStorage ?? []),
+  ];
+  if (kvs.length > 0) {
+    kvs.forEach(([k, v]) =>
+      assert.strictEqual(
+        actualAccount.pairs?.[hexToHexString(k)],
+        hexToHexString(v)
+      )
     );
   }
 };
@@ -45,5 +47,5 @@ type ExpectedAccount = {
   nonce?: number;
   balance?: bigint;
   containsEsdts?: Esdt[];
-  containsStorage?: Pair[];
+  containsStorage?: Kv[];
 };

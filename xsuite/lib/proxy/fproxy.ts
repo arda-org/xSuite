@@ -1,12 +1,5 @@
-import { Esdt, getEsdtsPairs } from "../pairs";
-import {
-  Address,
-  CodeMetadata,
-  Hex,
-  codeMetadataToHexString,
-  hexToHexString,
-  Proxy,
-} from "./proxy";
+import { Esdt, getEsdtsKvs, Kv, kvsToPairs, Pairs } from "../pairs";
+import { Address, CodeMetadata, codeMetadataToHexString, Proxy } from "./proxy";
 
 export class FProxy extends Proxy {
   static setAccount(baseUrl: string, account: Account) {
@@ -38,14 +31,12 @@ export class FProxy extends Proxy {
 }
 
 const accountToRawAccount = (account: Account): RawAccount => {
-  let pairs: Record<string, string> | undefined;
+  let pairs: Pairs | undefined;
   if ("esdts" in account || "storage" in account) {
-    pairs = Object.fromEntries(
-      [
-        ...getEsdtsPairs(...(account.esdts ?? [])),
-        ...(account.storage ?? []),
-      ].map(([k, v]) => [hexToHexString(k), hexToHexString(v)])
-    );
+    pairs = kvsToPairs([
+      ...getEsdtsKvs(account.esdts ?? []),
+      ...(account.storage ?? []),
+    ]);
   } else if ("pairs" in account) {
     pairs = account.pairs;
   }
@@ -70,7 +61,7 @@ export type HighlevelAccount = {
   nonce?: number;
   balance?: bigint;
   esdts?: Esdt[];
-  storage?: [Hex, Hex][];
+  storage?: Kv[];
   code?: string;
   codeMetadata?: CodeMetadata;
   owner?: Address;
@@ -80,7 +71,7 @@ type RawAccount = {
   address: string;
   nonce?: number;
   balance?: string;
-  pairs?: Record<string, string>;
+  pairs?: Pairs;
   code?: string;
   codeMetadata?: string;
   owner?: string;

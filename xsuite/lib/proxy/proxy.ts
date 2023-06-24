@@ -1,4 +1,12 @@
-import { Encodable, e, AddressEncodable, b64ToHex } from "../enc";
+import {
+  Encodable,
+  e,
+  AddressEncodable,
+  b64ToHex,
+  Hex,
+  hexToHexString,
+} from "../enc";
+import { Pairs } from "../pairs";
 
 export class Proxy {
   baseUrl: string;
@@ -183,7 +191,7 @@ export class Proxy {
 
   static async getAccountPairs(baseUrl: string, address: Address) {
     const res = unrawRes(await Proxy.getAccountPairsRaw(baseUrl, address));
-    return res.pairs as Record<string, string>;
+    return res.pairs as Pairs;
   }
 
   getAccountPairs(address: Address) {
@@ -420,13 +428,6 @@ export const codeMetadataToHexString = (codeMetadata: CodeMetadata): string => {
   return codeMetadata.toTopHex();
 };
 
-export const hexToHexString = (hex: Hex) => {
-  if (typeof hex === "string") {
-    return hex;
-  }
-  return hex.toTopHex();
-};
-
 const isTxCompleted = (res: any): boolean => {
   const events: any[] | undefined = res?.data?.transaction?.logs?.events;
   if (events) {
@@ -497,8 +498,6 @@ export type DeployContractTxParams = {
 export type CodeMetadata = string | Encodable | CodeProperty[];
 
 type CodeProperty = "upgradeable" | "readable" | "payable" | "payableBySc";
-
-export type Hex = string | Encodable;
 
 export type UpgradeContractTxParams = {
   nonce: number;

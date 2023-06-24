@@ -1,0 +1,14 @@
+[package]
+name = "storage-wasm"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies.storage]
+path = ".."
+
+[dependencies.multiversx-sc-wasm-adapter]
+version = "0.41.2"

@@ -1,3 +1,11 @@
-import { Encodable } from "../enc";
+import { Hex, hexToHexString } from "../enc";
 
-export type Pair = [key: Encodable, value: Encodable];
+export type Pairs = Record<string, string>;
+
+export type Kv = [key: Hex, value: Hex];
+
+export const kvsToPairs = (kvs: Kv[]) => {
+  return Object.fromEntries(
+    kvs.map(([k, v]) => [hexToHexString(k), hexToHexString(v)])
+  );
+};

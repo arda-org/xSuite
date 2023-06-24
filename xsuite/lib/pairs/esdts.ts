@@ -1,6 +1,6 @@
 import { Field, Type } from "protobufjs";
 import { Encodable, e } from "../enc";
-import { Pair } from "./pairs";
+import { Kv } from "./pairs";
 
 export type Esdt = {
   id: string;
@@ -21,37 +21,37 @@ type Role =
   | "ESDTRoleNFTAddURI"
   | "ESDTRoleNFTAddQuantity";
 
-export const getEsdtsPairs = (...esdts: Esdt[]): Pair[] => {
-  return esdts.flatMap(getEsdtPairs);
+export const getEsdtsKvs = (esdts: Esdt[]): Kv[] => {
+  return esdts.flatMap(getEsdtKvs);
 };
 
-const getEsdtPairs = ({
+const getEsdtKvs = ({
   id,
   nonce,
   amount,
   roles,
   lastNonce,
   attrs,
-}: Esdt): Pair[] => {
-  const pairs: Pair[] = [];
+}: Esdt): Kv[] => {
+  const kvs: Kv[] = [];
   if (amount !== undefined || attrs !== undefined) {
-    pairs.push(getEsdtAmountOrAttributesPair(id, nonce, amount, attrs));
+    kvs.push(getEsdtAmountOrAttributesKv(id, nonce, amount, attrs));
   }
   if (lastNonce !== undefined) {
-    pairs.push(getEsdtLastNoncePair(id, lastNonce));
+    kvs.push(getEsdtLastNonceKv(id, lastNonce));
   }
   if (roles !== undefined) {
-    pairs.push(getEsdtRolesPair(id, roles));
+    kvs.push(getEsdtRolesKv(id, roles));
   }
-  return pairs;
+  return kvs;
 };
 
-const getEsdtAmountOrAttributesPair = (
+const getEsdtAmountOrAttributesKv = (
   id: string,
   nonce?: number,
   amount?: bigint,
   attrs?: Encodable
-): Pair => {
+): Kv => {
   let esdtKey = e.Str(`ELRONDesdt${id}`).toTopHex();
   const message: Record<string, any> = {};
   if (amount !== undefined && amount > 0) {
@@ -72,11 +72,11 @@ const getEsdtAmountOrAttributesPair = (
   return [e.Bytes(esdtKey), e.Bytes(messageBytes)];
 };
 
-const getEsdtLastNoncePair = (id: string, lastNonce: number): Pair => {
+const getEsdtLastNonceKv = (id: string, lastNonce: number): Kv => {
   return [e.Str(`ELRONDnonce${id}`), e.U(lastNonce)];
 };
 
-const getEsdtRolesPair = (id: string, roles: string[]): Pair => {
+const getEsdtRolesKv = (id: string, roles: string[]): Kv => {
   const messageBytes = ESDTRolesMessage.encode({ Roles: roles }).finish();
   return [e.Str(`ELRONDroleesdt${id}`), e.Bytes(messageBytes)];
 };

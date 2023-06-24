@@ -19,6 +19,22 @@ import { UintEncodable } from "./UintEncodable";
 
 export { Encodable, AddressEncodable };
 
+export type Hex = string | Encodable;
+
+export const hexToHexString = (hex: Hex) => {
+  if (typeof hex === "string") {
+    return hex;
+  }
+  return hex.toTopHex();
+};
+
+export const hexToEncodable = (hex: Hex) => {
+  if (typeof hex === "string") {
+    return new BytesEncodable(hex);
+  }
+  return hex;
+};
+
 export const e = {
   Bytes: (bytes: string | number[] | Uint8Array) => {
     return new BytesEncodable(bytes);
