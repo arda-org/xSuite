@@ -49,6 +49,18 @@ export class World {
     return new WorldContract(this, address);
   }
 
+  getAccountNonce(address: Address) {
+    return this.proxy.getAccountNonce(address);
+  }
+
+  getAccountBalance(address: Address) {
+    return this.proxy.getAccountBalance(address);
+  }
+
+  getAccountPairs(address: Address) {
+    return this.proxy.getAccountPairs(address);
+  }
+
   getAccountWithPairs(address: Address) {
     return this.proxy.getAccountWithPairs(address);
   }
@@ -181,6 +193,18 @@ export class WorldWallet extends Signer {
     return this.signer.sign(data);
   }
 
+  getAccountNonce() {
+    return this.world.getAccountNonce(this);
+  }
+
+  getAccountBalance() {
+    return this.world.getAccountBalance(this);
+  }
+
+  getAccountPairs() {
+    return this.world.getAccountPairs(this);
+  }
+
   getAccountWithPairs() {
     return this.world.getAccountWithPairs(this);
   }
@@ -229,6 +253,18 @@ export class WorldContract extends AddressEncodable {
   constructor(world: World, address: string | Uint8Array) {
     super(address);
     this.world = world;
+  }
+
+  getAccountNonce() {
+    return this.world.getAccountNonce(this);
+  }
+
+  getAccountBalance() {
+    return this.world.getAccountBalance(this);
+  }
+
+  getAccountPairs() {
+    return this.world.getAccountPairs(this);
   }
 
   getAccountWithPairs() {
