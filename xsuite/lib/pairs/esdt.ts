@@ -54,14 +54,16 @@ const getEsdtAmountOrAttributesKv = (
 ): Kv => {
   let esdtKey = e.Str(`ELRONDesdt${id}`).toTopHex();
   const message: Record<string, any> = {};
-  if (amount !== undefined && amount > 0) {
-    const hex =
-      amount >= 0
-        ? "00" + e.U(amount).toTopHex()
-        : "01" + e.U(-amount).toTopHex();
-    message["Value"] = e.Bytes(hex).toTopBytes();
+  if (amount !== undefined) {
+    if (amount <= 0) {
+      throw new Error("Negative amount.");
+    }
+    message["Value"] = new Uint8Array([0, ...e.U(amount).toTopBytes()]);
   }
-  if (nonce !== undefined && nonce >= 1) {
+  if (nonce !== undefined && nonce !== 0) {
+    if (nonce < 0) {
+      throw new Error("Negative nonce.");
+    }
     esdtKey += e.U64(nonce).toTopHex();
     message["Type"] = "1";
     if (attrs !== undefined) {
