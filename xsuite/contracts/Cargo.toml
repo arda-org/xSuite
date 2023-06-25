@@ -4,5 +4,4 @@ resolver = "2"
 members = [
   "storage",
   "storage/meta",
-  "storage/wasm",
 ]

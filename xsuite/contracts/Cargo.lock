@@ -696,15 +696,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "multiversx-sc-wasm-adapter"
-version = "0.41.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "932327626de71eeb1dbe86b863cc70cc532f8ceba8e73a059410f6aa56b22a77"
-dependencies = [
- "multiversx-sc",
-]
-
-[[package]]
 name = "nibble_vec"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1053,14 +1044,6 @@ name = "storage-meta"
 version = "0.0.0"
 dependencies = [
  "multiversx-sc-meta",
- "storage",
-]
-
-[[package]]
-name = "storage-wasm"
-version = "0.0.0"
-dependencies = [
- "multiversx-sc-wasm-adapter",
  "storage",
 ]
 

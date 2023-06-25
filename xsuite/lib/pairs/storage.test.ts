@@ -4,13 +4,13 @@ import { FWorld, FWorldContract, FWorldWallet, readFileHex } from "../world";
 import { kvsToPairs } from "./pairs";
 import { s } from "./storage";
 
-let fworld: FWorld;
+let world: FWorld;
 let wallet: FWorldWallet;
 let contract: FWorldContract;
 
 beforeEach(async () => {
-  fworld = await FWorld.start();
-  wallet = await fworld.createWallet({});
+  world = await FWorld.start();
+  wallet = await world.createWallet({});
   ({ deployedContract: contract } = await wallet.deployContract({
     code: readFileHex("contracts/storage/output/storage.wasm"),
     codeMetadata: [],
@@ -19,7 +19,7 @@ beforeEach(async () => {
 });
 
 afterEach(() => {
-  fworld.terminate();
+  world.terminate();
 });
 
 test("s.SingleValueMapper", async () => {
