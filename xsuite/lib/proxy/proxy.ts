@@ -5,6 +5,8 @@ import {
   b64ToHex,
   Hex,
   hexToHexString,
+  Address,
+  addressToHexString,
 } from "../enc";
 import { Pairs } from "../pairs";
 
@@ -394,13 +396,6 @@ const queryToRawQuery = (query: Query): RawQuery => ({
   args: query.args.map(hexToHexString),
 });
 
-const addressToHexString = (address: Address) => {
-  if (typeof address === "string") {
-    address = e.Addr(address);
-  }
-  return address.toTopHex();
-};
-
 export const codeMetadataToHexString = (codeMetadata: CodeMetadata): string => {
   if (typeof codeMetadata === "string") {
     return codeMetadata;
@@ -440,8 +435,6 @@ const completionEvents = ["completedTxEvent", "SCDeploy", "signalError"];
 
 const zeroBechAddress =
   "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
-
-export type Address = string | AddressEncodable;
 
 type Tx = Transaction | RawTx;
 

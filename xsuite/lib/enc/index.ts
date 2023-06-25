@@ -21,6 +21,15 @@ export { Encodable, AddressEncodable };
 
 export type Hex = string | Encodable;
 
+export type Address = string | AddressEncodable;
+
+export const hexToBytes = (hex: Hex) => {
+  if (typeof hex === "string") {
+    hex = e.Bytes(hex);
+  }
+  return hex.toTopBytes();
+};
+
 export const hexToHexString = (hex: Hex) => {
   if (typeof hex === "string") {
     return hex;
@@ -33,6 +42,20 @@ export const hexToEncodable = (hex: Hex) => {
     return new BytesEncodable(hex);
   }
   return hex;
+};
+
+export const addressToBytes = (address: Address) => {
+  if (typeof address === "string") {
+    address = e.Addr(address);
+  }
+  return address.toTopBytes();
+};
+
+export const addressToHexString = (address: Address) => {
+  if (typeof address === "string") {
+    address = e.Addr(address);
+  }
+  return address.toTopHex();
 };
 
 export function b64ToHex(b64: string) {

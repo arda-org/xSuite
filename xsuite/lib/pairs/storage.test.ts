@@ -52,7 +52,7 @@ test("s.SetMapper", async () => {
   );
   await wallet.callContract(contract, {
     functionName: "set_add",
-    functionArgs: [e.U64(10), e.U64(20), e.U64(30)],
+    functionArgs: [e.U64(10), e.U64(20), e.U64(30), e.U64(40)],
     gasLimit: 10_000_000,
   });
   await wallet.callContract(contract, {
@@ -65,12 +65,13 @@ test("s.SetMapper", async () => {
       s.SetMapper("set", [
         [3, e.U64(30)],
         [1, e.U64(10)],
+        [4, e.U64(40)],
       ])
     )
   ).toEqual(await contract.getAccountPairs());
   await wallet.callContract(contract, {
     functionName: "set_remove",
-    functionArgs: [e.U64(10), e.U64(30)],
+    functionArgs: [e.U64(10), e.U64(30), e.U64(40)],
     gasLimit: 10_000_000,
   });
   expect(kvsToPairs(s.SetMapper("set", []))).toEqual(

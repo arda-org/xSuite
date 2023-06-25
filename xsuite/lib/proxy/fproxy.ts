@@ -1,5 +1,6 @@
+import { Address } from "../enc";
 import { Esdt, getEsdtsKvs, Kv, kvsToPairs, Pairs } from "../pairs";
-import { Address, CodeMetadata, codeMetadataToHexString, Proxy } from "./proxy";
+import { CodeMetadata, codeMetadataToHexString, Proxy } from "./proxy";
 
 export class FProxy extends Proxy {
   static setAccount(baseUrl: string, account: Account) {

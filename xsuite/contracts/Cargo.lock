@@ -367,6 +367,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "esdt"
+version = "0.0.0"
+dependencies = [
+ "multiversx-sc",
+ "multiversx-sc-scenario",
+]
+
+[[package]]
+name = "esdt-meta"
+version = "0.0.0"
+dependencies = [
+ "esdt",
+ "multiversx-sc-meta",
+]
+
+[[package]]
 name = "fnv"
 version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"

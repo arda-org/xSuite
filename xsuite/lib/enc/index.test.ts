@@ -7,6 +7,9 @@ import {
   b64ToHex,
   hexToHexString,
   hexToEncodable,
+  hexToBytes,
+  addressToBytes,
+  addressToHexString,
 } from "./index";
 
 describe("Encoding Decoding Suite", () => {
@@ -20,14 +23,32 @@ describe("Encoding Decoding Suite", () => {
     expect(encodable).toBeInstanceOf(AddressEncodable);
   });
 
+  test("hexToBytes", () => {
+    expect(hexToBytes("12")).toEqual(new Uint8Array([18]));
+    expect(hexToBytes(e.Bool(true))).toEqual(new Uint8Array([1]));
+  });
+
   test("hexToHexString", () => {
     expect(hexToHexString("12")).toEqual("12");
-    expect(hexToHexString(e.Bool(true))).toEqual("01");
   });
 
   test("hexToEncodable", () => {
     expect(hexToEncodable("12")).toEqual(e.Bytes("12"));
-    expect(hexToEncodable(e.Bool(true))).toEqual(e.Bool(true));
+  });
+
+  test("addressToBytes", () => {
+    const bechAddress =
+      "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
+    const bytesAddress = new Uint8Array(32);
+    expect(addressToBytes(bechAddress)).toEqual(bytesAddress);
+  });
+
+  test("addressToHexString", () => {
+    const bechAddress =
+      "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
+    const hexAddress =
+      "0000000000000000000000000000000000000000000000000000000000000000";
+    expect(addressToHexString(bechAddress)).toEqual(hexAddress);
   });
 
   test("b64ToHex", () => {

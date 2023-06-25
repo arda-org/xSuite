@@ -29,11 +29,11 @@ const getSetMapperKvs = (
   map: [number | bigint, Encodable][]
 ): Kv[] => {
   if (map.length === 0) return [];
-  map.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  map.sort(([a], [b]) => (a <= b ? -1 : 1));
   const indexKvs: Kv[] = [];
   const valueKvs: Kv[] = [];
   const linksKvs: Kv[] = [];
-  let maxIndex = 0n;
+  let maxIndex: number | bigint = 0n;
   for (let i = 0; i < map.length; i++) {
     const [index, v] = map[i];
     if (index <= 0) {
@@ -44,7 +44,9 @@ const getSetMapperKvs = (
     const prevI = i === 0 ? 0n : map[i - 1][0];
     const nextI = i === map.length - 1 ? 0n : map[i + 1][0];
     linksKvs.push([e.U32(index), e.Tuple(e.U32(prevI), e.U32(nextI))]);
-    maxIndex = index >= maxIndex ? BigInt(index) : maxIndex;
+    if (index >= maxIndex) {
+      maxIndex = index;
+    }
   }
   const firstI = map[0][0];
   const lastI = map[map.length - 1][0];

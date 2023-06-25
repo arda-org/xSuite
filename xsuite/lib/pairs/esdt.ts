@@ -1,5 +1,5 @@
 import { Field, Type } from "protobufjs";
-import { Encodable, e } from "../enc";
+import { Address, Hex, addressToBytes, e, hexToBytes } from "../enc";
 import { Kv } from "./pairs";
 
 export type Esdt = {
@@ -8,7 +8,14 @@ export type Esdt = {
   amount?: bigint;
   roles?: Role[];
   lastNonce?: number;
-  attrs?: Encodable;
+  saveNonce?: boolean;
+  properties?: Hex;
+  name?: string;
+  creator?: Address;
+  royalties?: number;
+  hash?: Hex;
+  uris?: string[];
+  attrs?: Hex;
 };
 
 type Role =
@@ -31,56 +38,82 @@ const getEsdtKvs = ({
   amount,
   roles,
   lastNonce,
+  properties,
+  saveNonce,
+  name,
+  creator,
+  royalties,
+  hash,
+  uris,
   attrs,
 }: Esdt): Kv[] => {
   const kvs: Kv[] = [];
-  if (amount !== undefined || attrs !== undefined) {
-    kvs.push(getEsdtAmountOrAttributesKv(id, nonce, amount, attrs));
+  if (
+    amount !== undefined ||
+    properties !== undefined ||
+    saveNonce !== undefined ||
+    name !== undefined ||
+    creator !== undefined ||
+    royalties !== undefined ||
+    hash !== undefined ||
+    uris !== undefined ||
+    attrs !== undefined
+  ) {
+    let esdtKey = e.Str(`ELRONDesdt${id}`).toTopHex();
+    const message: Record<string, any> = {};
+    if (nonce !== undefined && nonce !== 0) {
+      if (nonce < 0) {
+        throw new Error("Non-positive nonce.");
+      }
+      esdtKey += e.U64(nonce).toTopHex();
+      message["Type"] = "1";
+    }
+    if (amount !== undefined) {
+      if (amount < 0) {
+        throw new Error("Non-positive amount.");
+      }
+      const bytes = amount > 0 ? e.U(amount).toTopBytes() : [0];
+      message["Value"] = new Uint8Array([0, ...bytes]);
+    }
+    if (properties !== undefined) {
+      message["Properties"] = hexToBytes(properties);
+    }
+    const metadata: [string, any][] = [];
+    if (saveNonce && nonce !== undefined) {
+      metadata.push(["Nonce", nonce.toString()]);
+    }
+    if (name !== undefined) {
+      metadata.push(["Name", e.Str(name).toTopBytes()]);
+    }
+    if (creator !== undefined) {
+      metadata.push(["Creator", addressToBytes(creator)]);
+    }
+    if (royalties !== undefined) {
+      metadata.push(["Royalties", royalties.toString()]);
+    }
+    if (hash !== undefined) {
+      metadata.push(["Hash", hexToBytes(hash)]);
+    }
+    if (uris !== undefined) {
+      metadata.push(["URIs", uris]);
+    }
+    if (attrs !== undefined) {
+      metadata.push(["Attributes", hexToBytes(attrs)]);
+    }
+    if (metadata.length > 0) {
+      message["Metadata"] = Object.fromEntries(metadata);
+    }
+    const messageBytes = ESDTSystemMessage.encode(message).finish();
+    kvs.push([e.Bytes(esdtKey), e.Bytes(messageBytes)]);
   }
   if (lastNonce !== undefined) {
-    kvs.push(getEsdtLastNonceKv(id, lastNonce));
+    kvs.push([e.Str(`ELRONDnonce${id}`), e.U(lastNonce)]);
   }
   if (roles !== undefined) {
-    kvs.push(getEsdtRolesKv(id, roles));
+    const messageBytes = ESDTRolesMessage.encode({ Roles: roles }).finish();
+    kvs.push([e.Str(`ELRONDroleesdt${id}`), e.Bytes(messageBytes)]);
   }
   return kvs;
-};
-
-const getEsdtAmountOrAttributesKv = (
-  id: string,
-  nonce?: number,
-  amount?: bigint,
-  attrs?: Encodable
-): Kv => {
-  let esdtKey = e.Str(`ELRONDesdt${id}`).toTopHex();
-  const message: Record<string, any> = {};
-  if (amount !== undefined) {
-    if (amount <= 0) {
-      throw new Error("Negative amount.");
-    }
-    message["Value"] = new Uint8Array([0, ...e.U(amount).toTopBytes()]);
-  }
-  if (nonce !== undefined && nonce !== 0) {
-    if (nonce < 0) {
-      throw new Error("Negative nonce.");
-    }
-    esdtKey += e.U64(nonce).toTopHex();
-    message["Type"] = "1";
-    if (attrs !== undefined) {
-      message["Metadata"] = { Attributes: attrs.toTopBytes() };
-    }
-  }
-  const messageBytes = ESDTSystemMessage.encode(message).finish();
-  return [e.Bytes(esdtKey), e.Bytes(messageBytes)];
-};
-
-const getEsdtLastNonceKv = (id: string, lastNonce: number): Kv => {
-  return [e.Str(`ELRONDnonce${id}`), e.U(lastNonce)];
-};
-
-const getEsdtRolesKv = (id: string, roles: string[]): Kv => {
-  const messageBytes = ESDTRolesMessage.encode({ Roles: roles }).finish();
-  return [e.Str(`ELRONDroleesdt${id}`), e.Bytes(messageBytes)];
 };
 
 const ESDTRolesMessage = new Type("ESDTRoles").add(

@@ -1,10 +1,9 @@
-import { AddressEncodable } from "../enc";
+import { Address, AddressEncodable } from "../enc";
 import {
   CallContractTxParams,
   DeployContractTxParams,
   Transaction,
   TxParams,
-  Address,
   Proxy,
 } from "../proxy";
 import { TransferTxParams, UpgradeContractTxParams } from "../proxy/proxy";

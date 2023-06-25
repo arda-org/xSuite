@@ -99,6 +99,10 @@ export class FWorld extends World {
     return contract.setAccount(account).then(() => contract);
   }
 
+  getSystemAccountPairs() {
+    return this.getAccountPairs(systemAccountAddress);
+  }
+
   setSystemAccount(account: Omit<HighlevelAccount, "address">) {
     return this.setAccount({ address: systemAccountAddress, ...account });
   }
