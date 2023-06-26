@@ -11,7 +11,7 @@ let contract: FWorldContract;
 beforeEach(async () => {
   world = await FWorld.start();
   wallet = await world.createWallet({});
-  ({ deployedContract: contract } = await wallet.deployContract({
+  ({ contract } = await wallet.deployContract({
     code: readFileHex("contracts/storage/output/storage.wasm"),
     codeMetadata: [],
     gasLimit: 10_000_000,
@@ -27,7 +27,8 @@ test("s.SingleValueMapper", async () => {
     [e.Str("a"), e.U64(1)],
     [e.Str("b"), e.U64(2)],
   ];
-  await wallet.callContract(contract, {
+  await wallet.callContract({
+    callee: contract,
     functionName: "single_add",
     functionArgs: map.map(([k, v]) => e.Tuple(k, v)),
     gasLimit: 10_000_000,
@@ -35,7 +36,8 @@ test("s.SingleValueMapper", async () => {
   expect(kvsToPairs(s.SingleValueMapper("single", map))).toEqual(
     await contract.getAccountPairs()
   );
-  await wallet.callContract(contract, {
+  await wallet.callContract({
+    callee: contract,
     functionName: "single_remove",
     functionArgs: map.map(([k]) => k),
     gasLimit: 10_000_000,
@@ -50,12 +52,14 @@ test("s.SetMapper", async () => {
   expect(() => s.SetMapper("set", [[0, e.U64(0)]])).toThrow(
     "Negative id not allowed."
   );
-  await wallet.callContract(contract, {
+  await wallet.callContract({
+    callee: contract,
     functionName: "set_add",
     functionArgs: [e.U64(10), e.U64(20), e.U64(30), e.U64(40)],
     gasLimit: 10_000_000,
   });
-  await wallet.callContract(contract, {
+  await wallet.callContract({
+    callee: contract,
     functionName: "set_remove",
     functionArgs: [e.U64(20)],
     gasLimit: 10_000_000,
@@ -69,7 +73,8 @@ test("s.SetMapper", async () => {
       ])
     )
   ).toEqual(await contract.getAccountPairs());
-  await wallet.callContract(contract, {
+  await wallet.callContract({
+    callee: contract,
     functionName: "set_remove",
     functionArgs: [e.U64(10), e.U64(30), e.U64(40)],
     gasLimit: 10_000_000,
@@ -80,7 +85,8 @@ test("s.SetMapper", async () => {
 });
 
 test("s.MapMapper", async () => {
-  await wallet.callContract(contract, {
+  await wallet.callContract({
+    callee: contract,
     functionName: "map_add",
     functionArgs: [
       e.Tuple(e.Str("a"), e.U64(10)),
@@ -89,7 +95,8 @@ test("s.MapMapper", async () => {
     ],
     gasLimit: 10_000_000,
   });
-  await wallet.callContract(contract, {
+  await wallet.callContract({
+    callee: contract,
     functionName: "map_remove",
     functionArgs: [e.Str("b")],
     gasLimit: 10_000_000,
@@ -102,7 +109,8 @@ test("s.MapMapper", async () => {
       ])
     )
   ).toEqual(await contract.getAccountPairs());
-  await wallet.callContract(contract, {
+  await wallet.callContract({
+    callee: contract,
     functionName: "map_remove",
     functionArgs: [e.Str("a"), e.Str("c")],
     gasLimit: 10_000_000,
@@ -114,7 +122,8 @@ test("s.MapMapper", async () => {
 
 test("s.VecMapper", async () => {
   const map = [e.U64(1), e.U64(2)];
-  await wallet.callContract(contract, {
+  await wallet.callContract({
+    callee: contract,
     functionName: "vec_add",
     functionArgs: map,
     gasLimit: 10_000_000,
@@ -122,7 +131,8 @@ test("s.VecMapper", async () => {
   expect(kvsToPairs(s.VecMapper("vec", map))).toEqual(
     await contract.getAccountPairs()
   );
-  await wallet.callContract(contract, {
+  await wallet.callContract({
+    callee: contract,
     functionName: "vec_remove",
     functionArgs: [e.U32(2), e.U32(1)],
     gasLimit: 10_000_000,

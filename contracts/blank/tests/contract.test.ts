@@ -21,7 +21,7 @@ afterEach(() => {
 
 test("Test", async () => {
   deployer = await fworld.createWallet({ balance: 10_000_000_000n });
-  ({ deployedContract: contract } = await deployer.deployContract({
+  ({ contract } = await deployer.deployContract({
     code: readFileHex("output/contract.wasm"),
     codeMetadata: [],
     gasLimit: 10_000_000,

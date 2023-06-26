@@ -41,7 +41,8 @@ test("getEsdtsKvs", async () => {
     "Non-positive nonce."
   );
   const fftAmount = 10n;
-  await wallet.callContract(contract, {
+  await wallet.callContract({
+    callee: contract,
     functionName: "mint_and_send",
     functionArgs: [e.Str(fftId), e.U(fftAmount)],
     gasLimit: 10_000_000,
@@ -52,7 +53,8 @@ test("getEsdtsKvs", async () => {
   const sftHash1 = "0001";
   const sftUris1 = ["https://google.com"];
   const sftAttrs1 = e.Tuple(e.U8(0), e.U8(0), e.U8(0));
-  await wallet.callContract(contract, {
+  await wallet.callContract({
+    callee: contract,
     functionName: "nft_create_and_send",
     functionArgs: [
       e.Str(sftId),
@@ -71,7 +73,8 @@ test("getEsdtsKvs", async () => {
   const sftHash2 = "0002";
   const sftUris2 = ["https://facebook.com"];
   const sftAttrs2 = e.Tuple(e.U8(255), e.U8(255), e.U8(255));
-  await wallet.callContract(contract, {
+  await wallet.callContract({
+    callee: contract,
     functionName: "nft_create_and_send",
     functionArgs: [
       e.Str(sftId),

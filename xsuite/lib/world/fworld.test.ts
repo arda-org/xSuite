@@ -153,7 +153,8 @@ test("FWorldWallet.deployContract & upgradeContract", async () => {
 });
 
 test("FWorldWallet.callContract with EGLD", async () => {
-  await wallet.callContract(contract, {
+  await wallet.callContract({
+    callee: contract,
     functionName: "fund",
     value: 10n ** 17n,
     gasLimit: 10_000_000,
@@ -167,7 +168,8 @@ test("FWorldWallet.callContract with EGLD", async () => {
 });
 
 test("FWorldWallet.callContract with ESDT", async () => {
-  await wallet.callContract(contract, {
+  await wallet.callContract({
+    callee: contract,
     functionName: "fund",
     esdts: [{ id: fftId, amount: 10n ** 17n }],
     gasLimit: 10_000_000,
@@ -190,7 +192,8 @@ test("FWorld.query", async () => {
 
 test("FWorldWallet.callContract.assertFail - Correct parameters", async () => {
   await wallet
-    .callContract(contract, {
+    .callContract({
+      callee: contract,
       functionName: "require_positive",
       functionArgs: [e.U64(0)],
       gasLimit: 10_000_000,
@@ -201,7 +204,8 @@ test("FWorldWallet.callContract.assertFail - Correct parameters", async () => {
 test("FWorldWallet.callContract.assertFail - Wrong code", async () => {
   await expect(
     wallet
-      .callContract(contract, {
+      .callContract({
+        callee: contract,
         functionName: "require_positive",
         functionArgs: [e.U64(0)],
         gasLimit: 10_000_000,
@@ -213,7 +217,8 @@ test("FWorldWallet.callContract.assertFail - Wrong code", async () => {
 test("FWorldWallet.callContract.assertFail - Wrong message", async () => {
   await expect(
     wallet
-      .callContract(contract, {
+      .callContract({
+        callee: contract,
         functionName: "require_positive",
         functionArgs: [e.U64(0)],
         gasLimit: 10_000_000,
@@ -225,7 +230,8 @@ test("FWorldWallet.callContract.assertFail - Wrong message", async () => {
 test("FWorldWallet.callContract.assertFail - Transaction not failing", async () => {
   await expect(
     wallet
-      .callContract(contract, {
+      .callContract({
+        callee: contract,
         functionName: "require_positive",
         functionArgs: [e.U64(1)],
         gasLimit: 10_000_000,

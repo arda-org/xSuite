@@ -250,13 +250,9 @@ export class WorldWallet extends Signer {
   }
 
   callContract(
-    callee: Address,
-    txParams: Omit<
-      CallContractTxParams,
-      "sender" | "nonce" | "chainId" | "callee"
-    >
+    txParams: Omit<CallContractTxParams, "sender" | "nonce" | "chainId">
   ) {
-    return this.world.callContract(this, { callee, ...txParams });
+    return this.world.callContract(this, txParams);
   }
 }
 
