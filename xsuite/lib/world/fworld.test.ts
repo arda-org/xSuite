@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, expect, test } from "@jest/globals";
+import { afterEach, beforeEach, expect, test } from "@jest/globals";
 import { e } from "../enc";
 import { getEsdtsKvs, kvsToPairs } from "../pairs";
 import { assertAccount } from "../test";
@@ -13,7 +13,7 @@ const fftId = "FFT-abcdef";
 const storageCode = readFileHex("contracts/storage/output/storage.wasm");
 const esdtCode = readFileHex("contracts/esdt/output/esdt.wasm");
 
-beforeAll(async () => {
+beforeEach(async () => {
   world = await FWorld.start();
   wallet = await world.createWallet({
     balance: 10n ** 18n,
@@ -21,11 +21,13 @@ beforeAll(async () => {
   });
   otherWallet = await world.createWallet({});
   contract = await world.createContract({
+    balance: 10n ** 18n,
+    esdts: [{ id: fftId, amount: 10n ** 18n }],
     code: readFileHex("contracts/world/output/world.wasm"),
   });
 });
 
-afterAll(async () => {
+afterEach(async () => {
   await world.terminate();
 });
 
@@ -55,6 +57,49 @@ test("FWorldWallet.getAccountWithPairs", async () => {
     nonce: 0,
     balance: 10n ** 18n,
     containsEsdts: [{ id: fftId, amount: 10n ** 18n }],
+  });
+});
+
+test("FWorldContract.getAccountNonce", async () => {
+  expect(await contract.getAccountNonce()).toEqual(0);
+});
+
+test("FWorldContract.getAccountBalance", async () => {
+  expect(await contract.getAccountBalance()).toEqual(10n ** 18n);
+});
+
+test("FWorldContract.getAccountPairs", async () => {
+  expect(await contract.getAccountPairs()).toEqual(
+    kvsToPairs(getEsdtsKvs([{ id: fftId, amount: 10n ** 18n }]))
+  );
+});
+
+test("FWorldContract.getAccount", async () => {
+  assertAccount(await contract.getAccount(), {
+    nonce: 0,
+    balance: 10n ** 18n,
+  });
+});
+
+test("FWorldContract.getAccountWithPairs", async () => {
+  assertAccount(await contract.getAccountWithPairs(), {
+    nonce: 0,
+    balance: 10n ** 18n,
+    containsEsdts: [{ id: fftId, amount: 10n ** 18n }],
+  });
+});
+
+test("FWorldWallet.executeTx", async () => {
+  await wallet.executeTx({
+    receiver: otherWallet,
+    value: 10n ** 17n,
+    gasLimit: 10_000_000,
+  });
+  assertAccount(await wallet.getAccountWithPairs(), {
+    balance: 9n * 10n ** 17n,
+  });
+  assertAccount(await otherWallet.getAccountWithPairs(), {
+    balance: 10n ** 17n,
   });
 });
 

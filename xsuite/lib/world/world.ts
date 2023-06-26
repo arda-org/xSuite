@@ -270,6 +270,10 @@ export class WorldContract extends AddressEncodable {
     return this.world.getAccountBalance(this);
   }
 
+  getAccount() {
+    return this.world.getAccount(this);
+  }
+
   getAccountPairs() {
     return this.world.getAccountPairs(this);
   }
