@@ -1,6 +1,7 @@
 import { test, expect, beforeEach, afterEach } from "@jest/globals";
-import { Encodable, e } from ".";
 import { FWorld, FWorldContract, FWorldWallet, readFileHex } from "../world";
+import { Encodable } from "./Encodable";
+import { e } from "./encoding";
 import { kvsToPairs } from "./pairs";
 import { s } from "./storage";
 
