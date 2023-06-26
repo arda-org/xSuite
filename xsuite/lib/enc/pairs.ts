@@ -1,4 +1,4 @@
-import { Hex, hexToHexString } from "../enc";
+import { Hex, hexToHexString } from "./hex";
 
 export type Pairs = Record<string, string>;
 

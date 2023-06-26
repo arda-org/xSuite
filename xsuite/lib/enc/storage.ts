@@ -1,4 +1,6 @@
-import { Encodable, e, hexToEncodable } from "../enc";
+import { Encodable } from "./Encodable";
+import { e } from "./encoding";
+import { hexToEncodable } from "./hex";
 import { Kv } from "./pairs";
 
 export const s = {

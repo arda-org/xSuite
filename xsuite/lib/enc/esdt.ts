@@ -1,5 +1,7 @@
 import { Field, Type } from "protobufjs";
-import { Address, Hex, addressToBytes, e, hexToBytes } from "../enc";
+import { Address, addressToBytes } from "./address";
+import { e } from "./encoding";
+import { Hex, hexToBytes } from "./hex";
 import { Kv } from "./pairs";
 
 export type Esdt = {

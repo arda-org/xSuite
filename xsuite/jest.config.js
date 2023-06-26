@@ -14,12 +14,6 @@ module.exports = {
       lines: 100,
       statements: 100,
     },
-    "./lib/pairs/": {
-      branches: 100,
-      functions: 100,
-      lines: 100,
-      statements: 100,
-    },
   },
   transform: {
     "^.+\\.(t|j)sx?$": "@swc/jest",

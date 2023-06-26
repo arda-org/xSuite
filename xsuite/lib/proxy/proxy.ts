@@ -1,14 +1,13 @@
 import {
   Encodable,
   e,
-  AddressEncodable,
-  b64ToHex,
+  b64ToHexString,
   Hex,
   hexToHexString,
   Address,
   addressToHexString,
+  Pairs,
 } from "../enc";
-import { Pairs } from "../pairs";
 
 export class Proxy {
   baseUrl: string;
@@ -118,7 +117,7 @@ export class Proxy {
       returnMessage: string;
     } = unrawRes(await Proxy.queryRaw(baseUrl, query)).data;
     return {
-      returnData: returnData.map(b64ToHex),
+      returnData: returnData.map(b64ToHexString),
       ...data,
     };
   }
@@ -280,7 +279,7 @@ export class Tx {
     esdts,
     ...txParams
   }: Pick<TransferTxParams, "sender" | "receiver" | "esdts"> & T) {
-    let receiver: string | AddressEncodable;
+    let receiver: Address;
     let data: string | undefined;
     if (esdts?.length) {
       receiver = sender;
@@ -318,7 +317,7 @@ export class Tx {
   > &
     T) {
     const dataParts: string[] = [];
-    let receiver: string | AddressEncodable;
+    let receiver: Address;
     if (esdts?.length) {
       receiver = sender;
       dataParts.push("MultiESDTNFTTransfer");

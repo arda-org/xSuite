@@ -1,6 +1,5 @@
 import assert from "node:assert";
-import { Encodable, hexToHexString } from "../enc";
-import { Esdt, Kv, getEsdtsKvs } from "../pairs";
+import { Encodable, hexToHexString, Esdt, Kv, getEsdtsKvs } from "../enc";
 import { Proxy } from "../proxy";
 
 export const assertAccount = (
