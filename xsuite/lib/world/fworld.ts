@@ -109,7 +109,7 @@ export class FWorldWallet extends WorldWallet {
   ) {
     return this.world.deployContract(this, txParams).then((data) => ({
       ...data,
-      deployedContract: new FWorldContract(this.world, data.deployedAddress),
+      contract: new FWorldContract(this.world, data.address),
     }));
   }
 }

@@ -123,9 +123,9 @@ export class World {
     if (!scDeployEvent) {
       throw new Error("No SCDeploy event.");
     }
-    const deployedAddress = scDeployEvent.address;
+    const address = scDeployEvent.address;
     const returnData = getTxReturnData(txResult.tx);
-    return { ...txResult, deployedAddress, returnData };
+    return { ...txResult, address, returnData };
   }
 
   upgradeContract(
@@ -233,7 +233,7 @@ export class WorldWallet extends Signer {
   ) {
     return this.world.deployContract(this, txParams).then((data) => ({
       ...data,
-      deployedContract: new WorldContract(this.world, data.deployedAddress),
+      contract: new WorldContract(this.world, data.address),
     }));
   }
 
@@ -380,7 +380,7 @@ export type TxResult = {
 };
 
 export type DeployContractTxResult = TxResult & {
-  deployedAddress: string;
+  address: string;
   returnData: string[];
 };
 

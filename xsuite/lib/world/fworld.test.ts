@@ -129,24 +129,24 @@ test("FWorldWallet.transfer", async () => {
 });
 
 test("FWorldWallet.deployContract & upgradeContract", async () => {
-  const { deployedContract } = await wallet.deployContract({
+  const { contract } = await wallet.deployContract({
     code: worldCode,
     codeMetadata: ["readable", "payable", "payableBySc", "upgradeable"],
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
-  assertAccount(await deployedContract.getAccountWithPairs(), {
+  assertAccount(await contract.getAccountWithPairs(), {
     code: worldCode,
     containsStorage: [[e.Str("n"), e.U64(1)]],
   });
   await wallet.upgradeContract({
-    callee: deployedContract,
+    callee: contract,
     code: worldCode,
     codeMetadata: "0000",
     codeArgs: [e.U64(2)],
     gasLimit: 10_000_000,
   });
-  assertAccount(await deployedContract.getAccountWithPairs(), {
+  assertAccount(await contract.getAccountWithPairs(), {
     code: worldCode,
     containsStorage: [[e.Str("n"), e.U64(2)]],
   });
