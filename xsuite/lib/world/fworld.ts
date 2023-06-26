@@ -1,12 +1,10 @@
-import { spawn } from "node:child_process";
-import os from "node:os";
-import path from "node:path";
 import {
   HighlevelAccount,
   Block,
   FProxy,
   DeployContractTxParams,
 } from "../proxy";
+import { startFProxyServer } from "./fproxyServer";
 import { DummySigner, Signer } from "./signer";
 import { numberToBytesAddress } from "./utils";
 import { World, WorldContract, WorldWallet } from "./world";
@@ -26,37 +24,11 @@ export class FWorld extends World {
     return new FWorld({ proxy: new FProxy(proxyUrl), gasPrice });
   }
 
-  static start({ gasPrice }: { gasPrice?: number } = {}): Promise<FWorld> {
-    return new Promise((resolve, reject) => {
-      let binaryName: string;
-      if (os.platform() === "linux") {
-        binaryName = "fproxy-Linux";
-      } else if (os.platform() === "darwin") {
-        binaryName = "fproxy-macOS";
-      } else {
-        throw new Error("Unsupported platform.");
-      }
-
-      const server = spawn(path.join(__dirname, "..", "..", "bin", binaryName));
-
-      server.stdout.on("data", (data: Buffer) => {
-        const addressRegex = /Server running on (http:\/\/[\w\d.:]+)/;
-        const match = data.toString().match(addressRegex);
-        if (match === null) {
-          reject(new Error("FProxy failed starting."));
-        } else {
-          resolve(FWorld.new({ proxyUrl: match[1], gasPrice }));
-        }
-      });
-
-      server.stderr.on("data", (data: Buffer) => {
-        reject(new Error(data.toString()));
-      });
-
-      server.on("error", (error) => {
-        reject(error);
-      });
-    });
+  static async start({
+    gasPrice,
+  }: { gasPrice?: number } = {}): Promise<FWorld> {
+    const url = await startFProxyServer();
+    return FWorld.new({ proxyUrl: url, gasPrice });
   }
 
   newWallet(signer: Signer): FWorldWallet {
