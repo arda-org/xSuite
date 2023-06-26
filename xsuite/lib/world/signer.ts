@@ -7,7 +7,7 @@ import {
   UserWallet,
 } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
-import { AddressEncodable } from "../enc";
+import { AddressEncodable } from "../data";
 
 export abstract class Signer extends AddressEncodable {
   abstract sign(data: Buffer): Promise<Buffer>;

@@ -1,1 +1,1 @@
-module.exports = require('./dist/world')
+module.exports = require("./dist/world")

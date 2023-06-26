@@ -7,7 +7,7 @@ import {
   Address,
   addressToHexString,
   Pairs,
-} from "../enc";
+} from "../data";
 
 export class Proxy {
   baseUrl: string;

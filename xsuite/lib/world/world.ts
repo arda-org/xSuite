@@ -1,4 +1,4 @@
-import { Address, AddressEncodable } from "../enc";
+import { Address, AddressEncodable } from "../data";
 import {
   CallContractTxParams,
   DeployContractTxParams,

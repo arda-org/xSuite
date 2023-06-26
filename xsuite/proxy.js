@@ -1,1 +1,1 @@
-module.exports = require('./dist/proxy')
+module.exports = require("./dist/proxy")
