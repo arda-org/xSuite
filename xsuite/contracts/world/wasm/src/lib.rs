@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                            1
+// Endpoints:                            3
 // Async Callback (empty):               1
-// Total number of exported functions:   3
+// Total number of exported functions:   5
 
 #![no_std]
 #![feature(lang_items)]
@@ -18,7 +18,9 @@ multiversx_sc_wasm_adapter::panic_handler!();
 multiversx_sc_wasm_adapter::endpoints! {
     world
     (
-        require_ten
+        fund
+        require_positive
+        get_n
     )
 }
 

@@ -41,20 +41,20 @@ export class Proxy {
     return Proxy.fetch(`${this.baseUrl}${path}`, data);
   }
 
-  static sendTxRaw(baseUrl: string, tx: Tx) {
-    return Proxy.fetchRaw(`${baseUrl}/transaction/send`, txToRawTx(tx));
+  static sendTxRaw(baseUrl: string, tx: BroadTx) {
+    return Proxy.fetchRaw(`${baseUrl}/transaction/send`, broadTxToRawTx(tx));
   }
 
-  sendTxRaw(tx: Tx) {
+  sendTxRaw(tx: BroadTx) {
     return Proxy.sendTxRaw(this.baseUrl, tx);
   }
 
-  static async sendTx(baseUrl: string, tx: Tx) {
+  static async sendTx(baseUrl: string, tx: BroadTx) {
     const res = unrawRes(await Proxy.sendTxRaw(baseUrl, tx));
     return res.txHash as string;
   }
 
-  sendTx(tx: Tx) {
+  sendTx(tx: BroadTx) {
     return Proxy.sendTx(this.baseUrl, tx);
   }
 
@@ -97,15 +97,18 @@ export class Proxy {
     return Proxy.getCompletedTx(this.baseUrl, txHash);
   }
 
-  static queryRaw(baseUrl: string, query: Query) {
-    return Proxy.fetchRaw(`${baseUrl}/vm-values/query`, queryToRawQuery(query));
+  static queryRaw(baseUrl: string, query: BroadQuery) {
+    return Proxy.fetchRaw(
+      `${baseUrl}/vm-values/query`,
+      broadQueryToRawQuery(query)
+    );
   }
 
-  queryRaw(query: Query) {
+  queryRaw(query: BroadQuery) {
     return Proxy.queryRaw(this.baseUrl, query);
   }
 
-  static async query(baseUrl: string, query: Query) {
+  static async query(baseUrl: string, query: BroadQuery) {
     const {
       returnData,
       ...data
@@ -120,7 +123,7 @@ export class Proxy {
     };
   }
 
-  query(query: Query) {
+  query(query: BroadQuery) {
     return Proxy.query(this.baseUrl, query);
   }
 
@@ -212,7 +215,7 @@ export class Proxy {
   }
 }
 
-export class Transaction {
+export class Tx {
   unsignedRawTx: Omit<RawTx, "signature">;
   signature: string | undefined;
 
@@ -228,10 +231,6 @@ export class Transaction {
       chainID: params.chainId,
       version: params.version ?? 1,
     };
-  }
-
-  static deployContract(params: DeployContractTxParams) {
-    return new Transaction(Transaction.getParamsToDeployContract(params));
   }
 
   static getParamsToDeployContract<T>({
@@ -250,10 +249,6 @@ export class Transaction {
       ].join("@"),
       ...txParams,
     };
-  }
-
-  static upgradeContract(params: UpgradeContractTxParams) {
-    return new Transaction(Transaction.getParamsToUpgradeContract(params));
   }
 
   static getParamsToUpgradeContract<T>({
@@ -277,10 +272,6 @@ export class Transaction {
       ].join("@"),
       ...txParams,
     };
-  }
-
-  static transfer(params: TransferTxParams) {
-    return new Transaction(Transaction.getParamsToTransfer(params));
   }
 
   static getParamsToTransfer<T>({
@@ -312,10 +303,6 @@ export class Transaction {
       data,
       ...txParams,
     };
-  }
-
-  static callContract(params: CallContractTxParams) {
-    return new Transaction(Transaction.getParamsToCallContract(params));
   }
 
   static getParamsToCallContract<T>({
@@ -383,25 +370,27 @@ const unrawTxRes = (r: any) => {
   return unrawRes(r).transaction as Record<string, any>;
 };
 
-const txToRawTx = (tx: Tx): RawTx => {
-  if (tx instanceof Transaction) {
+const broadTxToRawTx = (tx: BroadTx): RawTx => {
+  if (tx instanceof Tx) {
     return tx.toRawTx();
   }
   return tx;
 };
 
-const queryToRawQuery = (query: Query): RawQuery => ({
-  scAddress: query.scAddress.toString(),
-  funcName: query.funcName,
-  args: query.args.map(hexToHexString),
-});
+const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
+  if ("callee" in query) {
+    query = {
+      scAddress: query.callee.toString(),
+      funcName: query.functionName,
+      args: (query.functionArgs ?? []).map(hexToHexString),
+    };
+  }
+  return query;
+};
 
 export const codeMetadataToHexString = (codeMetadata: CodeMetadata): string => {
   if (typeof codeMetadata === "string") {
     return codeMetadata;
-  }
-  if (codeMetadata === undefined) {
-    codeMetadata = [];
   }
   if (Array.isArray(codeMetadata)) {
     let byteZero = 0;
@@ -436,7 +425,7 @@ const completionEvents = ["completedTxEvent", "SCDeploy", "signalError"];
 const zeroBechAddress =
   "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
 
-type Tx = Transaction | RawTx;
+type BroadTx = Tx | RawTx;
 
 type RawTx = {
   nonce: number;
@@ -451,10 +440,12 @@ type RawTx = {
   version: number;
 };
 
-type Query = {
-  scAddress: Address;
-  funcName: string;
-  args: Hex[];
+type BroadQuery = Query | RawQuery;
+
+export type Query = {
+  callee: Address;
+  functionName: string;
+  functionArgs?: Hex[];
 };
 
 type RawQuery = {

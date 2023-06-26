@@ -1,8 +1,11 @@
-export { FProxy, Block, HighlevelAccount } from "./fproxy";
+export { FProxy, type Block, type HighlevelAccount } from "./fproxy";
 export {
   Proxy,
-  Transaction,
-  DeployContractTxParams,
-  CallContractTxParams,
-  TxParams,
+  Tx,
+  type Query,
+  type DeployContractTxParams,
+  type CallContractTxParams,
+  type TransferTxParams,
+  type UpgradeContractTxParams,
+  type TxParams,
 } from "./proxy";

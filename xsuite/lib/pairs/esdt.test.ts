@@ -29,17 +29,17 @@ beforeEach(async () => {
   });
 });
 
-afterEach(() => {
-  world.terminate();
+afterEach(async () => {
+  await world.terminate();
 });
 
 test("getEsdtsKvs", async () => {
-  expect(() => getEsdtsKvs([{ id: fftId, amount: -1n }])).toThrowError(
+  expect(() => getEsdtsKvs([{ id: fftId, amount: -1n }])).toThrow(
     "Non-positive amount."
   );
-  expect(() =>
-    getEsdtsKvs([{ id: sftId, nonce: -1, amount: 1n }])
-  ).toThrowError("Non-positive nonce.");
+  expect(() => getEsdtsKvs([{ id: sftId, nonce: -1, amount: 1n }])).toThrow(
+    "Non-positive nonce."
+  );
   const fftAmount = 10n;
   await wallet.callContract(contract, {
     functionName: "mint_and_send",

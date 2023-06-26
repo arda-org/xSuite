@@ -2,11 +2,13 @@ import { Address, AddressEncodable } from "../enc";
 import {
   CallContractTxParams,
   DeployContractTxParams,
-  Transaction,
+  TransferTxParams,
+  UpgradeContractTxParams,
+  Tx,
   TxParams,
   Proxy,
+  Query,
 } from "../proxy";
-import { TransferTxParams, UpgradeContractTxParams } from "../proxy/proxy";
 import { Signer } from "./signer";
 
 export class World {
@@ -80,7 +82,7 @@ export class World {
     { gasPrice, ...txParams }: Omit<TxParams, "sender" | "nonce" | "chainId">
   ): Promise<TxResult> {
     const nonce = await this.proxy.getAccountNonce(sender);
-    const tx = new Transaction({
+    const tx = new Tx({
       gasPrice: gasPrice ?? this.#gasPrice,
       ...txParams,
       sender,
@@ -113,7 +115,7 @@ export class World {
   ): Promise<DeployContractTxResult> {
     const txResult = await this.#executeTx(
       sender,
-      Transaction.getParamsToDeployContract(txParams)
+      Tx.getParamsToDeployContract(txParams)
     );
     const scDeployEvent = txResult.tx?.logs?.events.find(
       (e: any) => e.identifier === "SCDeploy"
@@ -139,7 +141,7 @@ export class World {
   ): Promise<CallContractTxResult> {
     const txResult = await this.#executeTx(
       sender,
-      Transaction.getParamsToUpgradeContract({ sender, ...txParams })
+      Tx.getParamsToUpgradeContract({ sender, ...txParams })
     );
     const returnData = getTxReturnData(txResult.tx);
     return { ...txResult, returnData };
@@ -158,7 +160,7 @@ export class World {
   ): Promise<TxResult> {
     return this.#executeTx(
       sender,
-      Transaction.getParamsToTransfer({ sender, ...txParams })
+      Tx.getParamsToTransfer({ sender, ...txParams })
     );
   }
 
@@ -175,10 +177,14 @@ export class World {
   ): Promise<CallContractTxResult> {
     const txResult = await this.#executeTx(
       sender,
-      Transaction.getParamsToCallContract({ sender, ...txParams })
+      Tx.getParamsToCallContract({ sender, ...txParams })
     );
     const returnData = getTxReturnData(txResult.tx);
     return { ...txResult, returnData };
+  }
+
+  query(query: Query) {
+    return this.proxy.query(query);
   }
 }
 

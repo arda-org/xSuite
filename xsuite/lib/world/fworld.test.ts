@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, test } from "@jest/globals";
-import { e } from "../enc";
+import { d, e } from "../enc";
 import { getEsdtsKvs, kvsToPairs } from "../pairs";
 import { assertAccount } from "../test";
 import { FWorld, FWorldContract, FWorldWallet } from "./fworld";
@@ -10,8 +10,7 @@ let wallet: FWorldWallet;
 let otherWallet: FWorldWallet;
 let contract: FWorldContract;
 const fftId = "FFT-abcdef";
-const storageCode = readFileHex("contracts/storage/output/storage.wasm");
-const esdtCode = readFileHex("contracts/esdt/output/esdt.wasm");
+const worldCode = readFileHex("contracts/world/output/world.wasm");
 
 beforeEach(async () => {
   world = await FWorld.start();
@@ -23,7 +22,9 @@ beforeEach(async () => {
   contract = await world.createContract({
     balance: 10n ** 18n,
     esdts: [{ id: fftId, amount: 10n ** 18n }],
-    code: readFileHex("contracts/world/output/world.wasm"),
+    code: worldCode,
+    codeMetadata: ["payable"],
+    storage: [[e.Str("n"), e.U64(1)]],
   });
 });
 
@@ -70,7 +71,10 @@ test("FWorldContract.getAccountBalance", async () => {
 
 test("FWorldContract.getAccountPairs", async () => {
   expect(await contract.getAccountPairs()).toEqual(
-    kvsToPairs(getEsdtsKvs([{ id: fftId, amount: 10n ** 18n }]))
+    kvsToPairs([
+      ...getEsdtsKvs([{ id: fftId, amount: 10n ** 18n }]),
+      [e.Str("n"), e.U64(1)],
+    ])
   );
 });
 
@@ -126,57 +130,106 @@ test("FWorldWallet.transfer", async () => {
 
 test("FWorldWallet.deployContract & upgradeContract", async () => {
   const { deployedContract } = await wallet.deployContract({
-    code: storageCode,
-    codeMetadata: [],
+    code: worldCode,
+    codeMetadata: ["readable", "payable", "payableBySc", "upgradeable"],
+    codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
   assertAccount(await deployedContract.getAccountWithPairs(), {
-    code: storageCode,
+    code: worldCode,
+    containsStorage: [[e.Str("n"), e.U64(1)]],
   });
   await wallet.upgradeContract({
     callee: deployedContract,
-    code: esdtCode,
-    codeMetadata: [],
+    code: worldCode,
+    codeMetadata: "0000",
+    codeArgs: [e.U64(2)],
     gasLimit: 10_000_000,
   });
   assertAccount(await deployedContract.getAccountWithPairs(), {
-    code: esdtCode,
+    code: worldCode,
+    containsStorage: [[e.Str("n"), e.U64(2)]],
   });
 });
 
-test("FWorldWallet.callContract.assertFail", async () => {
+test("FWorldWallet.callContract with EGLD", async () => {
+  await wallet.callContract(contract, {
+    functionName: "fund",
+    value: 10n ** 17n,
+    gasLimit: 10_000_000,
+  });
+  assertAccount(await wallet.getAccountWithPairs(), {
+    balance: 9n * 10n ** 17n,
+  });
+  assertAccount(await contract.getAccountWithPairs(), {
+    balance: 10n ** 18n + 10n ** 17n,
+  });
+});
+
+test("FWorldWallet.callContract with ESDT", async () => {
+  await wallet.callContract(contract, {
+    functionName: "fund",
+    esdts: [{ id: fftId, amount: 10n ** 17n }],
+    gasLimit: 10_000_000,
+  });
+  assertAccount(await wallet.getAccountWithPairs(), {
+    containsEsdts: [{ id: fftId, amount: 9n * 10n ** 17n }],
+  });
+  assertAccount(await contract.getAccountWithPairs(), {
+    containsEsdts: [{ id: fftId, amount: 10n ** 18n + 10n ** 17n }],
+  });
+});
+
+test("FWorld.query", async () => {
+  const { returnData } = await world.query({
+    callee: contract,
+    functionName: "get_n",
+  });
+  expect(d.U64().topDecode(returnData[0])).toEqual(1n);
+});
+
+test("FWorldWallet.callContract.assertFail - Correct parameters", async () => {
   await wallet
     .callContract(contract, {
-      functionName: "require_ten",
-      functionArgs: [e.U64(11)],
+      functionName: "require_positive",
+      functionArgs: [e.U64(0)],
       gasLimit: 10_000_000,
     })
-    .assertFail({ code: 4, message: "Amount is not equal to 10." });
+    .assertFail({ code: 4, message: "Amount is not positive." });
+});
+
+test("FWorldWallet.callContract.assertFail - Wrong code", async () => {
   await expect(
     wallet
       .callContract(contract, {
-        functionName: "require_ten",
-        functionArgs: [e.U64(11)],
+        functionName: "require_positive",
+        functionArgs: [e.U64(0)],
         gasLimit: 10_000_000,
       })
       .assertFail({ code: 5 })
-  ).rejects.toThrowError("Failed with unexpected error code.");
+  ).rejects.toThrow("Failed with unexpected error code.");
+});
+
+test("FWorldWallet.callContract.assertFail - Wrong message", async () => {
   await expect(
     wallet
       .callContract(contract, {
-        functionName: "require_ten",
-        functionArgs: [e.U64(11)],
+        functionName: "require_positive",
+        functionArgs: [e.U64(0)],
         gasLimit: 10_000_000,
       })
       .assertFail({ message: "" })
-  ).rejects.toThrowError("Failed with unexpected error message.");
+  ).rejects.toThrow("Failed with unexpected error message.");
+});
+
+test("FWorldWallet.callContract.assertFail - Transaction not failing", async () => {
   await expect(
     wallet
       .callContract(contract, {
-        functionName: "require_ten",
-        functionArgs: [e.U64(10)],
+        functionName: "require_positive",
+        functionArgs: [e.U64(1)],
         gasLimit: 10_000_000,
       })
       .assertFail()
-  ).rejects.toThrowError("Transaction has not failed.");
+  ).rejects.toThrow("Transaction has not failed.");
 });

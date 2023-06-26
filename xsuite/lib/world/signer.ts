@@ -37,43 +37,51 @@ export class KeystoreSigner extends UserSigner {
     super(BaseUserSigner.fromWallet(keystore, password, addressIndex));
   }
 
-  static async create(filePath: string) {
+  static createFile(filePath: string, password: string): void;
+  static createFile(filePath: string, password?: undefined): Promise<void>;
+  static createFile(filePath: string, password?: string): void | Promise<void> {
     filePath = path.resolve(filePath);
     if (fs.existsSync(filePath)) {
-      console.log(chalk.red(`Wallet already exists at ${filePath}`));
+      log(chalk.red(`Wallet already exists at ${filePath}`));
       return;
     }
-    console.log(`Creating new keystore wallet at "${filePath}"...`);
-    const password = await inputHidden("Enter password: ");
-    const passwordAgain = await inputHidden("Re-enter password: ");
-    if (password !== passwordAgain) {
-      console.log(chalk.red("Passwords do not match."));
-      return;
+    if (password === undefined) {
+      return Promise.resolve().then(async () => {
+        log(`Creating new keystore wallet at "${filePath}"...`);
+        const password = await inputHidden("Enter password: ");
+        const passwordAgain = await inputHidden("Re-enter password: ");
+        if (password !== passwordAgain) {
+          log(chalk.red("Passwords do not match."));
+          return;
+        }
+        this.createFile(filePath, password);
+        log(chalk.green("Wallet successfully created."));
+      });
+    } else {
+      const mnemonic = Mnemonic.generate().toString();
+      const keystore = UserWallet.fromMnemonic({ mnemonic, password }).toJSON();
+      fs.writeFileSync(filePath, JSON.stringify(keystore), "utf8");
     }
-    const mnemonic = Mnemonic.generate().toString();
-    const keystore = UserWallet.fromMnemonic({ mnemonic, password }).toJSON();
-    fs.writeFileSync(filePath, JSON.stringify(keystore), "utf8");
-    console.log(chalk.green("Wallet successfully created."));
   }
 
   static fromFile(
     filePath: string,
     password: string,
     addressIndex?: number
-  ): UserSigner;
+  ): KeystoreSigner;
   static fromFile(
     filePath: string,
     password?: undefined,
     addressIndex?: number
-  ): Promise<UserSigner>;
+  ): Promise<KeystoreSigner>;
   static fromFile(
     filePath: string,
     password?: string,
     addressIndex?: number
-  ): UserSigner | Promise<UserSigner> {
+  ): KeystoreSigner | Promise<KeystoreSigner> {
     if (password === undefined) {
       filePath = path.resolve(filePath);
-      console.log(`Loading keystore wallet at "${filePath}"...`);
+      log(`Loading keystore wallet at "${filePath}"...`);
       return inputHidden("Enter password: ").then((password) => {
         return this.fromFile(filePath, password, addressIndex);
       });
@@ -84,28 +92,30 @@ export class KeystoreSigner extends UserSigner {
   }
 }
 
+function log(...msgs: string[]) {
+  process.stdout.write(msgs.join(" ") + "\n");
+}
+
 const inputHidden = async (query: string): Promise<string> => {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
   const answer = await new Promise<string>((resolve) => {
-    const onData = (char: string | Buffer) => {
-      char = char + "";
-      switch (char) {
+    const onData = (b: Buffer) => {
+      switch (b.toString().slice(-1)) {
         case "\n":
         case "\r":
         case "\u0004":
           process.stdin.off("data", onData);
           break;
         default:
-          process.stdout.clearLine(0);
-          process.stdout.cursorTo(0);
+          readline.clearLine(process.stdout, 0);
+          readline.cursorTo(process.stdout, 0);
           process.stdout.write(query + Array(rl.line.length + 1).join("*"));
           break;
       }
     };
-
     process.stdin.on("data", onData);
 
     rl.question(query, resolve);

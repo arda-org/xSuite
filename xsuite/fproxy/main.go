@@ -54,6 +54,11 @@ func main() {
 		respond(w, resBody, err)
 	})
 
+	router.Post("/vm-values/query", func(w http.ResponseWriter, r *http.Request) {
+		resBody, err := executor.HandleVmQuery(r)
+		respond(w, resBody, err)
+	})
+
 	router.Post("/admin/set-account", func(w http.ResponseWriter, r *http.Request) {
 		resBody, err := executor.HandleAdminSetAccount(r)
 		respond(w, resBody, err)

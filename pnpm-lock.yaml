@@ -75,12 +75,21 @@ importers:
       '@swc/jest':
         specifier: 0.2.24
         version: 0.2.24(@swc/core@1.3.46)
+      '@types/mock-fs':
+        specifier: ^4.13.1
+        version: 4.13.1
       '@types/node':
         specifier: 18.7.18
         version: 18.7.18
       jest:
         specifier: 29.5.0
         version: 29.5.0(@types/node@18.7.18)
+      mock-fs:
+        specifier: ^5.2.0
+        version: 5.2.0
+      mock-stdin:
+        specifier: ^1.0.0
+        version: 1.0.0
       open:
         specifier: ^9.1.0
         version: 9.1.0
@@ -1386,6 +1395,12 @@ packages:
 
   /@types/long@4.0.2:
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
+
+  /@types/mock-fs@4.13.1:
+    resolution: {integrity: sha512-m6nFAJ3lBSnqbvDZioawRvpLXSaPyn52Srf7OfzjubYbYX8MTUdIgDxQl0wEapm4m/pNYSd9TXocpQ0TvZFlYA==}
+    dependencies:
+      '@types/node': 18.16.18
+    dev: true
 
   /@types/node@11.11.6:
     resolution: {integrity: sha512-Exw4yUWMBXM3X+8oqzJNRqZSwUAaS4+7NdvHqQuFi/d+synz++xmX3QIf+BFqneW8N31R8Ky+sikfZUXq07ggQ==}
@@ -3619,7 +3634,7 @@ packages:
       '@jest/test-result': 29.5.0
       '@jest/transform': 29.5.0
       '@jest/types': 29.5.0
-      '@types/node': 18.7.18
+      '@types/node': 18.16.18
       chalk: 4.1.2
       emittery: 0.13.1
       graceful-fs: 4.2.11
@@ -3650,7 +3665,7 @@ packages:
       '@jest/test-result': 29.5.0
       '@jest/transform': 29.5.0
       '@jest/types': 29.5.0
-      '@types/node': 18.7.18
+      '@types/node': 18.16.18
       chalk: 4.1.2
       cjs-module-lexer: 1.2.2
       collect-v8-coverage: 1.0.1
@@ -4029,6 +4044,15 @@ packages:
     hasBin: true
     dev: true
 
+  /mock-fs@5.2.0:
+    resolution: {integrity: sha512-2dF2R6YMSZbpip1V1WHKGLNjr/k48uQClqMVb5H3MOvwc9qhYis3/IWbj02qIg/Y8MDXKFF4c5v0rxx2o6xTZw==}
+    engines: {node: '>=12.0.0'}
+    dev: true
+
+  /mock-stdin@1.0.0:
+    resolution: {integrity: sha512-tukRdb9Beu27t6dN+XztSRHq9J0B/CoAOySGzHfn8UTfmqipA5yNT/sDUEyYdAV3Hpka6Wx6kOMxuObdOex60Q==}
+    dev: true
+
   /ms@2.1.2:
     resolution: {integrity: sha512-sGkPx+VjMtmA6MX27oA4FBFELFCZZ4S4XqeGOXCv68tT+jb3vk/RyaKWP0PTKyWtmLSM0b+adUTEvbs1PEaH2w==}
     dev: true
@@ -4389,7 +4413,7 @@ packages:
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.0
       '@types/long': 4.0.2
-      '@types/node': 18.7.18
+      '@types/node': 18.16.18
       long: 4.0.0
     dev: true
 

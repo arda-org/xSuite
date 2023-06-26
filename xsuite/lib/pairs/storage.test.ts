@@ -18,8 +18,8 @@ beforeEach(async () => {
   }));
 });
 
-afterEach(() => {
-  world.terminate();
+afterEach(async () => {
+  await world.terminate();
 });
 
 test("s.SingleValueMapper", async () => {
@@ -47,7 +47,7 @@ test("s.SingleValueMapper", async () => {
 });
 
 test("s.SetMapper", async () => {
-  expect(() => s.SetMapper("set", [[0, e.U64(0)]])).toThrowError(
+  expect(() => s.SetMapper("set", [[0, e.U64(0)]])).toThrow(
     "Negative id not allowed."
   );
   await wallet.callContract(contract, {
