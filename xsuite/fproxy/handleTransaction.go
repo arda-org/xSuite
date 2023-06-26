@@ -16,7 +16,6 @@ import (
 )
 
 func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
-	reqBody, _ := io.ReadAll(r.Body)
 	ae.vmTestExecutor.World.CreateStateBackup()
 	var err error
 	defer func() {
@@ -33,6 +32,7 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 		}
 	}()
 
+	reqBody, _ := io.ReadAll(r.Body)
 	var rawTx RawTx
 	err = json.Unmarshal(reqBody, &rawTx)
 	if err != nil {
