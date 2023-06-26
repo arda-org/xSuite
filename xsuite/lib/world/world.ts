@@ -56,6 +56,10 @@ export class World {
     return this.proxy.getAccountBalance(address);
   }
 
+  getAccount(address: Address) {
+    return this.proxy.getAccount(address);
+  }
+
   getAccountPairs(address: Address) {
     return this.proxy.getAccountPairs(address);
   }
@@ -200,6 +204,10 @@ export class WorldWallet extends Signer {
     return this.world.getAccountBalance(this);
   }
 
+  getAccount() {
+    return this.world.getAccount(this);
+  }
+
   getAccountPairs() {
     return this.world.getAccountPairs(this);
   }
@@ -211,13 +219,13 @@ export class WorldWallet extends Signer {
   executeTx(
     txParams: Omit<TxParams, "sender" | "nonce" | "chainId">
   ): TxResultPromise<TxResult> {
-    return this.world.executeTx(this.signer, txParams);
+    return this.world.executeTx(this, txParams);
   }
 
   deployContract(
     txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">
   ) {
-    return this.world.deployContract(this.signer, txParams).then((data) => ({
+    return this.world.deployContract(this, txParams).then((data) => ({
       ...data,
       deployedContract: new WorldContract(this.world, data.deployedAddress),
     }));
@@ -226,13 +234,13 @@ export class WorldWallet extends Signer {
   upgradeContract(
     txParams: Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">
   ): TxResultPromise<CallContractTxResult> {
-    return this.world.upgradeContract(this.signer, txParams);
+    return this.world.upgradeContract(this, txParams);
   }
 
   transfer(
     txParams: Omit<TransferTxParams, "sender" | "nonce" | "chainId">
   ): TxResultPromise<TxResult> {
-    return this.world.transfer(this.signer, txParams);
+    return this.world.transfer(this, txParams);
   }
 
   callContract(
@@ -242,7 +250,7 @@ export class WorldWallet extends Signer {
       "sender" | "nonce" | "chainId" | "callee"
     >
   ) {
-    return this.world.callContract(this.signer, { callee, ...txParams });
+    return this.world.callContract(this, { callee, ...txParams });
   }
 }
 
@@ -316,7 +324,7 @@ export class TxResultPromise<T> extends Promise<T> {
     return this.then(null, onrejected);
   }
 
-  assertFail({ code, message }: { code?: number; message?: string }) {
+  assertFail({ code, message }: { code?: number; message?: string } = {}) {
     return this.then(() => {
       throw new Error("Transaction has not failed.");
     }).catch((error) => {

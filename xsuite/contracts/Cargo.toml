@@ -6,4 +6,6 @@ members = [
   "esdt/meta",
   "storage",
   "storage/meta",
+  "world",
+  "world/meta",
 ]

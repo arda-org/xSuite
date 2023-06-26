@@ -1,3 +1,9 @@
+import fs from "node:fs";
+
+export const readFileHex = (path: string) => {
+  return fs.readFileSync(path, "hex");
+};
+
 export const numberToBytesAddress = (n: number, isSc: boolean): Uint8Array => {
   if (n <= 0) {
     throw new Error("Number must be positive.");

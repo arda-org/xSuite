@@ -34,6 +34,11 @@ func main() {
 		respond(w, resBody, err)
 	})
 
+	router.Get("/address/{address}/balance", func(w http.ResponseWriter, r *http.Request) {
+		resBody, err := executor.HandleAddressBalance(r)
+		respond(w, resBody, err)
+	})
+
 	router.Get("/address/{address}/keys", func(w http.ResponseWriter, r *http.Request) {
 		resBody, err := executor.HandleAddressKeys(r)
 		respond(w, resBody, err)

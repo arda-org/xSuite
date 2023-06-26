@@ -44,6 +44,22 @@ func (ae *Executor) HandleAddressNonce(r *http.Request) (interface{}, error) {
 	return jData, nil
 }
 
+func (ae *Executor) HandleAddressBalance(r *http.Request) (interface{}, error) {
+	bechAddress := chi.URLParam(r, "address")
+	address, err := addressConverter.Decode(bechAddress)
+	if err != nil {
+		return nil, err
+	}
+	account := ae.vmTestExecutor.World.AcctMap.GetAccount(address)
+	jData := map[string]interface{}{
+		"data": map[string]interface{}{
+			"balance": account.Balance.String(),
+		},
+		"code": "successful",
+	}
+	return jData, nil
+}
+
 func (ae *Executor) HandleAddressKeys(r *http.Request) (interface{}, error) {
 	bechAddress := chi.URLParam(r, "address")
 	address, err := addressConverter.Decode(bechAddress)

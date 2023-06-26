@@ -66,11 +66,6 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 		return nil, err
 	}
 	tx.Tx.To = mj.JSONBytesFromString{Value: receiver}
-	if isAllZero(receiver) {
-		tx.Tx.Type = mj.ScDeploy
-	} else {
-		tx.Tx.Type = mj.ScCall
-	}
 	egldValue, err := stringToBigint(rawTx.Value)
 	if err != nil {
 		return nil, err
@@ -83,14 +78,14 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 		}
 		dataParts := strings.Split(string(dataBytes), "@")
 		i := 0
-		if tx.Tx.Type == mj.ScDeploy {
+		if isAllZero(receiver) {
 			code, err := hex.DecodeString(dataParts[i])
 			if err != nil {
 				return nil, err
 			}
 			tx.Tx.Code = mj.JSONBytesFromString{Value: code}
 			i += 3
-		} else if tx.Tx.Type == mj.ScCall {
+		} else {
 			if dataParts[i] == "MultiESDTNFTTransfer" {
 				if !bytes.Equal(sender, receiver) {
 					return nil, errors.New("receiver and sender are not equal")
@@ -130,25 +125,38 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 						Value: mj.JSONBigInt{Value: amount},
 					})
 				}
-				function, err := hex.DecodeString(dataParts[i])
+				if i < len(dataParts) {
+					function, err := hex.DecodeString(dataParts[i])
+					if err != nil {
+						return nil, err
+					}
+					tx.Tx.Function = string(function)
+					i += 1
+				}
+			} else {
+				if i < len(dataParts) {
+					tx.Tx.Function = dataParts[i]
+					i += 1
+				}
+			}
+		}
+		if i < len(dataParts) {
+			tx.Tx.Arguments = []mj.JSONBytesFromTree{}
+			for _, rawArgument := range dataParts[i:] {
+				argument, err := hex.DecodeString(rawArgument)
 				if err != nil {
 					return nil, err
 				}
-				tx.Tx.Function = string(function)
-				i += 1
-			} else {
-				tx.Tx.Function = dataParts[i]
-				i += 1
+				tx.Tx.Arguments = append(tx.Tx.Arguments, mj.JSONBytesFromTree{Value: argument})
 			}
 		}
-		tx.Tx.Arguments = []mj.JSONBytesFromTree{}
-		for _, rawArgument := range dataParts[i:] {
-			argument, err := hex.DecodeString(rawArgument)
-			if err != nil {
-				return nil, err
-			}
-			tx.Tx.Arguments = append(tx.Tx.Arguments, mj.JSONBytesFromTree{Value: argument})
-		}
+	}
+	if isAllZero(receiver) {
+		tx.Tx.Type = mj.ScDeploy
+	} else if tx.Tx.Function != "" {
+		tx.Tx.Type = mj.ScCall
+	} else {
+		tx.Tx.Type = mj.Transfer
 	}
 	if tx.Tx.Type == mj.ScDeploy {
 		ae.scCounter += 1

@@ -135,7 +135,7 @@ export class FWorldWallet extends WorldWallet {
   deployContract(
     txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">
   ) {
-    return this.world.deployContract(this.signer, txParams).then((data) => ({
+    return this.world.deployContract(this, txParams).then((data) => ({
       ...data,
       deployedContract: new FWorldContract(this.world, data.deployedAddress),
     }));
