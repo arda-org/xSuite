@@ -91,8 +91,11 @@ func respond(w http.ResponseWriter, resBody interface{}, err error) {
 		resBodyJson, err = json.Marshal(resBody)
 	}
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	} else {
-		fmt.Fprint(w, string(resBodyJson))
+		resBodyJson, _ = json.Marshal(map[string]interface{}{
+			"error": err.Error(),
+			"code": "error",
+		})
+		w.WriteHeader(http.StatusBadRequest)
 	}
+	fmt.Fprintln(w, string(resBodyJson))
 }
