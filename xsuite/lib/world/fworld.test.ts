@@ -17,7 +17,7 @@ beforeEach(async () => {
     balance: 10n ** 18n,
     esdts: [{ id: fftId, amount: 10n ** 18n }],
   });
-  otherWallet = await world.createWallet({});
+  otherWallet = await world.createWallet();
   contract = await world.createContract({
     balance: 10n ** 18n,
     esdts: [{ id: fftId, amount: 10n ** 18n }],
@@ -29,6 +29,24 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await world.terminate();
+});
+
+test("FWorld.createWallet()", async () => {
+  const wallet = await world.createWallet();
+  assertAccount(await wallet.getAccountWithPairs(), {});
+});
+
+test("FWorld.createContract()", async () => {
+  const contract = await world.createContract();
+  assertAccount(await contract.getAccountWithPairs(), { code: "00" });
+});
+
+test("FWorld.query", async () => {
+  const { returnData } = await world.query({
+    callee: contract,
+    functionName: "get_n",
+  });
+  expect(d.U64().topDecode(returnData[0])).toEqual(1n);
 });
 
 test("FWorldWallet.getAccountNonce", async () => {
@@ -179,14 +197,6 @@ test("FWorldWallet.callContract with ESDT", async () => {
   assertAccount(await contract.getAccountWithPairs(), {
     containsEsdts: [{ id: fftId, amount: 10n ** 18n + 10n ** 17n }],
   });
-});
-
-test("FWorld.query", async () => {
-  const { returnData } = await world.query({
-    callee: contract,
-    functionName: "get_n",
-  });
-  expect(d.U64().topDecode(returnData[0])).toEqual(1n);
 });
 
 test("FWorldWallet.callContract.assertFail - Correct parameters", async () => {

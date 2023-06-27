@@ -1,4 +1,4 @@
-export { FProxy, type Block, type HighlevelAccount } from "./fproxy";
+export { FProxy, type Block, Account } from "./fproxy";
 export {
   Proxy,
   Tx,

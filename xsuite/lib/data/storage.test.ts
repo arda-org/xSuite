@@ -11,7 +11,7 @@ let contract: FWorldContract;
 
 beforeEach(async () => {
   world = await FWorld.start();
-  wallet = await world.createWallet({});
+  wallet = await world.createWallet();
   ({ contract } = await wallet.deployContract({
     code: readFileHex("contracts/storage/output/storage.wasm"),
     codeMetadata: [],

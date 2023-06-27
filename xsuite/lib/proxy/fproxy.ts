@@ -1,15 +1,23 @@
-import { Address, Esdt, getEsdtsKvs, Kv, kvsToPairs, Pairs } from "../data";
+import {
+  Address,
+  addressToHexString,
+  Esdt,
+  getEsdtsKvs,
+  Kv,
+  kvsToPairs,
+  Pairs,
+} from "../data";
 import { CodeMetadata, codeMetadataToHexString, Proxy } from "./proxy";
 
 export class FProxy extends Proxy {
-  static setAccount(baseUrl: string, account: Account) {
+  static setAccount(baseUrl: string, account: BroadAccount) {
     return Proxy.fetch(
       `${baseUrl}/admin/set-account`,
       accountToRawAccount(account)
     );
   }
 
-  setAccount(account: Account) {
+  setAccount(account: BroadAccount) {
     return FProxy.setAccount(this.baseUrl, account);
   }
 
@@ -30,7 +38,10 @@ export class FProxy extends Proxy {
   }
 }
 
-const accountToRawAccount = (account: Account): RawAccount => {
+const accountToRawAccount = (account: BroadAccount): RawAccount => {
+  if (account.code === undefined && isContractAddress(account.address)) {
+    account.code = "00";
+  }
   let pairs: Pairs | undefined;
   if ("esdts" in account || "storage" in account) {
     pairs = kvsToPairs([
@@ -54,9 +65,13 @@ const accountToRawAccount = (account: Account): RawAccount => {
   };
 };
 
-type Account = HighlevelAccount | RawAccount;
+const isContractAddress = (address: Address) => {
+  return addressToHexString(address).startsWith("0000000000000000");
+};
 
-export type HighlevelAccount = {
+type BroadAccount = Account | RawAccount;
+
+export type Account = {
   address: Address;
   nonce?: number;
   balance?: bigint;

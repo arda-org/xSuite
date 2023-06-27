@@ -1,9 +1,4 @@
-import {
-  HighlevelAccount,
-  Block,
-  FProxy,
-  DeployContractTxParams,
-} from "../proxy";
+import { Account, Block, FProxy, DeployContractTxParams } from "../proxy";
 import { startFProxyServer } from "./fproxyServer";
 import { DummySigner, Signer } from "./signer";
 import { numberToBytesAddress } from "./utils";
@@ -39,47 +34,31 @@ export class FWorld extends World {
     return new FWorldContract(this, address);
   }
 
-  createWallet(): FWorldWallet;
-  createWallet(
-    account: Omit<HighlevelAccount, "address">
-  ): Promise<FWorldWallet>;
-  createWallet(
-    account?: Omit<HighlevelAccount, "address">
-  ): FWorldWallet | Promise<FWorldWallet> {
+  async createWallet(account: Omit<Account, "address"> = {}) {
     this.#walletCounter += 1;
     const address = numberToBytesAddress(this.#walletCounter, false);
     const wallet = new FWorldWallet(this, new DummySigner(address));
-    if (account === undefined) {
-      return wallet;
-    }
-    return wallet.setAccount(account).then(() => wallet);
+    await wallet.setAccount(account);
+    return wallet;
   }
 
-  createContract(): FWorldContract;
-  createContract(
-    account: Omit<HighlevelAccount, "address">
-  ): Promise<FWorldContract>;
-  createContract(
-    account?: Omit<HighlevelAccount, "address">
-  ): FWorldContract | Promise<FWorldContract> {
+  async createContract(account: Omit<Account, "address"> = {}) {
     this.#contractCounter += 1;
     const bytesAddress = numberToBytesAddress(this.#contractCounter, true);
     const contract = new FWorldContract(this, bytesAddress);
-    if (account === undefined) {
-      return contract;
-    }
-    return contract.setAccount(account).then(() => contract);
+    await contract.setAccount(account);
+    return contract;
   }
 
   getSystemAccountPairs() {
     return this.getAccountPairs(systemAccountAddress);
   }
 
-  setSystemAccount(account: Omit<HighlevelAccount, "address">) {
+  setSystemAccount(account: Omit<Account, "address">) {
     return this.setAccount({ address: systemAccountAddress, ...account });
   }
 
-  setAccount(account: HighlevelAccount) {
+  setAccount(account: Account) {
     return this.proxy.setAccount(account);
   }
 
@@ -100,7 +79,7 @@ export class FWorldWallet extends WorldWallet {
     this.world = world;
   }
 
-  setAccount(account: Omit<HighlevelAccount, "address">) {
+  setAccount(account: Omit<Account, "address">) {
     return this.world.setAccount({ address: this, ...account });
   }
 
@@ -122,7 +101,7 @@ export class FWorldContract extends WorldContract {
     this.world = world;
   }
 
-  setAccount(account: Omit<HighlevelAccount, "address">) {
+  setAccount(account: Omit<Account, "address">) {
     return this.world.setAccount({ address: this, ...account });
   }
 }

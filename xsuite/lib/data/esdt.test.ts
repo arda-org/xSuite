@@ -13,7 +13,7 @@ const sftId = "SFT-abcdef";
 
 beforeEach(async () => {
   world = await FWorld.start();
-  wallet = await world.createWallet({});
+  wallet = await world.createWallet();
   contract = await world.createContract({
     code: readFileHex("contracts/esdt/output/esdt.wasm"),
     esdts: [
