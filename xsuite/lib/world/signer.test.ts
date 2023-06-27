@@ -11,7 +11,7 @@ afterEach(() => {
   mockFs.restore();
 });
 
-test("KeystoreSigner non interactive", async () => {
+test("KeystoreSigner non-interactive", async () => {
   KeystoreSigner.createFile("wallet.json", "1234");
   const signer = KeystoreSigner.fromFile("wallet.json", "1234");
   const signature = await signer.sign(Buffer.from(""));
@@ -26,11 +26,11 @@ test("KeystoreSigner interactive", async () => {
       stdin.send("1234\n");
     }, 0);
   }, 0);
-  await KeystoreSigner.createFile("wallet.json");
+  await KeystoreSigner.createFileInteractive("wallet.json");
   setTimeout(() => {
     stdin.send("1234\n");
   }, 0);
-  const signer = await KeystoreSigner.fromFile("wallet.json");
+  const signer = await KeystoreSigner.fromFileInteractive("wallet.json");
   const signature = await signer.sign(Buffer.from(""));
   expect(signature.byteLength).toBeGreaterThan(0);
 });
