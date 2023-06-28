@@ -9,7 +9,8 @@ let wallet: FWorldWallet;
 let otherWallet: FWorldWallet;
 let contract: FWorldContract;
 const fftId = "FFT-abcdef";
-const worldCode = readFileHex("contracts/world/output/world.wasm");
+const worldPath = "contracts/world/output/world.wasm";
+const worldCode = readFileHex(worldPath);
 
 beforeEach(async () => {
   world = await FWorld.start();
@@ -39,6 +40,11 @@ test("FWorld.createWallet()", async () => {
 test("FWorld.createContract()", async () => {
   const contract = await world.createContract();
   assertAccount(await contract.getAccountWithPairs(), { code: "00" });
+});
+
+test("FWorld.createContract - file:", async () => {
+  const contract = await world.createContract({ code: `file:${worldPath}` });
+  assertAccount(await contract.getAccountWithPairs(), { code: worldCode });
 });
 
 test("FWorld.query", async () => {
@@ -159,6 +165,30 @@ test("FWorldWallet.deployContract & upgradeContract", async () => {
   await wallet.upgradeContract({
     callee: contract,
     code: worldCode,
+    codeMetadata: "0000",
+    codeArgs: [e.U64(2)],
+    gasLimit: 10_000_000,
+  });
+  assertAccount(await contract.getAccountWithPairs(), {
+    code: worldCode,
+    containsStorage: [[e.Str("n"), e.U64(2)]],
+  });
+});
+
+test("FWorldWallet.deployContract & upgradeContract - file:", async () => {
+  const { contract } = await wallet.deployContract({
+    code: `file:${worldPath}`,
+    codeMetadata: ["readable", "payable", "payableBySc", "upgradeable"],
+    codeArgs: [e.U64(1)],
+    gasLimit: 10_000_000,
+  });
+  assertAccount(await contract.getAccountWithPairs(), {
+    code: worldCode,
+    containsStorage: [[e.Str("n"), e.U64(1)]],
+  });
+  await wallet.upgradeContract({
+    callee: contract,
+    code: `file:${worldPath}`,
     codeMetadata: "0000",
     codeArgs: [e.U64(2)],
     gasLimit: 10_000_000,

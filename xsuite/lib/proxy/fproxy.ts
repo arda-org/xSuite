@@ -39,9 +39,6 @@ export class FProxy extends Proxy {
 }
 
 const accountToRawAccount = (account: BroadAccount): RawAccount => {
-  if (account.code === undefined && isContractAddress(account.address)) {
-    account.code = "00";
-  }
   let pairs: Pairs | undefined;
   if ("esdts" in account || "storage" in account) {
     pairs = kvsToPairs([
@@ -63,10 +60,6 @@ const accountToRawAccount = (account: BroadAccount): RawAccount => {
         : undefined,
     owner: account.owner !== undefined ? account.owner.toString() : undefined,
   };
-};
-
-const isContractAddress = (address: Address) => {
-  return addressToHexString(address).startsWith("0000000000000000");
 };
 
 type BroadAccount = Account | RawAccount;

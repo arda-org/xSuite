@@ -10,6 +10,7 @@ import {
   Query,
 } from "../proxy";
 import { Signer } from "./signer";
+import { readFileHex } from "./utils";
 
 export class World {
   proxy: Proxy;
@@ -113,6 +114,7 @@ export class World {
     sender: Signer,
     txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">
   ): Promise<DeployContractTxResult> {
+    txParams.code = expandCode(txParams.code);
     const txResult = await this.#executeTx(
       sender,
       Tx.getParamsToDeployContract(txParams)
@@ -139,6 +141,7 @@ export class World {
     sender: Signer,
     txParams: Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">
   ): Promise<CallContractTxResult> {
+    txParams.code = expandCode(txParams.code);
     const txResult = await this.#executeTx(
       sender,
       Tx.getParamsToUpgradeContract({ sender, ...txParams })
@@ -369,6 +372,13 @@ const getTxReturnData = (tx: any): string[] => {
     return scr.data.split("@").slice(2);
   }
   return [];
+};
+
+export const expandCode = (code: string) => {
+  if (code.startsWith("file:")) {
+    code = readFileHex(code.slice(5));
+  }
+  return code;
 };
 
 export type TxResult = {

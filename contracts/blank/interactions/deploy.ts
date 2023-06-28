@@ -1,4 +1,4 @@
-import { World, readFileHex, KeystoreSigner } from "xsuite/world";
+import { World, KeystoreSigner } from "xsuite/world";
 
 const main = async () => {
   const signer = await KeystoreSigner.fromFile("wallet.json");
@@ -8,7 +8,7 @@ const main = async () => {
     gasPrice: 1000000000,
   });
   const txResult = await world.deployContract(signer, {
-    code: readFileHex("output/contract.wasm"),
+    code: "file:output/contract.wasm",
     codeMetadata: [],
     gasLimit: 20_000_000,
   });
