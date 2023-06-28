@@ -2,6 +2,7 @@ import { test, beforeEach, afterEach, expect } from "@jest/globals";
 import { FWorld, FWorldContract, FWorldWallet, readFileHex } from "../world";
 import { e } from "./encoding";
 import { getEsdtsKvs } from "./esdt";
+import { hexToHexString } from "./hex";
 import { kvsToPairs } from "./pairs";
 
 let world: FWorld;
@@ -34,12 +35,6 @@ afterEach(async () => {
 });
 
 test("getEsdtsKvs", async () => {
-  expect(() => getEsdtsKvs([{ id: fftId, amount: -1n }])).toThrow(
-    "Non-positive amount."
-  );
-  expect(() => getEsdtsKvs([{ id: sftId, nonce: -1, amount: 1n }])).toThrow(
-    "Non-positive nonce."
-  );
   const fftAmount = 10n;
   await wallet.callContract({
     callee: contract,
@@ -118,7 +113,7 @@ test("getEsdtsKvs", async () => {
           id: sftId,
           nonce: 1,
           amount: 0n,
-          saveNonce: true,
+          metadataNonce: true,
           properties: "01",
           name: sftName1,
           creator: contract,
@@ -131,7 +126,7 @@ test("getEsdtsKvs", async () => {
           id: sftId,
           nonce: 2,
           amount: 0n,
-          saveNonce: true,
+          metadataNonce: true,
           properties: "01",
           name: sftName2,
           creator: contract,
@@ -143,4 +138,14 @@ test("getEsdtsKvs", async () => {
       ])
     )
   ).toEqual(await world.getSystemAccountPairs());
+});
+
+test("getEsdtsKvs - amount 0", () => {
+  const kvs = getEsdtsKvs([
+    { id: fftId, amount: 0n },
+    { id: sftId, nonce: 1, amount: 0n },
+  ]);
+  for (const [, v] of kvs) {
+    expect(hexToHexString(v)).toEqual("");
+  }
 });

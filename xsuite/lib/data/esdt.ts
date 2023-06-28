@@ -10,7 +10,7 @@ export type Esdt = {
   amount?: bigint;
   roles?: Role[];
   lastNonce?: number;
-  saveNonce?: boolean;
+  metadataNonce?: boolean;
   properties?: Hex;
   name?: string;
   creator?: Address;
@@ -41,7 +41,7 @@ const getEsdtKvs = ({
   roles,
   lastNonce,
   properties,
-  saveNonce,
+  metadataNonce,
   name,
   creator,
   royalties,
@@ -53,7 +53,7 @@ const getEsdtKvs = ({
   if (
     amount !== undefined ||
     properties !== undefined ||
-    saveNonce !== undefined ||
+    metadataNonce !== undefined ||
     name !== undefined ||
     creator !== undefined ||
     royalties !== undefined ||
@@ -64,24 +64,10 @@ const getEsdtKvs = ({
     let esdtKey = e.Str(`ELRONDesdt${id}`).toTopHex();
     const message: Record<string, any> = {};
     if (nonce !== undefined && nonce !== 0) {
-      if (nonce < 0) {
-        throw new Error("Non-positive nonce.");
-      }
       esdtKey += e.U64(nonce).toTopHex();
-      message["Type"] = "1";
-    }
-    if (amount !== undefined) {
-      if (amount < 0) {
-        throw new Error("Non-positive amount.");
-      }
-      const bytes = amount > 0 ? e.U(amount).toTopBytes() : [0];
-      message["Value"] = new Uint8Array([0, ...bytes]);
-    }
-    if (properties !== undefined) {
-      message["Properties"] = hexToBytes(properties);
     }
     const metadata: [string, any][] = [];
-    if (saveNonce && nonce !== undefined) {
+    if (metadataNonce && nonce !== undefined) {
       metadata.push(["Nonce", nonce.toString()]);
     }
     if (name !== undefined) {
@@ -101,6 +87,16 @@ const getEsdtKvs = ({
     }
     if (attrs !== undefined) {
       metadata.push(["Attributes", hexToBytes(attrs)]);
+    }
+    if (amount !== undefined && (amount !== 0n || metadata.length > 0)) {
+      if (nonce !== undefined && nonce !== 0) {
+        message["Type"] = "1";
+      }
+      if (properties !== undefined) {
+        message["Properties"] = hexToBytes(properties);
+      }
+      const bytes = amount > 0 ? e.U(amount).toTopBytes() : [0];
+      message["Value"] = new Uint8Array([0, ...bytes]);
     }
     if (metadata.length > 0) {
       message["Metadata"] = Object.fromEntries(metadata);

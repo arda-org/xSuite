@@ -22,7 +22,7 @@ export const assertAccount = (
   if (kvs.length > 0) {
     kvs.forEach(([k, v]) =>
       assert.strictEqual(
-        actualAccount.pairs?.[hexToHexString(k)],
+        actualAccount.pairs?.[hexToHexString(k)] ?? "",
         hexToHexString(v)
       )
     );
