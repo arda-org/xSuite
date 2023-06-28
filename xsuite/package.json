@@ -1,6 +1,6 @@
 {
   "name": "xsuite",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "license": "MIT",
   "scripts": {
     "build": "pnpm build-fproxy && pnpm build-lib",
