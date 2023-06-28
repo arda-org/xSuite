@@ -16,10 +16,8 @@
   "files": [
     "bin",
     "dist",
-    "enc.js",
-    "enc.d.ts",
-    "pairs.js",
-    "pairs.d.ts",
+    "data.js",
+    "data.d.ts",
     "proxy.js",
     "proxy.d.ts",
     "test.js",
