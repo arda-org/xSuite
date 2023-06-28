@@ -1,7 +1,7 @@
 import { World, KeystoreSigner } from "xsuite/world";
 
 const main = async () => {
-  const signer = await KeystoreSigner.fromFile("wallet.json");
+  const signer = await KeystoreSigner.fromFileInteractive("wallet.json");
   const world = World.new({
     proxyUrl: "https://devnet-gateway.multiversx.com",
     chainId: "D",

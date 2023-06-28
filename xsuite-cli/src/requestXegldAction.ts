@@ -9,7 +9,7 @@ export const requestXegldAction = async ({
 }: {
   wallet: string;
 }) => {
-  const signer = await KeystoreSigner.fromFile(walletPath);
+  const signer = await KeystoreSigner.fromFileInteractive(walletPath);
   const address = signer.toString();
   console.log(`Claiming 30 xEGLD for address ${address} ...`);
   const balance = await devnetProxy.getAccountBalance(address);

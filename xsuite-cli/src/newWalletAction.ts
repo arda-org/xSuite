@@ -5,5 +5,5 @@ export const newWalletAction = async ({
 }: {
   path: string;
 }) => {
-  await KeystoreSigner.createFile(walletPath);
+  await KeystoreSigner.createFileInteractive(walletPath);
 };
