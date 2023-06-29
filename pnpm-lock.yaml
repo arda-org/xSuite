@@ -75,18 +75,12 @@ importers:
       '@swc/jest':
         specifier: 0.2.24
         version: 0.2.24(@swc/core@1.3.46)
-      '@types/mock-fs':
-        specifier: ^4.13.1
-        version: 4.13.1
       '@types/node':
         specifier: 18.7.18
         version: 18.7.18
       jest:
         specifier: 29.5.0
         version: 29.5.0(@types/node@18.7.18)
-      mock-fs:
-        specifier: ^5.2.0
-        version: 5.2.0
       mock-stdin:
         specifier: ^1.0.0
         version: 1.0.0
@@ -99,6 +93,9 @@ importers:
       run-script-os:
         specifier: ^1.1.6
         version: 1.1.6
+      tmp-promise:
+        specifier: ^3.0.3
+        version: 3.0.3
       tsx:
         specifier: ^3.12.7
         version: 3.12.7
@@ -1395,12 +1392,6 @@ packages:
 
   /@types/long@4.0.2:
     resolution: {integrity: sha512-MqTGEo5bj5t157U6fA/BiDynNkn0YknVdh48CMPkTSpFTVmvao5UQmm7uEF6xBEo7qIMAlY/JSleYaE6VOdpaA==}
-
-  /@types/mock-fs@4.13.1:
-    resolution: {integrity: sha512-m6nFAJ3lBSnqbvDZioawRvpLXSaPyn52Srf7OfzjubYbYX8MTUdIgDxQl0wEapm4m/pNYSd9TXocpQ0TvZFlYA==}
-    dependencies:
-      '@types/node': 18.16.18
-    dev: true
 
   /@types/node@11.11.6:
     resolution: {integrity: sha512-Exw4yUWMBXM3X+8oqzJNRqZSwUAaS4+7NdvHqQuFi/d+synz++xmX3QIf+BFqneW8N31R8Ky+sikfZUXq07ggQ==}
@@ -4044,11 +4035,6 @@ packages:
     hasBin: true
     dev: true
 
-  /mock-fs@5.2.0:
-    resolution: {integrity: sha512-2dF2R6YMSZbpip1V1WHKGLNjr/k48uQClqMVb5H3MOvwc9qhYis3/IWbj02qIg/Y8MDXKFF4c5v0rxx2o6xTZw==}
-    engines: {node: '>=12.0.0'}
-    dev: true
-
   /mock-stdin@1.0.0:
     resolution: {integrity: sha512-tukRdb9Beu27t6dN+XztSRHq9J0B/CoAOySGzHfn8UTfmqipA5yNT/sDUEyYdAV3Hpka6Wx6kOMxuObdOex60Q==}
     dev: true
@@ -4837,6 +4823,19 @@ packages:
   /titleize@3.0.0:
     resolution: {integrity: sha512-KxVu8EYHDPBdUYdKZdKtU2aj2XfEx9AfjXxE/Aj0vT06w2icA09Vus1rh6eSu1y01akYg6BjIK/hxyLJINoMLQ==}
     engines: {node: '>=12'}
+    dev: true
+
+  /tmp-promise@3.0.3:
+    resolution: {integrity: sha512-RwM7MoPojPxsOBYnyd2hy0bxtIlVrihNs9pj5SUvY8Zz1sQcQG2tG1hSr8PDxfgEB8RNKDhqbIlroIarSNDNsQ==}
+    dependencies:
+      tmp: 0.2.1
+    dev: true
+
+  /tmp@0.2.1:
+    resolution: {integrity: sha512-76SUhtfqR2Ijn+xllcI5P1oyannHNHByD80W1q447gU3mp9G9PSpGdWmjUOHRDPiHYacIk66W7ubDTuPF3BEtQ==}
+    engines: {node: '>=8.17.0'}
+    dependencies:
+      rimraf: 3.0.2
     dev: true
 
   /tmpl@1.0.5:

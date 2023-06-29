@@ -1,14 +1,15 @@
 import { afterEach, beforeEach, expect, test } from "@jest/globals";
-import mockFs from "mock-fs";
 import mockStdin from "mock-stdin";
+import tmp from "tmp-promise";
 import { KeystoreSigner } from "./signer";
 
-beforeEach(() => {
-  mockFs();
+beforeEach(async () => {
+  const dir = await tmp.dir({ unsafeCleanup: true });
+  process.chdir(dir.path);
 });
 
-afterEach(() => {
-  mockFs.restore();
+afterEach(async () => {
+  await tmp.setGracefulCleanup();
 });
 
 test("KeystoreSigner non-interactive", async () => {
