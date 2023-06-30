@@ -81,9 +81,6 @@ importers:
       jest:
         specifier: 29.5.0
         version: 29.5.0(@types/node@18.7.18)
-      mock-stdin:
-        specifier: ^1.0.0
-        version: 1.0.0
       open:
         specifier: ^9.1.0
         version: 9.1.0
@@ -4033,10 +4030,6 @@ packages:
     resolution: {integrity: sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==}
     engines: {node: '>=10'}
     hasBin: true
-    dev: true
-
-  /mock-stdin@1.0.0:
-    resolution: {integrity: sha512-tukRdb9Beu27t6dN+XztSRHq9J0B/CoAOySGzHfn8UTfmqipA5yNT/sDUEyYdAV3Hpka6Wx6kOMxuObdOex60Q==}
     dev: true
 
   /ms@2.1.2:

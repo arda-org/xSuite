@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import path from "node:path";
-import readline from "node:readline";
 import {
   UserSigner as BaseUserSigner,
   Mnemonic,
@@ -8,6 +7,7 @@ import {
 } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
 import { AddressEncodable } from "../data";
+import { inputHidden, log } from "../stdio";
 
 export abstract class Signer extends AddressEncodable {
   abstract sign(data: Buffer): Promise<Buffer>;
@@ -72,35 +72,3 @@ export class KeystoreSigner extends UserSigner {
     return this.fromFile(filePath, password, addressIndex);
   }
 }
-
-function log(...msgs: string[]) {
-  process.stdout.write(msgs.join(" ") + "\n");
-}
-
-const inputHidden = async (query: string): Promise<string> => {
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout,
-  });
-  const answer = await new Promise<string>((resolve) => {
-    const onData = (b: Buffer) => {
-      switch (b.toString().slice(-1)) {
-        case "\n":
-        case "\r":
-        case "\u0004":
-          process.stdin.off("data", onData);
-          break;
-        default:
-          readline.clearLine(process.stdout, 0);
-          readline.cursorTo(process.stdout, 0);
-          process.stdout.write(query + Array(rl.line.length + 1).join("*"));
-          break;
-      }
-    };
-    process.stdin.on("data", onData);
-
-    rl.question(query, resolve);
-  });
-  rl.close();
-  return answer;
-};
