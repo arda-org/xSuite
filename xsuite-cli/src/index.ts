@@ -1,11 +1,13 @@
 import { Command } from "commander";
 import { version } from "../package.json";
-import { buildAction } from "./buildAction";
-import { newAction } from "./newAction";
-import { newWalletAction } from "./newWalletAction";
-import { requestXegldAction } from "./requestXegldAction";
-import { setupRustAction } from "./setupRustAction";
-import { testRustAction } from "./testRustAction";
+import {
+  newWalletAction,
+  requestXegldAction,
+  setupRustAction,
+  testRustAction,
+  buildAction,
+  newAction,
+} from "./actions";
 
 if (process.env["INIT_CWD"]) {
   process.chdir(process.env["INIT_CWD"]);
