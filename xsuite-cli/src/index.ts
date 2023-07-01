@@ -44,7 +44,7 @@ program
 program
   .command("new-wallet")
   .description("Create a new wallet.")
-  .requiredOption("--path <path>", "Wallet path")
+  .requiredOption("--wallet <wallet>", "Wallet path")
   .option("--password <password>", "Wallet password")
   .action((options) => newWalletAction(options));
 
@@ -52,6 +52,7 @@ program
   .command("request-xegld")
   .description("Request 30 xEGLD (once per day).")
   .requiredOption("--wallet <path>", "Wallet path")
+  .option("--password <password>", "Wallet password")
   .action((options) => requestXegldAction(options));
 
 program.parse(process.argv);

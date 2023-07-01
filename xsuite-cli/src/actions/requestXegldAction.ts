@@ -7,12 +7,19 @@ import { KeystoreSigner } from "xsuite/world";
 
 export const requestXegldAction = async ({
   wallet: walletPath,
+  password,
 }: {
   wallet: string;
+  password?: string;
 }) => {
-  const signer = await KeystoreSigner.fromFileInteractive(walletPath);
+  let signer: KeystoreSigner;
+  if (password === undefined) {
+    signer = await KeystoreSigner.fromFileInteractive(walletPath);
+  } else {
+    signer = KeystoreSigner.fromFile(walletPath, password);
+  }
   const address = signer.toString();
-  log(`Claiming 30 xEGLD for address ${address} ...`);
+  log(`Claiming 30 xEGLD for address "${address}"...`);
 
   const client = new NativeAuthClient({
     origin: "https://devnet-wallet.multiversx.com",
