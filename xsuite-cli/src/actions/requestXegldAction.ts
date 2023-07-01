@@ -13,7 +13,6 @@ export const requestXegldAction = async ({
   const signer = await KeystoreSigner.fromFileInteractive(walletPath);
   const address = signer.toString();
   log(`Claiming 30 xEGLD for address ${address} ...`);
-  const balance = await devnetProxy.getAccountBalance(address);
 
   const client = new NativeAuthClient({
     origin: "https://devnet-wallet.multiversx.com",
@@ -28,7 +27,7 @@ export const requestXegldAction = async ({
     .then((b) => b.toString("hex"));
   const accessToken = client.getToken(address, initToken, signature);
 
-  const errorMessage = await fetch(
+  const faucetRes = await fetch(
     "https://devnet-extras-api.multiversx.com/faucet",
     {
       headers: {
@@ -36,22 +35,17 @@ export const requestXegldAction = async ({
       },
       method: "POST",
     }
-  )
-    .then((r) => r.json())
-    .then((d) => {
-      if (d["status"] !== "success") {
-        return d["message"] as string;
-      }
-    });
+  ).then((r) => r.json());
 
-  if (errorMessage) {
-    log(chalk.red(`Error: ${errorMessage}`));
-    process.exit(1);
+  if (faucetRes["status"] !== "success") {
+    log(chalk.red(`Error: ${faucetRes["message"]}`));
+    return;
   }
 
-  let newBalance = balance;
-  while (newBalance - balance < 30n * 10n ** 18n) {
-    newBalance = await devnetProxy.getAccountBalance(address);
+  const initialBalance = await devnetProxy.getAccountBalance(address);
+  let balance = initialBalance;
+  while (balance - initialBalance < 30n * 10n ** 18n) {
+    balance = await devnetProxy.getAccountBalance(address);
     await new Promise((r) => setTimeout(r, 1000));
   }
 
