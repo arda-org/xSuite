@@ -38,6 +38,7 @@ const createStdInterceptor = (std: "stdout" | "stderr") => {
   let data = "";
   return {
     start() {
+      data = "";
       process[std].write = (chunk) => {
         data += chunk;
         return true;
