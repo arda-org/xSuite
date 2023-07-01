@@ -45,6 +45,7 @@ program
   .command("new-wallet")
   .description("Create a new wallet.")
   .requiredOption("--path <path>", "Wallet path")
+  .option("--password <password>", "Wallet password")
   .action((options) => newWalletAction(options));
 
 program
