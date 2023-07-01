@@ -1,9 +1,9 @@
 import { SignableMessage } from "@multiversx/sdk-core";
 import { NativeAuthClient } from "@multiversx/sdk-native-auth-client";
-import chalk from "chalk";
 import { log } from "xsuite/dist/stdio";
 import { Proxy } from "xsuite/proxy";
 import { KeystoreSigner } from "xsuite/world";
+import { logError, logSuccess } from "./helpers";
 
 export const requestXegldAction = async ({
   wallet: walletPath,
@@ -45,7 +45,7 @@ export const requestXegldAction = async ({
   ).then((r) => r.json());
 
   if (faucetRes["status"] !== "success") {
-    log(chalk.red(`Error: ${faucetRes["message"]}`));
+    logError(`Error: ${faucetRes["message"]}`);
     return;
   }
 
@@ -56,7 +56,7 @@ export const requestXegldAction = async ({
     await new Promise((r) => setTimeout(r, 1000));
   }
 
-  log(chalk.green("Wallet well received 30 xEGLD."));
+  logSuccess("Wallet well received 30 xEGLD.");
 };
 
 const devnetProxy = new Proxy("https://devnet-gateway.multiversx.com");

@@ -34,13 +34,13 @@ test("new-wallet --wallet wallet.json", async () => {
   stdout.stop();
   expect(fs.existsSync("wallet.json")).toEqual(true);
   const walletPath = path.resolve("wallet.json");
-  expect(stdout.output).toEqual(
-    `Creating keystore wallet at "${walletPath}"...\n` +
-      "Enter password: \n" +
-      "Re-enter password: \n" +
-      chalk.green(`Wallet created at "${walletPath}".`) +
-      "\n"
-  );
+  expect(stdout.output.split("\n")).toEqual([
+    `Creating keystore wallet at "${walletPath}"...`,
+    "Enter password: ",
+    "Re-enter password: ",
+    chalk.green(`Wallet created at "${walletPath}".`),
+    "",
+  ]);
 });
 
 test("new-wallet --wallet wallet.json | error: passwords don't match", async () => {
@@ -54,13 +54,13 @@ test("new-wallet --wallet wallet.json | error: passwords don't match", async () 
   await newWalletAction({ wallet: "wallet.json" });
   stdout.stop();
   const walletPath = path.resolve("wallet.json");
-  expect(stdout.output).toEqual(
-    `Creating keystore wallet at "${walletPath}"...\n` +
-      "Enter password: \n" +
-      "Re-enter password: \n" +
-      chalk.red(`Passwords do not match.`) +
-      "\n"
-  );
+  expect(stdout.output.split("\n")).toEqual([
+    `Creating keystore wallet at "${walletPath}"...`,
+    "Enter password: ",
+    "Re-enter password: ",
+    chalk.red(`Passwords do not match.`),
+    "",
+  ]);
 });
 
 test("new-wallet --wallet wallet.json --password 1234", async () => {
@@ -80,12 +80,11 @@ test("new-wallet --wallet wallet.json --password 1234 | error: already exists", 
   await newWalletAction({ wallet: "wallet.json", password: "1234" });
   stdout.stop();
   const walletPath = path.resolve("wallet.json");
-  expect(stdout.output).toEqual(
-    chalk.green(`Wallet created at "${walletPath}".`) +
-      "\n" +
-      chalk.red(`Wallet already exists at "${walletPath}".`) +
-      "\n"
-  );
+  expect(stdout.output.split("\n")).toEqual([
+    chalk.green(`Wallet created at "${walletPath}".`),
+    chalk.red(`Wallet already exists at "${walletPath}".`),
+    "",
+  ]);
 });
 
 test("request-xegld --wallet wallet.json", async () => {
@@ -128,14 +127,52 @@ test("request-xegld --wallet wallet.json", async () => {
   await requestXegldAction({ wallet: "wallet.json", password: "1234" });
   stdout.stop();
   server.close();
-  expect(stdout.output).toEqual(
-    `Claiming 30 xEGLD for address "${address}"...\n` +
-      chalk.green("Wallet well received 30 xEGLD.") +
-      "\n" +
-      `Claiming 30 xEGLD for address "${address}"...\n` +
-      chalk.red("Error: Already claimed today.") +
-      "\n"
-  );
+  expect(stdout.output.split("\n")).toEqual([
+    `Claiming 30 xEGLD for address "${address}"...`,
+    chalk.green("Wallet well received 30 xEGLD."),
+    `Claiming 30 xEGLD for address "${address}"...`,
+    chalk.red("Error: Already claimed today."),
+    "",
+  ]);
+});
+
+test("new --dir contract", async () => {
+  stdout.start();
+  await newAction({ dir: "contract" });
+  stdout.stop();
+  expect(fs.readdirSync(process.cwd()).length).toEqual(1);
+  const dirPath = path.resolve("contract");
+  expect(stdout.output.split("\n")).toEqual([
+    chalk.blue(
+      `Downloading contract ${chalk.magenta("blank")} in "${dirPath}"...`
+    ),
+    "",
+    chalk.blue("Installing packages..."),
+    chalk.cyan("$ npm install"),
+    "",
+    chalk.blue("Initialized a git repository."),
+    "",
+    chalk.green(
+      `Successfully created ${chalk.magenta("blank")} in "${dirPath}".`
+    ),
+    "",
+    "Inside that directory, you can run several commands:",
+    "",
+    chalk.cyan("  npm run build"),
+    "    Builds the contract.",
+    "",
+    chalk.cyan("  npm run test"),
+    "    Tests the contract.",
+    "",
+    chalk.cyan("  npm run deploy"),
+    "    Deploys the contract to devnet.",
+    "",
+    "We suggest that you begin by typing:",
+    "",
+    chalk.cyan(`  cd ${dirPath}`),
+    chalk.cyan("  npm run build"),
+    "",
+  ]);
 });
 
 test("new --dir contract | error: already exists", async () => {

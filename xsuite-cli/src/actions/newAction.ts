@@ -8,53 +8,53 @@ import util from "node:util";
 import chalk from "chalk";
 import tar from "tar";
 import { log } from "xsuite/dist/stdio";
-import { logTitle, runCommand } from "./helpers";
+import { logTitle, logAndRunCommand, logCommand, logError } from "./helpers";
 
 export const newAction = async ({ dir: dirPath }: { dir: string }) => {
   dirPath = path.resolve(dirPath);
   if (fs.existsSync(dirPath)) {
-    log(chalk.red(`Directory already exists at "${dirPath}".`));
+    logError(`Directory already exists at "${dirPath}".`);
     return;
   } else {
     fs.mkdirSync(dirPath, { recursive: true });
   }
   const contract = "blank";
   logTitle(
-    `Downloading contract ${chalk.cyan(contract)} in ${chalk.cyan(dirPath)}...`
+    `Downloading contract ${chalk.magenta(contract)} in "${dirPath}"...`
   );
-  process.chdir(dirPath);
-  await downloadAndExtractContract(contract);
+  await downloadAndExtractContract(contract, dirPath);
   log();
   logTitle("Installing packages...");
-  runCommand("npm", ["install"]);
-  if (tryGitInit()) {
+  logAndRunCommand("npm", ["install"], { cwd: dirPath });
+  if (tryGitInit(dirPath)) {
     log();
     logTitle("Initialized a git repository.");
   }
   log();
-  logTitle(
-    `Successfully created ${chalk.cyan(contract)} in ${chalk.cyan(dirPath)}.`
+  log(
+    chalk.green(
+      `Successfully created ${chalk.magenta(contract)} in "${dirPath}".`
+    )
   );
   log();
   log("Inside that directory, you can run several commands:");
   log();
-  log(chalk.cyan(`  npm run build`));
+  logCommand(`  npm run build`);
   log("    Builds the contract.");
   log();
-  log(chalk.cyan(`  npm run test`));
+  logCommand(`  npm run test`);
   log("    Tests the contract.");
   log();
-  log(chalk.cyan(`  npm run deploy`));
+  logCommand(`  npm run deploy`);
   log("    Deploys the contract to devnet.");
   log();
   log("We suggest that you begin by typing:");
   log();
-  log(chalk.cyan("  cd"), dirPath);
-  log(chalk.cyan("  npm run build"));
-  log();
+  logCommand(`  cd ${dirPath}`);
+  logCommand("  npm run build");
 };
 
-const downloadAndExtractContract = async (contract: string) => {
+const downloadAndExtractContract = async (contract: string, cwd: string) => {
   const file = await downloadTar(
     "https://codeload.github.com/arda-org/xSuite.js/tar.gz/main"
   );
@@ -62,6 +62,7 @@ const downloadAndExtractContract = async (contract: string) => {
     file,
     strip: 2 + contract.split("/").length,
     filter: (p) => p.includes(`xSuite.js-main/contracts/${contract}/`),
+    cwd,
   });
   fs.unlinkSync(file);
 };
@@ -81,22 +82,19 @@ const downloadTar = (url: string) => {
   });
 };
 
-const tryGitInit = (): boolean => {
+const tryGitInit = (cwd: string): boolean => {
   try {
-    execSync("git --version", { stdio: "ignore" });
-    execSync("git init", { stdio: "ignore" });
-    execSync("git checkout -b main", { stdio: "ignore" });
-    execSync("git add -A", { stdio: "ignore" });
+    execSync("git --version", { stdio: "ignore", cwd });
+    execSync("git init", { stdio: "ignore", cwd });
+    execSync("git checkout -b main", { stdio: "ignore", cwd });
+    execSync("git add -A", { stdio: "ignore", cwd });
     execSync('git commit -m "Initial commit from xSuite CLI"', {
       stdio: "ignore",
+      cwd,
     });
     return true;
   } catch (_) {
-    try {
-      fs.rmSync(".git", { recursive: true, force: true });
-    } catch (_) {
-      // Nothing
-    }
+    fs.rmSync(path.resolve(cwd, ".git"), { recursive: true, force: true });
     return false;
   }
 };

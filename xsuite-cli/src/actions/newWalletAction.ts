@@ -1,8 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
-import chalk from "chalk";
-import { log } from "xsuite/dist/stdio";
 import { KeystoreSigner } from "xsuite/world";
+import { logError, logSuccess } from "./helpers";
 
 export const newWalletAction = async ({
   wallet: walletPath,
@@ -13,7 +12,7 @@ export const newWalletAction = async ({
 }) => {
   walletPath = path.resolve(walletPath);
   if (fs.existsSync(walletPath)) {
-    log(chalk.red(`Wallet already exists at "${walletPath}".`));
+    logError(`Wallet already exists at "${walletPath}".`);
     return;
   }
   if (password === undefined) {
@@ -21,7 +20,7 @@ export const newWalletAction = async ({
       await KeystoreSigner.createFileInteractive(walletPath);
     } catch (err) {
       if (err instanceof Error) {
-        log(chalk.red(err.message));
+        logError(err.message);
         return;
       } else {
         throw err;
@@ -30,5 +29,5 @@ export const newWalletAction = async ({
   } else {
     KeystoreSigner.createFile(walletPath, password);
   }
-  log(chalk.green(`Wallet created at "${walletPath}".`));
+  logSuccess(`Wallet created at "${walletPath}".`);
 };

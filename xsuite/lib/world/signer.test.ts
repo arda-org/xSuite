@@ -37,12 +37,13 @@ test("KeystoreSigner interactive", async () => {
   const signer = await KeystoreSigner.fromFileInteractive(walletPath);
   const signature = await signer.sign(Buffer.from(""));
   stdout.stop();
-  expect(stdout.output).toEqual(
-    `Creating keystore wallet at "${walletPath}"...\n` +
-      "Enter password: \n" +
-      "Re-enter password: \n" +
-      `Loading keystore wallet at "${walletPath}"...\n` +
-      "Enter password: \n"
-  );
+  expect(stdout.output.split("\n")).toEqual([
+    `Creating keystore wallet at "${walletPath}"...`,
+    "Enter password: ",
+    "Re-enter password: ",
+    `Loading keystore wallet at "${walletPath}"...`,
+    "Enter password: ",
+    "",
+  ]);
   expect(signature.byteLength).toBeGreaterThan(0);
 });
