@@ -5,11 +5,11 @@ import tmp from "tmp-promise";
 import { stdout } from "../stdio";
 import { KeystoreSigner } from "./signer";
 
-let dir: tmp.DirectoryResult;
+let walletPath: string;
 
 beforeEach(async () => {
-  dir = await tmp.dir({ unsafeCleanup: true });
-  process.chdir(dir.path);
+  const dir = await tmp.dir({ unsafeCleanup: true });
+  walletPath = path.resolve(dir.path, "wallet.json");
 });
 
 afterEach(async () => {
@@ -17,8 +17,8 @@ afterEach(async () => {
 });
 
 test("KeystoreSigner non-interactive", async () => {
-  KeystoreSigner.createFile("wallet.json", "1234");
-  const signer = KeystoreSigner.fromFile("wallet.json", "1234");
+  KeystoreSigner.createFile(walletPath, "1234");
+  const signer = KeystoreSigner.fromFile(walletPath, "1234");
   const signature = await signer.sign(Buffer.from(""));
   expect(signature.byteLength).toBeGreaterThan(0);
 });
@@ -31,14 +31,13 @@ test("KeystoreSigner interactive", async () => {
       process.stdin.push("1234\n");
     });
   });
-  await KeystoreSigner.createFileInteractive("wallet.json");
+  await KeystoreSigner.createFileInteractive(walletPath);
   process.nextTick(() => {
     process.stdin.push("1234\n");
   });
-  const signer = await KeystoreSigner.fromFileInteractive("wallet.json");
+  const signer = await KeystoreSigner.fromFileInteractive(walletPath);
   const signature = await signer.sign(Buffer.from(""));
   stdout.stop();
-  const walletPath = path.resolve(dir.path, "wallet.json");
   expect(stdout.output).toEqual(
     `Creating new keystore wallet at "${walletPath}"...\n` +
       "Enter password: \n" +
