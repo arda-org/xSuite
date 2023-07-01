@@ -1,6 +1,6 @@
 import { SignableMessage } from "@multiversx/sdk-core";
 import { NativeAuthClient } from "@multiversx/sdk-native-auth-client";
-import { log } from "xsuite/dist/stdio";
+import { log } from "xsuite/_stdio";
 import { Proxy } from "xsuite/proxy";
 import { KeystoreSigner } from "xsuite/world";
 import { logError, logSuccess } from "./helpers";

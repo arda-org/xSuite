@@ -1,7 +1,7 @@
 import path from "node:path";
 import { afterEach, beforeEach, expect, test } from "@jest/globals";
 import tmp from "tmp-promise";
-import { stdoutInt } from "../stdio";
+import { stdoutInt } from "../_stdio";
 import { KeystoreSigner } from "./signer";
 
 let walletPath: string;

@@ -1,4 +1,4 @@
-import { log } from "xsuite/dist/stdio";
+import { log } from "xsuite/_stdio";
 import { logTitle, logAndRunCommand } from "./helpers";
 
 export const setupRustAction = () => {

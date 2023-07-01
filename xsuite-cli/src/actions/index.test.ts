@@ -5,7 +5,7 @@ import chalk from "chalk";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
 import tmp from "tmp-promise";
-import { stdoutInt } from "xsuite/dist/stdio";
+import { stdoutInt } from "xsuite/_stdio";
 import { KeystoreSigner } from "xsuite/world";
 import {
   buildAction,
