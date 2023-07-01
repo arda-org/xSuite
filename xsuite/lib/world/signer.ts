@@ -5,7 +5,6 @@ import {
   Mnemonic,
   UserWallet,
 } from "@multiversx/sdk-wallet";
-import chalk from "chalk";
 import { AddressEncodable } from "../data";
 import { inputHidden, log } from "../stdio";
 
@@ -45,19 +44,13 @@ export class KeystoreSigner extends UserSigner {
 
   static async createFileInteractive(filePath: string) {
     filePath = path.resolve(filePath);
-    if (fs.existsSync(filePath)) {
-      log(chalk.red(`Wallet already exists at ${filePath}`));
-      return;
-    }
-    log(`Creating new keystore wallet at "${filePath}"...`);
+    log(`Creating keystore wallet at "${filePath}"...`);
     const password = await inputHidden("Enter password: ");
     const passwordAgain = await inputHidden("Re-enter password: ");
     if (password !== passwordAgain) {
-      log(chalk.red("Passwords do not match."));
-      return;
+      throw new Error("Passwords do not match.");
     }
     this.createFile(filePath, password);
-    log(chalk.green("Wallet successfully created."));
   }
 
   static fromFile(filePath: string, password: string, addressIndex?: number) {

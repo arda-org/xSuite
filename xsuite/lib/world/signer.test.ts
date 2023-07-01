@@ -1,6 +1,5 @@
 import path from "node:path";
 import { afterEach, beforeEach, expect, test } from "@jest/globals";
-import chalk from "chalk";
 import tmp from "tmp-promise";
 import { stdout } from "../stdio";
 import { KeystoreSigner } from "./signer";
@@ -39,11 +38,9 @@ test("KeystoreSigner interactive", async () => {
   const signature = await signer.sign(Buffer.from(""));
   stdout.stop();
   expect(stdout.output).toEqual(
-    `Creating new keystore wallet at "${walletPath}"...\n` +
+    `Creating keystore wallet at "${walletPath}"...\n` +
       "Enter password: \n" +
       "Re-enter password: \n" +
-      chalk.green("Wallet successfully created.") +
-      "\n" +
       `Loading keystore wallet at "${walletPath}"...\n` +
       "Enter password: \n"
   );
