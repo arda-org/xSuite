@@ -25,7 +25,10 @@ jobs:
         run: pnpm build-xsuite-cli
 
       - name: Test xSuite-cli
-        run: pnpm test-xsuite-cli
+        run: |
+          git config --global user.email "you@example.com"
+          git config --global user.name "Your Name"
+          pnpm test-xsuite-cli
 
       - name: Publish xSuite-cli to NPM
         run: git config core.fileMode false && cd xsuite-cli && pnpm publish
