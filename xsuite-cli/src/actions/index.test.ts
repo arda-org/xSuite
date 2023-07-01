@@ -5,7 +5,7 @@ import chalk from "chalk";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
 import tmp from "tmp-promise";
-import { stdout } from "xsuite/dist/stdio";
+import { stdoutInt } from "xsuite/dist/stdio";
 import { KeystoreSigner } from "xsuite/world";
 import {
   buildAction,
@@ -36,12 +36,12 @@ test("new-wallet --wallet wallet.json", async () => {
       process.stdin.push("1234\n");
     });
   });
-  stdout.start();
+  stdoutInt.start();
   await newWalletAction({ wallet: "wallet.json" });
-  stdout.stop();
+  stdoutInt.stop();
   expect(fs.existsSync("wallet.json")).toEqual(true);
   const walletPath = path.resolve("wallet.json");
-  expect(stdout.output.split("\n")).toEqual([
+  expect(stdoutInt.data.split("\n")).toEqual([
     `Creating keystore wallet at "${walletPath}"...`,
     "Enter password: ",
     "Re-enter password: ",
@@ -57,11 +57,11 @@ test("new-wallet --wallet wallet.json | error: passwords don't match", async () 
       process.stdin.push("1235\n");
     });
   });
-  stdout.start();
+  stdoutInt.start();
   await newWalletAction({ wallet: "wallet.json" });
-  stdout.stop();
+  stdoutInt.stop();
   const walletPath = path.resolve("wallet.json");
-  expect(stdout.output.split("\n")).toEqual([
+  expect(stdoutInt.data.split("\n")).toEqual([
     `Creating keystore wallet at "${walletPath}"...`,
     "Enter password: ",
     "Re-enter password: ",
@@ -71,23 +71,23 @@ test("new-wallet --wallet wallet.json | error: passwords don't match", async () 
 });
 
 test("new-wallet --wallet wallet.json --password 1234", async () => {
-  stdout.start();
+  stdoutInt.start();
   await newWalletAction({ wallet: "wallet.json", password: "1234" });
-  stdout.stop();
+  stdoutInt.stop();
   expect(fs.existsSync("wallet.json")).toEqual(true);
   const walletPath = path.resolve("wallet.json");
-  expect(stdout.output).toEqual(
+  expect(stdoutInt.data).toEqual(
     chalk.green(`Wallet created at "${walletPath}".`) + "\n"
   );
 });
 
 test("new-wallet --wallet wallet.json --password 1234 | error: already exists", async () => {
-  stdout.start();
+  stdoutInt.start();
   await newWalletAction({ wallet: "wallet.json", password: "1234" });
   await newWalletAction({ wallet: "wallet.json", password: "1234" });
-  stdout.stop();
+  stdoutInt.stop();
   const walletPath = path.resolve("wallet.json");
-  expect(stdout.output.split("\n")).toEqual([
+  expect(stdoutInt.data.split("\n")).toEqual([
     chalk.green(`Wallet created at "${walletPath}".`),
     chalk.red(`Wallet already exists at "${walletPath}".`),
     "",
@@ -129,12 +129,12 @@ test("request-xegld --wallet wallet.json", async () => {
     )
   );
   server.listen();
-  stdout.start();
+  stdoutInt.start();
   await requestXegldAction({ wallet: "wallet.json", password: "1234" });
   await requestXegldAction({ wallet: "wallet.json", password: "1234" });
-  stdout.stop();
+  stdoutInt.stop();
   server.close();
-  expect(stdout.output.split("\n")).toEqual([
+  expect(stdoutInt.data.split("\n")).toEqual([
     `Claiming 30 xEGLD for address "${address}"...`,
     chalk.green("Wallet well received 30 xEGLD."),
     `Claiming 30 xEGLD for address "${address}"...`,
@@ -144,12 +144,12 @@ test("request-xegld --wallet wallet.json", async () => {
 });
 
 test("new --dir contract && setup-rust && build && test-rust", async () => {
-  stdout.start();
+  stdoutInt.start();
   await newAction({ dir: "contract" });
-  stdout.stop();
+  stdoutInt.stop();
   expect(fs.readdirSync(process.cwd()).length).toEqual(1);
   const dirPath = path.resolve("contract");
-  expect(stdout.output.split("\n")).toEqual([
+  expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue(
       `Downloading contract ${chalk.magenta("blank")} in "${dirPath}"...`
     ),
@@ -181,10 +181,10 @@ test("new --dir contract && setup-rust && build && test-rust", async () => {
     "",
   ]);
 
-  stdout.start();
+  stdoutInt.start();
   setupRustAction();
-  stdout.stop();
-  expect(stdout.output.split("\n")).toEqual([
+  stdoutInt.stop();
+  expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Installing Rust nightly..."),
     chalk.cyan(
       "$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain nightly-2023-06-15 -y"
@@ -198,19 +198,19 @@ test("new --dir contract && setup-rust && build && test-rust", async () => {
     "",
   ]);
 
-  stdout.start();
+  stdoutInt.start();
   buildAction([]);
-  stdout.stop();
-  expect(stdout.output.split("\n")).toEqual([
+  stdoutInt.stop();
+  expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Building contract..."),
     chalk.cyan("$ sc-meta all build"),
     "",
   ]);
 
-  stdout.start();
+  stdoutInt.start();
   testRustAction();
-  stdout.stop();
-  expect(stdout.output.split("\n")).toEqual([
+  stdoutInt.stop();
+  expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Testing contract with Rust tests..."),
     chalk.cyan("$ cargo test"),
     "",
@@ -219,11 +219,11 @@ test("new --dir contract && setup-rust && build && test-rust", async () => {
 
 test("new --dir contract | error: already exists", async () => {
   fs.mkdirSync("contract");
-  stdout.start();
+  stdoutInt.start();
   await newAction({ dir: "contract" });
-  stdout.stop();
+  stdoutInt.stop();
   const dirPath = path.resolve("contract");
-  expect(stdout.output).toEqual(
+  expect(stdoutInt.data).toEqual(
     chalk.red(`Directory already exists at "${dirPath}".`) + "\n"
   );
 });

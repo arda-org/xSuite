@@ -35,24 +35,24 @@ export function log(...msgs: string[]) {
 
 const createStdInterceptor = (std: "stdout" | "stderr") => {
   const f = process[std].write;
-  let data = "";
+  let _data = "";
   return {
     start() {
-      data = "";
+      _data = "";
       process[std].write = (chunk) => {
-        data += chunk;
+        _data += chunk;
         return true;
       };
     },
     stop() {
       process[std].write = f;
     },
-    get output() {
-      return data;
+    get data() {
+      return _data;
     },
   };
 };
 
-export const stdout = createStdInterceptor("stdout");
+export const stdoutInt = createStdInterceptor("stdout");
 
-export const stderr = createStdInterceptor("stderr");
+export const stderrInt = createStdInterceptor("stderr");
