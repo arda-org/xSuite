@@ -1,12 +1,4 @@
-import {
-  Address,
-  addressToHexString,
-  Esdt,
-  getEsdtsKvs,
-  Kv,
-  kvsToPairs,
-  Pairs,
-} from "../data";
+import { Address, Esdt, getEsdtsKvs, Kv, kvsToPairs, Pairs } from "../data";
 import { CodeMetadata, codeMetadataToHexString, Proxy } from "./proxy";
 
 export class FProxy extends Proxy {
