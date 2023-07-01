@@ -18,13 +18,9 @@ export const newWalletAction = async ({
   if (password === undefined) {
     try {
       await KeystoreSigner.createFileInteractive(walletPath);
-    } catch (err) {
-      if (err instanceof Error) {
-        logError(err.message);
-        return;
-      } else {
-        throw err;
-      }
+    } catch (err: any) {
+      logError(err.message);
+      return;
     }
   } else {
     KeystoreSigner.createFile(walletPath, password);

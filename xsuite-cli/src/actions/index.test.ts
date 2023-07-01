@@ -7,7 +7,14 @@ import { setupServer } from "msw/node";
 import tmp from "tmp-promise";
 import { stdout } from "xsuite/dist/stdio";
 import { KeystoreSigner } from "xsuite/world";
-import { newAction, newWalletAction, requestXegldAction } from "./index";
+import {
+  buildAction,
+  newAction,
+  newWalletAction,
+  requestXegldAction,
+  setupRustAction,
+  testRustAction,
+} from "./index";
 
 let dir: tmp.DirectoryResult;
 const originalCwd = process.cwd();
@@ -136,7 +143,7 @@ test("request-xegld --wallet wallet.json", async () => {
   ]);
 });
 
-test("new --dir contract", async () => {
+test("new --dir contract && setup-rust && build && test-rust", async () => {
   stdout.start();
   await newAction({ dir: "contract" });
   stdout.stop();
@@ -171,6 +178,41 @@ test("new --dir contract", async () => {
     "",
     chalk.cyan(`  cd ${dirPath}`),
     chalk.cyan("  npm run build"),
+    "",
+  ]);
+
+  stdout.start();
+  setupRustAction();
+  stdout.stop();
+  expect(stdout.output.split("\n")).toEqual([
+    chalk.blue("Installing Rust nightly..."),
+    chalk.cyan(
+      "$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain nightly-2023-06-15 -y"
+    ),
+    "",
+    chalk.blue("Installing wasm32-unknown-unknown target..."),
+    chalk.cyan("$ rustup target add wasm32-unknown-unknown"),
+    "",
+    chalk.blue("Installing multiversx-sc-meta crate..."),
+    chalk.cyan("$ cargo install multiversx-sc-meta"),
+    "",
+  ]);
+
+  stdout.start();
+  buildAction([]);
+  stdout.stop();
+  expect(stdout.output.split("\n")).toEqual([
+    chalk.blue("Building contract..."),
+    chalk.cyan("$ sc-meta all build"),
+    "",
+  ]);
+
+  stdout.start();
+  testRustAction();
+  stdout.stop();
+  expect(stdout.output.split("\n")).toEqual([
+    chalk.blue("Testing contract with Rust tests..."),
+    chalk.cyan("$ cargo test"),
     "",
   ]);
 });
