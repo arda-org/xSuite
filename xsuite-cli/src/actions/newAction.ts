@@ -82,11 +82,9 @@ const downloadTar = (url: string) => {
 };
 
 const tryGitInit = (): boolean => {
-  let didInit = false;
   try {
     execSync("git --version", { stdio: "ignore" });
     execSync("git init", { stdio: "ignore" });
-    didInit = true;
     execSync("git checkout -b main", { stdio: "ignore" });
     execSync("git add -A", { stdio: "ignore" });
     execSync('git commit -m "Initial commit from xSuite CLI"', {
@@ -94,12 +92,10 @@ const tryGitInit = (): boolean => {
     });
     return true;
   } catch (_) {
-    if (didInit) {
-      try {
-        fs.rmSync(".git", { recursive: true, force: true });
-      } catch (_) {
-        // Nothing
-      }
+    try {
+      fs.rmSync(".git", { recursive: true, force: true });
+    } catch (_) {
+      // Nothing
     }
     return false;
   }
