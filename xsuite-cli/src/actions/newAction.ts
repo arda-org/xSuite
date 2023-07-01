@@ -12,16 +12,16 @@ import { logTitle, runCommand } from "./helpers";
 
 export const newAction = async ({ dir: dirPath }: { dir: string }) => {
   dirPath = path.resolve(dirPath);
-  const contract = "blank";
-  logTitle(
-    `Downloading contract ${chalk.cyan(contract)} in ${chalk.cyan(dirPath)}...`
-  );
   if (fs.existsSync(dirPath)) {
-    log(chalk.red(`Directory already exists at ${dirPath}.`));
+    log(chalk.red(`Directory already exists at "${dirPath}".`));
     return;
   } else {
     fs.mkdirSync(dirPath, { recursive: true });
   }
+  const contract = "blank";
+  logTitle(
+    `Downloading contract ${chalk.cyan(contract)} in ${chalk.cyan(dirPath)}...`
+  );
   process.chdir(dirPath);
   await downloadAndExtractContract(contract);
   log();

@@ -13,7 +13,7 @@ export const newWalletAction = async ({
 }) => {
   walletPath = path.resolve(walletPath);
   if (fs.existsSync(walletPath)) {
-    log(chalk.red(`Wallet already exists at "${walletPath}"`));
+    log(chalk.red(`Wallet already exists at "${walletPath}".`));
     return;
   }
   if (password === undefined) {
@@ -30,5 +30,5 @@ export const newWalletAction = async ({
   } else {
     KeystoreSigner.createFile(walletPath, password);
   }
-  log(chalk.green(`Wallet created at "${walletPath}"`));
+  log(chalk.green(`Wallet created at "${walletPath}".`));
 };

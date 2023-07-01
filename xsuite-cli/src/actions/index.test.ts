@@ -7,7 +7,7 @@ import { setupServer } from "msw/node";
 import tmp from "tmp-promise";
 import { stdout } from "xsuite/dist/stdio";
 import { KeystoreSigner } from "xsuite/world";
-import { newWalletAction, requestXegldAction } from "./index";
+import { newAction, newWalletAction, requestXegldAction } from "./index";
 
 let dir: tmp.DirectoryResult;
 const originalCwd = process.cwd();
@@ -38,7 +38,7 @@ test("new-wallet --wallet wallet.json", async () => {
     `Creating keystore wallet at "${walletPath}"...\n` +
       "Enter password: \n" +
       "Re-enter password: \n" +
-      chalk.green(`Wallet created at "${walletPath}"`) +
+      chalk.green(`Wallet created at "${walletPath}".`) +
       "\n"
   );
 });
@@ -70,7 +70,7 @@ test("new-wallet --wallet wallet.json --password 1234", async () => {
   expect(fs.existsSync("wallet.json")).toEqual(true);
   const walletPath = path.resolve("wallet.json");
   expect(stdout.output).toEqual(
-    chalk.green(`Wallet created at "${walletPath}"`) + "\n"
+    chalk.green(`Wallet created at "${walletPath}".`) + "\n"
   );
 });
 
@@ -81,9 +81,9 @@ test("new-wallet --wallet wallet.json --password 1234 | error: already exists", 
   stdout.stop();
   const walletPath = path.resolve("wallet.json");
   expect(stdout.output).toEqual(
-    chalk.green(`Wallet created at "${walletPath}"`) +
+    chalk.green(`Wallet created at "${walletPath}".`) +
       "\n" +
-      chalk.red(`Wallet already exists at "${walletPath}"`) +
+      chalk.red(`Wallet already exists at "${walletPath}".`) +
       "\n"
   );
 });
@@ -135,5 +135,16 @@ test("request-xegld --wallet wallet.json", async () => {
       `Claiming 30 xEGLD for address "${address}"...\n` +
       chalk.red("Error: Already claimed today.") +
       "\n"
+  );
+});
+
+test("new --dir contract | error: already exists", async () => {
+  fs.mkdirSync("contract");
+  stdout.start();
+  await newAction({ dir: "contract" });
+  stdout.stop();
+  const dirPath = path.resolve("contract");
+  expect(stdout.output).toEqual(
+    chalk.red(`Directory already exists at "${dirPath}".`) + "\n"
   );
 });
