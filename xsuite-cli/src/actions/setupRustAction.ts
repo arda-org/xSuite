@@ -1,3 +1,4 @@
+import { log } from "xsuite/dist/stdio";
 import { logTitle, runCommand } from "./helpers";
 
 export const setupRustAction = () => {
@@ -16,10 +17,10 @@ export const setupRustAction = () => {
     "nightly-2023-06-15",
     "-y",
   ]);
-  console.log();
+  log();
   logTitle("Installing wasm32-unknown-unknown target...");
   runCommand("rustup", ["target", "add", "wasm32-unknown-unknown"]);
-  console.log();
+  log();
   logTitle("Installing multiversx-sc-meta crate...");
   runCommand("cargo", ["install", "multiversx-sc-meta"]);
 };

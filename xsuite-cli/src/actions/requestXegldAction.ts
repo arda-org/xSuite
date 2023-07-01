@@ -1,6 +1,7 @@
 import { SignableMessage } from "@multiversx/sdk-core";
 import { NativeAuthClient } from "@multiversx/sdk-native-auth-client";
 import chalk from "chalk";
+import { log } from "xsuite/dist/stdio";
 import { Proxy } from "xsuite/proxy";
 import { KeystoreSigner } from "xsuite/world";
 
@@ -11,7 +12,7 @@ export const requestXegldAction = async ({
 }) => {
   const signer = await KeystoreSigner.fromFileInteractive(walletPath);
   const address = signer.toString();
-  console.log(`Claiming 30 xEGLD for address ${address} ...`);
+  log(`Claiming 30 xEGLD for address ${address} ...`);
   const balance = await devnetProxy.getAccountBalance(address);
 
   const client = new NativeAuthClient({
@@ -44,7 +45,7 @@ export const requestXegldAction = async ({
     });
 
   if (errorMessage) {
-    console.log(chalk.red(`Error: ${errorMessage}`));
+    log(chalk.red(`Error: ${errorMessage}`));
     process.exit(1);
   }
 
@@ -54,7 +55,7 @@ export const requestXegldAction = async ({
     await new Promise((r) => setTimeout(r, 1000));
   }
 
-  console.log(chalk.green("Wallet well received 30 xEGLD."));
+  log(chalk.green("Wallet well received 30 xEGLD."));
 };
 
 const devnetProxy = new Proxy("https://devnet-gateway.multiversx.com");

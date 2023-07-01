@@ -7,6 +7,7 @@ import stream from "node:stream";
 import util from "node:util";
 import chalk from "chalk";
 import tar from "tar";
+import { log } from "xsuite/dist/stdio";
 import { logTitle, runCommand } from "./helpers";
 
 export const newAction = async ({ dir: dirPath }: { dir: string }) => {
@@ -16,41 +17,41 @@ export const newAction = async ({ dir: dirPath }: { dir: string }) => {
     `Downloading contract ${chalk.cyan(contract)} in ${chalk.cyan(dirPath)}...`
   );
   if (fs.existsSync(dirPath)) {
-    console.log(chalk.red(`Directory already exists at ${dirPath}.`));
+    log(chalk.red(`Directory already exists at ${dirPath}.`));
     return;
   } else {
     fs.mkdirSync(dirPath, { recursive: true });
   }
   process.chdir(dirPath);
   await downloadAndExtractContract(contract);
-  console.log();
+  log();
   logTitle("Installing packages...");
   runCommand("npm", ["install"]);
   if (tryGitInit()) {
-    console.log();
+    log();
     logTitle("Initialized a git repository.");
   }
-  console.log();
+  log();
   logTitle(
     `Successfully created ${chalk.cyan(contract)} in ${chalk.cyan(dirPath)}.`
   );
-  console.log();
-  console.log("Inside that directory, you can run several commands:");
-  console.log();
-  console.log(chalk.cyan(`  npm run build`));
-  console.log("    Builds the contract.");
-  console.log();
-  console.log(chalk.cyan(`  npm run test`));
-  console.log("    Tests the contract.");
-  console.log();
-  console.log(chalk.cyan(`  npm run deploy`));
-  console.log("    Deploys the contract to devnet.");
-  console.log();
-  console.log("We suggest that you begin by typing:");
-  console.log();
-  console.log(chalk.cyan("  cd"), dirPath);
-  console.log(chalk.cyan("  npm run build"));
-  console.log();
+  log();
+  log("Inside that directory, you can run several commands:");
+  log();
+  log(chalk.cyan(`  npm run build`));
+  log("    Builds the contract.");
+  log();
+  log(chalk.cyan(`  npm run test`));
+  log("    Tests the contract.");
+  log();
+  log(chalk.cyan(`  npm run deploy`));
+  log("    Deploys the contract to devnet.");
+  log();
+  log("We suggest that you begin by typing:");
+  log();
+  log(chalk.cyan("  cd"), dirPath);
+  log(chalk.cyan("  npm run build"));
+  log();
 };
 
 const downloadAndExtractContract = async (contract: string) => {
