@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, test } from "@jest/globals";
 import { d, e, getEsdtsKvs, kvsToPairs } from "../data";
-import { assertAccount } from "../test";
+import { assertAccount, assertTxReturnData } from "../test";
 import { FWorld, FWorldContract, FWorldWallet } from "./fworld";
 import { readFileHex } from "./utils";
 
@@ -227,6 +227,15 @@ test("FWorldWallet.callContract with ESDT", async () => {
   assertAccount(await contract.getAccountWithPairs(), {
     containsEsdts: [{ id: fftId, amount: 10n ** 18n + 10n ** 17n }],
   });
+});
+
+test("FWorldWallet.callContract with return", async () => {
+  const txResult = await wallet.callContract({
+    callee: contract,
+    functionName: "get_n",
+    gasLimit: 10_000_000,
+  });
+  assertTxReturnData(txResult.returnData, ["01"]);
 });
 
 test("FWorldWallet.callContract.assertFail - Correct parameters", async () => {

@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import { Encodable, hexToHexString, Esdt, Kv, getEsdtsKvs } from "../data";
+import { hexToHexString, Esdt, Kv, getEsdtsKvs, Hex } from "../data";
 import { Proxy } from "../proxy";
 
 export const assertAccount = (
@@ -31,10 +31,12 @@ export const assertAccount = (
 
 export const assertTxReturnData = (
   actualData: string[],
-  expectedData: Encodable[]
+  expectedData: Hex[]
 ) => {
-  const encExpectedData = expectedData.map((v) => v.toTopHex());
-  assert.deepStrictEqual(actualData, encExpectedData);
+  assert.deepStrictEqual(
+    actualData,
+    expectedData.map((v) => hexToHexString(v))
+  );
 };
 
 type ActualAccount = Partial<
