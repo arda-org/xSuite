@@ -1,7 +1,7 @@
 import path from "node:path";
 import { afterEach, beforeEach, expect, test } from "@jest/globals";
 import tmp from "tmp-promise";
-import { stdoutInt } from "../_stdio";
+import { input, stdoutInt } from "../_stdio";
 import { KeystoreSigner } from "./signer";
 
 let walletPath: string;
@@ -24,16 +24,9 @@ test("KeystoreSigner non-interactive", async () => {
 
 test("KeystoreSigner interactive", async () => {
   stdoutInt.start();
-  process.nextTick(() => {
-    process.stdin.push("1234\n");
-    process.nextTick(() => {
-      process.stdin.push("1234\n");
-    });
-  });
+  input.injected.push("1234", "1234");
   await KeystoreSigner.createFileInteractive(walletPath);
-  process.nextTick(() => {
-    process.stdin.push("1234\n");
-  });
+  input.injected.push("1234");
   const signer = await KeystoreSigner.fromFileInteractive(walletPath);
   const signature = await signer.sign(Buffer.from(""));
   stdoutInt.stop();

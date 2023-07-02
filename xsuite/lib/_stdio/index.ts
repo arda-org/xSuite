@@ -1,32 +1,41 @@
 import readline from "node:readline";
 import { Writable } from "node:stream";
 
-export const inputHidden = async (query: string): Promise<string> => {
-  const muted = { v: false };
+export const input = {
+  injected: [] as string[],
+  async hidden(query: string): Promise<string> {
+    const shifted = this.injected.shift();
+    if (shifted !== undefined) {
+      process.stdout.write(query + "\n");
+      return Promise.resolve(shifted);
+    }
 
-  const mutableStdout = new Writable({
-    write(chunk, encoding, callback) {
-      if (!muted.v) {
-        process.stdout.write(chunk, encoding);
-      }
-      callback();
-    },
-  });
+    const muted = { v: false };
 
-  const rl = readline.createInterface({
-    input: process.stdin,
-    output: mutableStdout,
-    terminal: process.env.JEST_WORKER_ID ? false : true,
-  });
-
-  return new Promise<string>((resolve) => {
-    rl.question(query, function (password) {
-      process.stdout.write("\n");
-      rl.close();
-      resolve(password);
+    const mutableStdout = new Writable({
+      write(chunk, encoding, callback) {
+        if (!muted.v) {
+          process.stdout.write(chunk, encoding);
+        }
+        callback();
+      },
     });
-    muted.v = true;
-  });
+
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: mutableStdout,
+      terminal: true,
+    });
+
+    return new Promise<string>((resolve) => {
+      rl.question(query, function (password) {
+        rl.close();
+        process.stdout.write("\n");
+        resolve(password);
+      });
+      muted.v = true;
+    });
+  },
 };
 
 export function log(...msgs: string[]) {

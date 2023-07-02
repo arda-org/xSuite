@@ -5,7 +5,7 @@ import {
   Mnemonic,
   UserWallet,
 } from "@multiversx/sdk-wallet";
-import { inputHidden, log } from "../_stdio";
+import { input, log } from "../_stdio";
 import { AddressEncodable } from "../data";
 
 export abstract class Signer extends AddressEncodable {
@@ -45,8 +45,8 @@ export class KeystoreSigner extends UserSigner {
   static async createFileInteractive(filePath: string) {
     filePath = path.resolve(filePath);
     log(`Creating keystore wallet at "${filePath}"...`);
-    const password = await inputHidden("Enter password: ");
-    const passwordAgain = await inputHidden("Re-enter password: ");
+    const password = await input.hidden("Enter password: ");
+    const passwordAgain = await input.hidden("Re-enter password: ");
     if (password !== passwordAgain) {
       throw new Error("Passwords do not match.");
     }
@@ -61,7 +61,7 @@ export class KeystoreSigner extends UserSigner {
   static async fromFileInteractive(filePath: string, addressIndex?: number) {
     filePath = path.resolve(filePath);
     log(`Loading keystore wallet at "${filePath}"...`);
-    const password = await inputHidden("Enter password: ");
+    const password = await input.hidden("Enter password: ");
     return this.fromFile(filePath, password, addressIndex);
   }
 }

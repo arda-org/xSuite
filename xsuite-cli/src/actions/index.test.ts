@@ -5,7 +5,7 @@ import chalk from "chalk";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
 import tmp from "tmp-promise";
-import { stdoutInt } from "xsuite/_stdio";
+import { stdoutInt, input } from "xsuite/_stdio";
 import { KeystoreSigner } from "xsuite/world";
 import {
   buildAction,
@@ -30,13 +30,8 @@ afterEach(async () => {
 });
 
 test("new-wallet --wallet wallet.json", async () => {
-  process.nextTick(() => {
-    process.stdin.push("1234\n");
-    process.nextTick(() => {
-      process.stdin.push("1234\n");
-    });
-  });
   stdoutInt.start();
+  input.injected.push("1234", "1234");
   await newWalletAction({ wallet: "wallet.json" });
   stdoutInt.stop();
   expect(fs.existsSync("wallet.json")).toEqual(true);
@@ -51,13 +46,8 @@ test("new-wallet --wallet wallet.json", async () => {
 });
 
 test("new-wallet --wallet wallet.json | error: passwords don't match", async () => {
-  process.nextTick(() => {
-    process.stdin.push("1234\n");
-    process.nextTick(() => {
-      process.stdin.push("1235\n");
-    });
-  });
   stdoutInt.start();
+  input.injected.push("1234", "1235");
   await newWalletAction({ wallet: "wallet.json" });
   stdoutInt.stop();
   const walletPath = path.resolve("wallet.json");
