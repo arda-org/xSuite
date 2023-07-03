@@ -22,7 +22,13 @@ export class FProxy extends Proxy {
   }
 
   static terminate(baseUrl: string) {
-    return Proxy.fetch(`${baseUrl}/admin/terminate`);
+    return Proxy.fetch(`${baseUrl}/admin/terminate`)
+      .then(() => {
+        //
+      })
+      .catch(() => {
+        //
+      });
   }
 
   terminate() {

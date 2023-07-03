@@ -70,13 +70,7 @@ func main() {
 	})
 
 	router.Get("/admin/terminate", func(w http.ResponseWriter, r *http.Request) {
-		resBody, err := executor.HandleAdminTerminate()
-		respond(w, resBody, err)
-		ctx := r.Context()
-		go func() {
-			<-ctx.Done()
-			os.Exit(0)
-		}()
+		os.Exit(0)
 	})
 
 	fmt.Printf("Server running on http://%s\n", listener.Addr().String())
