@@ -184,7 +184,7 @@ test("new --dir contract && setup-rust && build && test-rust", async () => {
     chalk.cyan("$ rustup target add wasm32-unknown-unknown"),
     "",
     chalk.blue("Installing multiversx-sc-meta crate..."),
-    chalk.cyan("$ cargo install multiversx-sc-meta"),
+    chalk.cyan("$ cargo install multiversx-sc-meta --version 0.41.0"),
     "",
   ]);
 
