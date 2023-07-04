@@ -5,8 +5,8 @@
   "scripts": {
     "build": "pnpm build-fproxy && pnpm build-lib",
     "build-fproxy": "run-script-os",
-    "build-fproxy:linux": "cd fproxy && GOOS=linux GOARCH=amd64 LIBRARY_PATH=$(pwd)/../bin go build -o ../bin/fproxy-Linux -ldflags \"-extldflags '-Wl,-rpath,\\$ORIGIN'\"",
-    "build-fproxy:darwin": "cd fproxy && GOOS=darwin GOARCH=amd64 go build -o ../bin/fproxy-macOS",
+    "build-fproxy:linux": "cd fproxy && GOOS=linux GOARCH=amd64 LIBRARY_PATH=$(pwd)/../bin go build -o ../bin/fproxy-linux-amd64 -ldflags \"-extldflags '-Wl,-rpath,\\$ORIGIN'\"",
+    "build-fproxy:darwin": "cd fproxy && GOOS=darwin GOARCH=amd64 go build -o ../bin/fproxy-darwin-amd64",
     "build-lib": "rimraf ./dist && tsc",
     "build-contracts": "INIT_CWD=contracts pnpm xsuite build --locked --target-dir $PWD/contracts/target",
     "test": "jest lib/",

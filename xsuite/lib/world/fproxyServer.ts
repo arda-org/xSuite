@@ -6,9 +6,9 @@ export const startFProxyServer = (): Promise<string> => {
   return new Promise((resolve, reject) => {
     let binaryName: string;
     if (os.platform() === "linux") {
-      binaryName = "fproxy-Linux";
+      binaryName = "fproxy-linux-amd64";
     } else if (os.platform() === "darwin") {
-      binaryName = "fproxy-macOS";
+      binaryName = "fproxy-darwin-amd64";
     } else {
       throw new Error("Unsupported platform.");
     }
