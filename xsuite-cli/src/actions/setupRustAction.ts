@@ -22,5 +22,10 @@ export const setupRustAction = () => {
   logAndRunCommand("rustup", ["target", "add", "wasm32-unknown-unknown"]);
   log();
   logTitle("Installing multiversx-sc-meta crate...");
-  logAndRunCommand("cargo", ["install", "multiversx-sc-meta"]);
+  logAndRunCommand("cargo", [
+    "install",
+    "multiversx-sc-meta",
+    "--version",
+    "0.41.0",
+  ]);
 };
