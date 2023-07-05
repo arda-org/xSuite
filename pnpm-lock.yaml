@@ -45,11 +45,14 @@ importers:
         specifier: ^5.0.4
         version: 5.0.4
       xsuite:
-        specifier: 0.0.18
+        specifier: 0.0.19
         version: link:../../xsuite
       xsuite-cli:
-        specifier: 0.0.7
+        specifier: 0.0.8
         version: link:../../xsuite-cli
+      xsuite-fproxy:
+        specifier: 0.0.1
+        version: link:../../xsuite-fproxy
 
   xsuite:
     dependencies:
