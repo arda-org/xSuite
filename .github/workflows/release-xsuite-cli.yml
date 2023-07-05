@@ -1,4 +1,4 @@
-name: Release xSuite-cli
+name: Release xsuite-cli
 
 on:
   workflow_dispatch:
@@ -18,19 +18,19 @@ jobs:
           node-registry-url: "https://registry.npmjs.org"
           pnpm-version: 8
 
-      - name: Build xSuite
+      - name: Build xsuite
         run: pnpm build-xsuite
 
-      - name: Build xSuite-cli
+      - name: Build xsuite-cli
         run: pnpm build-xsuite-cli
 
-      - name: Test xSuite-cli
+      - name: Test xsuite-cli
         run: |
           git config --global user.email "you@example.com"
           git config --global user.name "Your Name"
           pnpm test-xsuite-cli
 
-      - name: Publish xSuite-cli to NPM
+      - name: Publish xsuite-cli to NPM
         run: git config core.fileMode false && cd xsuite-cli && pnpm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

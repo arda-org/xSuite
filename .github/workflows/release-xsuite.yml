@@ -1,4 +1,4 @@
-name: Release xSuite
+name: Release xsuite
 
 on:
   workflow_dispatch:
@@ -27,7 +27,7 @@ jobs:
           go-version: 1.19.x
           cache-dependency-path: xsuite/fproxy/go.sum
 
-      - name: Build xSuite
+      - name: Build xsuite
         run: pnpm build-xsuite
 
       - name: Upload package
@@ -66,7 +66,7 @@ jobs:
           node-version: 18.x
           pnpm-version: 8
 
-      - name: Test xSuite
+      - name: Test xsuite
         run: pnpm test-xsuite
 
   publish:
@@ -95,7 +95,7 @@ jobs:
           pnpm-version: 8
           skip-install: true
 
-      - name: Publish xSuite to NPM
+      - name: Publish xsuite to NPM
         run: git config core.fileMode false && cd xsuite && pnpm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

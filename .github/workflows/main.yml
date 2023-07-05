@@ -60,16 +60,16 @@ jobs:
       - name: Lint
         run: pnpm lint
 
-      - name: Build xSuite
+      - name: Build xsuite
         run: pnpm build-xsuite
 
-      - name: Test xSuite
+      - name: Test xsuite
         run: pnpm test-xsuite
 
-      - name: Build xSuite-cli
+      - name: Build xsuite-cli
         run: pnpm build-xsuite-cli
 
-      - name: Test xSuite-cli
+      - name: Test xsuite-cli
         run: |
           git config --global user.email "you@example.com"
           git config --global user.name "Your Name"
