@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-test-publish:
+  build-and-publish:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,17 +18,8 @@ jobs:
           node-registry-url: "https://registry.npmjs.org"
           pnpm-version: 8
 
-      - name: Build xsuite
-        run: pnpm build-xsuite
-
       - name: Build xsuite-cli
-        run: pnpm build-xsuite-cli
-
-      - name: Test xsuite-cli
-        run: |
-          git config --global user.email "you@example.com"
-          git config --global user.name "Your Name"
-          pnpm test-xsuite-cli
+        run: pnpm build-xsuite && pnpm build-xsuite-cli
 
       - name: Publish xsuite-cli to NPM
         run: git config core.fileMode false && cd xsuite-cli && pnpm publish

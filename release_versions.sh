@@ -35,6 +35,8 @@ update_version() {
 
 install_flag=false
 
+update_version "xsuite-fproxy"
+
 update_version "xsuite"
 
 update_version "xsuite-cli"

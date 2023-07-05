@@ -1,19 +1,9 @@
 import { spawn } from "node:child_process";
-import os from "node:os";
-import path from "node:path";
+import { getFproxyBinPath } from "xsuite-fproxy";
 
 export const startFProxyServer = (): Promise<string> => {
   return new Promise((resolve, reject) => {
-    let binaryName: string;
-    if (os.platform() === "linux") {
-      binaryName = "fproxy-linux-amd64";
-    } else if (os.platform() === "darwin") {
-      binaryName = "fproxy-darwin-amd64";
-    } else {
-      throw new Error("Unsupported platform.");
-    }
-
-    const server = spawn(path.join(__dirname, "..", "..", "bin", binaryName));
+    const server = spawn(getFproxyBinPath());
 
     server.stdout.on("data", (data: Buffer) => {
       const addressRegex = /Server running on (http:\/\/[\w\d.:]+)/;

@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-test:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -55,10 +55,13 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: 1.19.x
-          cache-dependency-path: xsuite/fproxy/go.sum
+          cache-dependency-path: xsuite-fproxy/go.sum
 
       - name: Lint
         run: pnpm lint
+
+      - name: Build xsuite-fproxy
+        run: pnpm build-xsuite-fproxy
 
       - name: Build xsuite
         run: pnpm build-xsuite

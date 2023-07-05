@@ -8,7 +8,7 @@ module.exports = {
       lines: 80,
       statements: 80,
     },
-    "./lib/data/": {
+    "./src/data/": {
       branches: 100,
       functions: 100,
       lines: 100,

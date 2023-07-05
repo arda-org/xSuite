@@ -5,11 +5,11 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "dist",
-    "rootDir": "lib",
+    "rootDir": "src",
     "skipLibCheck": true,
     "strict": true,
     "target": "esnext"
   },
-  "include": ["*.ts", "lib/**/*.ts"],
+  "include": ["*.ts", "src/**/*.ts"],
   "exclude": ["node_modules"]
 }

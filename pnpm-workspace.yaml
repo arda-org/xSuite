@@ -1,4 +1,5 @@
 packages:
   - "xsuite"
   - "xsuite-cli"
+  - "xsuite-fproxy"
   - "contracts/*"
