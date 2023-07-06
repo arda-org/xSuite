@@ -4,7 +4,8 @@
   "license": "MIT",
   "scripts": {
     "build": "rimraf ./dist && tsc",
-    "build-contracts": "INIT_CWD=contracts pnpm xsuite build --locked --target-dir $PWD/contracts/target",
+    "build-wasms": "bash build_wasms.sh",
+    "verify-wasms": "pnpm build-wasms && (git diff --name-only | grep -q .wasm && exit 1 || exit 0)",
     "test": "jest src/",
     "open-coverage": "open ./coverage/lcov-report/index.html",
     "try": "tsx scripts/try.ts"

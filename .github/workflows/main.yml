@@ -81,6 +81,9 @@ jobs:
       - name: Setup Rust
         run: pnpm xsuite setup-rust
 
+      - name: Verify xsuite wasms
+        run: pnpm verify-xsuite-wasms
+
       - name: Build contracts
         run: pnpm build-contracts
 

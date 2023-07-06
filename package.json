@@ -7,7 +7,8 @@
     "test-xsuite": "pnpm --filter ./xsuite test",
     "build-xsuite-cli": "pnpm --filter ./xsuite-cli build",
     "test-xsuite-cli": "pnpm --filter ./xsuite-cli test",
-    "build-contracts": "INIT_CWD=contracts pnpm xsuite build --locked --target-dir $PWD/contracts/target",
+    "verify-xsuite-wasms": "pnpm --filter ./xsuite verify-wasms",
+    "build-contracts": "cd contracts && sc-meta all build --locked --target-dir $PWD/target",
     "typecheck-contracts": "pnpm --filter \"./contracts/**\" typecheck",
     "test-contracts": "pnpm --filter \"./contracts/**\" test"
   },
