@@ -29,8 +29,7 @@ jobs:
           path: |
             ~/.rustup/toolchains
           key: ${{ runner.os }}-rustup
-          restore-keys: |
-            ${{ runner.os }}-rustup
+          restore-keys: ${{ runner.os }}-rustup
 
       - name: Cache Rust dependencies
         uses: actions/cache@v3
@@ -40,16 +39,14 @@ jobs:
             ~/.cargo/git
             ~/.cargo/bin
           key: ${{ runner.os }}-cargo-${{ hashFiles('contracts/**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-cargo-
+          restore-keys: ${{ runner.os }}-cargo-
 
-      - name: Cache contracts target folder
+      - name: Cache Rust target folder
         uses: actions/cache@v3
         with:
-          path: contracts/target
-          key: ${{ runner.os }}-target-${{ hashFiles('contracts/**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-target-
+          path: target
+          key: ${{ runner.os }}-target
+          restore-keys: ${{ runner.os }}-target
 
       - name: Use Golang
         uses: actions/setup-go@v4

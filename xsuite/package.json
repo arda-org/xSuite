@@ -5,7 +5,7 @@
   "scripts": {
     "build": "rimraf ./dist && tsc",
     "build-wasms": "bash build_wasms.sh",
-    "verify-wasms": "pnpm build-wasms && (git diff --name-only | grep -q .wasm && exit 1 || exit 0)",
+    "verify-wasms": "pnpm build-wasms && (git status | grep -q \\\\.wasm && exit 1 || exit 0)",
     "test": "jest src/",
     "open-coverage": "open ./coverage/lcov-report/index.html",
     "try": "tsx scripts/try.ts"

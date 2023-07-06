@@ -202,11 +202,14 @@ test("new --dir contract && setup-rust && build && test-rust", async () => {
   ]);
 
   stdoutInt.start();
-  buildAction([]);
+  const targetDir = path.join(__dirname, "..", "..", "..", "target");
+  buildAction(["--target-dir", targetDir], {
+    env: { ...process.env, CARGO_TARGET_DIR: targetDir },
+  });
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Building contract..."),
-    chalk.cyan("$ sc-meta all build"),
+    chalk.cyan(`$ sc-meta all build --target-dir ${targetDir}`),
     "",
   ]);
 

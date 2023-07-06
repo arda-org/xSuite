@@ -1,3 +1,5 @@
+TARGET_DIR="$(pwd)/../target"
+
 SOURCE_DIR="$(pwd)/contracts"
 DEST_DIR="/tmp/xsuite-contracts"
 
@@ -6,7 +8,7 @@ cp -R $SOURCE_DIR $DEST_DIR
 
 cd $DEST_DIR
 
-sc-meta all build --locked --target-dir $(pwd)/target
+CARGO_TARGET_DIR=$TARGET_DIR sc-meta all build --locked --target-dir $TARGET_DIR
 
 shopt -s globstar dotglob
 
