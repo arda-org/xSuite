@@ -1,18 +1,18 @@
+import fs from "node:fs";
 import path from "node:path";
 import { afterEach, beforeEach, expect, test } from "@jest/globals";
-import tmp from "tmp-promise";
 import { input, stdoutInt } from "../_stdio";
 import { KeystoreSigner } from "./signer";
 
-let walletPath: string;
+const tmpDir = "/tmp/xsuite-cli-tests";
+const walletPath = path.resolve(tmpDir, "wallet.json");
 
-beforeEach(async () => {
-  const dir = await tmp.dir({ unsafeCleanup: true });
-  walletPath = path.resolve(dir.path, "wallet.json");
+beforeEach(() => {
+  fs.mkdirSync(tmpDir);
 });
 
-afterEach(async () => {
-  await tmp.setGracefulCleanup();
+afterEach(() => {
+  fs.rmSync(tmpDir, { recursive: true, force: true });
 });
 
 test("KeystoreSigner non-interactive", async () => {

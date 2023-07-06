@@ -4,7 +4,6 @@ import { test, beforeEach, afterEach, expect } from "@jest/globals";
 import chalk from "chalk";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
-import tmp from "tmp-promise";
 import { stdoutInt, input } from "xsuite/_stdio";
 import { KeystoreSigner } from "xsuite/world";
 import {
@@ -16,17 +15,15 @@ import {
   testRustAction,
 } from "./index";
 
-let dir: tmp.DirectoryResult;
-const originalCwd = process.cwd();
+const tmpDir = "/tmp/xsuite-cli-tests";
 
-beforeEach(async () => {
-  dir = await tmp.dir({ unsafeCleanup: true });
-  process.chdir(dir.path);
+beforeEach(() => {
+  fs.mkdirSync(tmpDir);
+  process.chdir(tmpDir);
 });
 
-afterEach(async () => {
-  process.chdir(originalCwd);
-  await tmp.setGracefulCleanup();
+afterEach(() => {
+  fs.rmSync(tmpDir, { recursive: true, force: true });
 });
 
 test("new-wallet --wallet wallet.json", async () => {

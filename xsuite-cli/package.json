@@ -29,7 +29,6 @@
     "msw": "^1.2.2",
     "open": "^9.1.0",
     "tar": "6.1.15",
-    "tmp-promise": "^3.0.3",
     "tsx": "^3.12.7",
     "typescript": "5.0.4",
     "xsuite": "workspace:*"

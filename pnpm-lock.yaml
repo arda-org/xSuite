@@ -87,9 +87,6 @@ importers:
       rimraf:
         specifier: 5.0.0
         version: 5.0.0
-      tmp-promise:
-        specifier: ^3.0.3
-        version: 3.0.3
       tsx:
         specifier: ^3.12.7
         version: 3.12.7
@@ -144,9 +141,6 @@ importers:
       tar:
         specifier: 6.1.15
         version: 6.1.15
-      tmp-promise:
-        specifier: ^3.0.3
-        version: 3.0.3
       tsx:
         specifier: ^3.12.7
         version: 3.12.7
@@ -4986,24 +4980,11 @@ packages:
     engines: {node: '>=12'}
     dev: true
 
-  /tmp-promise@3.0.3:
-    resolution: {integrity: sha512-RwM7MoPojPxsOBYnyd2hy0bxtIlVrihNs9pj5SUvY8Zz1sQcQG2tG1hSr8PDxfgEB8RNKDhqbIlroIarSNDNsQ==}
-    dependencies:
-      tmp: 0.2.1
-    dev: true
-
   /tmp@0.0.33:
     resolution: {integrity: sha512-jRCJlojKnZ3addtTOjdIqoRuPEKBvNXcGYqzO6zWZX8KfKEpnGY5jfggJQ3EjKuu8D4bJRr0y+cYJFmYbImXGw==}
     engines: {node: '>=0.6.0'}
     dependencies:
       os-tmpdir: 1.0.2
-    dev: true
-
-  /tmp@0.2.1:
-    resolution: {integrity: sha512-76SUhtfqR2Ijn+xllcI5P1oyannHNHByD80W1q447gU3mp9G9PSpGdWmjUOHRDPiHYacIk66W7ubDTuPF3BEtQ==}
-    engines: {node: '>=8.17.0'}
-    dependencies:
-      rimraf: 3.0.2
     dev: true
 
   /tmpl@1.0.5:
