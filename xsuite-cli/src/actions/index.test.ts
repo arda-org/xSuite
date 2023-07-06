@@ -90,12 +90,25 @@ test("request-xegld --wallet wallet.json", async () => {
   let numFaucetReqs = 0;
   let numBalanceReqs = 0;
   const server = setupServer(
-    rest.get("https://devnet-api.multiversx.com/blocks/latest", (req) =>
-      req.passthrough()
+    rest.get(
+      "https://devnet-api.multiversx.com/blocks/latest",
+      (_req, res, ctx) => {
+        return res(
+          ctx.json({
+            hash: "103b656af4fa9625962c5978e8cf69aca6918eb146a495bcf474f1c6a922be93",
+          })
+        );
+      }
     ),
-    rest.get("https://devnet-api.multiversx.com/blocks", (req) =>
-      req.passthrough()
-    ),
+    rest.get("https://devnet-api.multiversx.com/blocks", (_req, res, ctx) => {
+      return res(
+        ctx.json([
+          {
+            hash: "103b656af4fa9625962c5978e8cf69aca6918eb146a495bcf474f1c6a922be93",
+          },
+        ])
+      );
+    }),
     rest.post(
       "https://devnet-extras-api.multiversx.com/faucet",
       (_req, res, ctx) => {
