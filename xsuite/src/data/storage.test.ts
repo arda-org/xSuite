@@ -3,7 +3,7 @@ import { FWorld, FWorldContract, FWorldWallet, readFileHex } from "../world";
 import { Encodable } from "./Encodable";
 import { e } from "./encoding";
 import { hexToHexString } from "./hex";
-import { kvsToPairs } from "./pairs";
+import { pairsToRawPairs } from "./pairs";
 import { s } from "./storage";
 
 let world: FWorld;
@@ -42,7 +42,7 @@ describe("Mapper", () => {
       functionArgs: map.map(([k, v]) => e.Tuple(k, v)),
       gasLimit: 10_000_000,
     });
-    expect(kvsToPairs(s.SingleValueMapper("single", map))).toEqual(
+    expect(pairsToRawPairs(s.SingleValueMapper("single", map))).toEqual(
       await contract.getAccountPairs()
     );
     await wallet.callContract({
@@ -52,7 +52,7 @@ describe("Mapper", () => {
       gasLimit: 10_000_000,
     });
     map.length = 0;
-    expect(kvsToPairs(s.SingleValueMapper("single", map))).toEqual(
+    expect(pairsToRawPairs(s.SingleValueMapper("single", map))).toEqual(
       await contract.getAccountPairs()
     );
   });
@@ -74,7 +74,7 @@ describe("Mapper", () => {
       gasLimit: 10_000_000,
     });
     expect(
-      kvsToPairs(
+      pairsToRawPairs(
         s.SetMapper("set", [
           [3, e.U64(30)],
           [1, e.U64(10)],
@@ -88,7 +88,7 @@ describe("Mapper", () => {
       functionArgs: [e.U64(10), e.U64(30), e.U64(40)],
       gasLimit: 10_000_000,
     });
-    expect(kvsToPairs(s.SetMapper("set", []))).toEqual(
+    expect(pairsToRawPairs(s.SetMapper("set", []))).toEqual(
       await contract.getAccountPairs()
     );
   });
@@ -111,7 +111,7 @@ describe("Mapper", () => {
       gasLimit: 10_000_000,
     });
     expect(
-      kvsToPairs(
+      pairsToRawPairs(
         s.MapMapper("map", [
           [3, e.Str("c"), e.U64(30)],
           [1, e.Str("a"), e.U64(10)],
@@ -124,7 +124,7 @@ describe("Mapper", () => {
       functionArgs: [e.Str("a"), e.Str("c")],
       gasLimit: 10_000_000,
     });
-    expect(kvsToPairs(s.MapMapper("map", []))).toEqual(
+    expect(pairsToRawPairs(s.MapMapper("map", []))).toEqual(
       await contract.getAccountPairs()
     );
   });
@@ -137,7 +137,7 @@ describe("Mapper", () => {
       functionArgs: map,
       gasLimit: 10_000_000,
     });
-    expect(kvsToPairs(s.VecMapper("vec", map))).toEqual(
+    expect(pairsToRawPairs(s.VecMapper("vec", map))).toEqual(
       await contract.getAccountPairs()
     );
     await wallet.callContract({
@@ -147,7 +147,7 @@ describe("Mapper", () => {
       gasLimit: 10_000_000,
     });
     map.length = 0;
-    expect(kvsToPairs(s.VecMapper("vec", map))).toEqual(
+    expect(pairsToRawPairs(s.VecMapper("vec", map))).toEqual(
       await contract.getAccountPairs()
     );
   });
@@ -219,7 +219,7 @@ describe("Esdt", () => {
       gasLimit: 10_000_000,
     });
     expect(
-      kvsToPairs(
+      pairsToRawPairs(
         s.Esdts([
           { id: fftId, amount: fftAmount },
           { id: sftId, nonce: 1, amount: sftAmount1 },
@@ -228,7 +228,7 @@ describe("Esdt", () => {
       )
     ).toEqual(await wallet.getAccountPairs());
     expect(
-      kvsToPairs(
+      pairsToRawPairs(
         s.Esdts([
           {
             id: fftId,
@@ -243,7 +243,7 @@ describe("Esdt", () => {
       )
     ).toEqual(await contract.getAccountPairs());
     expect(
-      kvsToPairs(
+      pairsToRawPairs(
         s.Esdts([
           {
             id: sftId,

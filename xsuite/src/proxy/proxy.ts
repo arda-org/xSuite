@@ -6,7 +6,7 @@ import {
   hexToHexString,
   Address,
   addressToHexString,
-  Pairs,
+  RawPairs,
 } from "../data";
 
 export class Proxy {
@@ -195,7 +195,7 @@ export class Proxy {
 
   static async getAccountPairs(baseUrl: string, address: Address) {
     const res = unrawRes(await Proxy.getAccountPairsRaw(baseUrl, address));
-    return res.pairs as Pairs;
+    return res.pairs as RawPairs;
   }
 
   getAccountPairs(address: Address) {

@@ -3,57 +3,57 @@ import { Encodable } from "./Encodable";
 import { Address, addressToBytes } from "./address";
 import { e } from "./encoding";
 import { hexToEncodable, Hex, hexToBytes } from "./hex";
-import { Kv } from "./pairs";
+import { Pair } from "./pairs";
 
 export const s = {
-  SingleValueMapper: (baseKey: string, map: Kv[]) => {
-    return getSingleValueMapperKvs(baseKey, map);
+  SingleValueMapper: (baseKey: string, map: Pair[]) => {
+    return getSingleValueMapperPairs(baseKey, map);
   },
   SetMapper: (
     baseKey: string,
     map: [index: number | bigint, value: Encodable][]
   ) => {
-    return getSetMapperKvs(baseKey, map);
+    return getSetMapperPairs(baseKey, map);
   },
   MapMapper: (
     baseKey: string,
     map: [index: number | bigint, key: Encodable, value: Encodable][]
   ) => {
-    return getMapMapperKvs(baseKey, map);
+    return getMapMapperPairs(baseKey, map);
   },
   VecMapper: (baseKey: string, vec: Encodable[]) => {
-    return getVecMapperKvs(baseKey, vec);
+    return getVecMapperPairs(baseKey, vec);
   },
   Esdts: (esdts: Esdt[]) => {
-    return getEsdtsKvs(esdts);
+    return getEsdtsPairs(esdts);
   },
 };
 
-const getSingleValueMapperKvs = (baseKey: string, map: Kv[]): Kv[] => {
+const getSingleValueMapperPairs = (baseKey: string, map: Pair[]): Pair[] => {
   const baseKeyEnc = e.Bytes(e.Str(baseKey).toTopBytes());
   return map.map(([k, v]) => [e.List(baseKeyEnc, hexToEncodable(k)), v]);
 };
 
-const getSetMapperKvs = (
+const getSetMapperPairs = (
   baseKey: string,
   map: [number | bigint, Encodable][]
-): Kv[] => {
+): Pair[] => {
   if (map.length === 0) return [];
   map.sort(([a], [b]) => (a <= b ? -1 : 1));
-  const indexKvs: Kv[] = [];
-  const valueKvs: Kv[] = [];
-  const linksKvs: Kv[] = [];
+  const indexPairs: Pair[] = [];
+  const valuePairs: Pair[] = [];
+  const linksPairs: Pair[] = [];
   let maxIndex: number | bigint = 0n;
   for (let i = 0; i < map.length; i++) {
     const [index, v] = map[i];
     if (index <= 0) {
       throw new Error("Negative id not allowed.");
     }
-    indexKvs.push([v, e.U32(index)]);
-    valueKvs.push([e.U32(index), v]);
+    indexPairs.push([v, e.U32(index)]);
+    valuePairs.push([e.U32(index), v]);
     const prevI = i === 0 ? 0n : map[i - 1][0];
     const nextI = i === map.length - 1 ? 0n : map[i + 1][0];
-    linksKvs.push([e.U32(index), e.Tuple(e.U32(prevI), e.U32(nextI))]);
+    linksPairs.push([e.U32(index), e.Tuple(e.U32(prevI), e.U32(nextI))]);
     if (index >= maxIndex) {
       maxIndex = index;
     }
@@ -65,32 +65,32 @@ const getSetMapperKvs = (
       e.Str(baseKey + ".info"),
       e.Tuple(e.U32(map.length), e.U32(firstI), e.U32(lastI), e.U32(maxIndex)),
     ],
-    ...getSingleValueMapperKvs(baseKey + ".node_id", indexKvs),
-    ...getSingleValueMapperKvs(baseKey + ".value", valueKvs),
-    ...getSingleValueMapperKvs(baseKey + ".node_links", linksKvs),
+    ...getSingleValueMapperPairs(baseKey + ".node_id", indexPairs),
+    ...getSingleValueMapperPairs(baseKey + ".value", valuePairs),
+    ...getSingleValueMapperPairs(baseKey + ".node_links", linksPairs),
   ];
 };
 
-const getMapMapperKvs = (
+const getMapMapperPairs = (
   baseKey: string,
   map: [number | bigint, Encodable, Encodable][]
-): Kv[] => {
+): Pair[] => {
   return [
-    ...getSetMapperKvs(
+    ...getSetMapperPairs(
       baseKey,
       map.map(([i, k]) => [i, k])
     ),
-    ...getSingleValueMapperKvs(
+    ...getSingleValueMapperPairs(
       baseKey + ".mapped",
       map.map(([, k, v]) => [k, v])
     ),
   ];
 };
 
-const getVecMapperKvs = (baseKey: string, map: Encodable[]): Kv[] => {
+const getVecMapperPairs = (baseKey: string, map: Encodable[]): Pair[] => {
   if (map.length === 0) return [];
   return [
-    ...getSingleValueMapperKvs(
+    ...getSingleValueMapperPairs(
       baseKey + ".item",
       map.map((v, i) => [e.U32(BigInt(i + 1)), v])
     ),
@@ -98,11 +98,11 @@ const getVecMapperKvs = (baseKey: string, map: Encodable[]): Kv[] => {
   ];
 };
 
-const getEsdtsKvs = (esdts: Esdt[]) => {
-  return esdts.flatMap(getEsdtKvs);
+const getEsdtsPairs = (esdts: Esdt[]) => {
+  return esdts.flatMap(getEsdtPairs);
 };
 
-const getEsdtKvs = ({
+const getEsdtPairs = ({
   id,
   nonce,
   amount,
@@ -116,8 +116,8 @@ const getEsdtKvs = ({
   hash,
   uris,
   attrs,
-}: Esdt): Kv[] => {
-  const kvs: Kv[] = [];
+}: Esdt): Pair[] => {
+  const pairs: Pair[] = [];
   if (
     amount !== undefined ||
     properties !== undefined ||
@@ -170,16 +170,16 @@ const getEsdtKvs = ({
       message["Metadata"] = Object.fromEntries(metadata);
     }
     const messageBytes = ESDTSystemMessage.encode(message).finish();
-    kvs.push([e.Bytes(esdtKey), e.Bytes(messageBytes)]);
+    pairs.push([e.Bytes(esdtKey), e.Bytes(messageBytes)]);
   }
   if (lastNonce !== undefined) {
-    kvs.push([e.Str(`ELRONDnonce${id}`), e.U(lastNonce)]);
+    pairs.push([e.Str(`ELRONDnonce${id}`), e.U(lastNonce)]);
   }
   if (roles !== undefined) {
     const messageBytes = ESDTRolesMessage.encode({ Roles: roles }).finish();
-    kvs.push([e.Str(`ELRONDroleesdt${id}`), e.Bytes(messageBytes)]);
+    pairs.push([e.Str(`ELRONDroleesdt${id}`), e.Bytes(messageBytes)]);
   }
-  return kvs;
+  return pairs;
 };
 
 const ESDTRolesMessage = new Type("ESDTRoles").add(

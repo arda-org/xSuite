@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import { hexToHexString, Esdt, Kv, s, Hex } from "../data";
+import { hexToHexString, Esdt, Pairs, s, Hex, pairsToRawPairs } from "../data";
 import { Proxy } from "../proxy";
 
 export const assertAccount = (
@@ -15,17 +15,14 @@ export const assertAccount = (
   if (balance !== undefined) {
     assert.strictEqual(actualAccount.balance, balance);
   }
-  const kvs = [
-    ...(containsEsdts ? s.Esdts(containsEsdts) : []),
+  const rawPairs = pairsToRawPairs([
+    containsEsdts ? s.Esdts(containsEsdts) : [],
     ...(containsStorage ?? []),
-  ];
-  if (kvs.length > 0) {
-    kvs.forEach(([k, v]) =>
-      assert.strictEqual(
-        actualAccount.pairs?.[hexToHexString(k)] ?? "",
-        hexToHexString(v)
-      )
-    );
+  ]);
+  if (Object.keys(rawPairs).length > 0) {
+    for (const k in rawPairs) {
+      assert.strictEqual(actualAccount.pairs?.[k] ?? "", rawPairs[k]);
+    }
   }
 };
 
@@ -48,5 +45,5 @@ type ExpectedAccount = {
   nonce?: number;
   balance?: bigint;
   containsEsdts?: Esdt[];
-  containsStorage?: Kv[];
+  containsStorage?: Pairs;
 };
