@@ -9,7 +9,7 @@ test("assertAccount", () => {
       },
     },
     {
-      containsStorage: [
+      hasStorage: [
         ["01", "01"],
         ["02", ""],
       ],

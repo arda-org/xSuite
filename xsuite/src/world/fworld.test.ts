@@ -80,7 +80,7 @@ test("FWorldWallet.getAccountWithPairs", async () => {
   assertAccount(await wallet.getAccountWithPairs(), {
     nonce: 0,
     balance: 10n ** 18n,
-    containsEsdts: [{ id: fftId, amount: 10n ** 18n }],
+    hasEsdts: [{ id: fftId, amount: 10n ** 18n }],
   });
 });
 
@@ -112,7 +112,7 @@ test("FWorldContract.getAccountWithPairs", async () => {
   assertAccount(await contract.getAccountWithPairs(), {
     nonce: 0,
     balance: 10n ** 18n,
-    containsEsdts: [{ id: fftId, amount: 10n ** 18n }],
+    hasEsdts: [{ id: fftId, amount: 10n ** 18n }],
   });
 });
 
@@ -143,11 +143,11 @@ test("FWorldWallet.transfer", async () => {
   });
   assertAccount(await wallet.getAccountWithPairs(), {
     balance: 9n * 10n ** 17n,
-    containsEsdts: [{ id: fftId, amount: 9n * 10n ** 17n }],
+    hasEsdts: [{ id: fftId, amount: 9n * 10n ** 17n }],
   });
   assertAccount(await otherWallet.getAccountWithPairs(), {
     balance: 10n ** 17n,
-    containsEsdts: [{ id: fftId, amount: 10n ** 17n }],
+    hasEsdts: [{ id: fftId, amount: 10n ** 17n }],
   });
 });
 
@@ -160,7 +160,7 @@ test("FWorldWallet.deployContract & upgradeContract", async () => {
   });
   assertAccount(await contract.getAccountWithPairs(), {
     code: worldCode,
-    containsStorage: [[e.Str("n"), e.U64(1)]],
+    hasStorage: [[e.Str("n"), e.U64(1)]],
   });
   await wallet.upgradeContract({
     callee: contract,
@@ -171,7 +171,7 @@ test("FWorldWallet.deployContract & upgradeContract", async () => {
   });
   assertAccount(await contract.getAccountWithPairs(), {
     code: worldCode,
-    containsStorage: [[e.Str("n"), e.U64(2)]],
+    hasStorage: [[e.Str("n"), e.U64(2)]],
   });
 });
 
@@ -184,7 +184,7 @@ test("FWorldWallet.deployContract & upgradeContract - file:", async () => {
   });
   assertAccount(await contract.getAccountWithPairs(), {
     code: worldCode,
-    containsStorage: [[e.Str("n"), e.U64(1)]],
+    hasStorage: [[e.Str("n"), e.U64(1)]],
   });
   await wallet.upgradeContract({
     callee: contract,
@@ -195,7 +195,7 @@ test("FWorldWallet.deployContract & upgradeContract - file:", async () => {
   });
   assertAccount(await contract.getAccountWithPairs(), {
     code: worldCode,
-    containsStorage: [[e.Str("n"), e.U64(2)]],
+    hasStorage: [[e.Str("n"), e.U64(2)]],
   });
 });
 
@@ -222,10 +222,10 @@ test("FWorldWallet.callContract with ESDT", async () => {
     gasLimit: 10_000_000,
   });
   assertAccount(await wallet.getAccountWithPairs(), {
-    containsEsdts: [{ id: fftId, amount: 9n * 10n ** 17n }],
+    hasEsdts: [{ id: fftId, amount: 9n * 10n ** 17n }],
   });
   assertAccount(await contract.getAccountWithPairs(), {
-    containsEsdts: [{ id: fftId, amount: 10n ** 18n + 10n ** 17n }],
+    hasEsdts: [{ id: fftId, amount: 10n ** 18n + 10n ** 17n }],
   });
 });
 

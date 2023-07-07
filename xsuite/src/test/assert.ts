@@ -4,7 +4,7 @@ import { Proxy } from "../proxy";
 
 export const assertAccount = (
   actualAccount: ActualAccount,
-  { code, nonce, balance, containsEsdts, containsStorage }: ExpectedAccount
+  { code, nonce, balance, hasEsdts, hasStorage }: ExpectedAccount
 ) => {
   if (code !== undefined) {
     assert.strictEqual(actualAccount.code, code);
@@ -16,8 +16,8 @@ export const assertAccount = (
     assert.strictEqual(actualAccount.balance, balance);
   }
   const rawPairs = pairsToRawPairs([
-    containsEsdts ? s.Esdts(containsEsdts) : [],
-    ...(containsStorage ?? []),
+    hasEsdts ? s.Esdts(hasEsdts) : [],
+    ...(hasStorage ?? []),
   ]);
   if (Object.keys(rawPairs).length > 0) {
     for (const k in rawPairs) {
@@ -44,6 +44,6 @@ type ExpectedAccount = {
   code?: string;
   nonce?: number;
   balance?: bigint;
-  containsEsdts?: Esdt[];
-  containsStorage?: Pairs;
+  hasEsdts?: Esdt[];
+  hasStorage?: Pairs;
 };
