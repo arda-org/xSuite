@@ -1,4 +1,4 @@
-import { Address, Esdt, getEsdtsKvs, Kv, kvsToPairs, Pairs } from "../data";
+import { Address, Esdt, s, Kv, kvsToPairs, Pairs } from "../data";
 import { CodeMetadata, codeMetadataToHexString, Proxy } from "./proxy";
 
 export class FProxy extends Proxy {
@@ -40,7 +40,7 @@ const accountToRawAccount = (account: BroadAccount): RawAccount => {
   let pairs: Pairs | undefined;
   if ("esdts" in account || "storage" in account) {
     pairs = kvsToPairs([
-      ...getEsdtsKvs(account.esdts ?? []),
+      ...s.Esdts(account.esdts ?? []),
       ...(account.storage ?? []),
     ]);
   } else if ("pairs" in account) {

@@ -1,5 +1,5 @@
 [package]
-name = "storage-wasm"
+name = "mapper-wasm"
 version = "0.0.0"
 edition = "2021"
 publish = false
@@ -14,7 +14,7 @@ lto = true
 debug = false
 panic = "abort"
 
-[dependencies.storage]
+[dependencies.mapper]
 path = ".."
 
 [dependencies.multiversx-sc-wasm-adapter]

@@ -3,7 +3,7 @@
 multiversx_sc::imports!();
 
 #[multiversx_sc::contract]
-pub trait Storage {
+pub trait Mapper {
     #[init]
     fn init(&self) {}
 

@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import { hexToHexString, Esdt, Kv, getEsdtsKvs, Hex } from "../data";
+import { hexToHexString, Esdt, Kv, s, Hex } from "../data";
 import { Proxy } from "../proxy";
 
 export const assertAccount = (
@@ -16,7 +16,7 @@ export const assertAccount = (
     assert.strictEqual(actualAccount.balance, balance);
   }
   const kvs = [
-    ...(containsEsdts ? getEsdtsKvs(containsEsdts) : []),
+    ...(containsEsdts ? s.Esdts(containsEsdts) : []),
     ...(containsStorage ?? []),
   ];
   if (kvs.length > 0) {
