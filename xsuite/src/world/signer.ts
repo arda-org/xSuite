@@ -36,13 +36,7 @@ export class KeystoreSigner extends UserSigner {
     super(BaseUserSigner.fromWallet(keystore, password, addressIndex));
   }
 
-  static createFile(filePath: string, password: string) {
-    const mnemonic = Mnemonic.generate().toString();
-    const keystore = UserWallet.fromMnemonic({ mnemonic, password }).toJSON();
-    fs.writeFileSync(filePath, JSON.stringify(keystore), "utf8");
-  }
-
-  static async createFileInteractive(filePath: string) {
+  static async createFile(filePath: string) {
     filePath = path.resolve(filePath);
     log(`Creating keystore wallet at "${filePath}"...`);
     const password = await input.hidden("Enter password: ");
@@ -50,18 +44,28 @@ export class KeystoreSigner extends UserSigner {
     if (password !== passwordAgain) {
       throw new Error("Passwords do not match.");
     }
-    this.createFile(filePath, password);
+    this.createFile_unsafe(filePath, password);
   }
 
-  static fromFile(filePath: string, password: string, addressIndex?: number) {
-    const keystore = JSON.parse(fs.readFileSync(filePath, "utf8"));
-    return new KeystoreSigner(keystore, password, addressIndex);
+  static createFile_unsafe(filePath: string, password: string) {
+    const mnemonic = Mnemonic.generate().toString();
+    const keystore = UserWallet.fromMnemonic({ mnemonic, password }).toJSON();
+    fs.writeFileSync(filePath, JSON.stringify(keystore), "utf8");
   }
 
-  static async fromFileInteractive(filePath: string, addressIndex?: number) {
+  static async fromFile(filePath: string, addressIndex?: number) {
     filePath = path.resolve(filePath);
     log(`Loading keystore wallet at "${filePath}"...`);
     const password = await input.hidden("Enter password: ");
-    return this.fromFile(filePath, password, addressIndex);
+    return this.fromFile_unsafe(filePath, password, addressIndex);
+  }
+
+  static fromFile_unsafe(
+    filePath: string,
+    password: string,
+    addressIndex?: number
+  ) {
+    const keystore = JSON.parse(fs.readFileSync(filePath, "utf8"));
+    return new KeystoreSigner(keystore, password, addressIndex);
   }
 }

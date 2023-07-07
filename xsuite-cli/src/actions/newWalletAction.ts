@@ -17,13 +17,13 @@ export const newWalletAction = async ({
   }
   if (password === undefined) {
     try {
-      await KeystoreSigner.createFileInteractive(walletPath);
+      await KeystoreSigner.createFile(walletPath);
     } catch (err: any) {
       logError(err.message);
       return;
     }
   } else {
-    KeystoreSigner.createFile(walletPath, password);
+    KeystoreSigner.createFile_unsafe(walletPath, password);
   }
   logSuccess(`Wallet created at "${walletPath}".`);
 };

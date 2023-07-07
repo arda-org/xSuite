@@ -14,9 +14,9 @@ export const requestXegldAction = async ({
 }) => {
   let signer: KeystoreSigner;
   if (password === undefined) {
-    signer = await KeystoreSigner.fromFileInteractive(walletPath);
+    signer = await KeystoreSigner.fromFile(walletPath);
   } else {
-    signer = KeystoreSigner.fromFile(walletPath, password);
+    signer = KeystoreSigner.fromFile_unsafe(walletPath, password);
   }
   const address = signer.toString();
   log(`Claiming 30 xEGLD for address "${address}"...`);

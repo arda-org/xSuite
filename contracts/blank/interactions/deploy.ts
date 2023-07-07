@@ -1,4 +1,4 @@
-import { World, KeystoreSigner } from "xsuite/world";
+import { World } from "xsuite/world";
 
 const main = async () => {
   const world = World.new({
@@ -6,9 +6,7 @@ const main = async () => {
     chainId: "D",
     gasPrice: 1000000000,
   });
-  const wallet = world.newWallet(
-    await KeystoreSigner.fromFileInteractive("wallet.json")
-  );
+  const wallet = await world.newWalletFromFile("wallet.json");
   const txResult = await wallet.deployContract({
     code: "file:output/contract.wasm",
     codeMetadata: [],

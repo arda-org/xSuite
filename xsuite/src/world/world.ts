@@ -9,7 +9,7 @@ import {
   Proxy,
   Query,
 } from "../proxy";
-import { Signer } from "./signer";
+import { KeystoreSigner, Signer } from "./signer";
 import { readFileHex } from "./utils";
 
 export class World {
@@ -45,6 +45,17 @@ export class World {
 
   newWallet(signer: Signer) {
     return new WorldWallet(this, signer);
+  }
+
+  async newWalletFromFile(filePath: string) {
+    return new WorldWallet(this, await KeystoreSigner.fromFile(filePath));
+  }
+
+  newWalletFromFile_unsafe(filePath: string, password: string) {
+    return new WorldWallet(
+      this,
+      KeystoreSigner.fromFile_unsafe(filePath, password)
+    );
   }
 
   newContract(address: string | Uint8Array) {

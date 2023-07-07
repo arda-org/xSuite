@@ -82,8 +82,9 @@ test("new-wallet --wallet wallet.json --password 1234 | error: already exists", 
 });
 
 test("request-xegld --wallet wallet.json", async () => {
-  KeystoreSigner.createFile("wallet.json", "1234");
-  const address = KeystoreSigner.fromFile("wallet.json", "1234").toString();
+  KeystoreSigner.createFile_unsafe("wallet.json", "1234");
+  const signer = KeystoreSigner.fromFile_unsafe("wallet.json", "1234");
+  const address = signer.toString();
   let numFaucetReqs = 0;
   let numBalanceReqs = 0;
   const server = setupServer(
