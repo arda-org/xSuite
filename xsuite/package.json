@@ -24,7 +24,8 @@
   "dependencies": {
     "@multiversx/sdk-wallet": "4.2.0",
     "bech32": "2.0.0",
-    "protobufjs": "7.0.0"
+    "protobufjs": "7.0.0",
+    "xsuite-fproxy": "workspace:^"
   },
   "devDependencies": {
     "@jest/globals": "29.5.0",
@@ -35,7 +36,6 @@
     "open": "^9.1.0",
     "rimraf": "5.0.0",
     "tsx": "^3.12.7",
-    "typescript": "5.0.4",
-    "xsuite-fproxy": "workspace:^"
+    "typescript": "5.0.4"
   }
 }

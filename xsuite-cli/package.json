@@ -31,6 +31,6 @@
     "tar": "6.1.15",
     "tsx": "^3.12.7",
     "typescript": "5.0.4",
-    "xsuite": "workspace:*"
+    "xsuite": "workspace:^"
   }
 }
