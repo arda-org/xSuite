@@ -7,12 +7,15 @@ export const s = {
   SingleValueMapper: (baseKey: string, map: Kv[]) => {
     return getSingleValueMapperKvs(baseKey, map);
   },
-  SetMapper: (baseKey: string, map: [number | bigint, Encodable][]) => {
+  SetMapper: (
+    baseKey: string,
+    map: [index: number | bigint, value: Encodable][]
+  ) => {
     return getSetMapperKvs(baseKey, map);
   },
   MapMapper: (
     baseKey: string,
-    map: [number | bigint, Encodable, Encodable][]
+    map: [index: number | bigint, key: Encodable, value: Encodable][]
   ) => {
     return getMapMapperKvs(baseKey, map);
   },
