@@ -1,13 +1,15 @@
 import { World, KeystoreSigner } from "xsuite/world";
 
 const main = async () => {
-  const signer = await KeystoreSigner.fromFileInteractive("wallet.json");
   const world = World.new({
     proxyUrl: "https://devnet-gateway.multiversx.com",
     chainId: "D",
     gasPrice: 1000000000,
   });
-  const txResult = await world.deployContract(signer, {
+  const wallet = world.newWallet(
+    await KeystoreSigner.fromFileInteractive("wallet.json")
+  );
+  const txResult = await wallet.deployContract({
     code: "file:output/contract.wasm",
     codeMetadata: [],
     gasLimit: 20_000_000,
