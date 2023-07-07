@@ -50,9 +50,6 @@ importers:
       xsuite-cli:
         specifier: 0.0.8
         version: link:../../xsuite-cli
-      xsuite-fproxy:
-        specifier: 0.0.1
-        version: link:../../xsuite-fproxy
 
   xsuite:
     dependencies:
