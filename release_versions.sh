@@ -23,12 +23,11 @@ update_version() {
     updated_modules+=("$module@$version")
 
     for dir in contracts/*/; do
-      if [[ $dir == "contracts/target/" ]]; then
-        continue
-      fi
       package_json="$root_dir/$dir/package.json"
-      jq ".devDependencies[\"$module\"] = \"${version}\"" "$package_json" > tmp.$$.json && mv tmp.$$.json "$package_json"
-      modified_files+=("$package_json")
+      if jq -e ".devDependencies[\"$module\"]" $package_json > /dev/null; then
+        jq ".devDependencies[\"$module\"] = \"${version}\"" "$package_json" > tmp.$$.json && mv tmp.$$.json "$package_json"
+        modified_files+=("$package_json")
+      fi
     done
   fi
 }
