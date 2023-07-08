@@ -1,8 +1,8 @@
 import { expect, test } from "@jest/globals";
-import { e, Encodable, p } from "./index";
+import { e, Encodable } from "./index";
 
 test("s", () => {
-  expect(p.SingleValueMapper("key", [])).toEqual([]);
+  expect(e.p.SingleValueMapper("key", [])).toEqual([]);
 });
 
 test("Encodable", () => {

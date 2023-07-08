@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, expect, test } from "@jest/globals";
-import { d, e, p, pairsToRawPairs } from "../data";
+import { d, e, pairsToRawPairs } from "../data";
 import { assertAccount, assertTxReturnData } from "../test";
 import { FWorld, FWorldContract, FWorldWallet } from "./fworld";
 import { readFileHex } from "./utils";
@@ -65,7 +65,7 @@ test("FWorldWallet.getAccountBalance", async () => {
 
 test("FWorldWallet.getAccountPairs", async () => {
   expect(await wallet.getAccountPairs()).toEqual(
-    pairsToRawPairs(p.Esdts([{ id: fftId, amount: 10n ** 18n }]))
+    pairsToRawPairs(e.p.Esdts([{ id: fftId, amount: 10n ** 18n }]))
   );
 });
 
@@ -95,7 +95,7 @@ test("FWorldContract.getAccountBalance", async () => {
 test("FWorldContract.getAccountPairs", async () => {
   expect(await contract.getAccountPairs()).toEqual(
     pairsToRawPairs([
-      p.Esdts([{ id: fftId, amount: 10n ** 18n }]),
+      e.p.Esdts([{ id: fftId, amount: 10n ** 18n }]),
       [e.Str("n"), e.U64(1)],
     ])
   );

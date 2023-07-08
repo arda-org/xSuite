@@ -1,11 +1,11 @@
 import { Field, Type } from "protobufjs";
 import { Encodable } from "./Encodable";
 import { Address, addressToBytes } from "./address";
-import { e } from "./encoding";
+import { enc } from "./encoding";
 import { hexToEncodable, Hex, hexToBytes } from "./hex";
 import { Pair } from "./pairs";
 
-export const p = {
+export const pEnc = {
   SingleValueMapper: (baseKey: string, map: Pair[]) => {
     return getSingleValueMapperPairs(baseKey, map);
   },
@@ -30,8 +30,8 @@ export const p = {
 };
 
 const getSingleValueMapperPairs = (baseKey: string, map: Pair[]): Pair[] => {
-  const baseKeyEnc = e.Bytes(e.Str(baseKey).toTopBytes());
-  return map.map(([k, v]) => [e.List(baseKeyEnc, hexToEncodable(k)), v]);
+  const baseKeyEnc = enc.Bytes(enc.Str(baseKey).toTopBytes());
+  return map.map(([k, v]) => [enc.List(baseKeyEnc, hexToEncodable(k)), v]);
 };
 
 const getSetMapperPairs = (
@@ -49,11 +49,14 @@ const getSetMapperPairs = (
     if (index <= 0) {
       throw new Error("Negative id not allowed.");
     }
-    indexPairs.push([v, e.U32(index)]);
-    valuePairs.push([e.U32(index), v]);
+    indexPairs.push([v, enc.U32(index)]);
+    valuePairs.push([enc.U32(index), v]);
     const prevI = i === 0 ? 0n : map[i - 1][0];
     const nextI = i === map.length - 1 ? 0n : map[i + 1][0];
-    linksPairs.push([e.U32(index), e.Tuple(e.U32(prevI), e.U32(nextI))]);
+    linksPairs.push([
+      enc.U32(index),
+      enc.Tuple(enc.U32(prevI), enc.U32(nextI)),
+    ]);
     if (index >= maxIndex) {
       maxIndex = index;
     }
@@ -62,8 +65,13 @@ const getSetMapperPairs = (
   const lastI = map[map.length - 1][0];
   return [
     [
-      e.Str(baseKey + ".info"),
-      e.Tuple(e.U32(map.length), e.U32(firstI), e.U32(lastI), e.U32(maxIndex)),
+      enc.Str(baseKey + ".info"),
+      enc.Tuple(
+        enc.U32(map.length),
+        enc.U32(firstI),
+        enc.U32(lastI),
+        enc.U32(maxIndex)
+      ),
     ],
     ...getSingleValueMapperPairs(baseKey + ".node_id", indexPairs),
     ...getSingleValueMapperPairs(baseKey + ".value", valuePairs),
@@ -92,9 +100,9 @@ const getVecMapperPairs = (baseKey: string, map: Encodable[]): Pair[] => {
   return [
     ...getSingleValueMapperPairs(
       baseKey + ".item",
-      map.map((v, i) => [e.U32(BigInt(i + 1)), v])
+      map.map((v, i) => [enc.U32(BigInt(i + 1)), v])
     ),
-    [e.Str(baseKey + ".len"), e.U32(BigInt(map.length))],
+    [enc.Str(baseKey + ".len"), enc.U32(BigInt(map.length))],
   ];
 };
 
@@ -129,17 +137,17 @@ const getEsdtPairs = ({
     uris !== undefined ||
     attrs !== undefined
   ) {
-    let esdtKey = e.Str(`ELRONDesdt${id}`).toTopHex();
+    let esdtKey = enc.Str(`ELRONDesdt${id}`).toTopHex();
     const message: Record<string, any> = {};
     if (nonce !== undefined && nonce !== 0) {
-      esdtKey += e.U64(nonce).toTopHex();
+      esdtKey += enc.U64(nonce).toTopHex();
     }
     const metadata: [string, any][] = [];
     if (metadataNonce && nonce !== undefined) {
       metadata.push(["Nonce", nonce.toString()]);
     }
     if (name !== undefined) {
-      metadata.push(["Name", e.Str(name).toTopBytes()]);
+      metadata.push(["Name", enc.Str(name).toTopBytes()]);
     }
     if (creator !== undefined) {
       metadata.push(["Creator", addressToBytes(creator)]);
@@ -163,21 +171,21 @@ const getEsdtPairs = ({
       if (properties !== undefined) {
         message["Properties"] = hexToBytes(properties);
       }
-      const bytes = amount > 0 ? e.U(amount).toTopBytes() : [0];
+      const bytes = amount > 0 ? enc.U(amount).toTopBytes() : [0];
       message["Value"] = new Uint8Array([0, ...bytes]);
     }
     if (metadata.length > 0) {
       message["Metadata"] = Object.fromEntries(metadata);
     }
     const messageBytes = ESDTSystemMessage.encode(message).finish();
-    pairs.push([e.Bytes(esdtKey), e.Bytes(messageBytes)]);
+    pairs.push([enc.Bytes(esdtKey), enc.Bytes(messageBytes)]);
   }
   if (lastNonce !== undefined) {
-    pairs.push([e.Str(`ELRONDnonce${id}`), e.U(lastNonce)]);
+    pairs.push([enc.Str(`ELRONDnonce${id}`), enc.U(lastNonce)]);
   }
   if (roles !== undefined) {
     const messageBytes = ESDTRolesMessage.encode({ Roles: roles }).finish();
-    pairs.push([e.Str(`ELRONDroleesdt${id}`), e.Bytes(messageBytes)]);
+    pairs.push([enc.Str(`ELRONDroleesdt${id}`), enc.Bytes(messageBytes)]);
   }
   return pairs;
 };

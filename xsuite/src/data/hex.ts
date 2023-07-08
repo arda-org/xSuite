@@ -1,12 +1,12 @@
 import { BytesEncodable } from "./BytesEncodable";
 import { Encodable } from "./Encodable";
-import { e } from "./encoding";
+import { enc } from "./encoding";
 
 export type Hex = string | Encodable;
 
 export const hexToBytes = (hex: Hex) => {
   if (typeof hex === "string") {
-    hex = e.Bytes(hex);
+    hex = enc.Bytes(hex);
   }
   return hex.toTopBytes();
 };

@@ -1,10 +1,10 @@
 import { test, expect, beforeEach, afterEach, describe } from "@jest/globals";
 import { FWorld, FWorldContract, FWorldWallet, readFileHex } from "../world";
 import { Encodable } from "./Encodable";
-import { e } from "./encoding";
+import { enc } from "./encoding";
 import { hexToHexString } from "./hex";
 import { pairsToRawPairs } from "./pairs";
-import { p } from "./pairsEncoding";
+import { pEnc } from "./pairsEncoding";
 
 let world: FWorld;
 let wallet: FWorldWallet;
@@ -33,16 +33,16 @@ describe("Mapper", () => {
 
   test("s.SingleValueMapper", async () => {
     const map: [Encodable, Encodable][] = [
-      [e.Str("a"), e.U64(1)],
-      [e.Str("b"), e.U64(2)],
+      [enc.Str("a"), enc.U64(1)],
+      [enc.Str("b"), enc.U64(2)],
     ];
     await wallet.callContract({
       callee: contract,
       functionName: "single_add",
-      functionArgs: map.map(([k, v]) => e.Tuple(k, v)),
+      functionArgs: map.map(([k, v]) => enc.Tuple(k, v)),
       gasLimit: 10_000_000,
     });
-    expect(pairsToRawPairs(p.SingleValueMapper("single", map))).toEqual(
+    expect(pairsToRawPairs(pEnc.SingleValueMapper("single", map))).toEqual(
       await contract.getAccountPairs()
     );
     await wallet.callContract({
@@ -52,43 +52,43 @@ describe("Mapper", () => {
       gasLimit: 10_000_000,
     });
     map.length = 0;
-    expect(pairsToRawPairs(p.SingleValueMapper("single", map))).toEqual(
+    expect(pairsToRawPairs(pEnc.SingleValueMapper("single", map))).toEqual(
       await contract.getAccountPairs()
     );
   });
 
   test("s.SetMapper", async () => {
-    expect(() => p.SetMapper("set", [[0, e.U64(0)]])).toThrow(
+    expect(() => pEnc.SetMapper("set", [[0, enc.U64(0)]])).toThrow(
       "Negative id not allowed."
     );
     await wallet.callContract({
       callee: contract,
       functionName: "set_add",
-      functionArgs: [e.U64(10), e.U64(20), e.U64(30), e.U64(40)],
+      functionArgs: [enc.U64(10), enc.U64(20), enc.U64(30), enc.U64(40)],
       gasLimit: 10_000_000,
     });
     await wallet.callContract({
       callee: contract,
       functionName: "set_remove",
-      functionArgs: [e.U64(20)],
+      functionArgs: [enc.U64(20)],
       gasLimit: 10_000_000,
     });
     expect(
       pairsToRawPairs(
-        p.SetMapper("set", [
-          [3, e.U64(30)],
-          [1, e.U64(10)],
-          [4, e.U64(40)],
+        pEnc.SetMapper("set", [
+          [3, enc.U64(30)],
+          [1, enc.U64(10)],
+          [4, enc.U64(40)],
         ])
       )
     ).toEqual(await contract.getAccountPairs());
     await wallet.callContract({
       callee: contract,
       functionName: "set_remove",
-      functionArgs: [e.U64(10), e.U64(30), e.U64(40)],
+      functionArgs: [enc.U64(10), enc.U64(30), enc.U64(40)],
       gasLimit: 10_000_000,
     });
-    expect(pairsToRawPairs(p.SetMapper("set", []))).toEqual(
+    expect(pairsToRawPairs(pEnc.SetMapper("set", []))).toEqual(
       await contract.getAccountPairs()
     );
   });
@@ -98,56 +98,56 @@ describe("Mapper", () => {
       callee: contract,
       functionName: "map_add",
       functionArgs: [
-        e.Tuple(e.Str("a"), e.U64(10)),
-        e.Tuple(e.Str("b"), e.U64(20)),
-        e.Tuple(e.Str("c"), e.U64(30)),
+        enc.Tuple(enc.Str("a"), enc.U64(10)),
+        enc.Tuple(enc.Str("b"), enc.U64(20)),
+        enc.Tuple(enc.Str("c"), enc.U64(30)),
       ],
       gasLimit: 10_000_000,
     });
     await wallet.callContract({
       callee: contract,
       functionName: "map_remove",
-      functionArgs: [e.Str("b")],
+      functionArgs: [enc.Str("b")],
       gasLimit: 10_000_000,
     });
     expect(
       pairsToRawPairs(
-        p.MapMapper("map", [
-          [3, e.Str("c"), e.U64(30)],
-          [1, e.Str("a"), e.U64(10)],
+        pEnc.MapMapper("map", [
+          [3, enc.Str("c"), enc.U64(30)],
+          [1, enc.Str("a"), enc.U64(10)],
         ])
       )
     ).toEqual(await contract.getAccountPairs());
     await wallet.callContract({
       callee: contract,
       functionName: "map_remove",
-      functionArgs: [e.Str("a"), e.Str("c")],
+      functionArgs: [enc.Str("a"), enc.Str("c")],
       gasLimit: 10_000_000,
     });
-    expect(pairsToRawPairs(p.MapMapper("map", []))).toEqual(
+    expect(pairsToRawPairs(pEnc.MapMapper("map", []))).toEqual(
       await contract.getAccountPairs()
     );
   });
 
   test("s.VecMapper", async () => {
-    const map = [e.U64(1), e.U64(2)];
+    const map = [enc.U64(1), enc.U64(2)];
     await wallet.callContract({
       callee: contract,
       functionName: "vec_add",
       functionArgs: map,
       gasLimit: 10_000_000,
     });
-    expect(pairsToRawPairs(p.VecMapper("vec", map))).toEqual(
+    expect(pairsToRawPairs(pEnc.VecMapper("vec", map))).toEqual(
       await contract.getAccountPairs()
     );
     await wallet.callContract({
       callee: contract,
       functionName: "vec_remove",
-      functionArgs: [e.U32(2), e.U32(1)],
+      functionArgs: [enc.U32(2), enc.U32(1)],
       gasLimit: 10_000_000,
     });
     map.length = 0;
-    expect(pairsToRawPairs(p.VecMapper("vec", map))).toEqual(
+    expect(pairsToRawPairs(pEnc.VecMapper("vec", map))).toEqual(
       await contract.getAccountPairs()
     );
   });
@@ -175,7 +175,7 @@ describe("Esdt", () => {
     await wallet.callContract({
       callee: contract,
       functionName: "mint_and_send",
-      functionArgs: [e.Str(fftId), e.U(fftAmount)],
+      functionArgs: [enc.Str(fftId), enc.U(fftAmount)],
       gasLimit: 10_000_000,
     });
     const sftAmount1 = 20n;
@@ -183,18 +183,18 @@ describe("Esdt", () => {
     const sftRoyalties1 = 20;
     const sftHash1 = "0001";
     const sftUris1 = ["https://google.com"];
-    const sftAttrs1 = e.Tuple(e.U8(0), e.U8(0), e.U8(0));
+    const sftAttrs1 = enc.Tuple(enc.U8(0), enc.U8(0), enc.U8(0));
     await wallet.callContract({
       callee: contract,
       functionName: "nft_create_and_send",
       functionArgs: [
-        e.Str(sftId),
-        e.U(sftAmount1),
-        e.Str(sftName1),
-        e.U(sftRoyalties1),
-        e.Buffer(sftHash1),
+        enc.Str(sftId),
+        enc.U(sftAmount1),
+        enc.Str(sftName1),
+        enc.U(sftRoyalties1),
+        enc.Buffer(sftHash1),
         sftAttrs1,
-        e.List(...sftUris1.map((u) => e.Str(u))),
+        enc.List(...sftUris1.map((u) => enc.Str(u))),
       ],
       gasLimit: 10_000_000,
     });
@@ -203,24 +203,24 @@ describe("Esdt", () => {
     const sftRoyalties2 = 50;
     const sftHash2 = "0002";
     const sftUris2 = ["https://facebook.com"];
-    const sftAttrs2 = e.Tuple(e.U8(255), e.U8(255), e.U8(255));
+    const sftAttrs2 = enc.Tuple(enc.U8(255), enc.U8(255), enc.U8(255));
     await wallet.callContract({
       callee: contract,
       functionName: "nft_create_and_send",
       functionArgs: [
-        e.Str(sftId),
-        e.U(sftAmount2),
-        e.Str(sftName2),
-        e.U(sftRoyalties2),
-        e.Buffer(sftHash2),
+        enc.Str(sftId),
+        enc.U(sftAmount2),
+        enc.Str(sftName2),
+        enc.U(sftRoyalties2),
+        enc.Buffer(sftHash2),
         sftAttrs2,
-        e.List(...sftUris2.map((u) => e.Str(u))),
+        enc.List(...sftUris2.map((u) => enc.Str(u))),
       ],
       gasLimit: 10_000_000,
     });
     expect(
       pairsToRawPairs(
-        p.Esdts([
+        pEnc.Esdts([
           { id: fftId, amount: fftAmount },
           { id: sftId, nonce: 1, amount: sftAmount1 },
           { id: sftId, nonce: 2, amount: sftAmount2 },
@@ -229,7 +229,7 @@ describe("Esdt", () => {
     ).toEqual(await wallet.getAccountPairs());
     expect(
       pairsToRawPairs(
-        p.Esdts([
+        pEnc.Esdts([
           {
             id: fftId,
             roles: ["ESDTRoleLocalMint"],
@@ -244,7 +244,7 @@ describe("Esdt", () => {
     ).toEqual(await contract.getAccountPairs());
     expect(
       pairsToRawPairs(
-        p.Esdts([
+        pEnc.Esdts([
           {
             id: sftId,
             nonce: 1,
@@ -278,7 +278,7 @@ describe("Esdt", () => {
 
   test("s.Esdts - amount 0", () => {
     expect(
-      p
+      pEnc
         .Esdts([
           { id: fftId, amount: 0n },
           { id: sftId, nonce: 1, amount: 0n },

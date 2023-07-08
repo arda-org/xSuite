@@ -8,7 +8,7 @@ import { OptionEncodable } from "./OptionEncodable";
 import { TupleEncodable } from "./TupleEncodable";
 import { UintEncodable } from "./UintEncodable";
 
-export const e = {
+export const enc = {
   Bytes: (bytes: string | number[] | Uint8Array) => {
     return new BytesEncodable(bytes);
   },
