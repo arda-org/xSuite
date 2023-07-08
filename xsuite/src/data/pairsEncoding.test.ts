@@ -4,7 +4,7 @@ import { Encodable } from "./Encodable";
 import { e } from "./encoding";
 import { hexToHexString } from "./hex";
 import { pairsToRawPairs } from "./pairs";
-import { s } from "./storage";
+import { p } from "./pairsEncoding";
 
 let world: FWorld;
 let wallet: FWorldWallet;
@@ -42,7 +42,7 @@ describe("Mapper", () => {
       functionArgs: map.map(([k, v]) => e.Tuple(k, v)),
       gasLimit: 10_000_000,
     });
-    expect(pairsToRawPairs(s.SingleValueMapper("single", map))).toEqual(
+    expect(pairsToRawPairs(p.SingleValueMapper("single", map))).toEqual(
       await contract.getAccountPairs()
     );
     await wallet.callContract({
@@ -52,13 +52,13 @@ describe("Mapper", () => {
       gasLimit: 10_000_000,
     });
     map.length = 0;
-    expect(pairsToRawPairs(s.SingleValueMapper("single", map))).toEqual(
+    expect(pairsToRawPairs(p.SingleValueMapper("single", map))).toEqual(
       await contract.getAccountPairs()
     );
   });
 
   test("s.SetMapper", async () => {
-    expect(() => s.SetMapper("set", [[0, e.U64(0)]])).toThrow(
+    expect(() => p.SetMapper("set", [[0, e.U64(0)]])).toThrow(
       "Negative id not allowed."
     );
     await wallet.callContract({
@@ -75,7 +75,7 @@ describe("Mapper", () => {
     });
     expect(
       pairsToRawPairs(
-        s.SetMapper("set", [
+        p.SetMapper("set", [
           [3, e.U64(30)],
           [1, e.U64(10)],
           [4, e.U64(40)],
@@ -88,7 +88,7 @@ describe("Mapper", () => {
       functionArgs: [e.U64(10), e.U64(30), e.U64(40)],
       gasLimit: 10_000_000,
     });
-    expect(pairsToRawPairs(s.SetMapper("set", []))).toEqual(
+    expect(pairsToRawPairs(p.SetMapper("set", []))).toEqual(
       await contract.getAccountPairs()
     );
   });
@@ -112,7 +112,7 @@ describe("Mapper", () => {
     });
     expect(
       pairsToRawPairs(
-        s.MapMapper("map", [
+        p.MapMapper("map", [
           [3, e.Str("c"), e.U64(30)],
           [1, e.Str("a"), e.U64(10)],
         ])
@@ -124,7 +124,7 @@ describe("Mapper", () => {
       functionArgs: [e.Str("a"), e.Str("c")],
       gasLimit: 10_000_000,
     });
-    expect(pairsToRawPairs(s.MapMapper("map", []))).toEqual(
+    expect(pairsToRawPairs(p.MapMapper("map", []))).toEqual(
       await contract.getAccountPairs()
     );
   });
@@ -137,7 +137,7 @@ describe("Mapper", () => {
       functionArgs: map,
       gasLimit: 10_000_000,
     });
-    expect(pairsToRawPairs(s.VecMapper("vec", map))).toEqual(
+    expect(pairsToRawPairs(p.VecMapper("vec", map))).toEqual(
       await contract.getAccountPairs()
     );
     await wallet.callContract({
@@ -147,7 +147,7 @@ describe("Mapper", () => {
       gasLimit: 10_000_000,
     });
     map.length = 0;
-    expect(pairsToRawPairs(s.VecMapper("vec", map))).toEqual(
+    expect(pairsToRawPairs(p.VecMapper("vec", map))).toEqual(
       await contract.getAccountPairs()
     );
   });
@@ -220,7 +220,7 @@ describe("Esdt", () => {
     });
     expect(
       pairsToRawPairs(
-        s.Esdts([
+        p.Esdts([
           { id: fftId, amount: fftAmount },
           { id: sftId, nonce: 1, amount: sftAmount1 },
           { id: sftId, nonce: 2, amount: sftAmount2 },
@@ -229,7 +229,7 @@ describe("Esdt", () => {
     ).toEqual(await wallet.getAccountPairs());
     expect(
       pairsToRawPairs(
-        s.Esdts([
+        p.Esdts([
           {
             id: fftId,
             roles: ["ESDTRoleLocalMint"],
@@ -244,7 +244,7 @@ describe("Esdt", () => {
     ).toEqual(await contract.getAccountPairs());
     expect(
       pairsToRawPairs(
-        s.Esdts([
+        p.Esdts([
           {
             id: sftId,
             nonce: 1,
@@ -278,7 +278,7 @@ describe("Esdt", () => {
 
   test("s.Esdts - amount 0", () => {
     expect(
-      s
+      p
         .Esdts([
           { id: fftId, amount: 0n },
           { id: sftId, nonce: 1, amount: 0n },

@@ -5,7 +5,7 @@ import { e } from "./encoding";
 import { hexToEncodable, Hex, hexToBytes } from "./hex";
 import { Pair } from "./pairs";
 
-export const s = {
+export const p = {
   SingleValueMapper: (baseKey: string, map: Pair[]) => {
     return getSingleValueMapperPairs(baseKey, map);
   },

@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import { hexToHexString, Esdt, Pairs, s, Hex, pairsToRawPairs } from "../data";
+import { hexToHexString, Esdt, Pairs, p, Hex, pairsToRawPairs } from "../data";
 import { Proxy } from "../proxy";
 
 export const assertAccount = (
@@ -16,7 +16,7 @@ export const assertAccount = (
     assert.strictEqual(actualAccount.balance, balance);
   }
   const rawPairs = pairsToRawPairs([
-    hasEsdts ? s.Esdts(hasEsdts) : [],
+    hasEsdts ? p.Esdts(hasEsdts) : [],
     ...(hasPairs ?? []),
   ]);
   if (Object.keys(rawPairs).length > 0) {
