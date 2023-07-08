@@ -1,10 +1,10 @@
 import assert from "node:assert";
-import { hexToHexString, Esdt, Pairs, e, Hex, pairsToRawPairs } from "../data";
+import { hexToHexString, Pairs, Hex, pairsToRawPairs } from "../data";
 import { Proxy } from "../proxy";
 
 export const assertAccount = (
   actualAccount: ActualAccount,
-  { code, nonce, balance, hasEsdts, hasPairs }: ExpectedAccount
+  { code, nonce, balance, hasPairs }: ExpectedAccount
 ) => {
   if (code !== undefined) {
     assert.strictEqual(actualAccount.code, code);
@@ -15,11 +15,8 @@ export const assertAccount = (
   if (balance !== undefined) {
     assert.strictEqual(actualAccount.balance, balance);
   }
-  const rawPairs = pairsToRawPairs([
-    hasEsdts ? e.p.Esdts(hasEsdts) : [],
-    ...(hasPairs ?? []),
-  ]);
-  if (Object.keys(rawPairs).length > 0) {
+  if (hasPairs !== undefined) {
+    const rawPairs = pairsToRawPairs(hasPairs);
     for (const k in rawPairs) {
       assert.strictEqual(actualAccount.pairs?.[k] ?? "", rawPairs[k]);
     }
@@ -44,6 +41,5 @@ type ExpectedAccount = {
   code?: string;
   nonce?: number;
   balance?: bigint;
-  hasEsdts?: Esdt[];
   hasPairs?: Pairs;
 };

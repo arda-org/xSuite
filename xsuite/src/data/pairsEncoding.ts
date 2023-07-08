@@ -211,7 +211,7 @@ const ESDTSystemMessage = new Type("ESDTSystem")
   .add(new Field("Reserved", 5, "bytes"))
   .add(ESDTMetadataMessage);
 
-export type Esdt = {
+type Esdt = {
   id: string;
   nonce?: number;
   amount?: bigint;

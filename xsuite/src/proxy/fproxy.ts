@@ -1,4 +1,4 @@
-import { Address, Esdt, e, Pairs, pairsToRawPairs, RawPairs } from "../data";
+import { Address, Pairs, pairsToRawPairs, RawPairs } from "../data";
 import { CodeMetadata, codeMetadataToHexString, Proxy } from "./proxy";
 
 export class FProxy extends Proxy {
@@ -38,13 +38,12 @@ export class FProxy extends Proxy {
 
 const accountToRawAccount = (account: BroadAccount): RawAccount => {
   let pairs: RawPairs | undefined;
-  if (isAccount(account)) {
-    pairs = pairsToRawPairs([
-      e.p.Esdts(account.esdts ?? []),
-      ...(account.pairs ?? []),
-    ]);
-  } else {
-    pairs = account.pairs;
+  if ("pairs" in account) {
+    if (Array.isArray(account.pairs)) {
+      pairs = pairsToRawPairs(account.pairs);
+    } else {
+      pairs = account.pairs;
+    }
   }
   return {
     address: account.address.toString(),
@@ -60,16 +59,12 @@ const accountToRawAccount = (account: BroadAccount): RawAccount => {
   };
 };
 
-const isAccount = (account: BroadAccount): account is Account =>
-  "esdts" in account || ("pairs" in account && Array.isArray(account.pairs));
-
 type BroadAccount = Account | RawAccount;
 
 export type Account = {
   address: Address;
   nonce?: number;
   balance?: bigint;
-  esdts?: Esdt[];
   pairs?: Pairs;
   code?: string;
   codeMetadata?: CodeMetadata;

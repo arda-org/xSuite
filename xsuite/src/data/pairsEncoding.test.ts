@@ -157,15 +157,17 @@ describe("Esdt", () => {
   beforeEach(async () => {
     contract = await world.createContract({
       code: readFileHex("contracts/esdt/output/esdt.wasm"),
-      esdts: [
-        {
-          id: fftId,
-          roles: ["ESDTRoleLocalMint"],
-        },
-        {
-          id: sftId,
-          roles: ["ESDTRoleNFTCreate", "ESDTRoleNFTAddQuantity"],
-        },
+      pairs: [
+        pEnc.Esdts([
+          {
+            id: fftId,
+            roles: ["ESDTRoleLocalMint"],
+          },
+          {
+            id: sftId,
+            roles: ["ESDTRoleNFTCreate", "ESDTRoleNFTAddQuantity"],
+          },
+        ]),
       ],
     });
   });

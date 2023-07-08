@@ -16,15 +16,17 @@ beforeEach(async () => {
   world = await FWorld.start();
   wallet = await world.createWallet({
     balance: 10n ** 18n,
-    esdts: [{ id: fftId, amount: 10n ** 18n }],
+    pairs: [e.p.Esdts([{ id: fftId, amount: 10n ** 18n }])],
   });
   otherWallet = await world.createWallet();
   contract = await world.createContract({
     balance: 10n ** 18n,
-    esdts: [{ id: fftId, amount: 10n ** 18n }],
     code: worldCode,
     codeMetadata: ["payable"],
-    pairs: [[e.Str("n"), e.U64(1)]],
+    pairs: [
+      e.p.Esdts([{ id: fftId, amount: 10n ** 18n }]),
+      [e.Str("n"), e.U64(1)],
+    ],
   });
 });
 
@@ -80,7 +82,7 @@ test("FWorldWallet.getAccountWithPairs", async () => {
   assertAccount(await wallet.getAccountWithPairs(), {
     nonce: 0,
     balance: 10n ** 18n,
-    hasEsdts: [{ id: fftId, amount: 10n ** 18n }],
+    hasPairs: [e.p.Esdts([{ id: fftId, amount: 10n ** 18n }])],
   });
 });
 
@@ -112,7 +114,7 @@ test("FWorldContract.getAccountWithPairs", async () => {
   assertAccount(await contract.getAccountWithPairs(), {
     nonce: 0,
     balance: 10n ** 18n,
-    hasEsdts: [{ id: fftId, amount: 10n ** 18n }],
+    hasPairs: [e.p.Esdts([{ id: fftId, amount: 10n ** 18n }])],
   });
 });
 
@@ -143,11 +145,11 @@ test("FWorldWallet.transfer", async () => {
   });
   assertAccount(await wallet.getAccountWithPairs(), {
     balance: 9n * 10n ** 17n,
-    hasEsdts: [{ id: fftId, amount: 9n * 10n ** 17n }],
+    hasPairs: [e.p.Esdts([{ id: fftId, amount: 9n * 10n ** 17n }])],
   });
   assertAccount(await otherWallet.getAccountWithPairs(), {
     balance: 10n ** 17n,
-    hasEsdts: [{ id: fftId, amount: 10n ** 17n }],
+    hasPairs: [e.p.Esdts([{ id: fftId, amount: 10n ** 17n }])],
   });
 });
 
@@ -222,10 +224,10 @@ test("FWorldWallet.callContract with ESDT", async () => {
     gasLimit: 10_000_000,
   });
   assertAccount(await wallet.getAccountWithPairs(), {
-    hasEsdts: [{ id: fftId, amount: 9n * 10n ** 17n }],
+    hasPairs: [e.p.Esdts([{ id: fftId, amount: 9n * 10n ** 17n }])],
   });
   assertAccount(await contract.getAccountWithPairs(), {
-    hasEsdts: [{ id: fftId, amount: 10n ** 18n + 10n ** 17n }],
+    hasPairs: [e.p.Esdts([{ id: fftId, amount: 10n ** 18n + 10n ** 17n }])],
   });
 });
 

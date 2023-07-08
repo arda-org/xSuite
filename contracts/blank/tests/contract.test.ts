@@ -23,7 +23,6 @@ test("Test", async () => {
   }));
   assertAccount(await contract.getAccountWithPairs(), {
     balance: 0n,
-    hasEsdts: [],
     hasPairs: [],
   });
 });
