@@ -1,0 +1,16 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "xsuite build",
+    "test": "node --loader tsx --test **/*.test.ts",
+    "deploy": "tsx interactions/deploy.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^18.16.18",
+    "tsx": "^3.12.7",
+    "typescript": "^5.0.4",
+    "xsuite": "0.0.24",
+    "xsuite-cli": "0.0.8"
+  }
+}

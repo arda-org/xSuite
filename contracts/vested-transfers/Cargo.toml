@@ -1,0 +1,11 @@
+[package]
+name = "contract"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies.multiversx-sc]
+version = "0.41.2"
+
+[dev-dependencies.multiversx-sc-scenario]
+version = "0.41.2"
