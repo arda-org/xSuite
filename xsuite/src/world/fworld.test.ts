@@ -24,7 +24,7 @@ beforeEach(async () => {
     esdts: [{ id: fftId, amount: 10n ** 18n }],
     code: worldCode,
     codeMetadata: ["payable"],
-    storage: [[e.Str("n"), e.U64(1)]],
+    pairs: [[e.Str("n"), e.U64(1)]],
   });
 });
 
@@ -160,7 +160,7 @@ test("FWorldWallet.deployContract & upgradeContract", async () => {
   });
   assertAccount(await contract.getAccountWithPairs(), {
     code: worldCode,
-    hasStorage: [[e.Str("n"), e.U64(1)]],
+    hasPairs: [[e.Str("n"), e.U64(1)]],
   });
   await wallet.upgradeContract({
     callee: contract,
@@ -171,7 +171,7 @@ test("FWorldWallet.deployContract & upgradeContract", async () => {
   });
   assertAccount(await contract.getAccountWithPairs(), {
     code: worldCode,
-    hasStorage: [[e.Str("n"), e.U64(2)]],
+    hasPairs: [[e.Str("n"), e.U64(2)]],
   });
 });
 
@@ -184,7 +184,7 @@ test("FWorldWallet.deployContract & upgradeContract - file:", async () => {
   });
   assertAccount(await contract.getAccountWithPairs(), {
     code: worldCode,
-    hasStorage: [[e.Str("n"), e.U64(1)]],
+    hasPairs: [[e.Str("n"), e.U64(1)]],
   });
   await wallet.upgradeContract({
     callee: contract,
@@ -195,7 +195,7 @@ test("FWorldWallet.deployContract & upgradeContract - file:", async () => {
   });
   assertAccount(await contract.getAccountWithPairs(), {
     code: worldCode,
-    hasStorage: [[e.Str("n"), e.U64(2)]],
+    hasPairs: [[e.Str("n"), e.U64(2)]],
   });
 });
 

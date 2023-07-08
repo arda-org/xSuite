@@ -38,12 +38,12 @@ export class FProxy extends Proxy {
 
 const accountToRawAccount = (account: BroadAccount): RawAccount => {
   let pairs: RawPairs | undefined;
-  if ("esdts" in account || "storage" in account) {
+  if (isAccount(account)) {
     pairs = pairsToRawPairs([
       s.Esdts(account.esdts ?? []),
-      ...(account.storage ?? []),
+      ...(account.pairs ?? []),
     ]);
-  } else if ("pairs" in account) {
+  } else {
     pairs = account.pairs;
   }
   return {
@@ -60,6 +60,9 @@ const accountToRawAccount = (account: BroadAccount): RawAccount => {
   };
 };
 
+const isAccount = (account: BroadAccount): account is Account =>
+  "esdts" in account || ("pairs" in account && Array.isArray(account.pairs));
+
 type BroadAccount = Account | RawAccount;
 
 export type Account = {
@@ -67,7 +70,7 @@ export type Account = {
   nonce?: number;
   balance?: bigint;
   esdts?: Esdt[];
-  storage?: Pairs;
+  pairs?: Pairs;
   code?: string;
   codeMetadata?: CodeMetadata;
   owner?: Address;
