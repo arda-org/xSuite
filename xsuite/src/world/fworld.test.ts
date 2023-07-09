@@ -52,7 +52,7 @@ test("FWorld.createContract - file:", async () => {
 test("FWorld.query", async () => {
   const { returnData } = await world.query({
     callee: contract,
-    functionName: "get_n",
+    funcName: "get_n",
   });
   expect(d.U64().topDecode(returnData[0])).toEqual(1n);
 });
@@ -204,7 +204,7 @@ test("FWorldWallet.deployContract & upgradeContract - file:", async () => {
 test("FWorldWallet.callContract with EGLD", async () => {
   await wallet.callContract({
     callee: contract,
-    functionName: "fund",
+    funcName: "fund",
     value: 10n ** 17n,
     gasLimit: 10_000_000,
   });
@@ -219,7 +219,7 @@ test("FWorldWallet.callContract with EGLD", async () => {
 test("FWorldWallet.callContract with ESDT", async () => {
   await wallet.callContract({
     callee: contract,
-    functionName: "fund",
+    funcName: "fund",
     esdts: [{ id: fftId, amount: 10n ** 17n }],
     gasLimit: 10_000_000,
   });
@@ -234,7 +234,7 @@ test("FWorldWallet.callContract with ESDT", async () => {
 test("FWorldWallet.callContract with return", async () => {
   const txResult = await wallet.callContract({
     callee: contract,
-    functionName: "get_n",
+    funcName: "get_n",
     gasLimit: 10_000_000,
   });
   assertTxReturnData(txResult.returnData, ["01"]);
@@ -244,8 +244,8 @@ test("FWorldWallet.callContract.assertFail - Correct parameters", async () => {
   await wallet
     .callContract({
       callee: contract,
-      functionName: "require_positive",
-      functionArgs: [e.U64(0)],
+      funcName: "require_positive",
+      funcArgs: [e.U64(0)],
       gasLimit: 10_000_000,
     })
     .assertFail({ code: 4, message: "Amount is not positive." });
@@ -256,8 +256,8 @@ test("FWorldWallet.callContract.assertFail - Wrong code", async () => {
     wallet
       .callContract({
         callee: contract,
-        functionName: "require_positive",
-        functionArgs: [e.U64(0)],
+        funcName: "require_positive",
+        funcArgs: [e.U64(0)],
         gasLimit: 10_000_000,
       })
       .assertFail({ code: 5 })
@@ -271,8 +271,8 @@ test("FWorldWallet.callContract.assertFail - Wrong message", async () => {
     wallet
       .callContract({
         callee: contract,
-        functionName: "require_positive",
-        functionArgs: [e.U64(0)],
+        funcName: "require_positive",
+        funcArgs: [e.U64(0)],
         gasLimit: 10_000_000,
       })
       .assertFail({ message: "" })
@@ -286,8 +286,8 @@ test("FWorldWallet.callContract.assertFail - Transaction not failing", async () 
     wallet
       .callContract({
         callee: contract,
-        functionName: "require_positive",
-        functionArgs: [e.U64(1)],
+        funcName: "require_positive",
+        funcArgs: [e.U64(1)],
         gasLimit: 10_000_000,
       })
       .assertFail()

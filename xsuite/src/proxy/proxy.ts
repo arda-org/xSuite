@@ -307,13 +307,13 @@ export class Tx {
   static getParamsToCallContract<T>({
     callee,
     sender,
-    functionName,
-    functionArgs,
+    funcName,
+    funcArgs,
     esdts,
     ...txParams
   }: Pick<
     CallContractTxParams,
-    "sender" | "callee" | "functionName" | "functionArgs" | "esdts"
+    "sender" | "callee" | "funcName" | "funcArgs" | "esdts"
   > &
     T) {
     const dataParts: string[] = [];
@@ -328,12 +328,12 @@ export class Tx {
         dataParts.push(e.U(esdt.nonce ?? 0).toTopHex());
         dataParts.push(e.U(esdt.amount).toTopHex());
       }
-      dataParts.push(e.Str(functionName).toTopHex());
+      dataParts.push(e.Str(funcName).toTopHex());
     } else {
       receiver = callee;
-      dataParts.push(functionName);
+      dataParts.push(funcName);
     }
-    dataParts.push(...(functionArgs ?? []).map(hexToHexString));
+    dataParts.push(...(funcArgs ?? []).map(hexToHexString));
     return {
       receiver,
       sender,
@@ -380,8 +380,8 @@ const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
   if ("callee" in query) {
     query = {
       scAddress: query.callee.toString(),
-      funcName: query.functionName,
-      args: (query.functionArgs ?? []).map(hexToHexString),
+      funcName: query.funcName,
+      args: (query.funcArgs ?? []).map(hexToHexString),
     };
   }
   return query;
@@ -443,8 +443,8 @@ type BroadQuery = Query | RawQuery;
 
 export type Query = {
   callee: Address;
-  functionName: string;
-  functionArgs?: Hex[];
+  funcName: string;
+  funcArgs?: Hex[];
 };
 
 type RawQuery = {
@@ -515,8 +515,8 @@ export type CallContractTxParams = {
   sender: Address;
   gasPrice?: number;
   gasLimit: number;
-  functionName: string;
-  functionArgs?: Hex[];
+  funcName: string;
+  funcArgs?: Hex[];
   esdts?: { id: string; nonce?: number; amount: bigint }[];
   chainId: string;
   version?: number;
