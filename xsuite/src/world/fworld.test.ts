@@ -261,7 +261,9 @@ test("FWorldWallet.callContract.assertFail - Wrong code", async () => {
         gasLimit: 10_000_000,
       })
       .assertFail({ code: 5 })
-  ).rejects.toThrow("Failed with unexpected error code.");
+  ).rejects.toThrow(
+    "Failed with unexpected error code.\nExpected code: 5\nReceived code: 4"
+  );
 });
 
 test("FWorldWallet.callContract.assertFail - Wrong message", async () => {
@@ -274,7 +276,9 @@ test("FWorldWallet.callContract.assertFail - Wrong message", async () => {
         gasLimit: 10_000_000,
       })
       .assertFail({ message: "" })
-  ).rejects.toThrow("Failed with unexpected error message.");
+  ).rejects.toThrow(
+    "Failed with unexpected error message.\nExpected message: \nReceived message: Amount is not positive."
+  );
 });
 
 test("FWorldWallet.callContract.assertFail - Transaction not failing", async () => {

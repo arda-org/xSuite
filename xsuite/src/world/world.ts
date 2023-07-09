@@ -354,10 +354,14 @@ export class TxResultPromise<T> extends Promise<T> {
           const errorCode = parseInt(matches[1]);
           const errorMessage = matches[2];
           if (code !== undefined && code !== errorCode) {
-            throw new Error(`Failed with unexpected error code.`);
+            throw new Error(
+              `Failed with unexpected error code.\nExpected code: ${code}\nReceived code: ${errorCode}`
+            );
           }
           if (message !== undefined && message !== errorMessage) {
-            throw new Error(`Failed with unexpected error message.`);
+            throw new Error(
+              `Failed with unexpected error message.\nExpected message: ${message}\nReceived message: ${errorMessage}`
+            );
           }
         } else {
           throw error;
