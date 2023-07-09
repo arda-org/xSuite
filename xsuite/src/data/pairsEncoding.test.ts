@@ -51,8 +51,7 @@ describe("Mapper", () => {
       functionArgs: map.map(([k]) => k),
       gasLimit: 10_000_000,
     });
-    map.length = 0;
-    expect(pairsToRawPairs(pEnc.SingleValueMapper("single", map))).toEqual(
+    expect(pairsToRawPairs(pEnc.SingleValueMapper("single", []))).toEqual(
       await contract.getAccountPairs()
     );
   });
@@ -146,8 +145,7 @@ describe("Mapper", () => {
       functionArgs: [enc.U32(2), enc.U32(1)],
       gasLimit: 10_000_000,
     });
-    map.length = 0;
-    expect(pairsToRawPairs(pEnc.VecMapper("vec", map))).toEqual(
+    expect(pairsToRawPairs(pEnc.VecMapper("vec", []))).toEqual(
       await contract.getAccountPairs()
     );
   });
