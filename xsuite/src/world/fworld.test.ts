@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, test } from "@jest/globals";
 import { d, e, pairsToRawPairs } from "../data";
-import { assertAccount, assertTxReturnData } from "../test";
+import { assertAccount, assertHexList } from "../test";
 import { FWorld, FWorldContract, FWorldWallet } from "./fworld";
 import { readFileHex } from "./utils";
 
@@ -237,7 +237,7 @@ test("FWorldWallet.callContract with return", async () => {
     funcName: "get_n",
     gasLimit: 10_000_000,
   });
-  assertTxReturnData(txResult.returnData, ["01"]);
+  assertHexList(txResult.returnData, ["01"]);
 });
 
 test("FWorldWallet.callContract.assertFail - Correct parameters", async () => {

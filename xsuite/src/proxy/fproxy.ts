@@ -2,14 +2,14 @@ import { Address, Pairs, pairsToRawPairs, RawPairs } from "../data";
 import { CodeMetadata, codeMetadataToHexString, Proxy } from "./proxy";
 
 export class FProxy extends Proxy {
-  static setAccount(baseUrl: string, account: BroadAccount) {
+  static setAccount(baseUrl: string, account: Account) {
     return Proxy.fetch(
       `${baseUrl}/admin/set-account`,
       accountToRawAccount(account)
     );
   }
 
-  setAccount(account: BroadAccount) {
+  setAccount(account: Account) {
     return FProxy.setAccount(this.baseUrl, account);
   }
 
@@ -36,20 +36,13 @@ export class FProxy extends Proxy {
   }
 }
 
-const accountToRawAccount = (account: BroadAccount): RawAccount => {
-  let pairs: RawPairs | undefined;
-  if ("pairs" in account) {
-    if (Array.isArray(account.pairs)) {
-      pairs = pairsToRawPairs(account.pairs);
-    } else {
-      pairs = account.pairs;
-    }
-  }
+const accountToRawAccount = (account: Account): RawAccount => {
   return {
     address: account.address.toString(),
     nonce: account.nonce,
     balance: account.balance?.toString(),
-    pairs,
+    pairs:
+      account.pairs !== undefined ? pairsToRawPairs(account.pairs) : undefined,
     code: account.code,
     codeMetadata:
       account.codeMetadata !== undefined
@@ -58,8 +51,6 @@ const accountToRawAccount = (account: BroadAccount): RawAccount => {
     owner: account.owner !== undefined ? account.owner.toString() : undefined,
   };
 };
-
-type BroadAccount = Account | RawAccount;
 
 export type Account = {
   address: Address;

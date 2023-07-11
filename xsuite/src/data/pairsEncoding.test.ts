@@ -1,9 +1,8 @@
 import { test, expect, beforeEach, afterEach, describe } from "@jest/globals";
+import { assertAllPairs } from "../test";
 import { FWorld, FWorldContract, FWorldWallet, readFileHex } from "../world";
-import { Encodable } from "./Encodable";
 import { enc } from "./encoding";
 import { hexToHexString } from "./hex";
-import { pairsToRawPairs } from "./pairs";
 import { pEnc } from "./pairsEncoding";
 
 let world: FWorld;
@@ -31,72 +30,86 @@ describe("Mapper", () => {
     }));
   });
 
-  test("s.SingleValueMapper", async () => {
-    const map: [Encodable, Encodable][] = [
-      [enc.Str("a"), enc.U64(1)],
-      [enc.Str("b"), enc.U64(2)],
-    ];
+  test("p.Mapper.Value", async () => {
     await wallet.callContract({
       callee: contract,
       funcName: "single_add",
-      funcArgs: map.map(([k, v]) => enc.Tuple(k, v)),
+      funcArgs: [enc.Str("a"), enc.U64(1)],
       gasLimit: 10_000_000,
     });
-    expect(pairsToRawPairs(pEnc.SingleValueMapper("single", map))).toEqual(
+    assertAllPairs(
+      pEnc.Mapper("single", enc.Str("a")).Value(enc.U64(1)),
       await contract.getAccountPairs()
     );
+    expect(async () =>
+      assertAllPairs(
+        pEnc.Mapper("single", enc.Str("a")).Value(null),
+        await contract.getAccountPairs()
+      )
+    ).rejects.toThrow();
     await wallet.callContract({
       callee: contract,
       funcName: "single_remove",
-      funcArgs: map.map(([k]) => k),
+      funcArgs: [enc.Str("a")],
       gasLimit: 10_000_000,
     });
-    expect(pairsToRawPairs(pEnc.SingleValueMapper("single", []))).toEqual(
+    assertAllPairs(
+      pEnc.Mapper("single", enc.Str("a")).Value(null),
       await contract.getAccountPairs()
     );
   });
 
-  test("s.SetMapper", async () => {
-    expect(() => pEnc.SetMapper("set", [[0, enc.U64(0)]])).toThrow(
-      "Negative id not allowed."
-    );
+  test("p.Mapper.Set", async () => {
     await wallet.callContract({
       callee: contract,
       funcName: "set_add",
-      funcArgs: [enc.U64(10), enc.U64(20), enc.U64(30), enc.U64(40)],
+      funcArgs: [enc.U64(1), enc.U(10), enc.U(20), enc.U(30), enc.U(40)],
       gasLimit: 10_000_000,
     });
     await wallet.callContract({
       callee: contract,
       funcName: "set_remove",
-      funcArgs: [enc.U64(20)],
+      funcArgs: [enc.U64(1), enc.U(20)],
       gasLimit: 10_000_000,
     });
-    expect(
-      pairsToRawPairs(
-        pEnc.SetMapper("set", [
-          [3, enc.U64(30)],
-          [1, enc.U64(10)],
-          [4, enc.U64(40)],
-        ])
+    assertAllPairs(
+      pEnc.Mapper("set", enc.U64(1)).Set([
+        [3, enc.U(30)],
+        [1, enc.U(10)],
+        [4, enc.U(40)],
+      ]),
+      await contract.getAccountPairs()
+    );
+    expect(async () =>
+      assertAllPairs(
+        pEnc.Mapper("set", enc.U64(1)).Set(null),
+        await contract.getAccountPairs()
       )
-    ).toEqual(await contract.getAccountPairs());
+    ).rejects.toThrow();
     await wallet.callContract({
       callee: contract,
       funcName: "set_remove",
-      funcArgs: [enc.U64(10), enc.U64(30), enc.U64(40)],
+      funcArgs: [enc.U64(1), enc.U64(10), enc.U64(30), enc.U64(40)],
       gasLimit: 10_000_000,
     });
-    expect(pairsToRawPairs(pEnc.SetMapper("set", []))).toEqual(
+    assertAllPairs(
+      pEnc.Mapper("set", enc.U64(1)).Set(null),
       await contract.getAccountPairs()
     );
   });
 
-  test("s.MapMapper", async () => {
+  test("p.Mapper.Set - Negative id", () => {
+    expect(() => pEnc.Mapper("set").Set([[0, enc.U64(0)]])).toThrow(
+      "Negative id not allowed."
+    );
+  });
+
+  test("p.Mapper.Map", async () => {
     await wallet.callContract({
       callee: contract,
       funcName: "map_add",
       funcArgs: [
+        enc.U(1),
         enc.Tuple(enc.Str("a"), enc.U64(10)),
         enc.Tuple(enc.Str("b"), enc.U64(20)),
         enc.Tuple(enc.Str("c"), enc.U64(30)),
@@ -106,46 +119,59 @@ describe("Mapper", () => {
     await wallet.callContract({
       callee: contract,
       funcName: "map_remove",
-      funcArgs: [enc.Str("b")],
+      funcArgs: [enc.U(1), enc.Str("b")],
       gasLimit: 10_000_000,
     });
-    expect(
-      pairsToRawPairs(
-        pEnc.MapMapper("map", [
-          [3, enc.Str("c"), enc.U64(30)],
-          [1, enc.Str("a"), enc.U64(10)],
-        ])
+    assertAllPairs(
+      pEnc.Mapper("map", enc.U(1)).Map([
+        [3, enc.Str("c"), enc.U64(30)],
+        [1, enc.Str("a"), enc.U64(10)],
+      ]),
+      await contract.getAccountPairs()
+    );
+    expect(async () =>
+      assertAllPairs(
+        pEnc.Mapper("map", enc.U(1)).Map(null),
+        await contract.getAccountPairs()
       )
-    ).toEqual(await contract.getAccountPairs());
+    ).rejects.toThrow();
     await wallet.callContract({
       callee: contract,
       funcName: "map_remove",
-      funcArgs: [enc.Str("a"), enc.Str("c")],
+      funcArgs: [enc.U(1), enc.Str("a"), enc.Str("c")],
       gasLimit: 10_000_000,
     });
-    expect(pairsToRawPairs(pEnc.MapMapper("map", []))).toEqual(
+    assertAllPairs(
+      pEnc.Mapper("map", enc.U(1)).Map(null),
       await contract.getAccountPairs()
     );
   });
 
-  test("s.VecMapper", async () => {
-    const map = [enc.U64(1), enc.U64(2)];
+  test("p.Mapper.Vec", async () => {
     await wallet.callContract({
       callee: contract,
       funcName: "vec_add",
-      funcArgs: map,
+      funcArgs: [enc.U64(1), enc.U(2), enc.U64(1), enc.U64(2)],
       gasLimit: 10_000_000,
     });
-    expect(pairsToRawPairs(pEnc.VecMapper("vec", map))).toEqual(
+    assertAllPairs(
+      pEnc.Mapper("vec", enc.U64(1), enc.U(2)).Vec([enc.U64(1), enc.U64(2)]),
       await contract.getAccountPairs()
     );
+    expect(async () =>
+      assertAllPairs(
+        pEnc.Mapper("vec", enc.U64(1), enc.U(2)).Vec(null),
+        await contract.getAccountPairs()
+      )
+    ).rejects.toThrow();
     await wallet.callContract({
       callee: contract,
       funcName: "vec_remove",
-      funcArgs: [enc.U32(2), enc.U32(1)],
+      funcArgs: [enc.U64(1), enc.U(2), enc.U32(2), enc.U32(1)],
       gasLimit: 10_000_000,
     });
-    expect(pairsToRawPairs(pEnc.VecMapper("vec", []))).toEqual(
+    assertAllPairs(
+      pEnc.Mapper("vec", enc.U64(1), enc.U(2)).Vec(null),
       await contract.getAccountPairs()
     );
   });
@@ -170,7 +196,7 @@ describe("Esdt", () => {
     });
   });
 
-  test("s.Esdts", async () => {
+  test("p.Esdts", async () => {
     const fftAmount = 10n;
     await wallet.callContract({
       callee: contract,
@@ -218,62 +244,59 @@ describe("Esdt", () => {
       ],
       gasLimit: 10_000_000,
     });
-    expect(
-      pairsToRawPairs(
-        pEnc.Esdts([
-          { id: fftId, amount: fftAmount },
-          { id: sftId, nonce: 1, amount: sftAmount1 },
-          { id: sftId, nonce: 2, amount: sftAmount2 },
-        ])
-      )
-    ).toEqual(await wallet.getAccountPairs());
-    expect(
-      pairsToRawPairs(
-        pEnc.Esdts([
-          {
-            id: fftId,
-            roles: ["ESDTRoleLocalMint"],
-          },
-          {
-            id: sftId,
-            roles: ["ESDTRoleNFTCreate", "ESDTRoleNFTAddQuantity"],
-            lastNonce: 2,
-          },
-        ])
-      )
-    ).toEqual(await contract.getAccountPairs());
-    expect(
-      pairsToRawPairs(
-        pEnc.Esdts([
-          {
-            id: sftId,
-            nonce: 1,
-            amount: 0n,
-            metadataNonce: true,
-            properties: "01",
-            name: sftName1,
-            creator: contract,
-            royalties: sftRoyalties1,
-            hash: sftHash1,
-            uris: sftUris1,
-            attrs: sftAttrs1,
-          },
-          {
-            id: sftId,
-            nonce: 2,
-            amount: 0n,
-            metadataNonce: true,
-            properties: "01",
-            name: sftName2,
-            creator: contract,
-            royalties: sftRoyalties2,
-            hash: sftHash2,
-            uris: sftUris2,
-            attrs: sftAttrs2,
-          },
-        ])
-      )
-    ).toEqual(await world.getSystemAccountPairs());
+    assertAllPairs(
+      pEnc.Esdts([
+        { id: fftId, amount: fftAmount },
+        { id: sftId, nonce: 1, amount: sftAmount1 },
+        { id: sftId, nonce: 2, amount: sftAmount2 },
+      ]),
+      await wallet.getAccountPairs()
+    );
+    assertAllPairs(
+      pEnc.Esdts([
+        {
+          id: fftId,
+          roles: ["ESDTRoleLocalMint"],
+        },
+        {
+          id: sftId,
+          roles: ["ESDTRoleNFTCreate", "ESDTRoleNFTAddQuantity"],
+          lastNonce: 2,
+        },
+      ]),
+      await contract.getAccountPairs()
+    );
+    assertAllPairs(
+      pEnc.Esdts([
+        {
+          id: sftId,
+          nonce: 1,
+          amount: 0n,
+          metadataNonce: true,
+          properties: "01",
+          name: sftName1,
+          creator: contract,
+          royalties: sftRoyalties1,
+          hash: sftHash1,
+          uris: sftUris1,
+          attrs: sftAttrs1,
+        },
+        {
+          id: sftId,
+          nonce: 2,
+          amount: 0n,
+          metadataNonce: true,
+          properties: "01",
+          name: sftName2,
+          creator: contract,
+          royalties: sftRoyalties2,
+          hash: sftHash2,
+          uris: sftUris2,
+          attrs: sftAttrs2,
+        },
+      ]),
+      await world.getSystemAccountPairs()
+    );
   });
 
   test("s.Esdts - amount 0", () => {

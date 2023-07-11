@@ -7,16 +7,20 @@ import { ListEncodable } from "./ListEncodable";
 import { OptionEncodable } from "./OptionEncodable";
 import { TupleEncodable } from "./TupleEncodable";
 import { UintEncodable } from "./UintEncodable";
+import { stringToBytes } from "./utils";
 
 export const enc = {
   Bytes: (bytes: string | number[] | Uint8Array) => {
     return new BytesEncodable(bytes);
   },
+  CstStr: (string: string) => {
+    return new BytesEncodable(stringToBytes(string));
+  },
   Buffer: (bytes: string | number[] | Uint8Array) => {
     return new BufferEncodable(bytes);
   },
   Str: (string: string) => {
-    return new BufferEncodable(new TextEncoder().encode(string));
+    return new BufferEncodable(stringToBytes(string));
   },
   Addr: (address: string | Uint8Array) => {
     return new AddressEncodable(address);

@@ -6,103 +6,105 @@ import { hexToEncodable, Hex, hexToBytes } from "./hex";
 import { Pair } from "./pairs";
 
 export const pEnc = {
-  SingleValueMapper: (baseKey: string, map: Pair[]) => {
-    return getSingleValueMapperPairs(baseKey, map);
-  },
-  SetMapper: (
-    baseKey: string,
-    map: [index: number | bigint, value: Encodable][]
-  ) => {
-    return getSetMapperPairs(baseKey, map);
-  },
-  MapMapper: (
-    baseKey: string,
-    map: [index: number | bigint, key: Encodable, value: Encodable][]
-  ) => {
-    return getMapMapperPairs(baseKey, map);
-  },
-  VecMapper: (baseKey: string, vec: Encodable[]) => {
-    return getVecMapperPairs(baseKey, vec);
+  Mapper: (name: string, ...keys: Encodable[]) => {
+    const baseKey = enc.Tuple(enc.CstStr(name), ...keys);
+    return {
+      Value: (data: Hex | null) => {
+        return getValueMapperPairs(baseKey, data);
+      },
+      Set: (data: [index: number | bigint, value: Hex][] | null) => {
+        return getSetMapperPairs(baseKey, data);
+      },
+      Map: (
+        data: [index: number | bigint, key: Encodable, value: Hex][] | null
+      ) => {
+        return getMapMapperPairs(baseKey, data);
+      },
+      Vec: (data: Hex[] | null) => {
+        return getVecMapperPairs(baseKey, data);
+      },
+    };
   },
   Esdts: (esdts: Esdt[]) => {
     return getEsdtsPairs(esdts);
   },
 };
 
-const getSingleValueMapperPairs = (baseKey: string, map: Pair[]): Pair[] => {
-  const baseKeyEnc = enc.Bytes(enc.Str(baseKey).toTopBytes());
-  return map.map(([k, v]) => [enc.List(baseKeyEnc, hexToEncodable(k)), v]);
+const getValueMapperPairs = (baseKey: Encodable, data: Hex | null): Pair[] => {
+  return [[baseKey, data ?? ""]];
 };
 
 const getSetMapperPairs = (
-  baseKey: string,
-  map: [number | bigint, Encodable][]
+  baseKey: Encodable,
+  data: [number | bigint, Hex][] | null
 ): Pair[] => {
-  if (map.length === 0) return [];
-  map.sort(([a], [b]) => (a <= b ? -1 : 1));
-  const indexPairs: Pair[] = [];
-  const valuePairs: Pair[] = [];
-  const linksPairs: Pair[] = [];
+  data ??= [];
+  data.sort(([a], [b]) => (a <= b ? -1 : 1));
+  const pairs: Pair[] = [];
   let maxIndex: number | bigint = 0n;
-  for (let i = 0; i < map.length; i++) {
-    const [index, v] = map[i];
+  for (let i = 0; i < data.length; i++) {
+    const [index, v] = data[i];
     if (index <= 0) {
       throw new Error("Negative id not allowed.");
     }
-    indexPairs.push([v, enc.U32(index)]);
-    valuePairs.push([enc.U32(index), v]);
-    const prevI = i === 0 ? 0n : map[i - 1][0];
-    const nextI = i === map.length - 1 ? 0n : map[i + 1][0];
-    linksPairs.push([
+    pairs.push([
+      enc.Tuple(baseKey, enc.CstStr(".node_id"), hexToEncodable(v)),
       enc.U32(index),
+    ]);
+    pairs.push([enc.Tuple(baseKey, enc.CstStr(".value"), enc.U32(index)), v]);
+    const prevI = i === 0 ? 0n : data[i - 1][0];
+    const nextI = i === data.length - 1 ? 0n : data[i + 1][0];
+    pairs.push([
+      enc.Tuple(baseKey, enc.CstStr(".node_links"), enc.U32(index)),
       enc.Tuple(enc.U32(prevI), enc.U32(nextI)),
     ]);
     if (index >= maxIndex) {
       maxIndex = index;
     }
   }
-  const firstI = map[0][0];
-  const lastI = map[map.length - 1][0];
-  return [
-    [
-      enc.Str(baseKey + ".info"),
-      enc.Tuple(
-        enc.U32(map.length),
-        enc.U32(firstI),
-        enc.U32(lastI),
-        enc.U32(maxIndex)
-      ),
-    ],
-    ...getSingleValueMapperPairs(baseKey + ".node_id", indexPairs),
-    ...getSingleValueMapperPairs(baseKey + ".value", valuePairs),
-    ...getSingleValueMapperPairs(baseKey + ".node_links", linksPairs),
-  ];
+  pairs.push([
+    enc.Tuple(baseKey, enc.CstStr(".info")),
+    data.length > 0
+      ? enc.Tuple(
+          enc.U32(data.length),
+          enc.U32(data[0][0]),
+          enc.U32(data[data.length - 1][0]),
+          enc.U32(maxIndex)
+        )
+      : "",
+  ]);
+  return pairs;
 };
 
 const getMapMapperPairs = (
-  baseKey: string,
-  map: [number | bigint, Encodable, Encodable][]
+  baseKey: Encodable,
+  data: [number | bigint, Encodable, Hex][] | null
 ): Pair[] => {
+  data ??= [];
   return [
     ...getSetMapperPairs(
       baseKey,
-      map.map(([i, k]) => [i, k])
+      data.map(([i, k]) => [i, k])
     ),
-    ...getSingleValueMapperPairs(
-      baseKey + ".mapped",
-      map.map(([, k, v]) => [k, v])
+    ...data.map(
+      ([, k, v]): Pair => [enc.Tuple(baseKey, enc.CstStr(".mapped"), k), v]
     ),
   ];
 };
 
-const getVecMapperPairs = (baseKey: string, map: Encodable[]): Pair[] => {
-  if (map.length === 0) return [];
+const getVecMapperPairs = (baseKey: Encodable, data: Hex[] | null): Pair[] => {
+  data ??= [];
   return [
-    ...getSingleValueMapperPairs(
-      baseKey + ".item",
-      map.map((v, i) => [enc.U32(BigInt(i + 1)), v])
+    ...data.map(
+      (v, i): Pair => [
+        enc.Tuple(baseKey, enc.CstStr(".item"), enc.U32(i + 1)),
+        v,
+      ]
     ),
-    [enc.Str(baseKey + ".len"), enc.U32(BigInt(map.length))],
+    [
+      enc.Tuple(baseKey, enc.CstStr(".len")),
+      data.length > 0 ? enc.U32(BigInt(data.length)) : "",
+    ],
   ];
 };
 

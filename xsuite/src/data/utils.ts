@@ -14,8 +14,11 @@ export const hexStringToBytes = (hexString: string) => {
   return Uint8Array.from(pairs.map((h) => parseInt(h, 16)));
 };
 
-export function b64ToHexString(b64: string) {
+export const b64ToHexString = (b64: string) => {
   return Array.from(atob(b64), function (char) {
     return char.charCodeAt(0).toString(16).padStart(2, "0");
   }).join("");
-}
+};
+
+export const stringToBytes = (string: string) =>
+  new TextEncoder().encode(string);

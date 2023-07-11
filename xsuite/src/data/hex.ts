@@ -1,4 +1,3 @@
-import { BytesEncodable } from "./BytesEncodable";
 import { Encodable } from "./Encodable";
 import { enc } from "./encoding";
 
@@ -20,7 +19,7 @@ export const hexToHexString = (hex: Hex) => {
 
 export const hexToEncodable = (hex: Hex) => {
   if (typeof hex === "string") {
-    return new BytesEncodable(hex);
+    return enc.Bytes(hex);
   }
   return hex;
 };

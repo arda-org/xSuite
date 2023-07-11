@@ -8,58 +8,54 @@ pub trait Mapper {
     fn init(&self) {}
 
     #[endpoint]
-    fn single_add(&self, kvs: MultiValueEncoded<(ManagedBuffer, u64)>) {
-        for (key, value) in kvs {
-            self.single(key).set(value);
-        }
+    fn single_add(&self, key: ManagedBuffer, value: u64) {
+        self.single(key).set(value);
     }
 
     #[endpoint]
-    fn single_remove(&self, keys: MultiValueEncoded<ManagedBuffer>) {
-        for key in keys {
-            self.single(key).clear();
-        }
+    fn single_remove(&self, key: ManagedBuffer) {
+        self.single(key).clear();
     }
 
     #[endpoint]
-    fn set_add(&self, values: MultiValueEncoded<u64>) {
+    fn set_add(&self, key: u64, values: MultiValueEncoded<BigUint>) {
         for value in values {
-            self.set().insert(value);
+            self.set(key).insert(value);
         }
     }
 
     #[endpoint]
-    fn set_remove(&self, values: MultiValueEncoded<u64>) {
+    fn set_remove(&self, key: u64, values: MultiValueEncoded<BigUint>) {
         for value in values {
-            self.set().remove(&value);
+            self.set(key).remove(&value);
         }
     }
 
     #[endpoint]
-    fn map_add(&self, kvs: MultiValueEncoded<(ManagedBuffer, u64)>) {
-        for (key, value) in kvs {
-            self.map().insert(key, value);
+    fn map_add(&self, key: BigUint, items: MultiValueEncoded<(ManagedBuffer, u64)>) {
+        for (id, value) in items {
+            self.map(key.clone()).insert(id, value);
         }
     }
 
     #[endpoint]
-    fn map_remove(&self, keys: MultiValueEncoded<ManagedBuffer>) {
-        for key in keys {
-            self.map().remove(&key);
+    fn map_remove(&self, key: BigUint, ids: MultiValueEncoded<ManagedBuffer>) {
+        for id in ids {
+            self.map(key.clone()).remove(&id);
         }
     }
 
     #[endpoint]
-    fn vec_add(&self, values: MultiValueEncoded<u64>) {
+    fn vec_add(&self, key1: u64, key2: BigUint, values: MultiValueEncoded<u64>) {
         for value in values {
-            self.vec().push(&value);
+            self.vec(key1, key2.clone()).push(&value);
         }
     }
 
     #[endpoint]
-    fn vec_remove(&self, indexes: MultiValueEncoded<usize>) {
+    fn vec_remove(&self, key1: u64, key2: BigUint, indexes: MultiValueEncoded<usize>) {
         for index in indexes {
-            self.vec().swap_remove(index);
+            self.vec(key1, key2.clone()).swap_remove(index);
         }
     }
 
@@ -67,11 +63,11 @@ pub trait Mapper {
     fn single(&self, key: ManagedBuffer) -> SingleValueMapper<u64>;
 
     #[storage_mapper("set")]
-    fn set(&self) -> SetMapper<u64>;
+    fn set(&self, key: u64) -> SetMapper<BigUint>;
 
     #[storage_mapper("map")]
-    fn map(&self) -> MapMapper<ManagedBuffer, u64>;
+    fn map(&self, key: BigUint) -> MapMapper<ManagedBuffer, u64>;
 
     #[storage_mapper("vec")]
-    fn vec(&self) -> VecMapper<u64>;
+    fn vec(&self, key1: u64, key2: BigUint) -> VecMapper<u64>;
 }
