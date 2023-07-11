@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "build": "xsuite build",
-    "test": "node --loader tsx --test **/*.test.ts",
+    "test": "vitest run",
     "deploy": "tsx interactions/deploy.ts",
     "typecheck": "tsc --noEmit"
   },
@@ -10,6 +10,7 @@
     "@types/node": "^18.16.18",
     "tsx": "^3.12.7",
     "typescript": "^5.0.4",
+    "vitest": "^0.33.0",
     "xsuite": "0.0.24",
     "xsuite-cli": "0.0.8"
   }

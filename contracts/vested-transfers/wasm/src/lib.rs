@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                            0
+// Endpoints:                            6
 // Async Callback (empty):               1
-// Total number of exported functions:   2
+// Total number of exported functions:   8
 
 #![no_std]
 #![feature(lang_items)]
@@ -18,6 +18,12 @@ multiversx_sc_wasm_adapter::panic_handler!();
 multiversx_sc_wasm_adapter::endpoints! {
     contract
     (
+        create_transfer
+        execute_transfer
+        cancel_transfer
+        claim_balances
+        get_transfers
+        get_address_balances
     )
 }
 
