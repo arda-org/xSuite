@@ -1,4 +1,4 @@
-import { test, beforeEach, afterEach } from "node:test";
+import { test, beforeEach, afterEach } from "vitest";
 import { assertAccount } from "xsuite/test";
 import { FWorld, FWorldWallet, FWorldContract } from "xsuite/world";
 
