@@ -55,7 +55,7 @@ const accountToRawAccount = (account: Account): RawAccount => {
 export type Account = {
   address: Address;
   nonce?: number;
-  balance?: bigint;
+  balance?: number | bigint;
   pairs?: Pairs;
   code?: string;
   codeMetadata?: CodeMetadata;

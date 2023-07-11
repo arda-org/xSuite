@@ -40,7 +40,7 @@ export const assertAccount = (
     assert.strictEqual(actualAccount.nonce, nonce);
   }
   if (balance !== undefined) {
-    assert.strictEqual(actualAccount.balance, balance);
+    assert.strictEqual(actualAccount.balance, BigInt(balance));
   }
   if (hasPairs !== undefined) {
     assertHasPairs(actualAccount.pairs ?? {}, hasPairs);
@@ -57,7 +57,7 @@ type ActualAccount = Partial<
 type ExpectedAccount = {
   code?: string;
   nonce?: number;
-  balance?: bigint;
+  balance?: number | bigint;
   hasPairs?: Pairs;
   allPairs?: Pairs;
 };

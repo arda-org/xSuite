@@ -166,7 +166,7 @@ const getEsdtPairs = ({
     if (attrs !== undefined) {
       metadata.push(["Attributes", hexToBytes(attrs)]);
     }
-    if (amount !== undefined && (amount !== 0n || metadata.length > 0)) {
+    if (amount !== undefined && (amount != 0 || metadata.length > 0)) {
       if (nonce !== undefined && nonce !== 0) {
         message["Type"] = "1";
       }
@@ -216,7 +216,7 @@ const ESDTSystemMessage = new Type("ESDTSystem")
 type Esdt = {
   id: string;
   nonce?: number;
-  amount?: bigint;
+  amount?: number | bigint;
   roles?: Role[];
   lastNonce?: number;
   metadataNonce?: boolean;

@@ -455,7 +455,7 @@ type RawQuery = {
 
 export type TxParams = {
   nonce: number;
-  value?: bigint;
+  value?: number | bigint;
   receiver: Address;
   sender: Address;
   gasPrice?: number;
@@ -467,7 +467,7 @@ export type TxParams = {
 
 export type DeployContractTxParams = {
   nonce: number;
-  value?: bigint;
+  value?: number | bigint;
   sender: Address;
   gasPrice?: number;
   gasLimit: number;
@@ -484,7 +484,7 @@ type CodeProperty = "upgradeable" | "readable" | "payable" | "payableBySc";
 
 export type UpgradeContractTxParams = {
   nonce: number;
-  value?: bigint;
+  value?: number | bigint;
   callee: Address;
   sender: Address;
   gasPrice?: number;
@@ -498,26 +498,26 @@ export type UpgradeContractTxParams = {
 
 export type TransferTxParams = {
   nonce: number;
-  value?: bigint;
+  value?: number | bigint;
   receiver: Address;
   sender: Address;
   gasPrice?: number;
   gasLimit: number;
-  esdts?: { id: string; nonce?: number; amount: bigint }[];
+  esdts?: { id: string; nonce?: number; amount: number | bigint }[];
   chainId: string;
   version?: number;
 };
 
 export type CallContractTxParams = {
   nonce: number;
-  value?: bigint;
+  value?: number | bigint;
   callee: Address;
   sender: Address;
   gasPrice?: number;
   gasLimit: number;
   funcName: string;
   funcArgs?: Hex[];
-  esdts?: { id: string; nonce?: number; amount: bigint }[];
+  esdts?: { id: string; nonce?: number; amount: number | bigint }[];
   chainId: string;
   version?: number;
 };
