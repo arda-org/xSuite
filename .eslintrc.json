@@ -41,5 +41,5 @@
     "object-shorthand": "error",
     "prettier/prettier": "error"
   },
-  "ignorePatterns": ["**/*.js", "xsuite/*.d.ts"]
+  "ignorePatterns": ["**/*.js", "xsuite/*.d.ts", "xsuite/dist/"]
 }
