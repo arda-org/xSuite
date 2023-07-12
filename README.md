@@ -19,7 +19,7 @@ cd mycontract
 ```
 
 ```
-xsuite new-wallet --path wallet.json
+xsuite new-wallet --wallet wallet.json
 ```
 
 ```
