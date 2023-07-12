@@ -14,6 +14,8 @@
     "dist",
     "data.js",
     "data.d.ts",
+    "interact.js",
+    "interact.d.ts",
     "proxy.js",
     "proxy.d.ts",
     "test.js",

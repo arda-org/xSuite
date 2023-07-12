@@ -3,11 +3,14 @@
   "scripts": {
     "build": "xsuite build",
     "test": "vitest run",
-    "deploy": "tsx interactions/deploy.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "interact:devnet": "CHAIN=devnet tsx interact/index.ts",
+    "interact:testnet": "CHAIN=testnet tsx interact/index.ts",
+    "interact:mainnet": "CHAIN=mainnet tsx interact/index.ts"
   },
   "devDependencies": {
     "@types/node": "^18.16.18",
+    "commander": "11.0.0",
     "tsx": "^3.12.7",
     "typescript": "^5.0.4",
     "vitest": "^0.33.0",
