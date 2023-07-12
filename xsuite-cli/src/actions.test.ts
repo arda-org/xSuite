@@ -13,7 +13,7 @@ import {
   requestXegldAction,
   setupRustAction,
   testRustAction,
-} from "./index";
+} from "./actions";
 
 const tmpDir = "/tmp/xsuite-cli-tests";
 

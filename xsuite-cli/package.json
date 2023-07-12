@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "build": "ncc build ./src/index.ts -o ./dist/ -m",
-    "test": "jest src/actions/",
+    "test": "jest src/",
     "open-coverage": "open ./coverage/lcov-report/index.html"
   },
   "bin": {
