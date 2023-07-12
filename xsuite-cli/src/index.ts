@@ -20,7 +20,7 @@ program.version(version);
 program
   .command("setup-rust")
   .description(
-    "Install Rust nightly, wasm32-unknown-unknown target, and multiversx-sc-meta crate."
+    "Install Rust nightly, wasm32-unknown-unknown target, and multiversx-sc-meta crate.",
   )
   .action(() => setupRustAction());
 

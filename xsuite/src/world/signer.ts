@@ -63,7 +63,7 @@ export class KeystoreSigner extends UserSigner {
   static fromFile_unsafe(
     filePath: string,
     password: string,
-    addressIndex?: number
+    addressIndex?: number,
   ) {
     const keystore = JSON.parse(fs.readFileSync(filePath, "utf8"));
     return new KeystoreSigner(keystore, password, addressIndex);

@@ -16,7 +16,7 @@ export const logError = (text: string) => log(chalk.red(text));
 export const logAndRunCommand = (
   command: string,
   args: string[],
-  options?: SpawnSyncOptionsWithBufferEncoding
+  options?: SpawnSyncOptionsWithBufferEncoding,
 ) => {
   logCommand(`$ ${command} ${args.join(" ")}`);
   const result = spawnSync(command, args, {

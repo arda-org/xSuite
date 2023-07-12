@@ -20,7 +20,7 @@ describe("Encoding Decoding Suite", () => {
   test("d.Addr", () => {
     const decoded = d.Addr().topDecode(new Uint8Array(32));
     expect(decoded).toEqual(
-      "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu"
+      "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu",
     );
   });
 

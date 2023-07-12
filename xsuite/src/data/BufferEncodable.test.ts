@@ -17,7 +17,7 @@ describe("BufferEncodable", () => {
 
     test("non-empty number array", () => {
       expect(new BufferEncodable([72, 101, 108, 108]).toTopHex()).toEqual(
-        "48656c6c"
+        "48656c6c",
       );
     });
 
@@ -27,7 +27,7 @@ describe("BufferEncodable", () => {
 
     test("non-empty Uint8Array", () => {
       expect(
-        new BufferEncodable(new Uint8Array([72, 101, 108, 108])).toTopHex()
+        new BufferEncodable(new Uint8Array([72, 101, 108, 108])).toTopHex(),
       ).toEqual("48656c6c");
     });
   });
@@ -39,7 +39,7 @@ describe("BufferEncodable", () => {
 
     test("non-empty hex string", () => {
       expect(new BufferEncodable("48656c6c").toNestHex()).toEqual(
-        "0000000448656c6c"
+        "0000000448656c6c",
       );
     });
   });

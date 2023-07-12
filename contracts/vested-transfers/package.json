@@ -9,7 +9,7 @@
   "devDependencies": {
     "@types/node": "^18.16.18",
     "tsx": "^3.12.7",
-    "typescript": "^5.0.4",
+    "typescript": "^5.1.6",
     "vitest": "^0.33.0",
     "xsuite": "0.0.25",
     "xsuite-cli": "0.0.8"

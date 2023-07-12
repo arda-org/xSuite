@@ -16,7 +16,7 @@ export const pEnc = {
         return getSetMapperPairs(baseKey, data);
       },
       Map: (
-        data: [index: number | bigint, key: Encodable, value: Hex][] | null
+        data: [index: number | bigint, key: Encodable, value: Hex][] | null,
       ) => {
         return getMapMapperPairs(baseKey, data);
       },
@@ -36,7 +36,7 @@ const getValueMapperPairs = (baseKey: Encodable, data: Hex | null): Pair[] => {
 
 const getSetMapperPairs = (
   baseKey: Encodable,
-  data: [number | bigint, Hex][] | null
+  data: [number | bigint, Hex][] | null,
 ): Pair[] => {
   data ??= [];
   data.sort(([a], [b]) => (a <= b ? -1 : 1));
@@ -69,7 +69,7 @@ const getSetMapperPairs = (
           enc.U32(data.length),
           enc.U32(data[0][0]),
           enc.U32(data[data.length - 1][0]),
-          enc.U32(maxIndex)
+          enc.U32(maxIndex),
         )
       : "",
   ]);
@@ -78,16 +78,16 @@ const getSetMapperPairs = (
 
 const getMapMapperPairs = (
   baseKey: Encodable,
-  data: [number | bigint, Encodable, Hex][] | null
+  data: [number | bigint, Encodable, Hex][] | null,
 ): Pair[] => {
   data ??= [];
   return [
     ...getSetMapperPairs(
       baseKey,
-      data.map(([i, k]) => [i, k])
+      data.map(([i, k]) => [i, k]),
     ),
     ...data.map(
-      ([, k, v]): Pair => [enc.Tuple(baseKey, enc.CstStr(".mapped"), k), v]
+      ([, k, v]): Pair => [enc.Tuple(baseKey, enc.CstStr(".mapped"), k), v],
     ),
   ];
 };
@@ -99,7 +99,7 @@ const getVecMapperPairs = (baseKey: Encodable, data: Hex[] | null): Pair[] => {
       (v, i): Pair => [
         enc.Tuple(baseKey, enc.CstStr(".item"), enc.U32(i + 1)),
         v,
-      ]
+      ],
     ),
     [
       enc.Tuple(baseKey, enc.CstStr(".len")),
@@ -193,7 +193,7 @@ const getEsdtPairs = ({
 };
 
 const ESDTRolesMessage = new Type("ESDTRoles").add(
-  new Field("Roles", 1, "string", "repeated")
+  new Field("Roles", 1, "string", "repeated"),
 );
 
 const ESDTMetadataMessage = new Type("ESDTMetadata")

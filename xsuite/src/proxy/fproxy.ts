@@ -5,7 +5,7 @@ export class FProxy extends Proxy {
   static setAccount(baseUrl: string, account: Account) {
     return Proxy.fetch(
       `${baseUrl}/admin/set-account`,
-      accountToRawAccount(account)
+      accountToRawAccount(account),
     );
   }
 

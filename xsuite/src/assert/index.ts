@@ -5,7 +5,7 @@ import { Proxy } from "../proxy";
 export const assertHexList = (actualHexList: Hex[], expectedHexList: Hex[]) => {
   assert.deepStrictEqual(
     actualHexList.map((v) => hexToHexString(v)),
-    expectedHexList.map((v) => hexToHexString(v))
+    expectedHexList.map((v) => hexToHexString(v)),
   );
 };
 
@@ -31,7 +31,7 @@ export const assertAllPairs = (actualPairs: Pairs, allPairs: Pairs) => {
 
 export const assertAccount = (
   actualAccount: ActualAccount,
-  { code, nonce, balance, hasPairs, allPairs }: ExpectedAccount
+  { code, nonce, balance, hasPairs, allPairs }: ExpectedAccount,
 ) => {
   if (code !== undefined) {
     assert.strictEqual(actualAccount.code, code);

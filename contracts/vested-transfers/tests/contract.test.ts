@@ -1,6 +1,6 @@
 import { test, beforeEach, afterEach } from "vitest";
+import { assertAccount, assertHexList } from "xsuite/assert";
 import { e } from "xsuite/data";
-import { assertAccount, assertHexList } from "xsuite/test";
 import { FWorld, FWorldWallet, FWorldContract } from "xsuite/world";
 
 let world: FWorld;
@@ -49,7 +49,7 @@ test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Cl
       e.List(
         e.Tuple(e.U64(5), e.U(2000)),
         e.Tuple(e.U64(10), e.U(3000)),
-        e.Tuple(e.U64(15), e.U(5000))
+        e.Tuple(e.U64(15), e.U(5000)),
       ),
     ],
     value: 10_000,
@@ -80,8 +80,8 @@ test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Cl
               e.List(
                 e.Tuple(e.U64(5), e.U(2000)),
                 e.Tuple(e.U64(10), e.U(3000)),
-                e.Tuple(e.U64(15), e.U(5000))
-              )
+                e.Tuple(e.U64(15), e.U(5000)),
+              ),
             ),
           ],
         ]),
@@ -120,8 +120,8 @@ test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Cl
               e.List(
                 e.Tuple(e.U64(5), e.U(2000)),
                 e.Tuple(e.U64(10), e.U(3000)),
-                e.Tuple(e.U64(15), e.U(5000))
-              )
+                e.Tuple(e.U64(15), e.U(5000)),
+              ),
             ),
           ],
         ]),
@@ -159,8 +159,8 @@ test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Cl
               e.U64(0),
               e.List(
                 e.Tuple(e.U64(10), e.U(3000)),
-                e.Tuple(e.U64(15), e.U(5000))
-              )
+                e.Tuple(e.U64(15), e.U(5000)),
+              ),
             ),
           ],
         ]),
@@ -223,7 +223,7 @@ test("SFT transfer vested over epochs 5, 10, 15. Execute at epoch 20. Claim.", a
       e.List(
         e.Tuple(e.U64(5), e.U(2000)),
         e.Tuple(e.U64(10), e.U(3000)),
-        e.Tuple(e.U64(15), e.U(5000))
+        e.Tuple(e.U64(15), e.U(5000)),
       ),
     ],
     esdts: [{ id: sftId, nonce: 1, amount: 10_000 }],
@@ -254,8 +254,8 @@ test("SFT transfer vested over epochs 5, 10, 15. Execute at epoch 20. Claim.", a
               e.List(
                 e.Tuple(e.U64(5), e.U(2000)),
                 e.Tuple(e.U64(10), e.U(3000)),
-                e.Tuple(e.U64(15), e.U(5000))
-              )
+                e.Tuple(e.U64(15), e.U(5000)),
+              ),
             ),
           ],
         ]),
@@ -340,8 +340,8 @@ test("EGLD transfer vested over epochs 5, 10. Cancelled at epoch 7. Claim.", asy
               e.U64(0),
               e.List(
                 e.Tuple(e.U64(5), e.U(3000)),
-                e.Tuple(e.U64(10), e.U(7000))
-              )
+                e.Tuple(e.U64(10), e.U(7000)),
+              ),
             ),
           ],
         ]),
@@ -432,8 +432,8 @@ test("EGLD transfer to oneself over epochs 5, 10. Cancelled at epoch 7. Claim.",
               e.U64(0),
               e.List(
                 e.Tuple(e.U64(5), e.U(3000)),
-                e.Tuple(e.U64(10), e.U(7000))
-              )
+                e.Tuple(e.U64(10), e.U(7000)),
+              ),
             ),
           ],
         ]),
@@ -642,8 +642,8 @@ test("get_transfers", async () => {
         receiver1,
         e.Str(egldId),
         e.U64(0),
-        e.List(e.Tuple(e.U64(5), e.U(3000)), e.Tuple(e.U64(10), e.U(7000)))
-      )
+        e.List(e.Tuple(e.U64(5), e.U(3000)), e.Tuple(e.U64(10), e.U(7000))),
+      ),
     ),
     e.Tuple(
       e.U64(2),
@@ -652,8 +652,8 @@ test("get_transfers", async () => {
         receiver1,
         e.Str(sftId),
         e.U64(1),
-        e.List(e.Tuple(e.U64(5), e.U(3000)), e.Tuple(e.U64(10), e.U(7000)))
-      )
+        e.List(e.Tuple(e.U64(5), e.U(3000)), e.Tuple(e.U64(10), e.U(7000))),
+      ),
     ),
   ]);
 });
@@ -743,7 +743,7 @@ test("Invalid canceller.", async () => {
 test("Too many milestones.", async () => {
   const limit = 20;
   const milestones = Array.from({ length: limit + 1 }, (_, i) =>
-    e.Tuple(e.U64(i + 1), e.U(1_000))
+    e.Tuple(e.U64(i + 1), e.U(1_000)),
   );
   await sender1
     .callContract({
@@ -775,7 +775,7 @@ test("Too many milestones.", async () => {
               receiver1,
               e.Str(egldId),
               e.U64(0),
-              e.List(...milestones)
+              e.List(...milestones),
             ),
           ],
         ]),

@@ -11,7 +11,7 @@ describe("AddressEncodable", () => {
       "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
     const bytesAddress = new Uint8Array(32);
     expect(new AddressEncodable(bechAddress).toTopBytes()).toEqual(
-      bytesAddress
+      bytesAddress,
     );
   });
 
@@ -39,21 +39,21 @@ describe("AddressEncodable", () => {
     const address =
       "btc1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq5mhdvz";
     expect(() => new AddressEncodable(address)).toThrow(
-      'Address HRP is not "erd".'
+      'Address HRP is not "erd".',
     );
   });
 
   it("should throw error if address length too short", () => {
     const address = new Uint8Array(31);
     expect(() => new AddressEncodable(address)).toThrow(
-      "Invalid address length."
+      "Invalid address length.",
     );
   });
 
   it("should throw error if address length too long", () => {
     const address = new Uint8Array(33);
     expect(() => new AddressEncodable(address)).toThrow(
-      "Invalid address length."
+      "Invalid address length.",
     );
   });
 });

@@ -20,7 +20,7 @@ export const newAction = async ({ dir: dirPath }: { dir: string }) => {
   }
   const contract = "blank";
   logTitle(
-    `Downloading contract ${chalk.magenta(contract)} in "${dirPath}"...`
+    `Downloading contract ${chalk.magenta(contract)} in "${dirPath}"...`,
   );
   await downloadAndExtractContract(contract, dirPath);
   log();
@@ -33,8 +33,8 @@ export const newAction = async ({ dir: dirPath }: { dir: string }) => {
   log();
   log(
     chalk.green(
-      `Successfully created ${chalk.magenta(contract)} in "${dirPath}".`
-    )
+      `Successfully created ${chalk.magenta(contract)} in "${dirPath}".`,
+    ),
   );
   log();
   log("Inside that directory, you can run several commands:");
@@ -56,7 +56,7 @@ export const newAction = async ({ dir: dirPath }: { dir: string }) => {
 
 const downloadAndExtractContract = async (contract: string, cwd: string) => {
   const file = await downloadTar(
-    "https://codeload.github.com/arda-org/xSuite.js/tar.gz/main"
+    "https://codeload.github.com/arda-org/xSuite.js/tar.gz/main",
   );
   await tar.x({
     file,

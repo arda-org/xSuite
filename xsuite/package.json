@@ -11,17 +11,17 @@
     "try": "tsx scripts/try.ts"
   },
   "files": [
-    "dist",
-    "data.js",
+    "assert.d.ts",
+    "assert.js",
     "data.d.ts",
-    "interact.js",
+    "data.js",
+    "dist",
     "interact.d.ts",
-    "proxy.js",
+    "interact.js",
     "proxy.d.ts",
-    "test.js",
-    "test.d.ts",
-    "world.js",
-    "world.d.ts"
+    "proxy.js",
+    "world.d.ts",
+    "world.js"
   ],
   "dependencies": {
     "@multiversx/sdk-wallet": "4.2.0",
@@ -35,9 +35,9 @@
     "@swc/jest": "0.2.24",
     "@types/node": "18.7.18",
     "jest": "29.5.0",
-    "open": "^9.1.0",
+    "open": "9.1.0",
     "rimraf": "5.0.0",
-    "tsx": "^3.12.7",
-    "typescript": "5.0.4"
+    "tsx": "3.12.7",
+    "typescript": "5.1.6"
   }
 }

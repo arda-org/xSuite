@@ -41,7 +41,7 @@ export const requestXegldAction = async ({
         authorization: `Bearer ${accessToken}`,
       },
       method: "POST",
-    }
+    },
   ).then((r) => r.json());
 
   if (faucetRes["status"] !== "success") {

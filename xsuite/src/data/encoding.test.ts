@@ -20,7 +20,7 @@ describe("Encoding Decoding Suite", () => {
   test("e.Addr", () => {
     const encoded = enc.Addr(new Uint8Array(32)).toTopHex();
     expect(encoded).toEqual(
-      "0000000000000000000000000000000000000000000000000000000000000000"
+      "0000000000000000000000000000000000000000000000000000000000000000",
     );
   });
 

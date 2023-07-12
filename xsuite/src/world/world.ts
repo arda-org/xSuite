@@ -54,7 +54,7 @@ export class World {
   newWalletFromFile_unsafe(filePath: string, password: string) {
     return new WorldWallet(
       this,
-      KeystoreSigner.fromFile_unsafe(filePath, password)
+      KeystoreSigner.fromFile_unsafe(filePath, password),
     );
   }
 
@@ -84,14 +84,14 @@ export class World {
 
   executeTx(
     sender: Signer,
-    txParams: Omit<TxParams, "sender" | "nonce" | "chainId">
+    txParams: Omit<TxParams, "sender" | "nonce" | "chainId">,
   ): TxResultPromise<TxResult> {
     return TxResultPromise.from(this.#executeTx(sender, txParams));
   }
 
   async #executeTx(
     sender: Signer,
-    { gasPrice, ...txParams }: Omit<TxParams, "sender" | "nonce" | "chainId">
+    { gasPrice, ...txParams }: Omit<TxParams, "sender" | "nonce" | "chainId">,
   ): Promise<TxResult> {
     const nonce = await this.proxy.getAccountNonce(sender);
     const tx = new Tx({
@@ -116,22 +116,22 @@ export class World {
 
   deployContract(
     sender: Signer,
-    txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">
+    txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">,
   ): TxResultPromise<DeployContractTxResult> {
     return TxResultPromise.from(this.#deployContract(sender, txParams));
   }
 
   async #deployContract(
     sender: Signer,
-    txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">
+    txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">,
   ): Promise<DeployContractTxResult> {
     txParams.code = expandCode(txParams.code);
     const txResult = await this.#executeTx(
       sender,
-      Tx.getParamsToDeployContract(txParams)
+      Tx.getParamsToDeployContract(txParams),
     );
     const scDeployEvent = txResult.tx?.logs?.events.find(
-      (e: any) => e.identifier === "SCDeploy"
+      (e: any) => e.identifier === "SCDeploy",
     );
     if (!scDeployEvent) {
       throw new Error("No SCDeploy event.");
@@ -143,19 +143,19 @@ export class World {
 
   upgradeContract(
     sender: Signer,
-    txParams: Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">
+    txParams: Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">,
   ): TxResultPromise<CallContractTxResult> {
     return TxResultPromise.from(this.#upgradeContract(sender, txParams));
   }
 
   async #upgradeContract(
     sender: Signer,
-    txParams: Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">
+    txParams: Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">,
   ): Promise<CallContractTxResult> {
     txParams.code = expandCode(txParams.code);
     const txResult = await this.#executeTx(
       sender,
-      Tx.getParamsToUpgradeContract({ sender, ...txParams })
+      Tx.getParamsToUpgradeContract({ sender, ...txParams }),
     );
     const returnData = getTxReturnData(txResult.tx);
     return { ...txResult, returnData };
@@ -163,35 +163,35 @@ export class World {
 
   transfer(
     sender: Signer,
-    txParams: Omit<TransferTxParams, "sender" | "nonce" | "chainId">
+    txParams: Omit<TransferTxParams, "sender" | "nonce" | "chainId">,
   ): TxResultPromise<TxResult> {
     return TxResultPromise.from(this.#transfer(sender, txParams));
   }
 
   async #transfer(
     sender: Signer,
-    txParams: Omit<TransferTxParams, "sender" | "nonce" | "chainId">
+    txParams: Omit<TransferTxParams, "sender" | "nonce" | "chainId">,
   ): Promise<TxResult> {
     return this.#executeTx(
       sender,
-      Tx.getParamsToTransfer({ sender, ...txParams })
+      Tx.getParamsToTransfer({ sender, ...txParams }),
     );
   }
 
   callContract(
     sender: Signer,
-    txParams: Omit<CallContractTxParams, "sender" | "nonce" | "chainId">
+    txParams: Omit<CallContractTxParams, "sender" | "nonce" | "chainId">,
   ): TxResultPromise<CallContractTxResult> {
     return TxResultPromise.from(this.#callContract(sender, txParams));
   }
 
   async #callContract(
     sender: Signer,
-    txParams: Omit<CallContractTxParams, "sender" | "nonce" | "chainId">
+    txParams: Omit<CallContractTxParams, "sender" | "nonce" | "chainId">,
   ): Promise<CallContractTxResult> {
     const txResult = await this.#executeTx(
       sender,
-      Tx.getParamsToCallContract({ sender, ...txParams })
+      Tx.getParamsToCallContract({ sender, ...txParams }),
     );
     const returnData = getTxReturnData(txResult.tx);
     return { ...txResult, returnData };
@@ -237,13 +237,13 @@ export class WorldWallet extends Signer {
   }
 
   executeTx(
-    txParams: Omit<TxParams, "sender" | "nonce" | "chainId">
+    txParams: Omit<TxParams, "sender" | "nonce" | "chainId">,
   ): TxResultPromise<TxResult> {
     return this.world.executeTx(this, txParams);
   }
 
   deployContract(
-    txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">
+    txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">,
   ) {
     return this.world.deployContract(this, txParams).then((data) => ({
       ...data,
@@ -252,19 +252,19 @@ export class WorldWallet extends Signer {
   }
 
   upgradeContract(
-    txParams: Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">
+    txParams: Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">,
   ): TxResultPromise<CallContractTxResult> {
     return this.world.upgradeContract(this, txParams);
   }
 
   transfer(
-    txParams: Omit<TransferTxParams, "sender" | "nonce" | "chainId">
+    txParams: Omit<TransferTxParams, "sender" | "nonce" | "chainId">,
   ): TxResultPromise<TxResult> {
     return this.world.transfer(this, txParams);
   }
 
   callContract(
-    txParams: Omit<CallContractTxParams, "sender" | "nonce" | "chainId">
+    txParams: Omit<CallContractTxParams, "sender" | "nonce" | "chainId">,
   ) {
     return this.world.callContract(this, txParams);
   }
@@ -308,7 +308,7 @@ export class TxResultPromise<T> extends Promise<T> {
 
   then<TResult1 = T, TResult2 = never>(
     onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null,
-    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null
+    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
   ) {
     return new TxResultPromise<TResult1 | TResult2>((resolve, reject) => {
       super.then(
@@ -333,13 +333,13 @@ export class TxResultPromise<T> extends Promise<T> {
           } else {
             reject(error);
           }
-        }
+        },
       );
     });
   }
 
   catch<TResult = never>(
-    onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null
+    onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null,
   ) {
     return this.then(null, onrejected);
   }
@@ -355,12 +355,12 @@ export class TxResultPromise<T> extends Promise<T> {
           const errorMessage = matches[2];
           if (code !== undefined && code !== errorCode) {
             throw new Error(
-              `Failed with unexpected error code.\nExpected code: ${code}\nReceived code: ${errorCode}`
+              `Failed with unexpected error code.\nExpected code: ${code}\nReceived code: ${errorCode}`,
             );
           }
           if (message !== undefined && message !== errorMessage) {
             throw new Error(
-              `Failed with unexpected error message.\nExpected message: ${message}\nReceived message: ${errorMessage}`
+              `Failed with unexpected error message.\nExpected message: ${message}\nReceived message: ${errorMessage}`,
             );
           }
         } else {
@@ -375,13 +375,13 @@ export class TxResultPromise<T> extends Promise<T> {
 
 const getTxReturnData = (tx: any): string[] => {
   const writeLogEvent = tx?.logs?.events.find(
-    (e: any) => e.identifier === "writeLog"
+    (e: any) => e.identifier === "writeLog",
   );
   if (writeLogEvent) {
     return atob(writeLogEvent.data).split("@").slice(2);
   }
   const scr = tx?.smartContractResults.find(
-    (r: any) => r.data === "@6f6b" || r.data.startsWith("@6f6b@")
+    (r: any) => r.data === "@6f6b" || r.data.startsWith("@6f6b@"),
   );
   if (scr) {
     return scr.data.split("@").slice(2);

@@ -34,7 +34,7 @@ const toByteReader = (bytes: string | number[] | Uint8Array | ByteReader) => {
 
 export const postDecode = <T, U>(
   decoder: Decoder<T>,
-  f: (x: T) => U
+  f: (x: T) => U,
 ): Decoder<U> => ({
   topDecode: (bytes: string | number[] | Uint8Array | ByteReader) =>
     f(decoder.topDecode(bytes)),

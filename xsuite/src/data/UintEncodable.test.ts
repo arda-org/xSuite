@@ -40,7 +40,7 @@ describe("UintEncodable success test cases", () => {
     });
     test(`Bytes: ${bytes}, Value: ${value}, Nest-encode`, () => {
       expect(new UintEncodable(value, bytes).toNestHex()).toEqual(
-        nestedEncoding
+        nestedEncoding,
       );
     });
   });

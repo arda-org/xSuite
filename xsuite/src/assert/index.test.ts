@@ -4,7 +4,7 @@ import {
   assertAccount,
   assertHasPairs,
   assertAllPairs,
-} from "./assert";
+} from "./index";
 
 test("assertHexList - matching", () => {
   assertHexList(["00"], ["00"]);
@@ -20,13 +20,13 @@ test("assertHasPairs - matching", () => {
 
 test("assertHasPairs - value not maching", () => {
   expect(() =>
-    assertHasPairs({ "01": "01", "02": "02" }, { "01": "01", "02": "" })
+    assertHasPairs({ "01": "01", "02": "02" }, { "01": "01", "02": "" }),
   ).toThrow();
 });
 
 test("assertHasPairs - value missing", () => {
   expect(() =>
-    assertHasPairs({ "01": "01" }, { "01": "01", "03": "03" })
+    assertHasPairs({ "01": "01" }, { "01": "01", "03": "03" }),
   ).toThrow();
 });
 
@@ -36,19 +36,19 @@ test("assertAllPairs - matching", () => {
 
 test("assertAllPairs - value not maching", () => {
   expect(() =>
-    assertAllPairs({ "01": "01", "02": "" }, { "01": "01", "02": "02" })
+    assertAllPairs({ "01": "01", "02": "" }, { "01": "01", "02": "02" }),
   ).toThrow();
 });
 
 test("assertAllPairs - value missing", () => {
   expect(() =>
-    assertAllPairs({ "01": "01" }, { "01": "01", "03": "03" })
+    assertAllPairs({ "01": "01" }, { "01": "01", "03": "03" }),
   ).toThrow();
 });
 
 test("assertAllPairs - value in excess", () => {
   expect(() =>
-    assertAllPairs({ "01": "01", "02": "02" }, { "01": "01" })
+    assertAllPairs({ "01": "01", "02": "02" }, { "01": "01" }),
   ).toThrow();
 });
 
@@ -66,6 +66,6 @@ test("assertAccount", () => {
         ["01", "01"],
         ["02", ""],
       ],
-    }
+    },
   );
 });

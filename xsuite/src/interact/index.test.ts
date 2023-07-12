@@ -22,21 +22,21 @@ test("envChain.name - mainnet", () => {
 
 test("envChain.name - not set", () => {
   expect(() => envChain.name()).toThrow(
-    "CHAIN environment variable is not set."
+    "CHAIN environment variable is not set.",
   );
 });
 
 test("envChain.name - invalid", () => {
   process.env.CHAIN = "other";
   expect(() => envChain.name()).toThrow(
-    "CHAIN environment variable value is invalid."
+    "CHAIN environment variable value is invalid.",
   );
 });
 
 test("envChain.select - no value", () => {
   process.env.CHAIN = "devnet";
   expect(() => envChain.select({})).toThrow(
-    "No value for CHAIN environment variable."
+    "No value for CHAIN environment variable.",
   );
 });
 
@@ -58,14 +58,14 @@ test("envChain.id - mainnet", () => {
 test("envChain.publicProxyUrl - devnet", () => {
   process.env.CHAIN = "devnet";
   expect(envChain.publicProxyUrl()).toEqual(
-    "https://devnet-gateway.multiversx.com"
+    "https://devnet-gateway.multiversx.com",
   );
 });
 
 test("envChain.publicProxyUrl - testnet", () => {
   process.env.CHAIN = "testnet";
   expect(envChain.publicProxyUrl()).toEqual(
-    "https://testnet-gateway.multiversx.com"
+    "https://testnet-gateway.multiversx.com",
   );
 });
 

@@ -4,10 +4,10 @@ import { numberToBytesAddress } from "./utils";
 describe("numberToBytesAddress", () => {
   it("should throw an error for non-positive numbers", () => {
     expect(() => numberToBytesAddress(0, false)).toThrow(
-      "Number must be positive."
+      "Number must be positive.",
     );
     expect(() => numberToBytesAddress(-1, true)).toThrow(
-      "Number must be positive."
+      "Number must be positive.",
     );
   });
 
@@ -16,7 +16,7 @@ describe("numberToBytesAddress", () => {
       Uint8Array.from([
         0, 0, 0, 123, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0,
-      ])
+      ]),
     );
   });
 
@@ -25,7 +25,7 @@ describe("numberToBytesAddress", () => {
       Uint8Array.from([
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 200, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0,
-      ])
+      ]),
     );
   });
 });

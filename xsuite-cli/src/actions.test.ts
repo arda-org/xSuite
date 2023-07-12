@@ -64,7 +64,7 @@ test("new-wallet --wallet wallet.json --password 1234", async () => {
   expect(fs.existsSync("wallet.json")).toEqual(true);
   const walletPath = path.resolve("wallet.json");
   expect(stdoutInt.data).toEqual(
-    chalk.green(`Wallet created at "${walletPath}".`) + "\n"
+    chalk.green(`Wallet created at "${walletPath}".`) + "\n",
   );
 });
 
@@ -94,9 +94,9 @@ test("request-xegld --wallet wallet.json", async () => {
         return res(
           ctx.json({
             hash: "103b656af4fa9625962c5978e8cf69aca6918eb146a495bcf474f1c6a922be93",
-          })
+          }),
         );
-      }
+      },
     ),
     rest.get("https://devnet-api.multiversx.com/blocks", (_req, res, ctx) => {
       return res(
@@ -104,7 +104,7 @@ test("request-xegld --wallet wallet.json", async () => {
           {
             hash: "103b656af4fa9625962c5978e8cf69aca6918eb146a495bcf474f1c6a922be93",
           },
-        ])
+        ]),
       );
     }),
     rest.post(
@@ -115,10 +115,10 @@ test("request-xegld --wallet wallet.json", async () => {
           return res(ctx.json({ status: "success" }));
         } else {
           return res(
-            ctx.json({ status: "error", message: "Already claimed today." })
+            ctx.json({ status: "error", message: "Already claimed today." }),
           );
         }
-      }
+      },
     ),
     rest.get(
       `https://devnet-gateway.multiversx.com/address/${address}/balance`,
@@ -126,8 +126,8 @@ test("request-xegld --wallet wallet.json", async () => {
         numBalanceReqs += 1;
         const balance = `${30n * 10n ** 18n * BigInt(numBalanceReqs)}`;
         return res(ctx.json({ code: "successful", data: { balance } }));
-      }
-    )
+      },
+    ),
   );
   server.listen();
   stdoutInt.start();
@@ -152,7 +152,7 @@ test("new --dir contract && setup-rust && build && test-rust", async () => {
   const dirPath = path.resolve("contract");
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue(
-      `Downloading contract ${chalk.magenta("blank")} in "${dirPath}"...`
+      `Downloading contract ${chalk.magenta("blank")} in "${dirPath}"...`,
     ),
     "",
     chalk.blue("Installing packages..."),
@@ -161,7 +161,7 @@ test("new --dir contract && setup-rust && build && test-rust", async () => {
     chalk.blue("Initialized a git repository."),
     "",
     chalk.green(
-      `Successfully created ${chalk.magenta("blank")} in "${dirPath}".`
+      `Successfully created ${chalk.magenta("blank")} in "${dirPath}".`,
     ),
     "",
     "Inside that directory, you can run several commands:",
@@ -188,7 +188,7 @@ test("new --dir contract && setup-rust && build && test-rust", async () => {
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Installing Rust nightly..."),
     chalk.cyan(
-      "$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain nightly-2023-06-15 -y"
+      "$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain nightly-2023-06-15 -y",
     ),
     "",
     chalk.blue("Installing wasm32-unknown-unknown target..."),
@@ -228,6 +228,6 @@ test("new --dir contract | error: already exists", async () => {
   stdoutInt.stop();
   const dirPath = path.resolve("contract");
   expect(stdoutInt.data).toEqual(
-    chalk.red(`Directory already exists at "${dirPath}".`) + "\n"
+    chalk.red(`Directory already exists at "${dirPath}".`) + "\n",
   );
 });

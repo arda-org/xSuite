@@ -11,8 +11,8 @@ describe("OptionDecoder", () => {
     test("topDecode option of BigUint that is some", () => {
       expect(
         new OptionDecoder(new UintDecoder()).topDecode(
-          new Uint8Array([1, 0, 0, 0, 1, 1])
-        )
+          new Uint8Array([1, 0, 0, 0, 1, 1]),
+        ),
       ).toEqual(1n);
     });
 
@@ -22,13 +22,13 @@ describe("OptionDecoder", () => {
 
     test("topDecode option of U8 that is some", () => {
       expect(new OptionDecoder(new UintDecoder(1)).topDecode([1, 1])).toEqual(
-        1n
+        1n,
       );
     });
 
     it("should throw error if first byte is not 1", () => {
       expect(() =>
-        new OptionDecoder(new UintDecoder(1)).topDecode([2, 0])
+        new OptionDecoder(new UintDecoder(1)).topDecode([2, 0]),
       ).toThrow(Error("Invalid Option top-encoding."));
     });
   });
@@ -40,7 +40,7 @@ describe("OptionDecoder", () => {
 
     test("nestDecode option of BigUint that is some", () => {
       expect(
-        new OptionDecoder(new UintDecoder()).nestDecode([1, 0, 0, 0, 1, 1])
+        new OptionDecoder(new UintDecoder()).nestDecode([1, 0, 0, 0, 1, 1]),
       ).toEqual(1n);
     });
 
@@ -50,13 +50,13 @@ describe("OptionDecoder", () => {
 
     test("nestDecode option of U8 that is some", () => {
       expect(new OptionDecoder(new UintDecoder(1)).nestDecode([1, 1])).toEqual(
-        1n
+        1n,
       );
     });
 
     it("should throw error if first byte is not 0 or 1", () => {
       expect(() =>
-        new OptionDecoder(new UintDecoder(1)).nestDecode([2, 0])
+        new OptionDecoder(new UintDecoder(1)).nestDecode([2, 0]),
       ).toThrow("Invalid Option nest-encoding.");
     });
   });

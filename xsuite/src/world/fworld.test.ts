@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, test } from "@jest/globals";
+import { assertAccount, assertHexList } from "../assert";
 import { d, e, pairsToRawPairs } from "../data";
-import { assertAccount, assertHexList } from "../test";
 import { FWorld, FWorldContract, FWorldWallet } from "./fworld";
 import { readFileHex } from "./utils";
 
@@ -67,7 +67,7 @@ test("FWorldWallet.getAccountBalance", async () => {
 
 test("FWorldWallet.getAccountPairs", async () => {
   expect(await wallet.getAccountPairs()).toEqual(
-    pairsToRawPairs(e.p.Esdts([{ id: fftId, amount: 10n ** 18n }]))
+    pairsToRawPairs(e.p.Esdts([{ id: fftId, amount: 10n ** 18n }])),
   );
 });
 
@@ -99,7 +99,7 @@ test("FWorldContract.getAccountPairs", async () => {
     pairsToRawPairs([
       e.p.Esdts([{ id: fftId, amount: 10n ** 18n }]),
       [e.Str("n"), e.U64(1)],
-    ])
+    ]),
   );
 });
 
@@ -260,9 +260,9 @@ test("FWorldWallet.callContract.assertFail - Wrong code", async () => {
         funcArgs: [e.U64(0)],
         gasLimit: 10_000_000,
       })
-      .assertFail({ code: 5 })
+      .assertFail({ code: 5 }),
   ).rejects.toThrow(
-    "Failed with unexpected error code.\nExpected code: 5\nReceived code: 4"
+    "Failed with unexpected error code.\nExpected code: 5\nReceived code: 4",
   );
 });
 
@@ -275,9 +275,9 @@ test("FWorldWallet.callContract.assertFail - Wrong message", async () => {
         funcArgs: [e.U64(0)],
         gasLimit: 10_000_000,
       })
-      .assertFail({ message: "" })
+      .assertFail({ message: "" }),
   ).rejects.toThrow(
-    "Failed with unexpected error message.\nExpected message: \nReceived message: Amount is not positive."
+    "Failed with unexpected error message.\nExpected message: \nReceived message: Amount is not positive.",
   );
 });
 
@@ -290,6 +290,6 @@ test("FWorldWallet.callContract.assertFail - Transaction not failing", async () 
         funcArgs: [e.U64(1)],
         gasLimit: 10_000_000,
       })
-      .assertFail()
+      .assertFail(),
   ).rejects.toThrow("Transaction has not failed.");
 });

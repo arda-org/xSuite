@@ -1,5 +1,5 @@
 import { test, expect, beforeEach, afterEach, describe } from "@jest/globals";
-import { assertAllPairs } from "../test";
+import { assertAllPairs } from "../assert";
 import { FWorld, FWorldContract, FWorldWallet, readFileHex } from "../world";
 import { enc } from "./encoding";
 import { hexToHexString } from "./hex";
@@ -39,13 +39,13 @@ describe("Mapper", () => {
     });
     assertAllPairs(
       pEnc.Mapper("single", enc.Str("a")).Value(enc.U64(1)),
-      await contract.getAccountPairs()
+      await contract.getAccountPairs(),
     );
     expect(async () =>
       assertAllPairs(
         pEnc.Mapper("single", enc.Str("a")).Value(null),
-        await contract.getAccountPairs()
-      )
+        await contract.getAccountPairs(),
+      ),
     ).rejects.toThrow();
     await wallet.callContract({
       callee: contract,
@@ -55,7 +55,7 @@ describe("Mapper", () => {
     });
     assertAllPairs(
       pEnc.Mapper("single", enc.Str("a")).Value(null),
-      await contract.getAccountPairs()
+      await contract.getAccountPairs(),
     );
   });
 
@@ -78,13 +78,13 @@ describe("Mapper", () => {
         [1, enc.U(10)],
         [4, enc.U(40)],
       ]),
-      await contract.getAccountPairs()
+      await contract.getAccountPairs(),
     );
     expect(async () =>
       assertAllPairs(
         pEnc.Mapper("set", enc.U64(1)).Set(null),
-        await contract.getAccountPairs()
-      )
+        await contract.getAccountPairs(),
+      ),
     ).rejects.toThrow();
     await wallet.callContract({
       callee: contract,
@@ -94,13 +94,13 @@ describe("Mapper", () => {
     });
     assertAllPairs(
       pEnc.Mapper("set", enc.U64(1)).Set(null),
-      await contract.getAccountPairs()
+      await contract.getAccountPairs(),
     );
   });
 
   test("p.Mapper.Set - Negative id", () => {
     expect(() => pEnc.Mapper("set").Set([[0, enc.U64(0)]])).toThrow(
-      "Negative id not allowed."
+      "Negative id not allowed.",
     );
   });
 
@@ -127,13 +127,13 @@ describe("Mapper", () => {
         [3, enc.Str("c"), enc.U64(30)],
         [1, enc.Str("a"), enc.U64(10)],
       ]),
-      await contract.getAccountPairs()
+      await contract.getAccountPairs(),
     );
     expect(async () =>
       assertAllPairs(
         pEnc.Mapper("map", enc.U(1)).Map(null),
-        await contract.getAccountPairs()
-      )
+        await contract.getAccountPairs(),
+      ),
     ).rejects.toThrow();
     await wallet.callContract({
       callee: contract,
@@ -143,7 +143,7 @@ describe("Mapper", () => {
     });
     assertAllPairs(
       pEnc.Mapper("map", enc.U(1)).Map(null),
-      await contract.getAccountPairs()
+      await contract.getAccountPairs(),
     );
   });
 
@@ -156,13 +156,13 @@ describe("Mapper", () => {
     });
     assertAllPairs(
       pEnc.Mapper("vec", enc.U64(1), enc.U(2)).Vec([enc.U64(1), enc.U64(2)]),
-      await contract.getAccountPairs()
+      await contract.getAccountPairs(),
     );
     expect(async () =>
       assertAllPairs(
         pEnc.Mapper("vec", enc.U64(1), enc.U(2)).Vec(null),
-        await contract.getAccountPairs()
-      )
+        await contract.getAccountPairs(),
+      ),
     ).rejects.toThrow();
     await wallet.callContract({
       callee: contract,
@@ -172,7 +172,7 @@ describe("Mapper", () => {
     });
     assertAllPairs(
       pEnc.Mapper("vec", enc.U64(1), enc.U(2)).Vec(null),
-      await contract.getAccountPairs()
+      await contract.getAccountPairs(),
     );
   });
 });
@@ -250,7 +250,7 @@ describe("Esdt", () => {
         { id: sftId, nonce: 1, amount: sftAmount1 },
         { id: sftId, nonce: 2, amount: sftAmount2 },
       ]),
-      await wallet.getAccountPairs()
+      await wallet.getAccountPairs(),
     );
     assertAllPairs(
       pEnc.Esdts([
@@ -264,7 +264,7 @@ describe("Esdt", () => {
           lastNonce: 2,
         },
       ]),
-      await contract.getAccountPairs()
+      await contract.getAccountPairs(),
     );
     assertAllPairs(
       pEnc.Esdts([
@@ -295,7 +295,7 @@ describe("Esdt", () => {
           attrs: sftAttrs2,
         },
       ]),
-      await world.getSystemAccountPairs()
+      await world.getSystemAccountPairs(),
     );
   });
 
@@ -306,7 +306,7 @@ describe("Esdt", () => {
           { id: fftId, amount: 0n },
           { id: sftId, nonce: 1, amount: 0n },
         ])
-        .map(([, v]) => hexToHexString(v))
+        .map(([, v]) => hexToHexString(v)),
     ).toEqual(["", ""]);
   });
 });

@@ -1,5 +1,5 @@
 import { test, beforeEach, afterEach } from "vitest";
-import { assertAccount } from "xsuite/test";
+import { assertAccount } from "xsuite/assert";
 import { FWorld, FWorldWallet, FWorldContract } from "xsuite/world";
 
 let world: FWorld;

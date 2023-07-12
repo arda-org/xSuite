@@ -42,7 +42,7 @@ describe("IntEncodable success test cases", () => {
     });
     test(`Bytes: ${bytes}, Value: ${value}, Nest-encode`, () => {
       expect(new IntEncodable(value, bytes).toNestHex()).toEqual(
-        nestedEncoding
+        nestedEncoding,
       );
     });
   });

@@ -10,7 +10,7 @@ describe("ListDecoder", () => {
 
   test("topDecode non-empty array", () => {
     const result = new ListDecoder(new U32Decoder()).topDecode(
-      "0000000100000002"
+      "0000000100000002",
     );
     expect(result).toEqual([1n, 2n]);
   });
@@ -22,7 +22,7 @@ describe("ListDecoder", () => {
 
   test("topDecode empty array", () => {
     const result = new ListDecoder(new U32Decoder()).nestDecode(
-      "000000020000000100000002"
+      "000000020000000100000002",
     );
     expect(result).toEqual([1n, 2n]);
   });

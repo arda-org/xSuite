@@ -17,7 +17,7 @@ describe("BytesEncodable", () => {
 
     test("non-empty number array", () => {
       expect(new BytesEncodable([72, 101, 108, 108]).toTopHex()).toEqual(
-        "48656c6c"
+        "48656c6c",
       );
     });
 
@@ -27,7 +27,7 @@ describe("BytesEncodable", () => {
 
     test("non-empty Uint8Array", () => {
       expect(
-        new BytesEncodable(new Uint8Array([72, 101, 108, 108])).toTopHex()
+        new BytesEncodable(new Uint8Array([72, 101, 108, 108])).toTopHex(),
       ).toEqual("48656c6c");
     });
   });

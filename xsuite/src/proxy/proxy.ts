@@ -24,7 +24,7 @@ export class Proxy {
             method: "POST",
             body: JSON.stringify(data),
           }
-        : undefined
+        : undefined,
     ).then((r) => r.json());
   }
 
@@ -99,7 +99,7 @@ export class Proxy {
   static queryRaw(baseUrl: string, query: BroadQuery) {
     return Proxy.fetchRaw(
       `${baseUrl}/vm-values/query`,
-      broadQueryToRawQuery(query)
+      broadQueryToRawQuery(query),
     );
   }
 
