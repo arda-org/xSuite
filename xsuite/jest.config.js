@@ -1,6 +1,7 @@
 /** @type {import('jest').Config} */
 module.exports = {
   collectCoverage: true,
+  collectCoverageFrom: ["src/**/*.ts"],
   coverageThreshold: {
     global: {
       branches: 80,
@@ -18,5 +19,5 @@ module.exports = {
   transform: {
     "^.+\\.(t|j)sx?$": "@swc/jest",
   },
-  transformIgnorePatterns: []
+  transformIgnorePatterns: [],
 };
