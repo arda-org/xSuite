@@ -1,6 +1,6 @@
 # 'blank' contract
 
-A blank contract, with everything already setup (contract, tests, interactions), to use as the starting point for your new contract.
+A blank contract, with everything already set up (contract, tests, interactions), to use as the starting point for your new contract.
 
 To create a copy of the 'blank' contract on your computer:
 

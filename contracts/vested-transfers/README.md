@@ -1,6 +1,8 @@
 # 'vested-transfers' contract
 
-A contract for vested transfers, with following endpoints and views:
+A contract for vested transfers, i.e. a transfer spread over a period of time, with optional intermediary releases (e.g. a transfer of 100 EGLD over 4 weeks, spread into 4 weekly transfers of 25 EGLD).
+
+The contract contains the following endpoints and views:
 
 - `create_transfer(receiver: Address, release_schedule: ReleaseSchedule)`: endpoint to create a vested transfer,
 - `execute_transfer(index: u64)`: endpoint to execute a specific vested transfer,
