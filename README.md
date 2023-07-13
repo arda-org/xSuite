@@ -10,7 +10,7 @@
     <img src="https://img.shields.io/badge/MADE%20BY%20ARDA-000000.svg?style=for-the-badge">
   </a>
   <a href="https://t.me/xSuite_js">
-    <img src="https://img.shields.io/badge/Join%20the%20telegram-blue.svg?style=for-the-badge&logo=Telegram&logoColor=ffffff">
+    <img src="https://img.shields.io/badge/Join%20on%20telegram-blue.svg?style=for-the-badge&logo=Telegram&logoColor=ffffff">
   </a>
 </p>
 
