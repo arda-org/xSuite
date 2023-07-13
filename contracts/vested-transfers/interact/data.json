@@ -1,0 +1,8 @@
+{
+  "code": "file:output/contract.wasm",
+  "address": {
+    "devnet": "",
+    "testnet": "",
+    "mainnet": ""
+  }
+}

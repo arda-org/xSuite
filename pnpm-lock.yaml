@@ -62,6 +62,9 @@ importers:
       '@types/node':
         specifier: ^18.16.18
         version: 18.16.18
+      commander:
+        specifier: 11.0.0
+        version: 11.0.0
       tsx:
         specifier: ^3.12.7
         version: 3.12.7
