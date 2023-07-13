@@ -11,11 +11,11 @@ xsuite setup-rust
 ```
 
 ```
-xsuite new --dir mycontract
+xsuite new --dir my-contract
 ```
 
 ```
-cd mycontract
+cd my-contract
 ```
 
 ```
