@@ -10,7 +10,17 @@ import tar from "tar";
 import { log } from "xsuite/_stdio";
 import { logTitle, logAndRunCommand, logCommand, logError } from "./helpers";
 
-export const newAction = async ({ dir: dirPath }: { dir: string }) => {
+export const newAction = async ({
+  dir: dirPath,
+  contract = "blank",
+  noInstall,
+  noGit,
+}: {
+  dir: string;
+  contract?: string;
+  noInstall?: boolean;
+  noGit?: boolean;
+}) => {
   dirPath = path.resolve(dirPath);
   if (fs.existsSync(dirPath)) {
     logError(`Directory already exists at "${dirPath}".`);
@@ -18,15 +28,16 @@ export const newAction = async ({ dir: dirPath }: { dir: string }) => {
   } else {
     fs.mkdirSync(dirPath, { recursive: true });
   }
-  const contract = "blank";
   logTitle(
     `Downloading contract ${chalk.magenta(contract)} in "${dirPath}"...`,
   );
   await downloadAndExtractContract(contract, dirPath);
-  log();
-  logTitle("Installing packages...");
-  logAndRunCommand("npm", ["install"], { cwd: dirPath });
-  if (tryGitInit(dirPath)) {
+  if (!noInstall) {
+    log();
+    logTitle("Installing packages...");
+    logAndRunCommand("npm", ["install"], { cwd: dirPath });
+  }
+  if (!noGit && tryGitInit(dirPath)) {
     log();
     logTitle("Initialized a git repository.");
   }

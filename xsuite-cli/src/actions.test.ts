@@ -221,6 +221,42 @@ test("new --dir contract && setup-rust && build && test-rust", async () => {
   ]);
 });
 
+test(`new --contract vested-transfers --dir contract --no-git --no-install`, async () => {
+  stdoutInt.start();
+  await newAction({
+    contract: "vested-transfers",
+    dir: "contract",
+    noGit: true,
+    noInstall: true,
+  });
+  stdoutInt.stop();
+  expect(fs.readdirSync(process.cwd()).length).toEqual(1);
+  const contractChalk = chalk.magenta("vested-transfers");
+  const dirPath = path.resolve("contract");
+  expect(stdoutInt.data.split("\n")).toEqual([
+    chalk.blue(`Downloading contract ${contractChalk} in "${dirPath}"...`),
+    "",
+    chalk.green(`Successfully created ${contractChalk} in "${dirPath}".`),
+    "",
+    "Inside that directory, you can run several commands:",
+    "",
+    chalk.cyan("  npm run build"),
+    "    Builds the contract.",
+    "",
+    chalk.cyan("  npm run test"),
+    "    Tests the contract.",
+    "",
+    chalk.cyan("  npm run deploy"),
+    "    Deploys the contract to devnet.",
+    "",
+    "We suggest that you begin by typing:",
+    "",
+    chalk.cyan(`  cd ${dirPath}`),
+    chalk.cyan("  npm run build"),
+    "",
+  ]);
+});
+
 test("new --dir contract | error: already exists", async () => {
   fs.mkdirSync("contract");
   stdoutInt.start();

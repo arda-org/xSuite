@@ -28,6 +28,9 @@ program
   .command("new")
   .description("Create a new blank contract.")
   .requiredOption("--dir <dir>", "Contract dir")
+  .option("--contract <contract>", "Contract template")
+  .option("--no-install", "Skip package installation")
+  .option("--no-git", "Skip git initialization")
   .action((options) => newAction(options));
 
 program
