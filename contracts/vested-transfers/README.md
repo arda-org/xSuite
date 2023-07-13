@@ -1,11 +1,18 @@
-# 'blank' contract
+# 'vested-transfers' contract
 
-A blank contract, with everything already setup (contract, tests, interactions), to use as the starting point for your new contract.
+A contract for vested transfers, with following endpoints and views:
 
-To create a copy of the 'blank' contract on your computer:
+- `create_transfer(receiver: Address, release_schedule: ReleaseSchedule)`: endpoint to create a vested transfer,
+- `execute_transfer(index: u64)`: endpoint to execute a specific vested transfer,
+- `cancel_transfer(index: u64)`: endpoint to cancel a specific vested transfer when caller is sender,
+- `claim_balances(tokens: MultiValueEncoded<(EgldOrEsdtTokenIdentifier, u64)>)`: endpoint to claim token balances,
+- `get_transfers()`: view to list all transfers,
+- `get_address_balances(address: Address)`: view to list all token balances of an address.
+
+To create a copy of the 'vested-contracts' contract on your computer:
 
 ```
-xsuite new --dir my-contract
+xsuite new --contract vested-contracts --dir my-contract
 cd my-contract
 ```
 
@@ -17,23 +24,17 @@ npm install -g xsuite-cli
 
 ## Build contract
 
-Write the contract logic in `src/lib.rs`. Then build the contract with:
-
 ```
 npm run build
 ```
 
 ## Test contract
 
-Write the tests in `tests/contract.test.ts`. Then test the contract with:
-
 ```
 npm run test
 ```
 
 ## Interact with contract
-
-Write the interactions in `interact/index.ts`. Then interact with:
 
 - On devnet:
 
