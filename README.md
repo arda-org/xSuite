@@ -14,9 +14,11 @@
   </a>
 </p>
 
-xSuite.js is the full suite for efficiently developing high-quality MultiversX smart contracts. To ensure safety and reliability, `xsuite` and `xsuite-cli` packages are extensively tested with 450+ tests and 100% test coverage of critical parts.
+xSuite.js is the full suite for efficiently developing high-quality MultiversX smart contracts. `xsuite` and `xsuite-cli` packages are extensively tested with 450+ tests and 100% test coverage of critical parts, to be sure they are always safe and reliable.
 
 xSuite.js is [made by Arda team](https://arda.run) and is the result of their deep expertise gained from building numerous dApps and auditing [25+ smart contracts](https://arda.run/audits) to date.
+
+> :warning: xSuite.js is in beta. Until it reaches version 1.0.0, breaking changes might appear at any new version.
 
 ## Getting Started
 
