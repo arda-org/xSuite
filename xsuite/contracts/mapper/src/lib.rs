@@ -18,6 +18,20 @@ pub trait Mapper {
     }
 
     #[endpoint]
+    fn unordered_set_add(&self, key: u64, values: MultiValueEncoded<BigUint>) {
+        for value in values {
+            self.unordered_set(key).insert(value);
+        }
+    }
+
+    #[endpoint]
+    fn unordered_set_remove(&self, key: u64, values: MultiValueEncoded<BigUint>) {
+        for value in values {
+            self.unordered_set(key).swap_remove(&value);
+        }
+    }
+
+    #[endpoint]
     fn set_add(&self, key: u64, values: MultiValueEncoded<BigUint>) {
         for value in values {
             self.set(key).insert(value);
@@ -61,6 +75,9 @@ pub trait Mapper {
 
     #[storage_mapper("single")]
     fn single(&self, key: ManagedBuffer) -> SingleValueMapper<u64>;
+
+    #[storage_mapper("unordered_set")]
+    fn unordered_set(&self, key: u64) -> UnorderedSetMapper<BigUint>;
 
     #[storage_mapper("set")]
     fn set(&self, key: u64) -> SetMapper<BigUint>;

@@ -59,6 +59,37 @@ describe("Mapper", () => {
     );
   });
 
+  test("p.Mapper.UnorderedSet", async () => {
+    await wallet.callContract({
+      callee: contract,
+      funcName: "unordered_set_add",
+      funcArgs: [enc.U64(1), enc.U(10), enc.U(20)],
+      gasLimit: 10_000_000,
+    });
+    assertAllPairs(
+      pEnc
+        .Mapper("unordered_set", enc.U64(1))
+        .UnorderedSet([enc.U(10), enc.U(20)]),
+      await contract.getAccountPairs(),
+    );
+    expect(async () =>
+      assertAllPairs(
+        pEnc.Mapper("unordered_set", enc.U64(1)).UnorderedSet(null),
+        await contract.getAccountPairs(),
+      ),
+    ).rejects.toThrow();
+    await wallet.callContract({
+      callee: contract,
+      funcName: "unordered_set_remove",
+      funcArgs: [enc.U64(1), enc.U(10), enc.U(20)],
+      gasLimit: 10_000_000,
+    });
+    assertAllPairs(
+      pEnc.Mapper("unordered_set", enc.U64(1)).UnorderedSet(null),
+      await contract.getAccountPairs(),
+    );
+  });
+
   test("p.Mapper.Set", async () => {
     await wallet.callContract({
       callee: contract,
@@ -89,7 +120,7 @@ describe("Mapper", () => {
     await wallet.callContract({
       callee: contract,
       funcName: "set_remove",
-      funcArgs: [enc.U64(1), enc.U64(10), enc.U64(30), enc.U64(40)],
+      funcArgs: [enc.U64(1), enc.U(10), enc.U(30), enc.U(40)],
       gasLimit: 10_000_000,
     });
     assertAllPairs(

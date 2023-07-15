@@ -12,6 +12,9 @@ export const pEnc = {
       Value: (data: Hex | null) => {
         return getValueMapperPairs(baseKey, data);
       },
+      UnorderedSet: (data: Hex[] | null) => {
+        return getUnorderedSetMapperPairs(baseKey, data);
+      },
       Set: (data: [index: number | bigint, value: Hex][] | null) => {
         return getSetMapperPairs(baseKey, data);
       },
@@ -32,6 +35,19 @@ export const pEnc = {
 
 const getValueMapperPairs = (baseKey: Encodable, data: Hex | null): Pair[] => {
   return [[baseKey, data ?? ""]];
+};
+
+const getUnorderedSetMapperPairs = (baseKey: Encodable, data: Hex[] | null) => {
+  data ??= [];
+  return [
+    ...getVecMapperPairs(baseKey, data),
+    ...data.map(
+      (v, i): Pair => [
+        enc.Tuple(baseKey, enc.CstStr(".index"), hexToEncodable(v)),
+        enc.U32(i + 1),
+      ],
+    ),
+  ];
 };
 
 const getSetMapperPairs = (
