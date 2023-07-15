@@ -165,7 +165,7 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 			&worldmock.NewAddressMock{
 				CreatorAddress: tx.Tx.From.Value,
 				CreatorNonce:   tx.Tx.Nonce.Value,
-				NewAddress:     uint64ToBytesAddress(ae.scCounter),
+				NewAddress:     uint64ToBytesAddress(ae.scCounter, true),
 			},
 		)
 	}
@@ -187,7 +187,7 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 				"events": []interface{}{
 					map[string]interface{}{
 						"identifier": "SCDeploy",
-						"address": addressConverter.Encode(uint64ToBytesAddress(ae.scCounter)),
+						"address": addressConverter.Encode(uint64ToBytesAddress(ae.scCounter, true)),
 					},
 					map[string]interface{}{
 						"identifier": "writeLog",

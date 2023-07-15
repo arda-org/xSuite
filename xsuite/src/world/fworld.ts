@@ -1,8 +1,7 @@
-import { Address, addressToHexString } from "../data";
 import { Account, Block, FProxy, DeployContractTxParams } from "../proxy";
 import { startFProxyServer } from "./fproxyServer";
 import { DummySigner, Signer } from "./signer";
-import { numberToBytesAddress } from "./utils";
+import { isContractAddress, numberToBytesAddress } from "./utils";
 import { World, WorldContract, WorldWallet, expandCode } from "./world";
 
 export class FWorld extends World {
@@ -113,10 +112,6 @@ export class FWorldContract extends WorldContract {
     return this.world.setAccount({ address: this, ...account });
   }
 }
-
-const isContractAddress = (address: Address) => {
-  return addressToHexString(address).startsWith("0000000000000000");
-};
 
 const systemAccountAddress =
   "erd1lllllllllllllllllllllllllllllllllllllllllllllllllllsckry7t";

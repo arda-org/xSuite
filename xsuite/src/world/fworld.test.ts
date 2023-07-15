@@ -2,7 +2,7 @@ import { afterEach, beforeEach, expect, test } from "@jest/globals";
 import { assertAccount, assertHexList } from "../assert";
 import { d, e, pairsToRawPairs } from "../data";
 import { FWorld, FWorldContract, FWorldWallet } from "./fworld";
-import { readFileHex } from "./utils";
+import { isContractAddress, readFileHex } from "./utils";
 
 let world: FWorld;
 let wallet: FWorldWallet;
@@ -34,14 +34,24 @@ afterEach(async () => {
   await world.terminate();
 });
 
-test("FWorld.createWallet()", async () => {
+test("FWorld.createWallet", async () => {
   const wallet = await world.createWallet();
   assertAccount(await wallet.getAccountWithPairs(), {});
 });
 
-test("FWorld.createContract()", async () => {
+test("FWorld.createWallet - is wallet address", async () => {
+  const wallet = await world.createWallet();
+  expect(isContractAddress(wallet)).toEqual(false);
+});
+
+test("FWorld.createContract", async () => {
   const contract = await world.createContract();
   assertAccount(await contract.getAccountWithPairs(), { code: "00" });
+});
+
+test("FWorld.createContract - is contract address", async () => {
+  const contract = await world.createContract();
+  expect(isContractAddress(contract)).toEqual(true);
 });
 
 test("FWorld.createContract - file:", async () => {
@@ -199,6 +209,16 @@ test("FWorldWallet.deployContract & upgradeContract - file:", async () => {
     code: worldCode,
     hasPairs: [[e.Str("n"), e.U64(2)]],
   });
+});
+
+test("FWorldWallet.deployContract - is contract address", async () => {
+  const { contract } = await wallet.deployContract({
+    code: `file:${worldPath}`,
+    codeMetadata: [],
+    codeArgs: [e.U64(1)],
+    gasLimit: 10_000_000,
+  });
+  expect(isContractAddress(contract)).toEqual(true);
 });
 
 test("FWorldWallet.callContract with EGLD", async () => {
