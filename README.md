@@ -68,7 +68,7 @@ npm run test
 Deploy the contract:
 
 ```
-npm run deploy
+npm run interact:devnet deploy
 ```
 
 ## Documentation
