@@ -1,7 +1,5 @@
 <p align="center">
-  <picture>
-    <img src="https://raw.githubusercontent.com/arda-org/xSuite.js/main/Logo.png" height="128">
-  </picture>
+  <img src="https://raw.githubusercontent.com/arda-org/xSuite.js/main/Logo.png" height="128">
   <h1 align="center">xSuite.js</h1>
 </p>
 
