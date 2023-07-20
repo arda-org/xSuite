@@ -5,7 +5,8 @@
   "scripts": {
     "build": "run-script-os",
     "build:linux": "cd src && GOOS=linux GOARCH=amd64 LIBRARY_PATH=$(pwd)/../bin go build -o ../bin/fproxy-linux-amd64 -ldflags \"-extldflags '-Wl,-rpath,\\$ORIGIN'\"",
-    "build:darwin": "cd src && GOOS=darwin GOARCH=amd64 go build -o ../bin/fproxy-darwin-amd64"
+    "build:darwin": "cd src && GOOS=darwin GOARCH=amd64 go build -o ../bin/fproxy-darwin-amd64",
+    "postinstall": "chmod -f +x ./bin/fproxy-* || true"
   },
   "files": [
     "bin",
