@@ -36,6 +36,30 @@ export class KeystoreSigner extends UserSigner {
     super(BaseUserSigner.fromWallet(keystore, password, addressIndex));
   }
 
+  static async fromFile(filePath: string, addressIndex?: number) {
+    const keystore = await Keystore.fromFile(filePath);
+    return keystore.newSigner(addressIndex);
+  }
+
+  static fromFile_unsafe(
+    filePath: string,
+    password: string,
+    addressIndex?: number,
+  ) {
+    const keystore = Keystore.fromFile_unsafe(filePath, password);
+    return keystore.newSigner(addressIndex);
+  }
+}
+
+export class Keystore {
+  keystore: any;
+  password: string;
+
+  constructor(keystore: any, password: string) {
+    this.keystore = keystore;
+    this.password = password;
+  }
+
   static async createFile(filePath: string) {
     filePath = path.resolve(filePath);
     log(`Creating keystore wallet at "${filePath}"...`);
@@ -44,28 +68,29 @@ export class KeystoreSigner extends UserSigner {
     if (password !== passwordAgain) {
       throw new Error("Passwords do not match.");
     }
-    this.createFile_unsafe(filePath, password);
+    return this.createFile_unsafe(filePath, password);
   }
 
   static createFile_unsafe(filePath: string, password: string) {
     const mnemonic = Mnemonic.generate().toString();
     const keystore = UserWallet.fromMnemonic({ mnemonic, password }).toJSON();
     fs.writeFileSync(filePath, JSON.stringify(keystore), "utf8");
+    return new Keystore(keystore, password);
   }
 
-  static async fromFile(filePath: string, addressIndex?: number) {
+  static async fromFile(filePath: string) {
     filePath = path.resolve(filePath);
     log(`Loading keystore wallet at "${filePath}"...`);
     const password = await input.hidden("Enter password: ");
-    return this.fromFile_unsafe(filePath, password, addressIndex);
+    return this.fromFile_unsafe(filePath, password);
   }
 
-  static fromFile_unsafe(
-    filePath: string,
-    password: string,
-    addressIndex?: number,
-  ) {
+  static fromFile_unsafe(filePath: string, password: string) {
     const keystore = JSON.parse(fs.readFileSync(filePath, "utf8"));
-    return new KeystoreSigner(keystore, password, addressIndex);
+    return new Keystore(keystore, password);
+  }
+
+  newSigner(addressIndex?: number) {
+    return new KeystoreSigner(this.keystore, this.password, addressIndex);
   }
 }

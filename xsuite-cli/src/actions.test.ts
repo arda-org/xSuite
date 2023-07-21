@@ -5,7 +5,7 @@ import chalk from "chalk";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { stdoutInt, input } from "xsuite/_stdio";
-import { KeystoreSigner } from "xsuite/world";
+import { Keystore } from "xsuite/world";
 import {
   buildAction,
   newAction,
@@ -32,7 +32,7 @@ afterEach(() => {
 test("new-wallet --wallet wallet.json", async () => {
   stdoutInt.start();
   input.injected.push("1234", "1234");
-  await newWalletAction({ wallet: "wallet.json" });
+  const signer = await newWalletAction({ wallet: "wallet.json" });
   stdoutInt.stop();
   expect(fs.existsSync("wallet.json")).toEqual(true);
   const walletPath = path.resolve("wallet.json");
@@ -40,7 +40,7 @@ test("new-wallet --wallet wallet.json", async () => {
     `Creating keystore wallet at "${walletPath}"...`,
     "Enter password: ",
     "Re-enter password: ",
-    chalk.green(`Wallet created at "${walletPath}".`),
+    chalk.green(`Wallet "${signer}" created at "${walletPath}".`),
     "",
   ]);
 });
@@ -62,31 +62,36 @@ test("new-wallet --wallet wallet.json | error: passwords don't match", async () 
 
 test("new-wallet --wallet wallet.json --password 1234", async () => {
   stdoutInt.start();
-  await newWalletAction({ wallet: "wallet.json", password: "1234" });
+  const signer = await newWalletAction({
+    wallet: "wallet.json",
+    password: "1234",
+  });
   stdoutInt.stop();
   expect(fs.existsSync("wallet.json")).toEqual(true);
   const walletPath = path.resolve("wallet.json");
   expect(stdoutInt.data).toEqual(
-    chalk.green(`Wallet created at "${walletPath}".`) + "\n",
+    chalk.green(`Wallet "${signer}" created at "${walletPath}".`) + "\n",
   );
 });
 
 test("new-wallet --wallet wallet.json --password 1234 | error: already exists", async () => {
   stdoutInt.start();
-  await newWalletAction({ wallet: "wallet.json", password: "1234" });
+  const signer = await newWalletAction({
+    wallet: "wallet.json",
+    password: "1234",
+  });
   await newWalletAction({ wallet: "wallet.json", password: "1234" });
   stdoutInt.stop();
   const walletPath = path.resolve("wallet.json");
   expect(stdoutInt.data.split("\n")).toEqual([
-    chalk.green(`Wallet created at "${walletPath}".`),
+    chalk.green(`Wallet "${signer}" created at "${walletPath}".`),
     chalk.red(`Wallet already exists at "${walletPath}".`),
     "",
   ]);
 });
 
 test("request-xegld --wallet wallet.json", async () => {
-  KeystoreSigner.createFile_unsafe("wallet.json", "1234");
-  const signer = KeystoreSigner.fromFile_unsafe("wallet.json", "1234");
+  const signer = Keystore.createFile_unsafe("wallet.json", "1234").newSigner();
   const address = signer.toString();
   let numFaucetReqs = 0;
   let numBalanceReqs = 0;

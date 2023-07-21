@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { KeystoreSigner } from "xsuite/world";
+import { Keystore } from "xsuite/world";
 import { logError, logSuccess } from "./helpers";
 
 export const newWalletAction = async ({
@@ -15,15 +15,18 @@ export const newWalletAction = async ({
     logError(`Wallet already exists at "${walletPath}".`);
     return;
   }
+  let keystore: Keystore;
   if (password === undefined) {
     try {
-      await KeystoreSigner.createFile(walletPath);
+      keystore = await Keystore.createFile(walletPath);
     } catch (err: any) {
       logError(err.message);
       return;
     }
   } else {
-    KeystoreSigner.createFile_unsafe(walletPath, password);
+    keystore = Keystore.createFile_unsafe(walletPath, password);
   }
-  logSuccess(`Wallet created at "${walletPath}".`);
+  const signer = keystore.newSigner();
+  logSuccess(`Wallet "${signer}" created at "${walletPath}".`);
+  return signer;
 };

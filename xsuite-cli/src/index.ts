@@ -26,12 +26,16 @@ program
   .description(
     `Install Rust with rustup: toolchain ${rustToolchain}, target ${rustTarget}, crate ${rustCrate}.`,
   )
-  .action(() => installRustAction());
+  .action(async () => {
+    installRustAction();
+  });
 
 program
   .command("uninstall-rust")
   .description("Uninstall Rust with rustup.")
-  .action(() => uninstallRustAction());
+  .action(async () => {
+    uninstallRustAction();
+  });
 
 program
   .command("new")
@@ -40,31 +44,41 @@ program
   .option("--contract <contract>", "Contract template")
   .option("--no-install", "Skip package installation")
   .option("--no-git", "Skip git initialization")
-  .action((options) => newAction(options));
+  .action(async (options) => {
+    await newAction(options);
+  });
 
 program
   .command("build [args...]")
   .description("Build contract.")
   .allowUnknownOption()
-  .action((args) => buildAction(args));
+  .action(async (args) => {
+    buildAction(args);
+  });
 
 program
   .command("test-rust")
   .description("Test contract with Rust tests.")
-  .action(() => testRustAction());
+  .action(async () => {
+    testRustAction();
+  });
 
 program
   .command("new-wallet")
   .description("Create a new wallet.")
   .requiredOption("--wallet <wallet>", "Wallet path")
   .option("--password <password>", "Wallet password")
-  .action((options) => newWalletAction(options));
+  .action(async (options) => {
+    await newWalletAction(options);
+  });
 
 program
   .command("request-xegld")
   .description("Request 30 xEGLD (once per day).")
   .requiredOption("--wallet <path>", "Wallet path")
   .option("--password <password>", "Wallet password")
-  .action((options) => requestXegldAction(options));
+  .action(async (options) => {
+    await requestXegldAction(options);
+  });
 
 program.parse(process.argv);

@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { afterEach, beforeEach, expect, test } from "@jest/globals";
 import { input, stdoutInt } from "../_stdio";
-import { KeystoreSigner } from "./signer";
+import { Keystore, KeystoreSigner } from "./signer";
 
 const tmpDir = "/tmp/xsuite-cli-tests";
 const walletPath = path.resolve(tmpDir, "wallet.json");
@@ -18,7 +18,7 @@ afterEach(() => {
 test("KeystoreSigner safe", async () => {
   stdoutInt.start();
   input.injected.push("1234", "1234");
-  await KeystoreSigner.createFile(walletPath);
+  await Keystore.createFile(walletPath);
   input.injected.push("1234");
   const signer = await KeystoreSigner.fromFile(walletPath);
   const signature = await signer.sign(Buffer.from(""));
@@ -35,7 +35,7 @@ test("KeystoreSigner safe", async () => {
 });
 
 test("KeystoreSigner unsafe", async () => {
-  KeystoreSigner.createFile_unsafe(walletPath, "1234");
+  Keystore.createFile_unsafe(walletPath, "1234");
   const signer = KeystoreSigner.fromFile_unsafe(walletPath, "1234");
   const signature = await signer.sign(Buffer.from(""));
   expect(signature.byteLength).toBeGreaterThan(0);
