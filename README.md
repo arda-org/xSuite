@@ -28,10 +28,10 @@ First, install `xsuite-cli`:
 npm install -g xsuite-cli
 ```
 
-A new command `xsuite` is now available in your terminal. With this command, setup Rust on your machine:
+A new command `xsuite` is now available in your terminal. With this command, install Rust on your machine:
 
 ```
-xsuite setup-rust
+xsuite install-rust
 ```
 
 Create a new blank contract in the directory `my-contract` and open it:

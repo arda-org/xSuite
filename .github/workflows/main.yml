@@ -75,8 +75,8 @@ jobs:
           git config --global user.name "Your Name"
           pnpm test-xsuite-cli
 
-      - name: Setup Rust
-        run: pnpm xsuite setup-rust
+      - name: Install Rust
+        run: pnpm xsuite install-rust
 
       - name: Verify xsuite wasms
         run: pnpm verify-xsuite-wasms

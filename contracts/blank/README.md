@@ -9,10 +9,11 @@ xsuite new --dir my-contract
 cd my-contract
 ```
 
-Note that `xsuite-cli` must be installed on your computer. To install, run:
+Note that `xsuite-cli` and Rust must be installed on your computer. To install, run:
 
 ```
 npm install -g xsuite-cli
+xsuite install-rust
 ```
 
 ## Build contract

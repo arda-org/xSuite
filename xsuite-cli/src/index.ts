@@ -3,10 +3,14 @@ import { version } from "../package.json";
 import {
   newWalletAction,
   requestXegldAction,
-  setupRustAction,
+  installRustAction,
   testRustAction,
   buildAction,
   newAction,
+  uninstallRustAction,
+  rustCrate,
+  rustTarget,
+  rustToolchain,
 } from "./actions";
 
 if (process.env["INIT_CWD"]) {
@@ -18,11 +22,16 @@ const program = new Command();
 program.version(version);
 
 program
-  .command("setup-rust")
+  .command("install-rust")
   .description(
-    "Install Rust nightly, wasm32-unknown-unknown target, and multiversx-sc-meta crate.",
+    `Install Rust with rustup: toolchain ${rustToolchain}, target ${rustTarget}, crate ${rustCrate}.`,
   )
-  .action(() => setupRustAction());
+  .action(() => installRustAction());
+
+program
+  .command("uninstall-rust")
+  .description("Uninstall Rust with rustup.")
+  .action(() => uninstallRustAction());
 
 program
   .command("new")

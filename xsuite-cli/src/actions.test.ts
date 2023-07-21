@@ -11,8 +11,11 @@ import {
   newAction,
   newWalletAction,
   requestXegldAction,
-  setupRustAction,
+  installRustAction,
   testRustAction,
+  rustToolchain,
+  rustTarget,
+  rustCrate,
 } from "./actions";
 
 const tmpDir = "/tmp/xsuite-cli-tests";
@@ -144,7 +147,26 @@ test("request-xegld --wallet wallet.json", async () => {
   ]);
 });
 
-test("new --dir contract && setup-rust && build && test-rust", async () => {
+test("install-rust", async () => {
+  stdoutInt.start();
+  installRustAction();
+  stdoutInt.stop();
+  expect(stdoutInt.data.split("\n")).toEqual([
+    chalk.blue(`Installing Rust toolchain ${rustToolchain}...`),
+    chalk.cyan(
+      `$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain ${rustToolchain} -y`,
+    ),
+    "",
+    chalk.blue(`Installing Rust target ${rustTarget}...`),
+    chalk.cyan(`$ rustup target add ${rustTarget}`),
+    "",
+    chalk.blue(`Installing Rust crate ${rustCrate}...`),
+    chalk.cyan(`$ cargo install ${rustCrate} --version 0.41.0`),
+    "",
+  ]);
+});
+
+test("new --dir contract && build && test-rust", async () => {
   stdoutInt.start();
   await newAction({ dir: "contract" });
   stdoutInt.stop();
@@ -179,23 +201,6 @@ test("new --dir contract && setup-rust && build && test-rust", async () => {
     "",
     chalk.cyan(`  cd ${dirPath}`),
     chalk.cyan("  npm run build"),
-    "",
-  ]);
-
-  stdoutInt.start();
-  setupRustAction();
-  stdoutInt.stop();
-  expect(stdoutInt.data.split("\n")).toEqual([
-    chalk.blue("Installing Rust nightly..."),
-    chalk.cyan(
-      "$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain nightly-2023-06-15 -y",
-    ),
-    "",
-    chalk.blue("Installing wasm32-unknown-unknown target..."),
-    chalk.cyan("$ rustup target add wasm32-unknown-unknown"),
-    "",
-    chalk.blue("Installing multiversx-sc-meta crate..."),
-    chalk.cyan("$ cargo install multiversx-sc-meta --version 0.41.0"),
     "",
   ]);
 
