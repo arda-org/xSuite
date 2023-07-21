@@ -30,27 +30,37 @@ afterEach(() => {
 });
 
 test("new-wallet --wallet wallet.json", async () => {
+  const walletPath = path.resolve("wallet.json");
   stdoutInt.start();
   input.injected.push("1234", "1234");
-  const signer = await newWalletAction({ wallet: "wallet.json" });
+  const keystore = (await newWalletAction({ wallet: walletPath }))!;
   stdoutInt.stop();
-  expect(fs.existsSync("wallet.json")).toEqual(true);
-  const walletPath = path.resolve("wallet.json");
+  expect(fs.existsSync(walletPath)).toEqual(true);
   expect(stdoutInt.data.split("\n")).toEqual([
     `Creating keystore wallet at "${walletPath}"...`,
     "Enter password: ",
     "Re-enter password: ",
-    chalk.green(`Wallet "${signer}" created at "${walletPath}".`),
+    "",
+    chalk.green(`Wallet created at "${walletPath}".`),
+    "",
+    chalk.bold.blue("Address:") + ` ${keystore.newSigner()}`,
+    "",
+    chalk.bold.blue("Private key:"),
+    ...keystore.mnemonicWords.map((w, i) => `  ${i + 1}. ${w}`),
+    "",
+    chalk.bold.yellow(
+      "Don't forget to backup the private key in a secure place.",
+    ),
     "",
   ]);
 });
 
 test("new-wallet --wallet wallet.json | error: passwords don't match", async () => {
+  const walletPath = path.resolve("wallet.json");
   stdoutInt.start();
   input.injected.push("1234", "1235");
-  await newWalletAction({ wallet: "wallet.json" });
+  await newWalletAction({ wallet: walletPath });
   stdoutInt.stop();
-  const walletPath = path.resolve("wallet.json");
   expect(stdoutInt.data.split("\n")).toEqual([
     `Creating keystore wallet at "${walletPath}"...`,
     "Enter password: ",
@@ -61,37 +71,44 @@ test("new-wallet --wallet wallet.json | error: passwords don't match", async () 
 });
 
 test("new-wallet --wallet wallet.json --password 1234", async () => {
-  stdoutInt.start();
-  const signer = await newWalletAction({
-    wallet: "wallet.json",
-    password: "1234",
-  });
-  stdoutInt.stop();
-  expect(fs.existsSync("wallet.json")).toEqual(true);
   const walletPath = path.resolve("wallet.json");
-  expect(stdoutInt.data).toEqual(
-    chalk.green(`Wallet "${signer}" created at "${walletPath}".`) + "\n",
-  );
+  stdoutInt.start();
+  const keystore = (await newWalletAction({
+    wallet: walletPath,
+    password: "1234",
+  }))!;
+  stdoutInt.stop();
+  expect(fs.existsSync(walletPath)).toEqual(true);
+  expect(stdoutInt.data.split("\n")).toEqual([
+    chalk.green(`Wallet created at "${walletPath}".`),
+    "",
+    chalk.bold.blue("Address:") + ` ${keystore.newSigner()}`,
+    "",
+    chalk.bold.blue("Private key:"),
+    ...keystore.mnemonicWords.map((w, i) => `  ${i + 1}. ${w}`),
+    "",
+    chalk.bold.yellow(
+      "Don't forget to backup the private key in a secure place.",
+    ),
+    "",
+  ]);
 });
 
 test("new-wallet --wallet wallet.json --password 1234 | error: already exists", async () => {
-  stdoutInt.start();
-  const signer = await newWalletAction({
-    wallet: "wallet.json",
-    password: "1234",
-  });
-  await newWalletAction({ wallet: "wallet.json", password: "1234" });
-  stdoutInt.stop();
   const walletPath = path.resolve("wallet.json");
+  fs.writeFileSync(walletPath, "");
+  stdoutInt.start();
+  await newWalletAction({ wallet: walletPath, password: "1234" });
+  stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
-    chalk.green(`Wallet "${signer}" created at "${walletPath}".`),
     chalk.red(`Wallet already exists at "${walletPath}".`),
     "",
   ]);
 });
 
 test("request-xegld --wallet wallet.json", async () => {
-  const signer = Keystore.createFile_unsafe("wallet.json", "1234").newSigner();
+  const walletPath = path.resolve("wallet.json");
+  const signer = Keystore.createFile_unsafe(walletPath, "1234").newSigner();
   const address = signer.toString();
   let numFaucetReqs = 0;
   let numBalanceReqs = 0;
@@ -139,11 +156,15 @@ test("request-xegld --wallet wallet.json", async () => {
   );
   server.listen();
   stdoutInt.start();
-  await requestXegldAction({ wallet: "wallet.json", password: "1234" });
-  await requestXegldAction({ wallet: "wallet.json", password: "1234" });
+  input.injected.push("1234", "1234");
+  await requestXegldAction({ wallet: walletPath });
+  await requestXegldAction({ wallet: walletPath, password: "1234" });
   stdoutInt.stop();
   server.close();
   expect(stdoutInt.data.split("\n")).toEqual([
+    `Loading keystore wallet at "${walletPath}"...`,
+    "Enter password: ",
+    "",
     `Claiming 30 xEGLD for address "${address}"...`,
     chalk.green("Wallet well received 30 xEGLD."),
     `Claiming 30 xEGLD for address "${address}"...`,

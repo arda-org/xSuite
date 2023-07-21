@@ -1,5 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
+import chalk from "chalk";
+import { log } from "xsuite/_stdio";
 import { Keystore } from "xsuite/world";
 import { logError, logSuccess } from "./helpers";
 
@@ -19,6 +21,7 @@ export const newWalletAction = async ({
   if (password === undefined) {
     try {
       keystore = await Keystore.createFile(walletPath);
+      log();
     } catch (err: any) {
       logError(err.message);
       return;
@@ -26,7 +29,17 @@ export const newWalletAction = async ({
   } else {
     keystore = Keystore.createFile_unsafe(walletPath, password);
   }
-  const signer = keystore.newSigner();
-  logSuccess(`Wallet "${signer}" created at "${walletPath}".`);
-  return signer;
+  logSuccess(`Wallet created at "${walletPath}".`);
+  log();
+  log(chalk.bold.blue("Address:") + ` ${keystore.newSigner()}`);
+  log();
+  log(chalk.bold.blue("Private key:"));
+  log(keystore.mnemonicWords.map((w, i) => `  ${i + 1}. ${w}`).join("\n"));
+  log();
+  log(
+    chalk.bold.yellow(
+      `Don't forget to backup the private key in a secure place.`,
+    ),
+  );
+  return keystore;
 };

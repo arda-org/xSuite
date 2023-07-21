@@ -32,8 +32,10 @@ export class UserSigner extends Signer {
 }
 
 export class KeystoreSigner extends UserSigner {
-  constructor(keystore: any, password: string, addressIndex?: number) {
-    super(BaseUserSigner.fromWallet(keystore, password, addressIndex));
+  constructor(keystore: Keystore, addressIndex?: number) {
+    super(
+      BaseUserSigner.fromWallet(keystore.key, keystore.password, addressIndex),
+    );
   }
 
   static async fromFile(filePath: string, addressIndex?: number) {
@@ -52,12 +54,14 @@ export class KeystoreSigner extends UserSigner {
 }
 
 export class Keystore {
-  keystore: any;
+  key: any;
   password: string;
+  mnemonicWords: string[];
 
-  constructor(keystore: any, password: string) {
-    this.keystore = keystore;
+  constructor(key: any, password: string) {
+    this.key = key;
     this.password = password;
+    this.mnemonicWords = UserWallet.decryptMnemonic(key, password).getWords();
   }
 
   static async createFile(filePath: string) {
@@ -91,6 +95,6 @@ export class Keystore {
   }
 
   newSigner(addressIndex?: number) {
-    return new KeystoreSigner(this.keystore, this.password, addressIndex);
+    return new KeystoreSigner(this, addressIndex);
   }
 }

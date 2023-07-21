@@ -15,6 +15,7 @@ export const requestXegldAction = async ({
   let signer: KeystoreSigner;
   if (password === undefined) {
     signer = await KeystoreSigner.fromFile(walletPath);
+    log();
   } else {
     signer = KeystoreSigner.fromFile_unsafe(walletPath, password);
   }
