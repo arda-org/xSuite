@@ -37,6 +37,9 @@ export const enc = {
   U32: (uint: number | bigint) => {
     return new UintEncodable(uint, 4);
   },
+  Usize: (uint: number | bigint) => {
+    return new UintEncodable(uint, 4);
+  },
   U64: (uint: number | bigint) => {
     return new UintEncodable(uint, 8);
   },
@@ -50,6 +53,9 @@ export const enc = {
     return new IntEncodable(int, 2);
   },
   I32: (int: number | bigint) => {
+    return new IntEncodable(int, 4);
+  },
+  Isize: (int: number | bigint) => {
     return new IntEncodable(int, 4);
   },
   I64: (int: number | bigint) => {

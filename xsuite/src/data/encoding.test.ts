@@ -44,6 +44,11 @@ describe("Encoding Decoding Suite", () => {
     expect(encoded).toEqual("04d2");
   });
 
+  test("e.Usize", () => {
+    const encoded = enc.Usize(1234).toTopHex();
+    expect(encoded).toEqual("04d2");
+  });
+
   test("e.U64", () => {
     const encoded = enc.U64(1234).toTopHex();
     expect(encoded).toEqual("04d2");
@@ -66,6 +71,11 @@ describe("Encoding Decoding Suite", () => {
 
   test("e.I32", () => {
     const encoded = enc.I32(1234).toTopHex();
+    expect(encoded).toEqual("04d2");
+  });
+
+  test("e.Isize", () => {
+    const encoded = enc.Isize(1234).toTopHex();
     expect(encoded).toEqual("04d2");
   });
 
