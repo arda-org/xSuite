@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi"
+	logger "github.com/multiversx/mx-chain-logger-go"
 	worldmock "github.com/multiversx/mx-chain-vm-v1_4-go/mock/world"
 	mj "github.com/multiversx/mx-chain-vm-v1_4-go/scenarios/model"
 )
@@ -169,7 +170,15 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 			},
 		)
 	}
+	var executionLogsBuf bytes.Buffer
+	_ = logger.SetLogLevel("*:TRACE")
+	logger.ToggleCorrelation(false)
+	logger.ToggleLoggerName(true)
+	logger.ClearLogObservers()
+	logger.AddLogObserver(&executionLogsBuf, &logger.PlainFormatter{})
 	vmOutput, err := ae.vmTestExecutor.ExecuteTxStep(tx)
+	_ = logger.SetLogLevel("*:NONE")
+	executionLogs := executionLogsBuf.String()
 	if err != nil {
 		return nil, err
 	}
@@ -215,6 +224,7 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 					"status": "success",
 					"logs": logs,
 					"smartContractResults": smartContractResults,
+					"executionLogs": executionLogs,
 				},
 			},
 			"code": "successful",
@@ -235,6 +245,7 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 						"returnCode": vmOutput.ReturnCode,
 						"returnMessage": vmOutput.ReturnMessage,
 					},
+					"executionLogs": executionLogs,
 				},
 			},
 			"code": "successful",
