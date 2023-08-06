@@ -13,13 +13,13 @@ import { logTitle, logAndRunCommand, logCommand, logError } from "./helpers";
 export const newAction = async ({
   dir: dirPath,
   contract = "blank",
-  noInstall,
-  noGit,
+  install,
+  git,
 }: {
   dir: string;
   contract?: string;
-  noInstall?: boolean;
-  noGit?: boolean;
+  install?: boolean;
+  git?: boolean;
 }) => {
   dirPath = path.resolve(dirPath);
   if (fs.existsSync(dirPath)) {
@@ -32,12 +32,12 @@ export const newAction = async ({
     `Downloading contract ${chalk.magenta(contract)} in "${dirPath}"...`,
   );
   await downloadAndExtractContract(contract, dirPath);
-  if (!noInstall) {
+  if (install) {
     log();
     logTitle("Installing packages...");
     logAndRunCommand("npm", ["install"], { cwd: dirPath });
   }
-  if (!noGit && tryGitInit(dirPath)) {
+  if (git && tryGitInit(dirPath)) {
     log();
     logTitle("Initialized a git repository.");
   }

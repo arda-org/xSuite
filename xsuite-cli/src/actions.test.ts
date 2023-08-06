@@ -194,7 +194,7 @@ test("install-rust", async () => {
 
 test("new --dir contract && build && test-rust", async () => {
   stdoutInt.start();
-  await newAction({ dir: "contract" });
+  await newAction({ dir: "contract", install: true, git: true });
   stdoutInt.stop();
   expect(fs.readdirSync(process.cwd()).length).toEqual(1);
   const dirPath = path.resolve("contract");
@@ -254,12 +254,7 @@ test("new --dir contract && build && test-rust", async () => {
 
 test(`new --contract vested-transfers --dir contract --no-git --no-install`, async () => {
   stdoutInt.start();
-  await newAction({
-    contract: "vested-transfers",
-    dir: "contract",
-    noGit: true,
-    noInstall: true,
-  });
+  await newAction({ contract: "vested-transfers", dir: "contract" });
   stdoutInt.stop();
   expect(fs.readdirSync(process.cwd()).length).toEqual(1);
   const contractChalk = chalk.magenta("vested-transfers");
@@ -291,7 +286,7 @@ test(`new --contract vested-transfers --dir contract --no-git --no-install`, asy
 test("new --dir contract | error: already exists", async () => {
   fs.mkdirSync("contract");
   stdoutInt.start();
-  await newAction({ dir: "contract" });
+  await newAction({ dir: "contract", install: true, git: true });
   stdoutInt.stop();
   const dirPath = path.resolve("contract");
   expect(stdoutInt.data).toEqual(
