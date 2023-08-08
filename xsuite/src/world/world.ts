@@ -104,14 +104,20 @@ export class World {
     await tx.sign(sender);
     const txHash = await this.proxy.sendTx(tx);
     const resTx = await this.proxy.getCompletedTx(txHash);
-    if (resTx.status === "success") {
-      return { tx: resTx };
-    } else if (resTx.status === "invalid") {
-      const { returnCode, returnMessage } = resTx.receipt;
-      throw new Error(`Tx failed: ${returnCode} - ${returnMessage}`);
-    } else {
-      throw new Error("Unknown tx status.");
+    if (resTx.status !== "success") {
+      throw new Error(`Tx failed: 100 - Failure with status ${resTx.status}.`);
     }
+    if (resTx.executionReceipt?.returnCode) {
+      const { returnCode, returnMessage } = resTx.executionReceipt;
+      throw new Error(`Tx failed: ${returnCode} - ${returnMessage}`);
+    }
+    const signalErrorEvent = resTx?.logs?.events.find(
+      (e: any) => e.identifier === "signalError",
+    );
+    if (signalErrorEvent) {
+      throw new Error("Tx failed: 100 - signalError event.");
+    }
+    return { tx: resTx };
   }
 
   deployContract(

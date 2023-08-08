@@ -184,13 +184,13 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 	}
 	ae.txCounter += 1
 	txHash := uint64ToString(ae.txCounter)
+	var logs interface{}
+	var smartContractResults interface{}
 	if vmOutput.ReturnCode == 0 {
 		jData := "@" + hex.EncodeToString([]byte(vmOutput.ReturnCode.String()))
 		for _, data := range vmOutput.ReturnData {
 			jData += "@" + hex.EncodeToString(data)
 		}
-		var logs interface{}
-		var smartContractResults interface{}
 		if tx.Tx.Type == mj.ScDeploy {
 			logs = map[string]interface{}{
 				"events": []interface{}{
@@ -218,38 +218,29 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 				},
 			}
 		}
-		ae.txs[txHash] = map[string]interface{}{
-			"data": map[string]interface{}{
-				"transaction": map[string]interface{}{
-					"status": "success",
-					"logs": logs,
-					"smartContractResults": smartContractResults,
-					"executionLogs": executionLogs,
-				},
-			},
-			"code": "successful",
-		}
 	} else {
-		ae.txs[txHash] = map[string]interface{}{
-			"data": map[string]interface{}{
-				"transaction": map[string]interface{}{
-					"status": "invalid",
-					"logs": map[string]interface{}{
-						"events": []interface{}{
-							map[string]interface{}{
-								"identifier": "signalError",
-							},
-						},
-					},
-					"receipt": map[string]interface{}{
-						"returnCode": vmOutput.ReturnCode,
-						"returnMessage": vmOutput.ReturnMessage,
-					},
-					"executionLogs": executionLogs,
+		logs = map[string]interface{}{
+			"events": []interface{}{
+				map[string]interface{}{
+					"identifier": "signalError",
 				},
 			},
-			"code": "successful",
 		}
+	}
+	ae.txs[txHash] = map[string]interface{}{
+		"data": map[string]interface{}{
+			"transaction": map[string]interface{}{
+				"status": "success",
+				"logs": logs,
+				"smartContractResults": smartContractResults,
+				"executionReceipt": map[string]interface{}{
+					"returnCode": vmOutput.ReturnCode,
+					"returnMessage": vmOutput.ReturnMessage,
+				},
+				"executionLogs": executionLogs,
+			},
+		},
+		"code": "successful",
 	}
 	jOutput := map[string]interface{}{
 		"data": map[string]interface{}{
