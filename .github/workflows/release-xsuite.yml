@@ -14,7 +14,7 @@ jobs:
       - name: Use Node.js & pnpm
         uses: ./.github/actions/node-pnpm
         with:
-          node-version: 18.x
+          node-version: 18
           node-registry-url: "https://registry.npmjs.org"
           pnpm-version: 8
 
