@@ -6,10 +6,11 @@ import (
 )
 
 type Executor struct {
-	vmTestExecutor    *se.VMTestExecutor
-	txs								map[string]interface{}
-	txCounter					uint64
-	scCounter					uint64
+	vmTestExecutor    		*se.VMTestExecutor
+	txResps								map[string]interface{}
+	txProcessStatusResps  map[string]interface{}
+	txCounter							uint64
+	scCounter							uint64
 }
 
 func NewExecutor() (*Executor, error) {
@@ -23,7 +24,8 @@ func NewExecutor() (*Executor, error) {
 	}
 	ae := Executor{
 		vmTestExecutor: vmTestExecutor,
-		txs: map[string]interface{}{},
+		txResps: map[string]interface{}{},
+		txProcessStatusResps: map[string]interface{}{},
 		txCounter: 0,
 		scCounter: 0,
 	}

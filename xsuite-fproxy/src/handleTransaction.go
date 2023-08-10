@@ -186,6 +186,7 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 	txHash := uint64ToString(ae.txCounter)
 	var logs interface{}
 	var smartContractResults interface{}
+	var processStatus string
 	if vmOutput.ReturnCode == 0 {
 		jData := "@" + hex.EncodeToString([]byte(vmOutput.ReturnCode.String()))
 		for _, data := range vmOutput.ReturnData {
@@ -218,6 +219,7 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 				},
 			}
 		}
+		processStatus = "success"
 	} else {
 		logs = map[string]interface{}{
 			"events": []interface{}{
@@ -226,8 +228,9 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 				},
 			},
 		}
+		processStatus = "failed"
 	}
-	ae.txs[txHash] = map[string]interface{}{
+	ae.txResps[txHash] = map[string]interface{}{
 		"data": map[string]interface{}{
 			"transaction": map[string]interface{}{
 				"status": "success",
@@ -239,6 +242,12 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 				},
 				"executionLogs": executionLogs,
 			},
+		},
+		"code": "successful",
+	}
+	ae.txProcessStatusResps[txHash] = map[string]interface{}{
+		"data": map[string]interface{}{
+			"status": processStatus,
 		},
 		"code": "successful",
 	}
@@ -254,9 +263,9 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 func (ae *Executor) HandleTransaction(r *http.Request) (interface{}, error) {
 	txHash := chi.URLParam(r, "txHash")
 	withResults := r.URL.Query().Get("withResults")
-	tx := ae.txs[txHash]
+	res := ae.txResps[txHash]
 	if withResults == "" || withResults == "false" {
-		if txMap, ok := tx.(map[string]interface{}); ok {
+		if txMap, ok := res.(map[string]interface{}); ok {
 			if data, ok := txMap["data"].(map[string]interface{}); ok {
 				if transaction, ok := data["transaction"].(map[string]interface{}); ok {
 					delete(transaction, "logs")
@@ -269,7 +278,13 @@ func (ae *Executor) HandleTransaction(r *http.Request) (interface{}, error) {
 	} else if withResults != "true" {
 		return nil, errors.New("invalid withResults option")
 	}
-	return tx, nil
+	return res, nil
+}
+
+func (ae *Executor) HandleTransactionProcessStatus(r *http.Request) (interface{}, error) {
+	txHash := chi.URLParam(r, "txHash")
+	res := ae.txResps[txHash]
+	return res, nil
 }
 
 func isAllZero(bytes []byte) bool {

@@ -75,13 +75,30 @@ export class Proxy {
     return Proxy.getTx(this.baseUrl, txHash, options);
   }
 
+  static async getTxProcessStatusRaw(baseUrl: string, txHash: string) {
+    return Proxy.fetchRaw(`${baseUrl}/transaction/${txHash}/process-status`);
+  }
+
+  getTxProcessStatusRaw(txHash: string) {
+    return Proxy.getTxProcessStatusRaw(this.baseUrl, txHash);
+  }
+
+  static async getTxProcessStatus(baseUrl: string, txHash: string) {
+    const res = unrawRes(await Proxy.getTxProcessStatusRaw(baseUrl, txHash));
+    return res.status as string;
+  }
+
+  getTxProcessStatus(txHash: string) {
+    return Proxy.getTxProcessStatus(this.baseUrl, txHash);
+  }
+
   static async getCompletedTxRaw(baseUrl: string, txHash: string) {
-    let res = await this.getTxRaw(baseUrl, txHash, { withResults: true });
-    while (!isTxCompleted(res)) {
+    let res = await Proxy.getTxProcessStatusRaw(baseUrl, txHash);
+    while (res.code !== "successful" || res.data.status === "pending") {
       await new Promise((r) => setTimeout(r, 1000));
-      res = await this.getTxRaw(baseUrl, txHash, { withResults: true });
+      res = await Proxy.getTxProcessStatusRaw(baseUrl, txHash);
     }
-    return res;
+    return await Proxy.getTxRaw(baseUrl, txHash, { withResults: true });
   }
 
   getCompletedTxRaw(txHash: string) {
@@ -410,16 +427,6 @@ export const codeMetadataToHexString = (codeMetadata: CodeMetadata): string => {
   }
   return codeMetadata.toTopHex();
 };
-
-const isTxCompleted = (res: any): boolean => {
-  const events: any[] | undefined = res?.data?.transaction?.logs?.events;
-  if (events) {
-    return events.some((e) => completionEvents.includes(e.identifier));
-  }
-  return false;
-};
-
-const completionEvents = ["completedTxEvent", "SCDeploy", "signalError"];
 
 const zeroBechAddress =
   "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";

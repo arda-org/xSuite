@@ -54,6 +54,11 @@ func main() {
 		respond(w, resBody, err)
 	})
 
+	router.Get("/transaction/{txHash}/process-status", func(w http.ResponseWriter, r *http.Request) {
+		resBody, err := executor.HandleTransactionProcessStatus(r)
+		respond(w, resBody, err)
+	})
+
 	router.Post("/vm-values/query", func(w http.ResponseWriter, r *http.Request) {
 		resBody, err := executor.HandleVmQuery(r)
 		respond(w, resBody, err)
