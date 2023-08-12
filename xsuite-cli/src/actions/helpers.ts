@@ -24,9 +24,8 @@ export const logAndRunCommand = (
     shell: true,
     ...options,
   });
-  if (result.error) {
-    throw result.error;
-  }
+  /* istanbul ignore next */
+  if (result.error) throw result.error;
 };
 
 export const rustToolchain = "nightly-2023-06-15";

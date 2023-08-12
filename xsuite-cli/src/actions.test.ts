@@ -16,6 +16,7 @@ import {
   rustToolchain,
   rustTarget,
   rustCrate,
+  testScenAction,
 } from "./actions";
 
 const tmpDir = "/tmp/xsuite-cli-tests";
@@ -192,7 +193,7 @@ test("install-rust", async () => {
   ]);
 });
 
-test("new --dir contract && build && test-rust", async () => {
+test("new --dir contract && build && test-rust && test-scen", async () => {
   stdoutInt.start();
   await newAction({ dir: "contract", install: true, git: true });
   stdoutInt.stop();
@@ -250,7 +251,19 @@ test("new --dir contract && build && test-rust", async () => {
     chalk.cyan("$ cargo test"),
     "",
   ]);
-});
+
+  stdoutInt.start();
+  await testScenAction();
+  stdoutInt.stop();
+  const scenexecName = "scenexec-ubuntu-22.04-v1.4.77";
+  const scenexecPath = path.join(__dirname, "..", "bin", scenexecName);
+  expect(stdoutInt.data.split("\n")).toEqual([
+    chalk.blue("Testing contract with scenarios..."),
+    "Downloading scenexec-ubuntu-22.04-v1.4.77...",
+    chalk.cyan(`$ ${scenexecPath} .`),
+    "",
+  ]);
+}, 100000);
 
 test(`new --contract vested-transfers --dir contract --no-git --no-install`, async () => {
   stdoutInt.start();

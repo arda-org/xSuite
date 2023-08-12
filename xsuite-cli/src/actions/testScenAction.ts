@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { Readable } from "stream";
 import { finished } from "stream/promises";
+import { log } from "xsuite/_stdio";
 import { xsuiteCliPath } from "../path";
 import { logTitle, logAndRunCommand } from "./helpers";
 
@@ -15,7 +16,7 @@ export const testScenAction = async () => {
   const localBinaryName = `${BINARY_NAME}-${binaryOs}-${TAG}`;
   const binaryPath = path.join(xsuiteCliPath, "bin", localBinaryName);
   if (!fs.existsSync(binaryPath)) {
-    console.log(`Downloading ${localBinaryName}...`);
+    log(`Downloading ${localBinaryName}...`);
     const url = `${repoUrl}/releases/download/${BINARY_NAME}-${TAG}/${BINARY_NAME}-${binaryOs}`;
     await downloadFile(url, binaryPath);
     fs.chmodSync(binaryPath, "755");
@@ -25,6 +26,7 @@ export const testScenAction = async () => {
 
 const downloadFile = async (url: string, dest: string) => {
   const res = await fetch(url);
+  /* istanbul ignore next */
   if (!res.body) throw new Error("No request body.");
   const stream = fs.createWriteStream(dest);
   await finished(Readable.fromWeb(res.body as any).pipe(stream));
