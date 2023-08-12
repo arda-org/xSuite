@@ -5,6 +5,7 @@ import {
   requestXegldAction,
   installRustAction,
   testRustAction,
+  testScenAction,
   buildAction,
   newAction,
   uninstallRustAction,
@@ -61,6 +62,13 @@ program
   .description("Test contract with Rust tests.")
   .action(async () => {
     testRustAction();
+  });
+
+program
+  .command("test-scen")
+  .description("Test contract with scenarios.")
+  .action(async () => {
+    testScenAction();
   });
 
 program

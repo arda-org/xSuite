@@ -11,6 +11,7 @@
     "xsuite": "index.js"
   },
   "files": [
+    "bin",
     "dist",
     "index.js"
   ],
