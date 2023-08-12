@@ -1,0 +1,51 @@
+name: Release scenexec
+
+on:
+  workflow_dispatch:
+
+env:
+  TAG: v1.4.77
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, macos-12]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Use Golang
+        uses: actions/setup-go@v4
+        with:
+          go-version: 1.19
+
+      - name: Build binary
+        run: |
+          git clone https://github.com/multiversx/mx-chain-vm-v1_4-go
+          cd mx-chain-vm-v1_4-go
+          git checkout tags/${{ env.TAG }}
+          cd cmd/test
+          go build -o scenexec-${{ matrix.os }} -ldflags "-extldflags '-Wl,-rpath,\$ORIGIN'"
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: scenexec
+          path: ./mx-chain-vm-v1_4-go/cmd/test/scenexec-${{ matrix.os }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download binaries
+        uses: actions/download-artifact@v3
+        with:
+          name: scenexec
+
+      - name: Create release
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: scenexec-*
+          tag: scenexec-${{ env.TAG }}
