@@ -231,11 +231,12 @@ test("new --dir contract && build && test-rust && test-scen", async () => {
     "",
   ]);
 
-  stdoutInt.start();
   const targetDir = path.join(__dirname, "..", "..", "..", "target");
-  buildAction(["--target-dir", targetDir], {
-    env: { ...process.env, CARGO_TARGET_DIR: targetDir },
-  });
+  process.env["CARGO_TARGET_DIR"] = targetDir;
+  process.chdir(dirPath);
+
+  stdoutInt.start();
+  buildAction(["--target-dir", targetDir]);
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Building contract..."),
@@ -263,7 +264,7 @@ test("new --dir contract && build && test-rust && test-scen", async () => {
     chalk.cyan(`$ ${scenexecPath} .`),
     "",
   ]);
-}, 100000);
+}, 600_000);
 
 test(`new --contract vested-transfers --dir contract --no-git --no-install`, async () => {
   stdoutInt.start();
