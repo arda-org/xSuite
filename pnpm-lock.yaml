@@ -51,10 +51,10 @@ importers:
         specifier: ^0.33.0
         version: 0.33.0
       xsuite:
-        specifier: 0.0.28
+        specifier: 0.0.29
         version: link:../../xsuite
       xsuite-cli:
-        specifier: 0.0.10
+        specifier: 0.0.11
         version: link:../../xsuite-cli
 
   contracts/vested-transfers:
@@ -75,10 +75,10 @@ importers:
         specifier: ^0.33.0
         version: 0.33.0
       xsuite:
-        specifier: 0.0.28
+        specifier: 0.0.29
         version: link:../../xsuite
       xsuite-cli:
-        specifier: 0.0.10
+        specifier: 0.0.11
         version: link:../../xsuite-cli
 
   xsuite:

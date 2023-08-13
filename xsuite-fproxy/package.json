@@ -1,6 +1,6 @@
 {
   "name": "xsuite-fproxy",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "license": "MIT",
   "scripts": {
     "build": "run-script-os",
