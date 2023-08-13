@@ -255,11 +255,11 @@ test("new --dir contract && build && test-rust && test-scen", async () => {
   stdoutInt.start();
   await testScenAction();
   stdoutInt.stop();
-  const scenexecName = "scenexec-ubuntu-22.04-v1.4.77";
+  const scenexecName = "scenexec-ubuntu-20.04-v1.4.77";
   const scenexecPath = path.join(__dirname, "..", "bin", scenexecName);
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Testing contract with scenarios..."),
-    "Downloading scenexec-ubuntu-22.04-v1.4.77...",
+    "Downloading scenexec-ubuntu-20.04-v1.4.77...",
     chalk.cyan(`$ ${scenexecPath} .`),
     "",
   ]);

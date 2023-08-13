@@ -35,7 +35,7 @@ const downloadFile = async (url: string, dest: string) => {
 function getBinaryOs() {
   switch (process.platform) {
     case "linux":
-      return "ubuntu-22.04";
+      return "ubuntu-20.04";
     case "darwin":
       return "macos-12";
     default:
