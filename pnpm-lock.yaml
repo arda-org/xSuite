@@ -39,7 +39,7 @@ importers:
         specifier: ^18.16.18
         version: 18.16.18
       commander:
-        specifier: 11.0.0
+        specifier: ^11.0.0
         version: 11.0.0
       tsx:
         specifier: ^3.12.7
@@ -54,8 +54,8 @@ importers:
         specifier: 0.0.29
         version: link:../../xsuite
       xsuite-cli:
-        specifier: 0.0.12
-        version: link:../../xsuite-cli
+        specifier: 0.0.11
+        version: 0.0.11
 
   contracts/vested-transfers:
     devDependencies:
@@ -63,7 +63,7 @@ importers:
         specifier: ^18.16.18
         version: 18.16.18
       commander:
-        specifier: 11.0.0
+        specifier: ^11.0.0
         version: 11.0.0
       tsx:
         specifier: ^3.12.7
@@ -78,8 +78,8 @@ importers:
         specifier: 0.0.29
         version: link:../../xsuite
       xsuite-cli:
-        specifier: 0.0.12
-        version: link:../../xsuite-cli
+        specifier: 0.0.11
+        version: 0.0.11
 
   xsuite:
     dependencies:
@@ -5856,6 +5856,11 @@ packages:
     dependencies:
       imurmurhash: 0.1.4
       signal-exit: 3.0.7
+    dev: true
+
+  /xsuite-cli@0.0.11:
+    resolution: {integrity: sha512-ibF4KstYgH5caF2JaMEvQyVFvXVzHhmNzZQz1IeGr2F4M+mwUMHWEN6fVfpzat/yuEIWIo29sUZG3AwQOwbNvw==}
+    hasBin: true
     dev: true
 
   /y18n@5.0.8:
