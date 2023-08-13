@@ -34,10 +34,7 @@ jobs:
       - name: Cache Rust dependencies
         uses: actions/cache@v3
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            ~/.cargo/bin
+          path: ~/.cargo
           key: ${{ runner.os }}-cargo-${{ hashFiles('contracts/**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-cargo-
 
