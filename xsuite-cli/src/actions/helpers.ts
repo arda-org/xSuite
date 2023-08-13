@@ -25,7 +25,10 @@ export const logAndRunCommand = (
     ...options,
   });
   /* istanbul ignore next */
-  if (result.error) throw result.error;
+  if (result.status !== 0) {
+    logError(`Command failed with exit code ${result.status}.`);
+    process.exit(1);
+  }
 };
 
 export const rustToolchain = "nightly-2023-06-15";
