@@ -21,14 +21,6 @@ update_version() {
     jq ".version = \"${version}\"" "$package_json" > tmp.$$.json && mv tmp.$$.json "$package_json"
     modified_files+=("$package_json")
     updated_modules+=("$module@$version")
-
-    for dir in contracts/*/; do
-      package_json="$root_dir/$dir/package.json"
-      if jq -e ".devDependencies[\"$module\"]" $package_json > /dev/null; then
-        jq ".devDependencies[\"$module\"] = \"${version}\"" "$package_json" > tmp.$$.json && mv tmp.$$.json "$package_json"
-        modified_files+=("$package_json")
-      fi
-    done
   fi
 }
 
