@@ -1,4 +1,3 @@
-import { log } from "xsuite/_stdio";
 import {
   logTitle,
   logAndRunCommand,
@@ -8,25 +7,15 @@ import {
 } from "./helpers";
 
 export const installRustAction = () => {
-  logTitle(`Installing Rust toolchain ${rustToolchain}...`);
-  logAndRunCommand("curl", [
-    "--proto",
-    "'=https'",
-    "--tlsv1.2",
-    "-sSf",
-    "https://sh.rustup.rs",
-    "|",
-    "sh",
-    "-s",
-    "--",
-    "--default-toolchain",
-    rustToolchain,
-    "-y",
-  ]);
-  log();
-  logTitle(`Installing Rust target ${rustTarget}...`);
-  logAndRunCommand("rustup", ["target", "add", rustTarget]);
-  log();
-  logTitle(`Installing Rust crate ${rustCrate}...`);
-  logAndRunCommand("cargo", ["install", rustCrate, "--version", "0.41.0"]);
+  logTitle(
+    `Installing Rust: toolchain ${rustToolchain}, target ${rustTarget}, crate ${rustCrate}...`,
+  );
+  logAndRunCommand("sh", ["-c", `'${installCommand}'`]);
 };
+
+const installCommand = [
+  `curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain ${rustToolchain} -y`,
+  '. "$HOME/.cargo/env"',
+  `rustup target add ${rustTarget}`,
+  `cargo install ${rustCrate} --version 0.41.0`,
+].join(" \\\n    && ");

@@ -179,16 +179,15 @@ test("install-rust", async () => {
   installRustAction();
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
-    chalk.blue(`Installing Rust toolchain ${rustToolchain}...`),
-    chalk.cyan(
-      `$ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain ${rustToolchain} -y`,
+    chalk.blue(
+      `Installing Rust: toolchain ${rustToolchain}, target ${rustTarget}, crate ${rustCrate}...`,
     ),
-    "",
-    chalk.blue(`Installing Rust target ${rustTarget}...`),
-    chalk.cyan(`$ rustup target add ${rustTarget}`),
-    "",
-    chalk.blue(`Installing Rust crate ${rustCrate}...`),
-    chalk.cyan(`$ cargo install ${rustCrate} --version 0.41.0`),
+    chalk.cyan(
+      `$ sh -c 'curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain ${rustToolchain} -y \\`,
+    ),
+    chalk.cyan('    && . "$HOME/.cargo/env" \\'),
+    chalk.cyan(`    && rustup target add ${rustTarget} \\`),
+    chalk.cyan(`    && cargo install ${rustCrate} --version 0.41.0'`),
     "",
   ]);
 });
