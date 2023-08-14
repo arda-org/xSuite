@@ -14,8 +14,8 @@ import {
   rustToolchain,
 } from "./actions";
 
-if (process.env["INIT_CWD"]) {
-  process.chdir(process.env["INIT_CWD"]);
+if (process.env["PWD"]) {
+  process.chdir(process.env["PWD"]);
 }
 
 const program = new Command();
