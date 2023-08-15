@@ -230,12 +230,14 @@ test("new --dir contract && build && test-rust && test-scen", async () => {
     "",
   ]);
 
-  const targetDir = path.join(__dirname, "..", "..", "..", "target");
-  process.env["CARGO_TARGET_DIR"] = targetDir;
+  const targetDir = path.join(__dirname, "..", "..", "target");
+  const options = {
+    env: { ...process.env, CARGO_TARGET_DIR: targetDir },
+  };
   process.chdir(dirPath);
 
   stdoutInt.start();
-  buildAction(["--target-dir", targetDir]);
+  buildAction(["--target-dir", targetDir], options);
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Building contract..."),
@@ -244,7 +246,7 @@ test("new --dir contract && build && test-rust && test-scen", async () => {
   ]);
 
   stdoutInt.start();
-  testRustAction();
+  testRustAction(options);
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Testing contract with Rust tests..."),
