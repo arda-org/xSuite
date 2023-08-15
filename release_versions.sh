@@ -4,7 +4,7 @@ root_dir="$(dirname "$(dirname "$0")")"
 modified_files=()
 updated_modules=()
 
-update_version() {
+release_version() {
   local module=$1
 
   package_json="$root_dir/$module/package.json"
@@ -16,26 +16,17 @@ update_version() {
   if [ -z "$version" ]; then
     echo "  Skipped."
   else
-    install_flag=true
-
     jq ".version = \"${version}\"" "$package_json" > tmp.$$.json && mv tmp.$$.json "$package_json"
     modified_files+=("$package_json")
     updated_modules+=("$module@$version")
   fi
 }
 
-install_flag=false
+release_version "xsuite-fproxy"
 
-update_version "xsuite-fproxy"
+release_version "xsuite"
 
-update_version "xsuite"
-
-update_version "xsuite-cli"
-
-if $install_flag ; then
-  pnpm install
-  modified_files+=("pnpm-lock.yaml")
-fi
+release_version "xsuite-cli"
 
 if [ ${#modified_files[@]} -ne 0 ]; then
   for file in "${modified_files[@]}"; do
