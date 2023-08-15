@@ -54,8 +54,8 @@ importers:
         specifier: 0.0.29
         version: link:../../xsuite
       xsuite-cli:
-        specifier: 0.0.11
-        version: 0.0.11
+        specifier: 0.0.14
+        version: link:../../xsuite-cli
 
   contracts/vested-transfers:
     devDependencies:
@@ -78,8 +78,8 @@ importers:
         specifier: 0.0.29
         version: link:../../xsuite
       xsuite-cli:
-        specifier: 0.0.11
-        version: 0.0.11
+        specifier: 0.0.14
+        version: link:../../xsuite-cli
 
   xsuite:
     dependencies:
@@ -5856,11 +5856,6 @@ packages:
     dependencies:
       imurmurhash: 0.1.4
       signal-exit: 3.0.7
-    dev: true
-
-  /xsuite-cli@0.0.11:
-    resolution: {integrity: sha512-ibF4KstYgH5caF2JaMEvQyVFvXVzHhmNzZQz1IeGr2F4M+mwUMHWEN6fVfpzat/yuEIWIo29sUZG3AwQOwbNvw==}
-    hasBin: true
     dev: true
 
   /y18n@5.0.8:
