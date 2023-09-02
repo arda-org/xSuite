@@ -2,16 +2,18 @@
   "private": true,
   "scripts": {
     "lint": "eslint .",
-    "build-xsuite-fproxy": "pnpm --filter ./xsuite-fproxy build",
-    "build-xsuite": "pnpm --filter ./xsuite build",
-    "test-xsuite": "pnpm --filter ./xsuite test",
-    "build-xsuite-cli": "pnpm --filter ./xsuite-cli build",
-    "test-xsuite-cli": "pnpm --filter ./xsuite-cli test",
-    "verify-xsuite-wasms": "pnpm --filter ./xsuite verify-wasms",
+    "build-xsuite-fproxy": "cd xsuite-fproxy && pnpm build",
+    "build-xsuite": "cd xsuite && pnpm build",
+    "test-xsuite": "cd xsuite && pnpm test",
+    "build-xsuite-cli": "cd xsuite-cli && pnpm build",
+    "test-xsuite-cli": "cd xsuite-cli && pnpm test",
+    "verify-xsuite-wasms": "cd xsuite && pnpm verify-wasms",
     "build-contracts": "CARGO_TARGET_DIR=$(pwd)/target sc-meta all build --path contracts --locked --target-dir $(pwd)/target",
     "typecheck-contracts": "pnpm --filter \"./contracts/**\" typecheck",
     "test-contracts": "pnpm --filter \"./contracts/**\" test",
-    "all": "pnpm lint && pnpm build-xsuite-fproxy && pnpm build-xsuite && pnpm test-xsuite && pnpm build-xsuite-cli && pnpm test-xsuite-cli && pnpm verify-xsuite-wasms && pnpm build-contracts && pnpm typecheck-contracts && pnpm test-contracts"
+    "dev-docs": "cd docs && pnpm dev",
+    "build-docs": "cd docs && pnpm build",
+    "all": "pnpm lint && pnpm build-xsuite-fproxy && pnpm build-xsuite && pnpm test-xsuite && pnpm build-xsuite-cli && pnpm test-xsuite-cli && pnpm verify-xsuite-wasms && pnpm build-contracts && pnpm typecheck-contracts && pnpm test-contracts && pnpm build-docs"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.0.0",
