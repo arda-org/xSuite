@@ -45,6 +45,13 @@ jobs:
           key: ${{ runner.os }}-target
           restore-keys: ${{ runner.os }}-target
 
+      - name: Cache Next.js .next folder
+        uses: actions/cache@v3
+        with:
+          path: docs/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('docs/**') }}
+          restore-keys: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
+
       - name: Use Golang
         uses: actions/setup-go@v4
         with:
