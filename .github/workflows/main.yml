@@ -93,6 +93,3 @@ jobs:
 
       - name: Test contracts
         run: pnpm test-contracts
-
-      - name: Build docs
-        run: pnpm build-docs
