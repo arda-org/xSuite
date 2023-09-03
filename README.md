@@ -12,84 +12,33 @@
   </a>
 </p>
 
-xSuite.js is the full suite for efficiently developing high-quality MultiversX smart contracts. `xsuite` and `xsuite-cli` packages are extensively tested with 450+ tests and 100% test coverage of critical parts, to be sure they are always safe and reliable.
+xSuite.js is the full suite for efficiently developing high-quality MultiversX smart contracts. Init, build, test, deploy contracts in seconds.
 
-xSuite.js is [made by Arda team](https://arda.run) and is the result of their deep expertise gained from building numerous dApps and auditing [25+ smart contracts](https://arda.run/audits) to date.
+xSuite.js is [made by Arda team](https://arda.run) and is the result of their deep expertise from building numerous dApps and auditing [35+ contracts](https://arda.run/audits). xSuite.js is extensively tested with 450+ tests and 100% test coverage of critical parts, to ensure it is always safe and reliable.
 
-> :warning: xSuite.js is in beta. Until it reaches version 1.0.0, breaking changes might appear at any new version.
-
-## Getting Started
-
-Let's build, test and deploy your first MultiversX contract in seconds, with no requirement except [Node.js](https://nodejs.org/) being already installed on your machine.
-
-First, install `xsuite-cli`:
-
-```
-npm install -g xsuite-cli
-```
-
-A new command `xsuite` is now available in your terminal. With this command, install Rust on your machine:
-
-```
-xsuite install-rust
-```
-
-Create a new blank contract in the directory `my-contract` and open it:
-
-```
-xsuite new --dir my-contract
-cd my-contract
-```
-
-Create a new wallet, encrypted with the password of your choice:
-
-```
-xsuite new-wallet --wallet wallet.json
-```
-
-Fund this new wallet with 30 xEGLD, the fake EGLD of devnet:
-
-```
-xsuite request-xegld --wallet wallet.json
-```
-
-Build the contract:
-
-```
-npm run build
-```
-
-Test the contract:
-
-```
-npm run test
-```
-
-Deploy the contract:
-
-```
-npm run interact:devnet deploy
-```
+> :warning: xSuite.js is in beta phase.
 
 ## Documentation
 
-If you want your team to be onboarded and trained to use xSuite.js, please reach out in [xSuite.js Telegram group](https://t.me/xSuite_js). xSuite.js documentation is under construction.
+Visit [https://xsuite.dev](https://xsuite.dev) to view the full documentation.
 
-Your team may also want to look at the [audited contracts](https://github.com/arda-org/xSuite.js/tree/main/contracts) made by Arda team. They can be used as a starting point for new contracts and are excellent examples of how to use xSuite.js.
+## Onboarding and Training
 
-## Audited contracts
+If you want you or your team to receive a personal onboarding and training to xSuite.js, please contact [Lucas Willems](https://t.me/LucasWillems).
 
-Arda team makes available audited contracts, that can be used as a starting point for new contracts and are excellent examples of how to use xSuite.js.
+## Starter Contracts (audited)
 
-So far, 2 contracts are available:
+Arda team has created starter contracts to be used as a great starting point for the development of your new smart contract and to save a significant amount of time into setting up the codebase and writing the initial logic. Starter contracts are **audited by Arda**.
 
-- [blank](https://github.com/arda-org/xSuite.js/tree/main/contracts/blank): A blank contract, fully set up (contract, tests, interactions), to start your new contract from.
-- [vested-transfers](https://github.com/arda-org/xSuite.js/tree/main/contracts/vested-transfers): A contract for vested transfers.
+The starter contracts available:
+
+- [blank](https://github.com/arda-org/xSuite.js/tree/main/contracts/blank): An empty contract that comes fully set up with tests and blockchain interactions.
+- [vested-transfers](https://github.com/arda-org/xSuite.js/tree/main/contracts/vested-transfers): A contract for vested transfers, with tests and blockchain interactions.
 
 ## Who is using xSuite.js?
 
-xSuite.js has been used internally by Arda since more than a year, and has been released publicly recently. Many ecosystem teams are being onboarded and trained to use xSuite.js right now. If you want your team to be onboarded and trained too, please reach out in [xSuite.js Telegram group](https://t.me/xSuite_js).
+xSuite.js has been used internally by Arda since more than a year, and has been released publicly recently. Many ecosystem teams have started to be onboarded and trained to use xSuite.js. To get your team onboarded and trained too, please contact [Lucas Willems](https://t.me/LucasWillems).
 
 ## Community
 
-The xSuite.js community can be found on [xSuite.js Telegram group](https://t.me/xSuite_js), where you can ask questions, share ideas and chat with other community members.
+The xSuite.js community can be found on [xSuite.js Telegram group](https://t.me/xSuite_js), where you can ask questions, share ideas and meet other community members.
