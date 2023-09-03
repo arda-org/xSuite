@@ -1,6 +1,6 @@
 {
   "name": "xsuite-cli",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "license": "MIT",
   "scripts": {
     "build": "ncc build ./src/index.ts -o ./dist/ -m",
