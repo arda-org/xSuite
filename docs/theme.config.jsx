@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 import logoUrl from "../Logo.png";
 
-export const websiteName = "xSuite.js";
+export const websiteName = "xSuite";
 
 export default {
   logo: (
@@ -11,7 +11,7 @@ export default {
     </div>
   ),
   project: {
-    link: "https://github.com/arda-org/xSuite.js",
+    link: "https://github.com/arda-org/xSuite",
   },
   chat: {
     link: "https://t.me/xSuite_js",
@@ -21,7 +21,7 @@ export default {
       </svg>
     ),
   },
-  docsRepositoryBase: "https://github.com/arda-org/xSuite.js/tree/main/docs",
+  docsRepositoryBase: "https://github.com/arda-org/xSuite/tree/main/docs",
   footer: {
     text: (
       <span>

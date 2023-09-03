@@ -6,7 +6,7 @@ import { log } from "xsuite/_stdio";
 import { xsuiteCliPath } from "../path";
 import { logTitle, logAndRunCommand } from "./helpers";
 
-const repoUrl = "https://github.com/arda-org/xSuite.js";
+const repoUrl = "https://github.com/arda-org/xSuite";
 const TAG = "v1.4.77";
 const BINARY_NAME = "scenexec";
 

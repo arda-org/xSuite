@@ -67,12 +67,12 @@ export const newAction = async ({
 
 const downloadAndExtractContract = async (contract: string, cwd: string) => {
   const file = await downloadTar(
-    "https://codeload.github.com/arda-org/xSuite.js/tar.gz/main",
+    "https://codeload.github.com/arda-org/xSuite/tar.gz/main",
   );
   await tar.x({
     file,
     strip: 2 + contract.split("/").length,
-    filter: (p) => p.includes(`xSuite.js-main/contracts/${contract}/`),
+    filter: (p) => p.includes(`xSuite-main/contracts/${contract}/`),
     cwd,
   });
   fs.unlinkSync(file);
@@ -81,7 +81,7 @@ const downloadAndExtractContract = async (contract: string, cwd: string) => {
 const pipeline = util.promisify(stream.Stream.pipeline);
 
 const downloadTar = (url: string) => {
-  const file = path.join(os.tmpdir(), `xSuite.js-contract-${Date.now()}`);
+  const file = path.join(os.tmpdir(), `xSuite-contract-${Date.now()}`);
   return new Promise<string>((resolve, reject) => {
     https
       .get(url, (response) => {
