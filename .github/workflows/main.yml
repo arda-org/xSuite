@@ -4,9 +4,8 @@ on:
   push:
     branches:
       - main
+      - dev
   pull_request:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
@@ -93,6 +92,3 @@ jobs:
 
       - name: Test contracts
         run: pnpm test-contracts
-
-      - name: Build docs
-        run: pnpm build-docs
