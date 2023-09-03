@@ -1,15 +1,6 @@
 # 'vested-transfers' contract
 
-A contract for vested transfers, i.e. a transfer spread over a period of time, with optional intermediary releases (e.g. a transfer of 100 EGLD over 4 weeks, spread into 4 weekly transfers of 25 EGLD).
-
-The contract comes with tests and blockchain interaction, and contains the following endpoints and views:
-
-- `create_transfer(receiver: Address, release_schedule: ReleaseSchedule)`: endpoint to create a vested transfer,
-- `execute_transfer(index: u64)`: endpoint to execute a specific vested transfer,
-- `cancel_transfer(index: u64)`: endpoint to cancel a specific vested transfer when caller is sender,
-- `claim_balances(tokens: MultiValueEncoded<(EgldOrEsdtTokenIdentifier, u64)>)`: endpoint to claim token balances,
-- `get_transfers()`: view to list all transfers,
-- `get_address_balances(address: Address)`: view to list all token balances of an address.
+A contract for vested transfers, i.e. a transfer spread over a period of time, with optional intermediary releases (e.g. a transfer of 100 EGLD over 4 weeks, spread into 4 weekly transfers of 25 EGLD). The conctract comes with tests and blockchain interactions.
 
 To create a copy of the 'vested-contracts' contract on your computer:
 
@@ -24,6 +15,20 @@ Note that `xsuite-cli` and Rust must be installed on your computer. To install, 
 npm install -g xsuite-cli
 xsuite install-rust
 ```
+
+## Contract endpoints & views
+
+Endpoints:
+
+- `create_transfer(receiver: Address, release_schedule: ReleaseSchedule)`: create a vested transfer,
+- `execute_transfer(index: u64)`: execute a specific vested transfer,
+- `cancel_transfer(index: u64)`: cancel a specific vested transfer when caller is sender,
+- `claim_balances(tokens: MultiValueEncoded<(EgldOrEsdtTokenIdentifier, u64)>)`: claim token balances.
+
+Views:
+
+- `get_transfers()`: list all transfers,
+- `get_address_balances(address: Address)`: list all token balances of an address.
 
 ## Build contract
 
