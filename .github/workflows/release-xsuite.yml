@@ -2,6 +2,8 @@ name: Release xsuite
 
 on:
   workflow_dispatch:
+    branches:
+      - main
 
 jobs:
   build-and-publish:
