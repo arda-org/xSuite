@@ -180,14 +180,16 @@ test("install-rust", async () => {
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue(
-      `Installing Rust: toolchain ${rustToolchain}, target ${rustTarget}, crate ${rustCrate}...`,
+      `Installing Rust: toolchain ${rustToolchain}, target ${rustTarget}, crate ${rustCrate.name}...`,
     ),
     chalk.cyan(
       `$ sh -c 'curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain ${rustToolchain} -y \\`,
     ),
     chalk.cyan('    && . "$HOME/.cargo/env" \\'),
     chalk.cyan(`    && rustup target add ${rustTarget} \\`),
-    chalk.cyan(`    && cargo install ${rustCrate} --version 0.41.0'`),
+    chalk.cyan(
+      `    && cargo install ${rustCrate.name} --version ${rustCrate.version}'`,
+    ),
     "",
   ]);
 });
@@ -231,22 +233,19 @@ test("new --dir contract && build && test-rust && test-scen", async () => {
   ]);
 
   const targetDir = path.join(__dirname, "..", "..", "target");
-  const options = {
-    env: { ...process.env, CARGO_TARGET_DIR: targetDir },
-  };
   process.chdir(dirPath);
 
   stdoutInt.start();
-  buildAction(["--target-dir", targetDir], options);
+  buildAction(["--target-dir-all", targetDir]);
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Building contract..."),
-    chalk.cyan(`$ sc-meta all build --target-dir ${targetDir}`),
+    chalk.cyan(`$ sc-meta all build --target-dir-all ${targetDir}`),
     "",
   ]);
 
   stdoutInt.start();
-  testRustAction(options);
+  testRustAction({ env: { ...process.env, CARGO_TARGET_DIR: targetDir } });
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Testing contract with Rust tests..."),

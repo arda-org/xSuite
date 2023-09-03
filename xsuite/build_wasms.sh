@@ -8,7 +8,7 @@ cp -R $SOURCE_DIR $DEST_DIR
 
 cd $DEST_DIR
 
-CARGO_TARGET_DIR=$TARGET_DIR sc-meta all build --locked --target-dir $TARGET_DIR
+sc-meta all build --locked --target-dir-all $TARGET_DIR
 
 shopt -s globstar dotglob
 

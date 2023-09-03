@@ -25,7 +25,7 @@ program.version(version);
 program
   .command("install-rust")
   .description(
-    `Install Rust with rustup: toolchain ${rustToolchain}, target ${rustTarget}, crate ${rustCrate}.`,
+    `Install Rust with rustup: toolchain ${rustToolchain}, target ${rustTarget}, crate ${rustCrate.name}.`,
   )
   .action(async () => {
     installRustAction();
