@@ -1,0 +1,317 @@
+# Testing Contracts
+
+**xSuite** can be used to easily test contracts by abstracting away the [MultiversX Serialization Format](https://docs.multiversx.com/developers/developer-reference/serialization-format) as well as providing other useful helpers.
+
+Under the hood, **xSuite** uses the same test engine as the [MultiversX Scenarios (Mandos)](https://docs.multiversx.com/developers/scenario-reference/overview) tests, but allows you to write everything in easy to learn Javascript code.
+
+## Your first test
+
+Make sure to have followed the [Getting Started](/) guide and already have **xSuite** set up and running for your contract(s).
+
+A test is just a `.ts` (or `.js`) file in the `tests` directory, which uses `xSuite` abstractions and is run using [vitest](https://vitest.dev/guide/). Below we will detail how to write a basic test for checking if the contract was deployed successfully.
+
+Let's start by first creating a `tests/contract.test.ts` file.
+
+### Required imports
+
+The following imports are needed at the top of the file:
+
+```ts
+import { test, beforeEach, afterEach } from "vitest";
+import { assertAccount } from "xsuite/assert";
+import { FWorld, FWorldWallet, FWorldContract } from "xsuite/world";
+import { e } from "xsuite/data";
+```
+
+We use the `test`, `beforeEach` and `afterEach` hooks from `vitest`. These are functions in which we will write our test's code as well as code that we want to run before/after each test respectively.
+
+`assertAccount` is used to assert that an address (account) on MultiversX contains the data we expect (token balances, storage keys etc).
+
+The `xsuite/world` and `xsuite/data` imports will be detailed later.
+
+### "Fake" world, wallet & contract
+
+Next, we need to define some variables:
+
+```ts
+let world: FWorld;
+let deployer: FWorldWallet;
+let contract: FWorldContract;
+```
+
+The `FWorld` represents a "Fake" World, i.e. the MultiversX blockchain. It abstracts away all the interaction with the underlying test MultiversX blockchain.
+
+The `FWorldWallet` and `FWorldContract` represents a wallet and a contract respectively, that are deployed on the "Fake" World (test blockchain).)
+
+### beforeEach & afterEach hooks (initializing variables)
+
+Now that we have defined the imports and the variables, we need to initialize them.
+
+```ts
+beforeEach(async () => {
+  world = await FWorld.start();
+  deployer = await world.createWallet();
+  ({ contract } = await deployer.deployContract({
+    code: "file:output/contract.wasm",
+    codeMetadata: [],
+    gasLimit: 10_000_000,
+    codeArgs: [e.Str('ourString')],
+  }));
+});
+
+afterEach(async () => {
+  await world.terminate();
+});
+```
+
+First, we need to start the underlying MultiversX blockchain and store it in a variable using `FWorld.start()`. After the test is done, we need to also stop the underlying blockchain using `await world.terminate()` in the `afterEach` hook.
+
+We also create the `deployer` wallet using `world.createWallet()`, which will be used to deploy our contract using `deployer.deployContract()`. This will deploy the contract with the specified code file and the specified `init` arguments.
+
+The `e` is a helper that lets you easily encode data in the format that the MultiversX blockchain understands. Here, `e.Str()` will convert the data in a format that can be recognized by the `ManagedBuffer` type in a Rust Smart Contract.
+
+More details about encoding blockchain data on the [Data Encoding](/encoding) page.
+
+### Test case
+
+Finally, we can write our first basic test case:
+
+```ts
+test("Test", async () => {
+  assertAccount(await contract.getAccountWithPairs(), {
+    balance: 0n,
+    hasPairs: [
+      e.p.Mapper("ourStringStorageKey").Value(e.Str('ourString')),
+    ],
+  });
+});
+```
+
+Here, using `assertAccount`, we will test that the contract we deployed has the correct balance and storage keys we expect. `contract.getAccountWithPairs()` will fetch the account of the contract with all it's pairs from the underlying blockchain.
+
+Using `hasPairs` we can test that the contract contains the pairs provided (use `allPairs` if you want to test that only the pairs provided exist).
+
+The `e.p` is a helper that lets you easily encode storage mappers in the format that the MultiversX blockchain understands. Here, `e.p.Mapper()` represents a simple `SingleValueMapper` type from a Rust Smart Contract. Usign `.Value()` we can assert that it contains the value we expect.
+
+More details about storage mappers [here](/encoding#storage-mappers).
+
+### Full basic test file code
+
+```ts
+// tests/contract.test.ts
+import { test, beforeEach, afterEach } from "vitest";
+import { assertAccount } from "xsuite/assert";
+import { FWorld, FWorldWallet, FWorldContract } from "xsuite/world";
+
+let world: FWorld;
+let deployer: FWorldWallet;
+let contract: FWorldContract;
+
+beforeEach(async () => {
+  world = await FWorld.start();
+  deployer = await world.createWallet();
+  ({ contract } = await deployer.deployContract({
+    code: "file:output/contract.wasm",
+    codeMetadata: [],
+    gasLimit: 10_000_000,
+    codeArgs: [e.Str('ourString')],
+  }));
+});
+
+afterEach(async () => {
+  await world.terminate();
+});
+
+test("Test", async () => {
+  assertAccount(await contract.getAccountWithPairs(), {
+    balance: 0n,
+    hasPairs: [
+      e.p.Mapper("ourStringStorageKey").Value(e.Str('ourString')),
+    ],
+  });
+});
+```
+
+## Creating wallets
+
+You can create wallets from a `FWorld` object using the `createWallet` method. You can specify the initial EGLD balance as well as ESDTs balances.
+```ts
+const deployer: FWorldWallet = await world.createWallet({
+  balance: 10_000_000_000n,
+  pairs: [
+    e.p.Esdts([
+      { id: 'TOKEN-123456', amount: 100_000 },
+    ])
+  ],
+});
+```
+
+## Deploying contracts
+
+Contracts can be deployed by an `FWorldWallet` object
+```ts
+const { contract, address } = await deployer.deployContract({
+  code: "file:output/contract.wasm",
+  codeMetadata: ["upgradeable"],
+  gasLimit: 100_000_000,
+  codeArgs: [
+    e.Str('ourString'),
+  ],
+}));
+```
+
+The `contract` is an instance of `FWorldContract` and `address` is a string with the Bech32 address of the contract.
+
+When deploying a contract you can specify:
+- `code` - in this case from a wasm file, but it can also be a string of the full contract code
+- `codeMetadata` - flags like `upgradeable`, `payable` etc,
+- `gasLimit` - the gas limit to use for the transaction
+- `codeArgs` - arguments used in the `init` function of the contract
+
+Use the `e` helper utility to encode the data (see [Data Encoding](/encoding)).
+
+## Calling contracts
+
+Contracts can be easily called from a `FWorldWallet` object using the `callContract` method and specifying which contract to call in the `callee` field.
+```ts
+const result = await wallet.callContract({
+  callee: contract,
+  gasLimit: 5_000_000,
+  funcName: 'addWhitelistedToken',
+  funcArgs: [e.Str('TOKEN-123456')],
+  value: 1_000, // egld to send in the transaction
+});
+```
+
+To call a contract with ESDT tokens use the `esdts` field:
+```ts
+const result = await wallet.callContract({
+  callee: contract,
+  gasLimit: 20_000_000,
+  funcName: 'swap',
+  funcArgs: [
+    e.Str('TOKEN-123456'),
+  ],
+  esdts: [{ id: 'TOKEN-123456', amount: BigInt(1_000) }]
+});
+```
+
+The `result` contains the `tx` (transaction) and `returnData` fields.
+
+### Checking errors
+
+You can also easily assert that a transaction failed with the appropriate code or message using the `assertFail` method:
+```ts
+await deployer.callContract({
+  callee: contract,
+  gasLimit: 10_000_000,
+  funcName: 'test',
+  funcArgs: [],
+}).assertFail({ code: 4, message: 'Some error' });
+````
+
+## Querying contracts
+
+You can query a contract directly from a `FWorld` object using the `query` method and specifying which contract to query in the `callee` field.
+```ts
+const { returnData, returnCode, returnMessage } = await world.query({
+  callee: contract,
+  funcName: "getWhitelistedToken",
+  funcArgs: [e.Str('TOKEN-123456')],
+});
+```
+
+In order to decode the `returnData` you can use the `d` helper from the `xsuite/data` package. More info [here](/encoding#data-decoding).
+```ts
+import { assert } from "vitest";
+import { d } from "xsuite/data"
+const tokenData = d.Tuple({
+  token: d.Str(),
+}).topDecode(returnData[0]);
+
+assert(tokenData.token === 'TOKEN-123456');
+```
+
+## Asserting account data
+
+### Pairs & accounts
+
+In MultiversX, ESDT and storage data is actually stored in the same place, the `pairs` of an account. That is why all the objects that abstract the blockchain from **xSuite** use the general term `pairs` instead of specifying separately the ESDT and storage data.
+
+An account is an address that exists on the MultiversX blockchain. It can represent a simple wallet address or a smart contract address (which have an additional `code` field). Since they are both accounts, they can both have ESDTs or storage data associated with them.
+
+### Checking balance & ESDTs
+
+We can use the `assertAccount` function to test that an account has a specific EGLD balance and has specific ESDTs. The ESDTs can be Simple tokens (fungible), NFTs or SFTs.
+```ts
+const pairs = await contract.getAccountWithPairs();
+assertAccount(pairs, {
+  balance: 1_000,
+  allPairs: [
+    ...e.p.Esdts([
+      { id: 'TOKEN-123456', amount: 2_000 },
+      { id: 'NFT-123456', nonce: 1, name: 'Nft Name', uris: ['url'] },
+      { id: 'SFT-123456', nonce: 1, amount: 3_000, name: 'Sft Name', uris: ['url'] },
+      { id: 'META-123456', nonce: 1, amount: 3_000, attrs: e.Tuple(e.Str('test')) },
+    ]),
+  ],
+});
+```
+
+### Checking storage data
+
+The helper `e.p` can be used to check storage data. More details about storage mappers encoding [here](/encoding#storage-mappers).
+
+```ts
+const pairs = await contract.getAccountWithPairs();
+assertAccount(pairs, {
+  balance: 0n,
+  allPairs: [
+    ...e.p.Mapper("pause_module:paused").Value(e.Bool(false)),
+    ...e.p.Mapper("fee_percent").Value(e.U64(100)),
+  ],
+});
+```
+
+## The FWorld object
+
+The `FWorld` class represents an abstraction over the MultiversX blockchain and allows you to easily interact with the blockchain. It provides helper functions to managed accounts, as well as other blockchain variables. Below are a list of the most relevant functions that the class provides:
+
+- `static start({ gasPrice, }?: { gasPrice?: number; }): Promise<FWorld>` - starts an underlying blockchain and creates a new instance of the class; you can optionally specify the `gasPrice`
+- `newContract(address: string | Uint8Array): FWorldContract;` - creates a new `FWorldContract` instances for the specified address
+- `createWallet(account?: Omit<Account, "address">): Promise<FWorldWallet>;` - creates a new wallet account on the blockchain; when creating a wallet you can specify it's EGLD balance as well as other pairs (eg: ESDT tokens or storage keys):
+```ts
+await world.createWallet({
+  balance: 10_000_000_000n,
+  pairs: [
+    e.p.Esdts([{ id: 'MYTOKEN-123456', amount: 100_000 } ])
+  ]
+});
+```
+- `getAccount(address: Address): Promise<{ nonce: number; balance: bigint; code: string;}>;` - get the account's data
+- `getAccountWithPairs(address: Address): Promise<{pairs: import("../data").RawPairs; nonce: number; balance: bigint; code: string; }>;` - get the account's data with all it's pairs
+- `setAccount(account: Account): Promise<any>;` - allows to set the data of an account on the blockchain; this is useful for setting storage keys or ESDTs directly for a contract:
+```ts
+await world.setAccount({
+  address: contract,
+  ...await contract.getAccount(),
+  codeMetadata: ["payable"],
+  owner: deployer,
+  pairs: [
+    ...e.p.Esdts([{ id: 'TOKENID-123456', amount: 500_000 }]),
+
+    e.p.Mapper("customStorageKeyHardToSet").Value(e.Str('value')),
+  ]
+});
+```
+- `setCurrentBlockInfo(block: Block): Promise<any>;` - allows to set current block info, like the timestamp, nonce, round & epoch, eg:
+```ts
+world.setCurrentBlockInfo({
+  nonce: 0,
+  epoch: 0,
+});
+```
+- `deployContract(sender: Signer, txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">): TxResultPromise<DeployContractTxResult>;` - allows to deploy a contract
+- `terminate(): Promise<void>;` - stops the underlying blockchain; should be called in `afterEach` to make sure that the underlying blockchain is properly shutdown
+
+The functions from above that are related to accounts also have wrappers in the `FWorldWallet` and `FWorldContract` classes, for easier interaction.

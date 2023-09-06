@@ -1,0 +1,64 @@
+# Contract Interactions
+
+**xSuite** can be used to easily deploy contracts quickly to the devnet, testnet or even mainnet. It currently supports keystore `.json` wallet files.
+
+Instead of using a `FWorld` object like in tests, in interactions we use a "real" `World` object, that is connected to a real MultiversX Gateway/Proxy URL.
+
+The package `xsuite/interact` also provides an `envChain` utility, to easily and quickly deploy contracts for different networks.
+
+## Your first interaction
+
+Make sure to have followed the [Getting Started](/) guide and already have **xSuite** set up and running for your contract(s).
+
+Interactions are CLI commands written using the [commander](https://www.npmjs.com/package/commander) NodeJs library. You should already have the `interact/data.json` and `interact/index.ts` files created after following the getting started guide. Below we will detail the contents of the files.
+
+### data.json
+
+The `data.json` file contains information regarding your contracts and can be used with the `envChain` utility. Take the following `data.json` file:
+```json
+{
+  "code": "file:output/contract.wasm",
+  "address": {
+    "devnet": "",
+    "testnet": "",
+    "mainnet": ""
+  }
+}
+
+```
+
+In Typescript code we can import the file and use the data under the fields directly. The `code` field contains the path to the contract wasm code, but the `address` is an object with fields for `devnet`, `testnet` and `mainnet`.
+These keys will be used by the `envChain` utility depending on the `CHAIN` env variable (which is set in the `package.json` file in the appropriate interact scripts for each environment) to select the address of the contract on that chain.
+
+### Required imports
+
+You should have the following imports at the top of the `interact/index.ts` file:
+```ts
+import { Command } from "commander";
+import { envChain } from "xsuite/interact";
+import { World } from "xsuite/world";
+// @ts-ignore
+import data from "./data.json";
+import { e } from "xsuite/data"
+```
+
+### World, wallet & program
+
+Next, you should have the following variables:
+```ts
+const world = World.new({
+  proxyUrl: envChain.publicProxyUrl(),
+  chainId: envChain.id(),
+  gasPrice: 1000000000,
+});
+
+const loadWallet = () => world.newWalletFromFile("wallet.json");
+
+const program = new Command();
+```
+
+Here we define the `world` object using `World.new()` which takes the `proxyUrl`, `chainId` and `gasPrice` as arguments. Using the `envChain` utility we can easily get the appropriate `publicProxyUrl` (i.e. https://devnet-gateway.multiversx.com/ for Devnet) and chain `id` depending on the current `CHAIN` environment variable value.
+
+We then declare the function `loadWallet` to load a wallet from a `.json` file using the `world.newWalletFromFile()` function. The reason we don't call this directly is because we will get a password prompt after running this function.
+
+Finally, we initialize the `program` variable with an instance of the `Command` class from `commander`, which will allow us to write nice CLI commands.

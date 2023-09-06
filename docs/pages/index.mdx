@@ -26,6 +26,8 @@ A new command `xsuite` is now available in your terminal. With this command, ins
 xsuite install-rust
 ```
 
+*Note: If you already have Rust installed and the `cargo` command available you can skip this step (eg: if you use `mxpy` or have manually installed Rust before)*
+
 Create a new blank contract in the directory `my-contract` and open it:
 
 ```
@@ -63,9 +65,138 @@ Deploy the contract to MultiversX devnet:
 npm run interact:devnet deploy
 ```
 
-## Onboarding and Training
+## Adding xSuite to existing contracts
 
-If you want you or your team to receive a personal onboarding and training to xSuite, please contact [Lucas Willems](https://t.me/LucasWillems).
+xSuite can easily be added to existing contracts as well.
+
+Init a new `npm` package in the root of your contract(s) and add the required dependencies:
+
+```
+npm init
+npm i --save-dev xsuite vitest typescript tsx commander
+```
+
+Add the following `scripts` in the `package.json` file:
+
+```
+  "scripts": {
+    "build": "xsuite build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "interact:devnet": "CHAIN=devnet tsx interact/index.ts",
+    "interact:testnet": "CHAIN=testnet tsx interact/index.ts",
+    "interact:mainnet": "CHAIN=mainnet tsx interact/index.ts"
+  },
+```
+
+Create the `tests` and `interact` directory
+
+```
+mkdir tests interact
+```
+
+Create the first test file under `tests/contract.test.ts`, with the following content:
+
+```ts
+import { test, beforeEach, afterEach } from "vitest";
+import { assertAccount } from "xsuite/assert";
+import { FWorld, FWorldWallet, FWorldContract } from "xsuite/world";
+
+let world: FWorld;
+let deployer: FWorldWallet;
+let contract: FWorldContract;
+
+beforeEach(async () => {
+  world = await FWorld.start();
+  deployer = await world.createWallet();
+  ({ contract } = await deployer.deployContract({
+    code: "file:output/contract.wasm",
+    codeMetadata: [],
+    gasLimit: 10_000_000,
+  }));
+});
+
+afterEach(async () => {
+  await world.terminate();
+});
+
+test("Test", async () => {
+  assertAccount(await contract.getAccountWithPairs(), {
+    balance: 0n,
+    hasPairs: [],
+  });
+});
+
+```
+
+Create the `interact/data.json` file with the following content:
+```json
+{
+  "code": "file:output/contract.wasm",
+  "address": {
+    "devnet": "",
+    "testnet": "",
+    "mainnet": ""
+  }
+}
+
+```
+
+Create the `interact/index.ts` file with the following content:
+```ts
+import { Command } from "commander";
+import { envChain } from "xsuite/interact";
+import { World } from "xsuite/world";
+import data from "./data.json";
+
+const world = World.new({
+  proxyUrl: envChain.publicProxyUrl(),
+  chainId: envChain.id(),
+  gasPrice: 1000000000,
+});
+
+const loadWallet = () => world.newWalletFromFile("wallet.json");
+
+const program = new Command();
+
+program.command("deploy").action(async () => {
+  const wallet = await loadWallet();
+  const result = await wallet.deployContract({
+    code: data.code,
+    codeMetadata: ["upgradeable"],
+    gasLimit: 20_000_000,
+  });
+  console.log("Result:", result);
+});
+
+program.command("upgrade").action(async () => {
+  const wallet = await loadWallet();
+  const result = await wallet.upgradeContract({
+    callee: envChain.select(data.address),
+    code: data.code,
+    codeMetadata: ["upgradeable"],
+    gasLimit: 20_000_000,
+  });
+  console.log("Result:", result);
+});
+
+program.command("ClaimDeveloperRewards").action(async () => {
+  const wallet = await loadWallet();
+  const result = await wallet.callContract({
+    callee: envChain.select(data.address),
+    funcName: "ClaimDeveloperRewards",
+    gasLimit: 10_000_000,
+  });
+  console.log("Result:", result);
+});
+
+program.parse(process.argv);
+
+```
+
+Edit the above files to suit your contract needs. At this point, you should be able to run tests with `npm run test` and the interactions with `npm run interact:devnet deploy`.
+
+*Note: The interactions use a `wallet.json` file which can be generated using `npm run interact:devnet deploy`*
 
 ## Starter Contracts (audited)
 
@@ -75,6 +206,10 @@ The starter contracts available:
 
 - [blank](https://github.com/arda-org/xSuite/tree/main/contracts/blank): An empty contract that comes fully set up with tests and blockchain interactions.
 - [vested-transfers](https://github.com/arda-org/xSuite/tree/main/contracts/vested-transfers): A contract for vested transfers, with tests and blockchain interactions.
+
+## Onboarding and Training
+
+If you want you or your team to receive a personal onboarding and training to xSuite, please contact [Lucas Willems](https://t.me/LucasWillems).
 
 ## Who is using xSuite?
 
