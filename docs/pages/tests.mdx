@@ -1,3 +1,5 @@
+import { Callout } from "nextra/components";
+
 # Testing Contracts
 
 **xSuite** can be used to easily test contracts by abstracting away the [MultiversX Serialization Format](https://docs.multiversx.com/developers/developer-reference/serialization-format) as well as providing other useful helpers.
@@ -75,7 +77,6 @@ More details about encoding blockchain data on the [Data Encoding](/encoding) pa
 ### Test case
 
 Finally, we can write our first basic test case:
-
 ```ts
 test("Test", async () => {
   assertAccount(await contract.getAccountWithPairs(), {
@@ -91,7 +92,7 @@ Here, using `assertAccount`, we will test that the contract we deployed has the 
 
 Using `hasPairs` we can test that the contract contains the pairs provided (use `allPairs` if you want to test that only the pairs provided exist).
 
-The `e.p` is a helper that lets you easily encode storage mappers in the format that the MultiversX blockchain understands. Here, `e.p.Mapper()` represents a simple `SingleValueMapper` type from a Rust Smart Contract. Usign `.Value()` we can assert that it contains the value we expect.
+The `e.p` is a helper that lets you easily encode storage mappers in the format that the MultiversX blockchain understands. Here, `e.p.Mapper()` represents a simple `SingleValueMapper` type from a Rust Smart Contract. Using `.Value()` we can assert that it contains the value we expect.
 
 More details about storage mappers [here](/encoding#storage-mappers).
 
@@ -134,7 +135,7 @@ test("Test", async () => {
 
 ## Creating wallets
 
-You can create wallets from a `FWorld` object using the `createWallet` method. You can specify the initial EGLD balance as well as ESDTs balances.
+You can create wallets from a `FWorld` object using the `createWallet` method. When creating a wallet you can specify it's EGLD balance as well as other pairs, like ESDT tokens or storage keys.
 ```ts
 const deployer: FWorldWallet = await world.createWallet({
   balance: 10_000_000_000n,
@@ -146,7 +147,9 @@ const deployer: FWorldWallet = await world.createWallet({
 });
 ```
 
-## Deploying contracts
+## Contract operations
+
+### Deploying contracts
 
 Contracts can be deployed by an `FWorldWallet` object
 ```ts
@@ -170,7 +173,7 @@ When deploying a contract you can specify:
 
 Use the `e` helper utility to encode the data (see [Data Encoding](/encoding)).
 
-## Calling contracts
+### Calling contracts
 
 Contracts can be easily called from a `FWorldWallet` object using the `callContract` method and specifying which contract to call in the `callee` field.
 ```ts
@@ -182,6 +185,10 @@ const result = await wallet.callContract({
   value: 1_000, // egld to send in the transaction
 });
 ```
+
+The `result` contains the `tx` (transaction) and `returnData` fields.
+
+#### Sending ESDTs
 
 To call a contract with ESDT tokens use the `esdts` field:
 ```ts
@@ -196,9 +203,7 @@ const result = await wallet.callContract({
 });
 ```
 
-The `result` contains the `tx` (transaction) and `returnData` fields.
-
-### Checking errors
+#### Checking errors
 
 You can also easily assert that a transaction failed with the appropriate code or message using the `assertFail` method:
 ```ts
@@ -210,7 +215,7 @@ await deployer.callContract({
 }).assertFail({ code: 4, message: 'Some error' });
 ````
 
-## Querying contracts
+### Querying contracts
 
 You can query a contract directly from a `FWorld` object using the `query` method and specifying which contract to query in the `callee` field.
 ```ts
@@ -239,6 +244,12 @@ assert(tokenData.token === 'TOKEN-123456');
 In MultiversX, ESDT and storage data is actually stored in the same place, the `pairs` of an account. That is why all the objects that abstract the blockchain from **xSuite** use the general term `pairs` instead of specifying separately the ESDT and storage data.
 
 An account is an address that exists on the MultiversX blockchain. It can represent a simple wallet address or a smart contract address (which have an additional `code` field). Since they are both accounts, they can both have ESDTs or storage data associated with them.
+
+We can assert that an account has the pairs we want using `assertAccount` function. Here, we have two fields we can use:
+- `hasPairs` - will check if the account has the pairs we want, but the account can also have other pairs that we have not specified
+- `allPairs` - will check if the account has these EXACT pairs we want, if it has extra pairs the assertion will fail (this is similar to how MultiversX Scenarios work)
+
+You can use whichever works best for you, but we recommend using `allPairs` to make sure your contract doesn't have any unwanted side effects. But sometimes it may be easier to use `hasPairs`, when there are a lot of storage keys or when debugging why some storage keys were set/not set.
 
 ### Checking balance & ESDTs
 
@@ -273,45 +284,114 @@ assertAccount(pairs, {
 });
 ```
 
+## Mocking account data
+
+Sometimes it is hard to arrive to a specific state of your smart contract, maybe because it will take too many transactions to arrive to that state or because there are some tricky errors that appear only in very specific cases. In those cases you can directly set the storage keys of a smart contract or any ESDTs amount & roles to whatever you want using the `contract.setAccount()` function:
+```ts
+await contract.setAccount({
+  ...(await contract.getAccount()),
+  owner: deployer,
+  codeMetadata: ["upgradable", "payable"],
+  pairs: [
+    // Manually setting storage keys
+    e.p.Mapper("mock_address").Value(e.Addr(mockAddress)),
+    e.p.Mapper("supported_tokens", e.Str('TOKEN-123456')).Value(e.Tuple(
+      e.U8(1),
+      e.Str('OTHER-654321'),
+      e.U(0),
+    )),
+
+    // Manually setting ESDTs & roles
+    e.p.Esdts([{ id: 'TOKEN-123456', amount: 1_000, roles: ['ESDTRoleLocalBurn', 'ESDTRoleLocalMint'] }]),
+  ]
+});
+```
+
+This override the `pairs` of the account to what we set here. Make sure to also specify the `owner` and appropriate `codeMetadata` for the contract since they will be lost when using the `setAccount` function.
+
+
+<Callout type="warning" emoji="⚠️">
+  Due to a current bug in the underlying MultiversX Scenarios library, you should always specify `payable` in the `codeMetadata` of the `setAccount` method in order for payable endpoints to continue to work properly.
+</Callout>
+
+## Advanced tests
+
+Using **xSuite** you can write even advanced tests easily.
+```ts
+test("Validate", async () => {
+  await contract.setAccount({
+    ...await contract.getAccount(),
+    owner: deployer,
+    codeMetadata: ['payable'],
+    pairs: [
+      // Manually set next_epoch
+      e.p.Mapper("next_epoch", e.Str('TOKEN-123456')).Value(e.U64(10)),
+    ]
+  });
+
+  await deployer.callContract({
+    callee: contract,
+    gasLimit: 10_000_000,
+    funcName: "validate",
+    funcArgs: [
+      e.Str('TOKEN-123456'),
+    ],
+    value: 1_000,
+  }).assertFail({ code: 4, message: 'Invalid epoch' });
+
+  world.setCurrentBlockInfo({
+    epoch: 10,
+  });
+
+  await deployer.callContract({
+    callee: contract,
+    gasLimit: 10_000_000,
+    funcName: "validate",
+    funcArgs: [
+      e.Str('TOKEN-123456'),
+    ],
+    value: 1_000,
+  });
+
+  let pairs = await contract.getAccountWithPairs();
+  assertAccount(pairs, {
+    balance: 1_000, // Assert that balance changed
+    allPairs: [
+      // Test that next_epoch was modified accordingly
+      e.p.Mapper("next_epoch", e.Str('TOKEN-123456')).Value(e.U64(20)),
+    ],
+  });
+
+  let pairsDeployer = await deployer.getAccountWithPairs();
+  assertAccount(pairsDeployer, {
+    balance: 0, // Assuming initial balance was 1_000 for deployer
+  });
+});
+```
+
+Above we first mock the account data to set it to what we want using `setAccount`. Then we do a contract call using `callContract` which fails, and we can assert that using `assertFail`.
+Then, we set the world `epoch` to what we want and do the transaction again, this time we expect it to succeed.
+
+Then we check that the `pairs` of the contract and the deployer account changed to what we expect.
+In this case `next_epoch` value was changed to `20` and `1_000` EGLD was transfered from the deployer account to the contract.
+
 ## The FWorld object
 
-The `FWorld` class represents an abstraction over the MultiversX blockchain and allows you to easily interact with the blockchain. It provides helper functions to managed accounts, as well as other blockchain variables. Below are a list of the most relevant functions that the class provides:
+The `FWorld` class represents an abstraction over a mock MultiversX blockchain and allows you to easily interact with it. It provides helper functions to managed accounts, deploy contracts and do transactions. Below are a list of the most relevant functions that the class provides:
 
 - `static start({ gasPrice, }?: { gasPrice?: number; }): Promise<FWorld>` - starts an underlying blockchain and creates a new instance of the class; you can optionally specify the `gasPrice`
 - `newContract(address: string | Uint8Array): FWorldContract;` - creates a new `FWorldContract` instances for the specified address
-- `createWallet(account?: Omit<Account, "address">): Promise<FWorldWallet>;` - creates a new wallet account on the blockchain; when creating a wallet you can specify it's EGLD balance as well as other pairs (eg: ESDT tokens or storage keys):
-```ts
-await world.createWallet({
-  balance: 10_000_000_000n,
-  pairs: [
-    e.p.Esdts([{ id: 'MYTOKEN-123456', amount: 100_000 } ])
-  ]
-});
-```
-- `getAccount(address: Address): Promise<{ nonce: number; balance: bigint; code: string;}>;` - get the account's data
-- `getAccountWithPairs(address: Address): Promise<{pairs: import("../data").RawPairs; nonce: number; balance: bigint; code: string; }>;` - get the account's data with all it's pairs
-- `setAccount(account: Account): Promise<any>;` - allows to set the data of an account on the blockchain; this is useful for setting storage keys or ESDTs directly for a contract:
-```ts
-await world.setAccount({
-  address: contract,
-  ...await contract.getAccount(),
-  codeMetadata: ["payable"],
-  owner: deployer,
-  pairs: [
-    ...e.p.Esdts([{ id: 'TOKENID-123456', amount: 500_000 }]),
-
-    e.p.Mapper("customStorageKeyHardToSet").Value(e.Str('value')),
-  ]
-});
-```
-- `setCurrentBlockInfo(block: Block): Promise<any>;` - allows to set current block info, like the timestamp, nonce, round & epoch, eg:
+- `createWallet(account?: Omit<Account, "address">): Promise<FWorldWallet>;` - creates a new wallet account on the blockchain
+- `setAccount(account: Account): Promise<any>;` - allows to set the data of an account on the blockchain; this is useful for setting storage keys or ESDTs directly for a contract
+- `setCurrentBlockInfo(block: Block): Promise<any>;` - allows to set current block info, like the timestamp, nonce, round & epoch:
 ```ts
 world.setCurrentBlockInfo({
   nonce: 0,
   epoch: 0,
 });
 ```
-- `deployContract(sender: Signer, txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">): TxResultPromise<DeployContractTxResult>;` - allows to deploy a contract
 - `terminate(): Promise<void>;` - stops the underlying blockchain; should be called in `afterEach` to make sure that the underlying blockchain is properly shutdown
+
+The class also inherits from the `World` class, so it has all the functions form that class as well, like `deployContract`, `callContract` and `query`. Checkout out [here](/interact#the-world-object) for more information about that.
 
 The functions from above that are related to accounts also have wrappers in the `FWorldWallet` and `FWorldContract` classes, for easier interaction.

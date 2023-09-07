@@ -59,7 +59,7 @@ pub struct Data<M: ManagedTypeApi> {
 ```
 
 ### List
-- Encodes an array of values. Uses nest encoding for the underlying data. Adds the length of the array at the beginning when it is itself nest encoded i.e. as part of a `Tuple`.
+- Encodes an array of values for use with vector data types such as `ManagedVec`, `MultiValueManagedVec` or `MultiValueEncoded`. Uses nest encoding for the underlying data. Adds the length of the array at the beginning when it is itself nest encoded i.e. as part of a `Tuple`.
 ```ts
 e.List(e.U64(1), e.U64(2)),
 ```

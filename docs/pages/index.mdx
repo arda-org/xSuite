@@ -67,32 +67,34 @@ npm run interact:devnet deploy
 
 ## Adding xSuite to existing contracts
 
-xSuite can easily be added to existing contracts as well.
+xSuite can also be added to existing contracts as well.
 
-Init a new `npm` package in the root of your contract(s) and add the required dependencies:
+Init a new `npm` package in the root of your contracts and install the xSuite library and we also recommend setting up Typescript:
 
 ```
 npm init
-npm i --save-dev xsuite vitest typescript tsx commander
+npm i --save-dev xsuite typescript tsx
+```
+
+### Setting up tests
+
+Tests are run using `vitest`:
+```
+npm i --save-dev vitest
 ```
 
 Add the following `scripts` in the `package.json` file:
-
 ```
   "scripts": {
     "build": "xsuite build",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit",
-    "interact:devnet": "CHAIN=devnet tsx interact/index.ts",
-    "interact:testnet": "CHAIN=testnet tsx interact/index.ts",
-    "interact:mainnet": "CHAIN=mainnet tsx interact/index.ts"
+    "typecheck": "tsc --noEmit"
   },
 ```
 
-Create the `tests` and `interact` directory
-
+Create the `tests` directory:
 ```
-mkdir tests interact
+mkdir tests
 ```
 
 Create the first test file under `tests/contract.test.ts`, with the following content:
@@ -127,6 +129,22 @@ test("Test", async () => {
   });
 });
 
+```
+
+At this point you can build the contract using `npm run build` and run tests with `npm run test`.
+
+### Setting up interactions
+
+Interactions use `commander` to easily declare CLI commands:
+```
+npm i --save-dev commander
+```
+
+Add the following `scripts` under the appropriate key in the `package.json` file:
+```
+"interact:devnet": "CHAIN=devnet tsx interact/index.ts",
+"interact:testnet": "CHAIN=testnet tsx interact/index.ts",
+"interact:mainnet": "CHAIN=mainnet tsx interact/index.ts"
 ```
 
 Create the `interact/data.json` file with the following content:
@@ -197,6 +215,8 @@ program.parse(process.argv);
 Edit the above files to suit your contract needs. At this point, you should be able to run tests with `npm run test` and the interactions with `npm run interact:devnet deploy`.
 
 *Note: The interactions use a `wallet.json` file which can be generated using `npm run interact:devnet deploy`*
+
+Of course, if you only need tests or interactions for your contract you can follow the steps only for what interests you.
 
 ## Starter Contracts (audited)
 
