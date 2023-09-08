@@ -44,4 +44,5 @@ export default {
       titleTemplate: websiteName,
     };
   },
+
 };

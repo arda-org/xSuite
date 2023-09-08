@@ -67,9 +67,9 @@ e.List(e.U64(1), e.U64(2)),
 ### Option
 - Encodes arbitrary data for use with an `Option` (not to be confused with an `OptionalValue`). It appends `01` (hex) at the start of the value if the value is not `null`, or is simply `00` (hex).
 
-### Advanced example
+## Advanced data types example
 
-The above data types can be combined to pass complex data as part of a contract call or query:
+The above data types can be combined to pass complex data as part of a contract call or query, for example:
 ```ts
 await deployer.callContract({
   callee: contract,
@@ -126,20 +126,20 @@ The `e.p.Mapper` returns a type with the following helper functions for the comm
 ### Vec
 - For use with a `VecMapper`
 
-### Advanced example
+## Advanced storage mapper example
 
 Below you can find an example of how to assert complex storage values, with the equivalent storage mappers from smart contract code:
 
 ```ts
 assertAccount(pairs, {
   allPairs: [
-    ...e.p.Mapper("fee").Value(e.U(1_000)),
+    e.p.Mapper("fee").Value(e.U(1_000)),
 
-    ...e.p.Mapper("active", e.Str('TOKEN-123456')).Value(e.Bool(true)),
+    e.p.Mapper("active", e.Str('TOKEN-123456')).Value(e.Bool(true)),
 
-    ...e.p.Mapper("tokens").UnorderedSet([e.Str('TOKEN-123456')]),
+    e.p.Mapper("tokens").UnorderedSet([e.Str('TOKEN-123456')]),
 
-    ...e.p.Mapper('positions', e.Addr(address), e.Str('TOKEN-123456')).Vec([
+    e.p.Mapper('positions', e.Addr(address), e.Str('TOKEN-123456')).Vec([
         e.Tuple(
           e.Str('NAME1'),
           e.U32(BigInt(1)),
@@ -184,7 +184,7 @@ Under `e.p.Esdts` there are utilities to easily encode pairs for ESDTs and asser
 assertAccount(pairs, {
   balance: 1_000,
   allPairs: [
-    ...e.p.Esdts([
+    e.p.Esdts([
       { id: 'TOKEN-123456', amount: 2_000 },
       { id: 'NFT-123456', nonce: 1, name: 'Nft Name', uris: ['url'] },
       { id: 'SFT-123456', nonce: 1, amount: 3_000, name: 'Sft Name', uris: ['url'] },
@@ -192,25 +192,4 @@ assertAccount(pairs, {
     ]),
   ],
 });
-```
-
-## Data decoding
-
-The `d` utility provides almost the same data types as the `e` utility, but instead of encoding the data it allows decoding of the data. It is useful when wanting to decode data returned by a query.
-
-For example if we would want to decode the data returned by `positions` storage mapper from above we could use:
-```ts
-const { returnData } = await world.query({
-  callee: contract,
-  funcName: "positions",
-  funcArgs: [e.Addr(address), e.Str('TOKEN-123456')],
-});
-
-const positions = d.List(
-  d.Tuple({
-    name: d.Str(),
-    timestamp: d.U32(),
-    price: d.U(),
-  })
-).topDecode(returnData[0]);
 ```

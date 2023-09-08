@@ -1,0 +1,162 @@
+# New Contract
+
+## Setup contract using CLI
+
+You can create a new contract using xSuite, starting from one of the two available [starter contracts](/#starter-contracts-audited):
+
+`xsuite new --dir my-contract` - to start from the `blank` contract
+
+`xsuite new --contract vested-transfers --dir my-contract` - to start from the `vested-transfers` contract
+
+## Manually setup contract
+
+xSuite can also be added to existing contracts.
+
+Init a new `npm` package in the root of your contracts and install the xSuite library and we also recommend setting up Typescript:
+
+```
+npm init
+npm i --save-dev xsuite typescript tsx
+```
+
+### Setting up tests
+
+Tests are run using `vitest`:
+```
+npm i --save-dev vitest
+```
+
+Add the following `scripts` in the `package.json` file:
+```
+  "scripts": {
+    "build": "xsuite build",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+```
+
+Create the `tests` directory:
+```
+mkdir tests
+```
+
+Create the first test file under `tests/contract.test.ts`, with the following content:
+
+```ts
+import { test, beforeEach, afterEach } from "vitest";
+import { assertAccount } from "xsuite/assert";
+import { FWorld, FWorldWallet, FWorldContract } from "xsuite/world";
+
+let world: FWorld;
+let deployer: FWorldWallet;
+let contract: FWorldContract;
+
+beforeEach(async () => {
+  world = await FWorld.start();
+  deployer = await world.createWallet();
+  ({ contract } = await deployer.deployContract({
+    code: "file:output/contract.wasm",
+    codeMetadata: [],
+    gasLimit: 10_000_000,
+  }));
+});
+
+afterEach(async () => {
+  await world.terminate();
+});
+
+test("Test", async () => {
+  assertAccount(await contract.getAccountWithPairs(), {
+    balance: 0n,
+    hasPairs: [],
+  });
+});
+
+```
+
+At this point you can build the contract using `npm run build` and run tests with `npm run test`.
+
+### Setting up interactions
+
+Interactions use `commander` to easily declare CLI commands:
+```
+npm i --save-dev commander
+```
+
+Add the following `scripts` under the appropriate key in the `package.json` file:
+```
+"interact:devnet": "CHAIN=devnet tsx interact/index.ts",
+"interact:testnet": "CHAIN=testnet tsx interact/index.ts",
+"interact:mainnet": "CHAIN=mainnet tsx interact/index.ts"
+```
+
+Create the `interact/data.json` file with the following content:
+```json
+{
+  "code": "file:output/contract.wasm",
+  "address": {
+    "devnet": "",
+    "testnet": "",
+    "mainnet": ""
+  }
+}
+
+```
+
+Create the `interact/index.ts` file with the following content:
+```ts
+import { Command } from "commander";
+import { envChain } from "xsuite/interact";
+import { World } from "xsuite/world";
+import data from "./data.json";
+
+const world = World.new({
+  proxyUrl: envChain.publicProxyUrl(),
+  chainId: envChain.id(),
+  gasPrice: 1000000000,
+});
+
+const loadWallet = () => world.newWalletFromFile("wallet.json");
+
+const program = new Command();
+
+program.command("deploy").action(async () => {
+  const wallet = await loadWallet();
+  const result = await wallet.deployContract({
+    code: data.code,
+    codeMetadata: ["upgradeable"],
+    gasLimit: 20_000_000,
+  });
+  console.log("Result:", result);
+});
+
+program.command("upgrade").action(async () => {
+  const wallet = await loadWallet();
+  const result = await wallet.upgradeContract({
+    callee: envChain.select(data.address),
+    code: data.code,
+    codeMetadata: ["upgradeable"],
+    gasLimit: 20_000_000,
+  });
+  console.log("Result:", result);
+});
+
+program.command("ClaimDeveloperRewards").action(async () => {
+  const wallet = await loadWallet();
+  const result = await wallet.callContract({
+    callee: envChain.select(data.address),
+    funcName: "ClaimDeveloperRewards",
+    gasLimit: 10_000_000,
+  });
+  console.log("Result:", result);
+});
+
+program.parse(process.argv);
+
+```
+
+Edit the above files to suit your contract needs. At this point, you should be able to run tests with `npm run test` and the interactions with `npm run interact:devnet deploy`.
+
+*Note: The interactions use a `wallet.json` file which can be generated using `xsuite new-wallet --wallet wallet.json`*
+
+Of course, if you only need tests or interactions for your contract you can follow the steps only for what interests you.

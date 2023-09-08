@@ -1,6 +1,9 @@
 {
   "index": "Getting Started",
-  "tests": "Testing Contracts",
-  "interact": "Contract Interactions",
-  "encoding": "Data Encoding"
+  "contract": "New Contract",
+  "tests": "Contract Testing",
+  "interact": "Contract Interaction",
+  "encoding": "Data Encoding",
+  "decoding": "Data Decoding",
+  "cli": "CLI"
 }

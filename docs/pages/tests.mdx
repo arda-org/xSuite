@@ -43,7 +43,7 @@ let contract: FWorldContract;
 
 The `FWorld` represents a "Fake" World, i.e. the MultiversX blockchain. It abstracts away all the interaction with the underlying test MultiversX blockchain.
 
-The `FWorldWallet` and `FWorldContract` represents a wallet and a contract respectively, that are deployed on the "Fake" World (test blockchain).)
+The `FWorldWallet` and `FWorldContract` represents a wallet and a contract respectively, that are deployed on the "Fake" World (test blockchain).
 
 ### beforeEach & afterEach hooks (initializing variables)
 
@@ -259,7 +259,7 @@ const pairs = await contract.getAccountWithPairs();
 assertAccount(pairs, {
   balance: 1_000,
   allPairs: [
-    ...e.p.Esdts([
+    e.p.Esdts([
       { id: 'TOKEN-123456', amount: 2_000 },
       { id: 'NFT-123456', nonce: 1, name: 'Nft Name', uris: ['url'] },
       { id: 'SFT-123456', nonce: 1, amount: 3_000, name: 'Sft Name', uris: ['url'] },
@@ -278,8 +278,8 @@ const pairs = await contract.getAccountWithPairs();
 assertAccount(pairs, {
   balance: 0n,
   allPairs: [
-    ...e.p.Mapper("pause_module:paused").Value(e.Bool(false)),
-    ...e.p.Mapper("fee_percent").Value(e.U64(100)),
+    e.p.Mapper("pause_module:paused").Value(e.Bool(false)),
+    e.p.Mapper("fee_percent").Value(e.U64(100)),
   ],
 });
 ```
@@ -320,7 +320,7 @@ Using **xSuite** you can write even advanced tests easily.
 ```ts
 test("Validate", async () => {
   await contract.setAccount({
-    ...await contract.getAccount(),
+    ...(await contract.getAccount()),
     owner: deployer,
     codeMetadata: ['payable'],
     pairs: [
