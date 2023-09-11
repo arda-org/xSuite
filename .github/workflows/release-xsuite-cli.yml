@@ -2,8 +2,6 @@ name: Release xsuite-cli
 
 on:
   workflow_dispatch:
-    branches:
-      - main
 
 jobs:
   build-and-publish:

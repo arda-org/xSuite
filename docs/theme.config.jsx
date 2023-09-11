@@ -21,7 +21,7 @@ export default {
       </svg>
     ),
   },
-  docsRepositoryBase: "https://github.com/arda-org/xSuite/tree/main/docs",
+  docsRepositoryBase: "https://github.com/arda-org/xSuite/tree/dev/docs",
   footer: {
     text: (
       <span>
