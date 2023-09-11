@@ -2,8 +2,6 @@ name: Release scenexec
 
 on:
   workflow_dispatch:
-    branches:
-      - main
 
 env:
   TAG: v1.4.77

@@ -2,8 +2,6 @@ name: Release xsuite-fproxy
 
 on:
   workflow_dispatch:
-    branches:
-      - main
 
 jobs:
   build:
