@@ -26,6 +26,8 @@ A new command `xsuite` is now available in your terminal. With this command, ins
 xsuite install-rust
 ```
 
+*Note: If you already have Rust installed and the `cargo` command available you can skip this step (eg: if you use `mxpy` or have manually installed Rust before)*
+
 Create a new blank contract in the directory `my-contract` and open it:
 
 ```
@@ -63,10 +65,6 @@ Deploy the contract to MultiversX devnet:
 npm run interact:devnet deploy
 ```
 
-## Onboarding and Training
-
-If you want you or your team to receive a personal onboarding and training to xSuite, please contact [Lucas Willems](https://t.me/LucasWillems).
-
 ## Starter Contracts (audited)
 
 Arda team has created starter contracts to be used as a great starting point for the development of your new smart contract and to save a significant amount of time into setting up the codebase and writing the initial logic. Starter contracts are **audited by Arda**.
@@ -75,6 +73,12 @@ The starter contracts available:
 
 - [blank](https://github.com/arda-org/xSuite/tree/main/contracts/blank): An empty contract that comes fully set up with tests and blockchain interactions.
 - [vested-transfers](https://github.com/arda-org/xSuite/tree/main/contracts/vested-transfers): A contract for vested transfers, with tests and blockchain interactions.
+
+You can create a new contract from a starter contract by running `xsuite new --contract [CONTRACT] --dir [DIR]`.
+
+## Onboarding and Training
+
+If you want you or your team to receive a personal onboarding and training to xSuite, please contact [Lucas Willems](https://t.me/LucasWillems).
 
 ## Who is using xSuite?
 

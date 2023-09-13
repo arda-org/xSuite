@@ -1,0 +1,22 @@
+# CLI
+
+xSuite utility provides the following commands:
+
+- `xsuite install-rust` - installs Rust with rustup; also installs crate multiversx-sc-meta for smart contract compilation
+- `xsuite uninstall-rust` - uninstalls Rust with rustup
+- `xsuite new` - creates a new blank contract; currently it has the following options:
+    - `--dir <dir>` - specify the contract dir
+    - `--contract <blank|vested-transfers>` - specify the contract template
+    - `--no-install` - skip package installation
+    - `--no-git` - skip git initialization
+- `xsuite build [args...]` - builds a contract using [sc-meta](https://docs.multiversx.com/developers/meta/sc-meta) tool
+- `xsuite test-rust` - runs contract Rust tests
+- `xsuite test-scen` - runs contract Scenarios tests
+- `xsuite new-wallet` - creates a new wallet file; currently it has the following options:
+    - `--wallet <wallet>` - specify the wallet path
+    - `--password <password>` - specify the wallet password
+- `xsuite request-xegld` - requests XEGLD tokens for a wallet; currently it has the following options:
+    - `--wallet <wallet>` - specify the wallet path
+    - `--password <password>` - specify the wallet password
+
+For learning more about the commands you can run `xsuite --help` for a general help page or for example `xsuite new --help` for a help page for a specific command.

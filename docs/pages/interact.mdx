@@ -1,0 +1,283 @@
+# Contract Interactions
+
+**xSuite** can be used to easily deploy contracts quickly to the devnet, testnet or even mainnet. It currently supports keystore `.json` wallet files.
+
+Instead of using a `FWorld` object like in tests, in interactions we use a "real" `World` object, that is connected to a real MultiversX Gateway/Proxy URL.
+
+The package `xsuite/interact` also provides an `envChain` utility, to easily and quickly deploy contracts for different networks.
+
+## Your first interaction
+
+Make sure to have followed the [Getting Started](/) guide and already have **xSuite** set up and running for your contract(s).
+
+Interactions are CLI commands written using the [commander](https://github.com/tj/commander.js) NodeJs library. You should already have the `interact/data.json` and `interact/index.ts` files created after following the getting started guide. Below we will detail the contents of the files.
+
+### data.json
+
+The `data.json` file contains information regarding your contracts and can be used with the `envChain` utility. Take the following `data.json` file:
+```json
+{
+  "code": "file:output/contract.wasm",
+  "address": {
+    "devnet": "",
+    "testnet": "",
+    "mainnet": ""
+  }
+}
+
+```
+
+In Typescript code we can import the file and use the data under the fields directly. The `code` field contains the path to the contract wasm code, but the `address` is an object with fields for `devnet`, `testnet` and `mainnet`.
+These keys will be used by the `envChain` utility depending on the `CHAIN` env variable (which is set in the `package.json` file in the appropriate interact scripts for each environment) to select the address of the contract on that chain.
+
+### Required imports
+
+You should have the following imports at the top of the `interact/index.ts` file:
+```ts
+import { Command } from "commander";
+import { envChain } from "xsuite/interact";
+import { World } from "xsuite/world";
+// @ts-ignore
+import data from "./data.json";
+import { e, d } from "xsuite/data"
+```
+
+We use the `Command` class from `commander` to allow us to write nice NodeJs CLI commands.
+
+`envChain` is the utility we talked previous and `World` is an wrapper over a real MultiversX blockchain (similar to `FWorld` from tests, which is a wrapper over a "fake" MultiversX blockchain).
+
+We then import the `data.json` file and will use the `e` and `d` utilities from `xsuite/data` to encode/decode data respectively to a format that the MultiversX blockchain understands. More info on the [Data Encoding](/encoding) page
+
+### World, wallet & program
+
+Next, you should have the following variables:
+```ts
+const world = World.new({
+  proxyUrl: envChain.publicProxyUrl(),
+  chainId: envChain.id(),
+  gasPrice: 1000000000,
+});
+
+const loadWallet = () => world.newWalletFromFile("wallet.json");
+
+const program = new Command();
+```
+
+Here we define the `world` object using `World.new()` which takes the `proxyUrl`, `chainId` and `gasPrice` as arguments. Using the `envChain` utility we can easily get the appropriate `publicProxyUrl` (i.e. https://devnet-gateway.multiversx.com/ for Devnet) and chain `id` depending on the current `CHAIN` environment variable value that is set in the `scripts` section of our `package.json` file.
+
+We then declare the function `loadWallet` to load a wallet from a `.json` file using the `world.newWalletFromFile()` function. The reason we don't call this directly is that we will get a password prompt after running this function, and we only want to trigger that after `commander` handles our custom command.
+
+Finally, we initialize the `program` variable with an instance of the `Command` class.
+
+### Basic commands
+
+Finally, we can write our first basic commands:
+```ts
+program.command("deploy").action(async () => {
+  const wallet = await loadWallet();
+  const result = await wallet.deployContract({
+    code: data.code,
+    codeMetadata: ["upgradeable"],
+    gasLimit: 20_000_000,
+    codeArgs: [e.Str('ourString')],
+  });
+  console.log("Result:", result);
+});
+
+program.command("upgrade").action(async () => {
+  const wallet = await loadWallet();
+  const result = await wallet.upgradeContract({
+    callee: envChain.select(data.address),
+    code: data.code,
+    codeMetadata: ["upgradeable"],
+    gasLimit: 20_000_000,
+    codeArgs: [e.Str('ourString')],
+  });
+  console.log("Result:", result);
+});
+
+program.parse(process.argv);
+
+```
+
+Here we declare two CLI commands, `deploy` and `upgrade` to easily manage our contract.
+
+1. In the `deploy` command, we first call `loadWallet` to get a new instance of `WorldWallet`, which represents a wallet on the MultiversX blockchain. When calling this function, we will be prompted for the keystore file's password.
+
+   Then we will deploy the contract code that comes from the `data.json` file's `code` key calling `wallet.deployContract()` function. Here we also pass the `codeMetadata` and make the contract `upgradable`, specify the `gasLimit` and any `codeArgs` which will be encoded using the `e` utility.
+
+2. The `upgrade` is very similar to the `deploy` command. Here we use the `envChain.select()` function to get the correct address of our contract from the `data.json` file depending on the environment (devnet, testnet, mainnet) the command runs on. (which comes from the `CHAIN` environmental variable)
+
+The command can then be run for devnet like follows:
+```
+npm run interact:devnet deploy
+npm run interact:devnet upgrade
+```
+
+Interactions are very similar to tests since they use the same underlying wrappers. For more information on how to deploy contracts, call contracts and query contracts check out the [Contract Operations](/tests#contract-operations) section on the Testing Contracts page.
+
+### Full basic interact file code
+
+```ts
+import { Command } from "commander";
+import { envChain } from "xsuite/interact";
+import { World } from "xsuite/world";
+import data from "./data.json";
+
+const world = World.new({
+  proxyUrl: envChain.publicProxyUrl(),
+  chainId: envChain.id(),
+  gasPrice: 1000000000,
+});
+
+const loadWallet = () => world.newWalletFromFile("wallet.json");
+
+const program = new Command();
+
+program.command("deploy").action(async () => {
+  const wallet = await loadWallet();
+  const result = await wallet.deployContract({
+    code: data.code,
+    codeMetadata: ["upgradeable"],
+    gasLimit: 20_000_000,
+  });
+  console.log("Result:", result);
+});
+
+program.command("upgrade").action(async () => {
+  const wallet = await loadWallet();
+  const result = await wallet.upgradeContract({
+    callee: envChain.select(data.address),
+    code: data.code,
+    codeMetadata: ["upgradeable"],
+    gasLimit: 20_000_000,
+  });
+  console.log("Result:", result);
+});
+
+program.parse(process.argv);
+
+```
+
+## Advanced interactions
+
+If you want to create more advanced commands, with advanced options or arguments, it is highly recommended to check out the [commander](https://github.com/tj/commander.js) documentation. However, below we will detail some examples on how to write more advanced interactions.
+
+Suppose you want an interaction that takes some arguments, to easily create new resources for tests. You could do something like this:
+
+```ts
+program.command("createOffer")
+  .argument('token', 'The id of the token')
+  .argument('amount', 'The amount to send')
+  .action(async (token: string, amount: number) => {
+    const wallet = await loadWallet();
+
+    const result = await wallet.callContract({
+      callee: envChain.select(data.address),
+      gasLimit: 10_000_000,
+      funcName: 'createOffer',
+      funcArgs: [
+        e.Str(token),
+        e.U64(BigInt(amount)),
+      ],
+    });
+    console.log(result);
+  });
+```
+
+You can call the above command like this for devnet: `npm run interact:devnet createOffer TOKEN-123456 1000`. It will execute the transaction with `token` being `TOKEN-123456` and `amount` being `1000`.
+You can execute this command easily with different arguments to quickly make multiple different transactions to the contract for testing purposes, perhaps to set up different cases to check how a DApp UI will look like depending on the contract data.
+
+Of course uou are also not limited to calling only one `callContract` function or `query` function per command, or even deploying only one contract using `deployContract`. You can call the functions multiple times to setup more advanced contracts, like for example if you need to deploy 2 contract which depend on each other:
+```ts
+program.command("deploy")
+  .argument('[decimals]', 'The number of decimals with a default of 18', 18)
+  .action(async (decimals: number) => {
+    const wallet = await loadWallet();
+
+    const result = await wallet.deployContract({
+      code: data.code,
+      codeMetadata: ["upgradeable"],
+      gasLimit: 100_000_000,
+      codeArgs: [
+        e.U8(BigInt(decimals))
+      ]
+    });
+
+    // Setup some data on the first contract
+    const args: any[] = envChain.select(data.pairs);
+    for (let [ tokenIn, tokenOut ] of args) {
+      await wallet.callContract({
+        callee: result.address,
+        gasLimit: 20_000_000,
+        funcName: 'addPair',
+        funcArgs: [
+          e.Str(tokenIn),
+          e.Str(tokenOut),
+        ],
+      });
+    }
+
+    // Deploy another contract that depends on the first one
+    const resultOther = await wallet.deployContract({
+      code: data.otherCode,
+      codeMetadata: ["upgradeable"],
+      gasLimit: 100_000_000,
+      funcArgs: [
+        e.Addr(result.address),
+      ]
+    });
+
+    console.log('Contract Address:', result.address);
+    console.log('Other Contract Address', resultOther.address);
+  });
+```
+
+You can call the above command like this for devnet: `npm run interact:devnet deploy`. The `decimals` argument is optional, and will have a default of `18` if it is not specified.
+
+The `data.json` file for the above example could look something like this:
+```json
+{
+  "code": "file:contract/output/contract.wasm",
+  "otherCode": "file:otherContract/output/other-contract.wasm",
+  "address": {
+    "devnet": "",
+    "testnet": "",
+    "mainnet": ""
+  },
+  "otherAddress": {
+    "devnet": "",
+    "testnet": "",
+    "mainnet": ""
+  },
+  "pairs": {
+    "devnet": [
+      ["WEGLD-d7c6bb", "USDC-8d4068"],
+      ["WEGLD-d7c6bb", "ASH-4ce444"]
+    ],
+    "testnet": [],
+    "mainnet": [
+      ["WEGLD-bd4d79", "USDC-c76f1f"],
+      ["WEGLD-bd4d79", "ASH-a642d1"]
+    ]
+  }
+}
+
+```
+
+You can populate the `address` and `otherAddress` fields with the correct addresses of the contracts after the `deploy` command was run for an environment. Then you can use the `envChain.select()` utility in an `upgrade` command for example to upgrade both contracts.
+
+## The World object
+
+The `World` class represents an abstraction over the MultiversX blockchain, specifically the Gateway API. It provides helper functions to managed accounts, deploy contracts and do transactions. Below are a list of the most relevant functions that the class provides:
+
+- `getAccountBalance(address: Address): Promise<bigint>;` - gets only the alance of an account
+- `getAccount(address: Address): Promise<{ nonce: number; balance: bigint; code: string;}>;` - get the account's data
+- `getAccountWithPairs(address: Address): Promise<{pairs: import("../data").RawPairs; nonce: number; balance: bigint; code: string; }>;` - get the account's data with all it's pairs
+- `deployContract(sender: Signer, txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">): TxResultPromise<DeployContractTxResult>;` - allows to deploy a contract
+- `upgradeContract(sender: Signer, txParams: Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">): TxResultPromise<CallContractTxResult>;` - allows to upgrade a contract
+- `transfer(sender: Signer, txParams: Omit<TransferTxParams, "sender" | "nonce" | "chainId">): TxResultPromise<TxResult>;` - initiate a transfer from a sender to a receiver
+- `callContract(sender: Signer, txParams: Omit<CallContractTxParams, "sender" | "nonce" | "chainId">): TxResultPromise<CallContractTxResult>;` - call a contract endpoint
+- `query(query: Query): Promise<{ returnCode: string; returnMessage: string; returnData: string[]; }>;` - query a contract view
+
+The functions from above that are related to accounts also have wrappers in the `WorldWallet` and `WorldContract` classes, for easier interaction.
