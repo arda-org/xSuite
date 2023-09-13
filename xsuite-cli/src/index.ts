@@ -9,10 +9,8 @@ import {
   buildAction,
   newAction,
   uninstallRustAction,
-  rustCrate,
-  rustTarget,
-  rustToolchain,
 } from "./actions";
+import { scmetaCrate, rustTarget, rustToolchain } from "./rustSettings";
 
 if (process.env["PWD"]) {
   process.chdir(process.env["PWD"]);
@@ -25,7 +23,7 @@ program.version(version);
 program
   .command("install-rust")
   .description(
-    `Install Rust with rustup: toolchain ${rustToolchain}, target ${rustTarget}, crate ${rustCrate.name}.`,
+    `Install Rust with rustup: toolchain ${rustToolchain}, target ${rustTarget}, crate ${scmetaCrate.name}.`,
   )
   .action(async () => {
     installRustAction();

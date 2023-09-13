@@ -1,14 +1,9 @@
-import {
-  logTitle,
-  logAndRunCommand,
-  rustToolchain,
-  rustTarget,
-  rustCrate,
-} from "./helpers";
+import { scmetaCrate, rustTarget, rustToolchain } from "../rustSettings";
+import { logTitle, logAndRunCommand } from "./helpers";
 
 export const installRustAction = () => {
   logTitle(
-    `Installing Rust: toolchain ${rustToolchain}, target ${rustTarget}, crate ${rustCrate.name}...`,
+    `Installing Rust: toolchain ${rustToolchain}, target ${rustTarget}, crate ${scmetaCrate.name}...`,
   );
   logAndRunCommand("sh", ["-c", `'${installCommand}'`]);
 };
@@ -17,5 +12,5 @@ const installCommand = [
   `curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain ${rustToolchain} -y`,
   '. "$HOME/.cargo/env"',
   `rustup target add ${rustTarget}`,
-  `cargo install ${rustCrate.name} --version ${rustCrate.version}`,
+  `cargo install ${scmetaCrate.name} --version ${scmetaCrate.version}`,
 ].join(" \\\n    && ");

@@ -21,27 +21,21 @@ jobs:
           node-version: 18
           pnpm-version: 8
 
-      - name: Cache Rust toolchain
+      - name: Cache Rust setup
         uses: actions/cache@v3
         with:
           path: |
             ~/.rustup/toolchains
-          key: ${{ runner.os }}-rustup
-          restore-keys: ${{ runner.os }}-rustup
-
-      - name: Cache Rust dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cargo
-          key: ${{ runner.os }}-cargo-${{ hashFiles('contracts/**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
+            ~/.cargo
+          key: ${{ runner.os }}-rust-${{ hashFiles('xsuite-cli/src/rustSettings.ts') }}-${{ hashFiles('contracts/**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-rust-
 
       - name: Cache Rust target folder
         uses: actions/cache@v3
         with:
           path: target
-          key: ${{ runner.os }}-target
-          restore-keys: ${{ runner.os }}-target
+          key: ${{ runner.os }}-target-${{ hashFiles('contracts/**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-target-
 
       - name: Use Golang
         uses: actions/setup-go@v4
