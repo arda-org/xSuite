@@ -13,11 +13,9 @@ import {
   requestXegldAction,
   installRustAction,
   testRustAction,
-  rustToolchain,
-  rustTarget,
-  rustCrate,
   testScenAction,
 } from "./actions";
+import { rustToolchain, rustTarget, scmetaCrate } from "./rustSettings";
 
 const tmpDir = "/tmp/xsuite-cli-tests";
 
@@ -180,7 +178,7 @@ test("install-rust", async () => {
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue(
-      `Installing Rust: toolchain ${rustToolchain}, target ${rustTarget}, crate ${rustCrate.name}...`,
+      `Installing Rust: toolchain ${rustToolchain}, target ${rustTarget}, crate ${scmetaCrate.name}...`,
     ),
     chalk.cyan(
       `$ sh -c 'curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain ${rustToolchain} -y \\`,
@@ -188,7 +186,7 @@ test("install-rust", async () => {
     chalk.cyan('    && . "$HOME/.cargo/env" \\'),
     chalk.cyan(`    && rustup target add ${rustTarget} \\`),
     chalk.cyan(
-      `    && cargo install ${rustCrate.name} --version ${rustCrate.version}'`,
+      `    && cargo install ${scmetaCrate.name} --version ${scmetaCrate.version}'`,
     ),
     "",
   ]);
