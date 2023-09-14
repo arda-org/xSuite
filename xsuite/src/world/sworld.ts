@@ -1,43 +1,43 @@
-import { Account, Block, FProxy, DeployContractTxParams } from "../proxy";
-import { startSimulnet } from "./fproxyServer";
+import { Account, Block, SProxy, DeployContractTxParams } from "../proxy";
 import { DummySigner, Signer } from "./signer";
+import { startSimulnet } from "./simulnet";
 import { isContractAddress, numberToBytesAddress } from "./utils";
 import { World, WorldContract, WorldWallet, expandCode } from "./world";
 
-export class FWorld extends World {
-  declare proxy: FProxy;
+export class SWorld extends World {
+  declare proxy: SProxy;
   #walletCounter: number;
   #contractCounter: number;
 
-  constructor({ proxy, gasPrice }: { proxy: FProxy; gasPrice?: number }) {
+  constructor({ proxy, gasPrice }: { proxy: SProxy; gasPrice?: number }) {
     super({ proxy, chainId: "F", gasPrice });
     this.#walletCounter = 0;
     this.#contractCounter = 0;
   }
 
   static new({ proxyUrl, gasPrice }: { proxyUrl: string; gasPrice?: number }) {
-    return new FWorld({ proxy: new FProxy(proxyUrl), gasPrice });
+    return new SWorld({ proxy: new SProxy(proxyUrl), gasPrice });
   }
 
   static async start({
     gasPrice,
-  }: { gasPrice?: number } = {}): Promise<FWorld> {
+  }: { gasPrice?: number } = {}): Promise<SWorld> {
     const url = await startSimulnet();
-    return FWorld.new({ proxyUrl: url, gasPrice });
+    return SWorld.new({ proxyUrl: url, gasPrice });
   }
 
-  newWallet(signer: Signer): FWorldWallet {
-    return new FWorldWallet(this, signer);
+  newWallet(signer: Signer): SWorldWallet {
+    return new SWorldWallet(this, signer);
   }
 
-  newContract(address: string | Uint8Array): FWorldContract {
-    return new FWorldContract(this, address);
+  newContract(address: string | Uint8Array): SWorldContract {
+    return new SWorldContract(this, address);
   }
 
   async createWallet(account: Omit<Account, "address"> = {}) {
     this.#walletCounter += 1;
     const address = numberToBytesAddress(this.#walletCounter, false);
-    const wallet = new FWorldWallet(this, new DummySigner(address));
+    const wallet = new SWorldWallet(this, new DummySigner(address));
     await wallet.setAccount(account);
     return wallet;
   }
@@ -45,7 +45,7 @@ export class FWorld extends World {
   async createContract(account: Omit<Account, "address"> = {}) {
     this.#contractCounter += 1;
     const bytesAddress = numberToBytesAddress(this.#contractCounter, true);
-    const contract = new FWorldContract(this, bytesAddress);
+    const contract = new SWorldContract(this, bytesAddress);
     await contract.setAccount(account);
     return contract;
   }
@@ -78,10 +78,10 @@ export class FWorld extends World {
   }
 }
 
-export class FWorldWallet extends WorldWallet {
-  world: FWorld;
+export class SWorldWallet extends WorldWallet {
+  world: SWorld;
 
-  constructor(world: FWorld, signer: Signer) {
+  constructor(world: SWorld, signer: Signer) {
     super(world, signer);
     this.world = world;
   }
@@ -95,15 +95,15 @@ export class FWorldWallet extends WorldWallet {
   ) {
     return this.world.deployContract(this, txParams).then((data) => ({
       ...data,
-      contract: new FWorldContract(this.world, data.address),
+      contract: new SWorldContract(this.world, data.address),
     }));
   }
 }
 
-export class FWorldContract extends WorldContract {
-  world: FWorld;
+export class SWorldContract extends WorldContract {
+  world: SWorld;
 
-  constructor(world: FWorld, address: string | Uint8Array) {
+  constructor(world: SWorld, address: string | Uint8Array) {
     super(world, address);
     this.world = world;
   }

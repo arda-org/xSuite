@@ -1,7 +1,7 @@
 import { expect, test } from "@jest/globals";
-import { FProxy } from "../proxy";
-import { startSimulnet } from "./fproxyServer";
+import { SProxy } from "../proxy";
 import { DummySigner } from "./signer";
+import { startSimulnet } from "./simulnet";
 import { World } from "./world";
 
 test("World.new, World.newWallet, World.newContract", async () => {
@@ -11,5 +11,5 @@ test("World.new, World.newWallet, World.newContract", async () => {
   const contract = world.newContract(new Uint8Array(32));
   expect(wallet.toTopBytes()).toEqual(new Uint8Array(32));
   expect(contract.toTopBytes()).toEqual(new Uint8Array(32));
-  await FProxy.terminate(proxyUrl);
+  await SProxy.terminate(proxyUrl);
 });
