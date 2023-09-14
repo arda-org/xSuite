@@ -2,17 +2,17 @@ import { Account, Block, SProxy, DeployContractTxParams } from "../proxy";
 import { DummySigner, Signer } from "./signer";
 import { startSimulnet } from "./simulnet";
 import { isContractAddress, numberToBytesAddress } from "./utils";
-import { World, WorldContract, WorldWallet, expandCode } from "./world";
+import { World, Contract, Wallet, expandCode } from "./world";
+
+let walletCounter = 0;
+let contractCounter = 0;
 
 export class SWorld extends World {
-  declare proxy: SProxy;
-  #walletCounter: number;
-  #contractCounter: number;
+  proxy: SProxy;
 
   constructor({ proxy, gasPrice }: { proxy: SProxy; gasPrice?: number }) {
     super({ proxy, chainId: "S", gasPrice });
-    this.#walletCounter = 0;
-    this.#contractCounter = 0;
+    this.proxy = proxy;
   }
 
   static new({ proxyUrl, gasPrice }: { proxyUrl: string; gasPrice?: number }) {
@@ -26,47 +26,49 @@ export class SWorld extends World {
     return SWorld.new({ proxyUrl: url, gasPrice });
   }
 
-  newWallet(signer: Signer): SWorldWallet {
-    return new SWorldWallet(this, signer);
+  newWallet(signer: Signer): SWallet {
+    return new SWallet({
+      signer,
+      proxy: this.proxy,
+      chainId: this.chainId,
+      gasPrice: this.gasPrice,
+    });
   }
 
-  newContract(address: string | Uint8Array): SWorldContract {
-    return new SWorldContract(this, address);
+  newContract(address: string | Uint8Array): SContract {
+    return new SContract({ address, proxy: this.proxy });
   }
 
   async createWallet(account: Omit<Account, "address"> = {}) {
-    this.#walletCounter += 1;
-    const address = numberToBytesAddress(this.#walletCounter, false);
-    const wallet = new SWorldWallet(this, new DummySigner(address));
+    walletCounter += 1;
+    const address = numberToBytesAddress(walletCounter, false);
+    const wallet = new SWallet({
+      signer: new DummySigner(address),
+      proxy: this.proxy,
+      chainId: this.chainId,
+      gasPrice: this.gasPrice,
+    });
     await wallet.setAccount(account);
     return wallet;
   }
 
   async createContract(account: Omit<Account, "address"> = {}) {
-    this.#contractCounter += 1;
-    const bytesAddress = numberToBytesAddress(this.#contractCounter, true);
-    const contract = new SWorldContract(this, bytesAddress);
+    contractCounter += 1;
+    const address = numberToBytesAddress(contractCounter, true);
+    const contract = new SContract({ address, proxy: this.proxy });
     await contract.setAccount(account);
     return contract;
   }
 
   getSystemAccountPairs() {
-    return this.getAccountPairs(systemAccountAddress);
+    return this.proxy.getAccountPairs(systemAccountAddress);
   }
 
   setSystemAccount(account: Omit<Account, "address">) {
-    return this.setAccount({ address: systemAccountAddress, ...account });
-  }
-
-  setAccount(account: Account) {
-    if (account.code === undefined) {
-      if (isContractAddress(account.address)) {
-        account.code = "00";
-      }
-    } else {
-      account.code = expandCode(account.code);
-    }
-    return this.proxy.setAccount(account);
+    return setAccount(this.proxy, {
+      address: systemAccountAddress,
+      ...account,
+    });
   }
 
   setCurrentBlockInfo(block: Block) {
@@ -78,40 +80,70 @@ export class SWorld extends World {
   }
 }
 
-export class SWorldWallet extends WorldWallet {
-  world: SWorld;
+export class SWallet extends Wallet {
+  proxy: SProxy;
 
-  constructor(world: SWorld, signer: Signer) {
-    super(world, signer);
-    this.world = world;
+  constructor({
+    signer,
+    proxy,
+    chainId,
+    gasPrice,
+  }: {
+    signer: Signer;
+    proxy: SProxy;
+    chainId: string;
+    gasPrice?: number;
+  }) {
+    super({ signer, proxy, chainId, gasPrice });
+    this.proxy = proxy;
   }
 
   setAccount(account: Omit<Account, "address">) {
-    return this.world.setAccount({ address: this, ...account });
+    return setAccount(this.proxy, { address: this, ...account });
   }
 
   deployContract(
     txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">,
   ) {
-    return this.world.deployContract(this, txParams).then((data) => ({
+    return super.deployContract(txParams).then((data) => ({
       ...data,
-      contract: new SWorldContract(this.world, data.address),
+      contract: new SContract({
+        address: data.address,
+        proxy: this.proxy,
+      }),
     }));
   }
 }
 
-export class SWorldContract extends WorldContract {
-  world: SWorld;
+export class SContract extends Contract {
+  proxy: SProxy;
 
-  constructor(world: SWorld, address: string | Uint8Array) {
-    super(world, address);
-    this.world = world;
+  constructor({
+    address,
+    proxy,
+  }: {
+    address: string | Uint8Array;
+    proxy: SProxy;
+  }) {
+    super({ address, proxy });
+    this.proxy = proxy;
   }
 
   setAccount(account: Omit<Account, "address">) {
-    return this.world.setAccount({ address: this, ...account });
+    return setAccount(this.proxy, { address: this, ...account });
   }
 }
+
+const setAccount = (proxy: SProxy, account: Account) => {
+  if (account.code === undefined) {
+    if (isContractAddress(account.address)) {
+      account.code = "00";
+    }
+  } else {
+    account.code = expandCode(account.code);
+  }
+  return proxy.setAccount(account);
+};
 
 const systemAccountAddress =
   "erd1lllllllllllllllllllllllllllllllllllllllllllllllllllsckry7t";
