@@ -5,7 +5,7 @@ A contract for vested transfers, i.e. a transfer spread over a period of time, w
 To create a copy of the 'vested-contracts' contract on your computer:
 
 ```
-xsuite new --contract vested-contracts --dir my-contract
+xsuite new --starter vested-contracts --dir my-contract
 cd my-contract
 ```
 
