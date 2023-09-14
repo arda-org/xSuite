@@ -39,7 +39,7 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 	if err != nil {
 		return nil, err
 	}
-	if rawTx.ChainID != "F" {
+	if rawTx.ChainID != "S" {
 		return nil, errors.New("invalid chain ID")
 	}
 	if rawTx.Version != 1 {

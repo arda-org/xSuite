@@ -10,7 +10,7 @@ export class SWorld extends World {
   #contractCounter: number;
 
   constructor({ proxy, gasPrice }: { proxy: SProxy; gasPrice?: number }) {
-    super({ proxy, chainId: "F", gasPrice });
+    super({ proxy, chainId: "S", gasPrice });
     this.#walletCounter = 0;
     this.#contractCounter = 0;
   }
