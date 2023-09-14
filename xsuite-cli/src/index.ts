@@ -40,7 +40,7 @@ program
   .command("new")
   .description("Create a new blank contract.")
   .requiredOption("--dir <dir>", "Contract dir")
-  .option("--contract <contract>", "Contract template")
+  .option("--starter <contract>", "Contract to start from")
   .option("--no-install", "Skip package installation")
   .option("--no-git", "Skip git initialization")
   .action(async (options) => {

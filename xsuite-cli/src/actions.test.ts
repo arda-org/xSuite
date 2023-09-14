@@ -265,7 +265,7 @@ test("new --dir contract && build && test-rust && test-scen", async () => {
   ]);
 }, 600_000);
 
-test(`new --contract vested-transfers --dir contract --no-git --no-install`, async () => {
+test(`new --starter vested-transfers --dir contract --no-git --no-install`, async () => {
   stdoutInt.start();
   await newAction({ contract: "vested-transfers", dir: "contract" });
   stdoutInt.stop();
