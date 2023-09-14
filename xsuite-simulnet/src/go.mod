@@ -1,4 +1,4 @@
-module fproxy
+module sproxy
 
 go 1.17
 

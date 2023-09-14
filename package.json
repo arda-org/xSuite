@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "lint": "eslint .",
-    "build-xsuite-fproxy": "cd xsuite-fproxy && pnpm build",
+    "build-xsuite-simulnet": "cd xsuite-simulnet && pnpm build",
     "build-xsuite": "cd xsuite && pnpm build",
     "test-xsuite": "cd xsuite && pnpm test",
     "build-xsuite-cli": "cd xsuite-cli && pnpm build",
@@ -11,7 +11,7 @@
     "build-contracts": "sc-meta all build --path contracts --locked --target-dir-all $(pwd)/target",
     "typecheck-contracts": "pnpm --filter \"./contracts/**\" typecheck",
     "test-contracts": "pnpm --filter \"./contracts/**\" test",
-    "ci": "pnpm lint && pnpm build-xsuite-fproxy && pnpm build-xsuite && pnpm test-xsuite && pnpm build-xsuite-cli && pnpm test-xsuite-cli && pnpm verify-xsuite-wasms && pnpm build-contracts && pnpm typecheck-contracts && pnpm test-contracts",
+    "ci-main": "pnpm lint && pnpm build-xsuite-simulnet && pnpm build-xsuite && pnpm test-xsuite && pnpm build-xsuite-cli && pnpm test-xsuite-cli && pnpm verify-xsuite-wasms && pnpm build-contracts && pnpm typecheck-contracts && pnpm test-contracts",
     "dev-docs": "cd docs && pnpm dev",
     "build-docs": "cd docs && pnpm build"
   },

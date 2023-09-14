@@ -55,7 +55,7 @@ importers:
         version: link:../../xsuite
       xsuite-cli:
         specifier: 0.0.14
-        version: link:../../xsuite-cli
+        version: 0.0.14
 
   contracts/vested-transfers:
     devDependencies:
@@ -79,7 +79,7 @@ importers:
         version: link:../../xsuite
       xsuite-cli:
         specifier: 0.0.14
-        version: link:../../xsuite-cli
+        version: 0.0.14
 
   docs:
     dependencies:
@@ -104,15 +104,15 @@ importers:
       '@multiversx/sdk-wallet':
         specifier: 4.2.0
         version: 4.2.0
+      '@xsuite/simulnet':
+        specifier: workspace:^
+        version: link:../xsuite-simulnet
       bech32:
         specifier: 2.0.0
         version: 2.0.0
       protobufjs:
         specifier: 7.2.4
         version: 7.2.4
-      xsuite-fproxy:
-        specifier: workspace:^
-        version: link:../xsuite-fproxy
     devDependencies:
       '@jest/globals':
         specifier: 29.5.0
@@ -196,7 +196,7 @@ importers:
         specifier: workspace:^
         version: link:../xsuite
 
-  xsuite-fproxy:
+  xsuite-simulnet:
     devDependencies:
       run-script-os:
         specifier: ^1.1.6
@@ -8493,6 +8493,11 @@ packages:
     dependencies:
       imurmurhash: 0.1.4
       signal-exit: 3.0.7
+    dev: true
+
+  /xsuite-cli@0.0.14:
+    resolution: {integrity: sha512-E5FQFAQ4yyN0LZyRsUKg5bAZeVGxCN9EsMJdeEoxaoH7w+OJ++RZMA47jsIRD4DmRChdGzdKLQiu+iL0UjIifQ==}
+    hasBin: true
     dev: true
 
   /y18n@5.0.8:

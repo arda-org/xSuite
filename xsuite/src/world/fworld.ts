@@ -1,5 +1,5 @@
 import { Account, Block, FProxy, DeployContractTxParams } from "../proxy";
-import { startFProxyServer } from "./fproxyServer";
+import { startSimulnet } from "./fproxyServer";
 import { DummySigner, Signer } from "./signer";
 import { isContractAddress, numberToBytesAddress } from "./utils";
 import { World, WorldContract, WorldWallet, expandCode } from "./world";
@@ -22,7 +22,7 @@ export class FWorld extends World {
   static async start({
     gasPrice,
   }: { gasPrice?: number } = {}): Promise<FWorld> {
-    const url = await startFProxyServer();
+    const url = await startSimulnet();
     return FWorld.new({ proxyUrl: url, gasPrice });
   }
 
