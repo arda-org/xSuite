@@ -1,7 +1,7 @@
 import { Address, Pairs, pairsToRawPairs, RawPairs } from "../data";
 import { CodeMetadata, codeMetadataToHexString, Proxy } from "./proxy";
 
-export class FProxy extends Proxy {
+export class SProxy extends Proxy {
   static setAccount(baseUrl: string, account: Account) {
     return Proxy.fetch(
       `${baseUrl}/admin/set-account`,
@@ -10,7 +10,7 @@ export class FProxy extends Proxy {
   }
 
   setAccount(account: Account) {
-    return FProxy.setAccount(this.baseUrl, account);
+    return SProxy.setAccount(this.baseUrl, account);
   }
 
   static setCurrentBlock(baseUrl: string, block: Block) {
@@ -18,7 +18,7 @@ export class FProxy extends Proxy {
   }
 
   setCurrentBlock(block: Block) {
-    return FProxy.setCurrentBlock(this.baseUrl, block);
+    return SProxy.setCurrentBlock(this.baseUrl, block);
   }
 
   static terminate(baseUrl: string) {
@@ -32,7 +32,7 @@ export class FProxy extends Proxy {
   }
 
   terminate() {
-    return FProxy.terminate(this.baseUrl);
+    return SProxy.terminate(this.baseUrl);
   }
 }
 

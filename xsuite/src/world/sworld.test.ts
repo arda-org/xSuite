@@ -1,19 +1,19 @@
 import { afterEach, beforeEach, expect, test } from "@jest/globals";
 import { assertAccount, assertHexList } from "../assert";
 import { d, e, pairsToRawPairs } from "../data";
-import { FWorld, FWorldContract, FWorldWallet } from "./fworld";
+import { SWorld, SWorldContract, SWorldWallet } from "./sworld";
 import { isContractAddress, readFileHex } from "./utils";
 
-let world: FWorld;
-let wallet: FWorldWallet;
-let otherWallet: FWorldWallet;
-let contract: FWorldContract;
+let world: SWorld;
+let wallet: SWorldWallet;
+let otherWallet: SWorldWallet;
+let contract: SWorldContract;
 const fftId = "FFT-abcdef";
 const worldPath = "contracts/world/output/world.wasm";
 const worldCode = readFileHex(worldPath);
 
 beforeEach(async () => {
-  world = await FWorld.start();
+  world = await SWorld.start();
   wallet = await world.createWallet({
     balance: 10n ** 18n,
     pairs: [e.p.Esdts([{ id: fftId, amount: 10n ** 18n }])],
@@ -34,32 +34,32 @@ afterEach(async () => {
   await world.terminate();
 });
 
-test("FWorld.createWallet", async () => {
+test("SWorld.createWallet", async () => {
   const wallet = await world.createWallet();
   assertAccount(await wallet.getAccountWithPairs(), {});
 });
 
-test("FWorld.createWallet - is wallet address", async () => {
+test("SWorld.createWallet - is wallet address", async () => {
   const wallet = await world.createWallet();
   expect(isContractAddress(wallet)).toEqual(false);
 });
 
-test("FWorld.createContract", async () => {
+test("SWorld.createContract", async () => {
   const contract = await world.createContract();
   assertAccount(await contract.getAccountWithPairs(), { code: "00" });
 });
 
-test("FWorld.createContract - is contract address", async () => {
+test("SWorld.createContract - is contract address", async () => {
   const contract = await world.createContract();
   expect(isContractAddress(contract)).toEqual(true);
 });
 
-test("FWorld.createContract - file:", async () => {
+test("SWorld.createContract - file:", async () => {
   const contract = await world.createContract({ code: `file:${worldPath}` });
   assertAccount(await contract.getAccountWithPairs(), { code: worldCode });
 });
 
-test("FWorld.query", async () => {
+test("SWorld.query", async () => {
   const { returnData } = await world.query({
     callee: contract,
     funcName: "get_n",
@@ -67,28 +67,28 @@ test("FWorld.query", async () => {
   expect(d.U64().topDecode(returnData[0])).toEqual(1n);
 });
 
-test("FWorldWallet.getAccountNonce", async () => {
+test("SWorldWallet.getAccountNonce", async () => {
   expect(await wallet.getAccountNonce()).toEqual(0);
 });
 
-test("FWorldWallet.getAccountBalance", async () => {
+test("SWorldWallet.getAccountBalance", async () => {
   expect(await wallet.getAccountBalance()).toEqual(10n ** 18n);
 });
 
-test("FWorldWallet.getAccountPairs", async () => {
+test("SWorldWallet.getAccountPairs", async () => {
   expect(await wallet.getAccountPairs()).toEqual(
     pairsToRawPairs(e.p.Esdts([{ id: fftId, amount: 10n ** 18n }])),
   );
 });
 
-test("FWorldWallet.getAccount", async () => {
+test("SWorldWallet.getAccount", async () => {
   assertAccount(await wallet.getAccount(), {
     nonce: 0,
     balance: 10n ** 18n,
   });
 });
 
-test("FWorldWallet.getAccountWithPairs", async () => {
+test("SWorldWallet.getAccountWithPairs", async () => {
   assertAccount(await wallet.getAccountWithPairs(), {
     nonce: 0,
     balance: 10n ** 18n,
@@ -96,15 +96,15 @@ test("FWorldWallet.getAccountWithPairs", async () => {
   });
 });
 
-test("FWorldContract.getAccountNonce", async () => {
+test("SWorldContract.getAccountNonce", async () => {
   expect(await contract.getAccountNonce()).toEqual(0);
 });
 
-test("FWorldContract.getAccountBalance", async () => {
+test("SWorldContract.getAccountBalance", async () => {
   expect(await contract.getAccountBalance()).toEqual(10n ** 18n);
 });
 
-test("FWorldContract.getAccountPairs", async () => {
+test("SWorldContract.getAccountPairs", async () => {
   expect(await contract.getAccountPairs()).toEqual(
     pairsToRawPairs([
       e.p.Esdts([{ id: fftId, amount: 10n ** 18n }]),
@@ -113,14 +113,14 @@ test("FWorldContract.getAccountPairs", async () => {
   );
 });
 
-test("FWorldContract.getAccount", async () => {
+test("SWorldContract.getAccount", async () => {
   assertAccount(await contract.getAccount(), {
     nonce: 0,
     balance: 10n ** 18n,
   });
 });
 
-test("FWorldContract.getAccountWithPairs", async () => {
+test("SWorldContract.getAccountWithPairs", async () => {
   assertAccount(await contract.getAccountWithPairs(), {
     nonce: 0,
     balance: 10n ** 18n,
@@ -128,7 +128,7 @@ test("FWorldContract.getAccountWithPairs", async () => {
   });
 });
 
-test("FWorldWallet.executeTx", async () => {
+test("SWorldWallet.executeTx", async () => {
   await wallet.executeTx({
     receiver: otherWallet,
     value: 10n ** 17n,
@@ -142,7 +142,7 @@ test("FWorldWallet.executeTx", async () => {
   });
 });
 
-test("FWorldWallet.transfer", async () => {
+test("SWorldWallet.transfer", async () => {
   await wallet.transfer({
     receiver: otherWallet,
     value: 10n ** 17n,
@@ -163,7 +163,7 @@ test("FWorldWallet.transfer", async () => {
   });
 });
 
-test("FWorldWallet.deployContract & upgradeContract", async () => {
+test("SWorldWallet.deployContract & upgradeContract", async () => {
   const { contract } = await wallet.deployContract({
     code: worldCode,
     codeMetadata: ["readable", "payable", "payableBySc", "upgradeable"],
@@ -187,7 +187,7 @@ test("FWorldWallet.deployContract & upgradeContract", async () => {
   });
 });
 
-test("FWorldWallet.deployContract & upgradeContract - file:", async () => {
+test("SWorldWallet.deployContract & upgradeContract - file:", async () => {
   const { contract } = await wallet.deployContract({
     code: `file:${worldPath}`,
     codeMetadata: ["readable", "payable", "payableBySc", "upgradeable"],
@@ -211,7 +211,7 @@ test("FWorldWallet.deployContract & upgradeContract - file:", async () => {
   });
 });
 
-test("FWorldWallet.deployContract - is contract address", async () => {
+test("SWorldWallet.deployContract - is contract address", async () => {
   const { contract } = await wallet.deployContract({
     code: `file:${worldPath}`,
     codeMetadata: [],
@@ -221,7 +221,7 @@ test("FWorldWallet.deployContract - is contract address", async () => {
   expect(isContractAddress(contract)).toEqual(true);
 });
 
-test("FWorldWallet.callContract with EGLD", async () => {
+test("SWorldWallet.callContract with EGLD", async () => {
   await wallet.callContract({
     callee: contract,
     funcName: "fund",
@@ -236,7 +236,7 @@ test("FWorldWallet.callContract with EGLD", async () => {
   });
 });
 
-test("FWorldWallet.callContract with ESDT", async () => {
+test("SWorldWallet.callContract with ESDT", async () => {
   await wallet.callContract({
     callee: contract,
     funcName: "fund",
@@ -251,7 +251,7 @@ test("FWorldWallet.callContract with ESDT", async () => {
   });
 });
 
-test("FWorldWallet.callContract with return", async () => {
+test("SWorldWallet.callContract with return", async () => {
   const txResult = await wallet.callContract({
     callee: contract,
     funcName: "get_n",
@@ -260,7 +260,7 @@ test("FWorldWallet.callContract with return", async () => {
   assertHexList(txResult.returnData, ["01"]);
 });
 
-test("FWorldWallet.callContract.assertFail - Correct parameters", async () => {
+test("SWorldWallet.callContract.assertFail - Correct parameters", async () => {
   await wallet
     .callContract({
       callee: contract,
@@ -271,7 +271,7 @@ test("FWorldWallet.callContract.assertFail - Correct parameters", async () => {
     .assertFail({ code: 4, message: "Amount is not positive." });
 });
 
-test("FWorldWallet.callContract.assertFail - Wrong code", async () => {
+test("SWorldWallet.callContract.assertFail - Wrong code", async () => {
   await expect(
     wallet
       .callContract({
@@ -286,7 +286,7 @@ test("FWorldWallet.callContract.assertFail - Wrong code", async () => {
   );
 });
 
-test("FWorldWallet.callContract.assertFail - Wrong message", async () => {
+test("SWorldWallet.callContract.assertFail - Wrong message", async () => {
   await expect(
     wallet
       .callContract({
@@ -301,7 +301,7 @@ test("FWorldWallet.callContract.assertFail - Wrong message", async () => {
   );
 });
 
-test("FWorldWallet.callContract.assertFail - Transaction not failing", async () => {
+test("SWorldWallet.callContract.assertFail - Transaction not failing", async () => {
   await expect(
     wallet
       .callContract({

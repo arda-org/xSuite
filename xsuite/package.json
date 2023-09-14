@@ -1,6 +1,6 @@
 {
   "name": "xsuite",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "license": "MIT",
   "scripts": {
     "build": "rimraf ./dist && tsc",
@@ -25,9 +25,9 @@
   ],
   "dependencies": {
     "@multiversx/sdk-wallet": "4.2.0",
+    "@xsuite/simulnet": "workspace:^",
     "bech32": "2.0.0",
-    "protobufjs": "7.2.4",
-    "xsuite-fproxy": "workspace:^"
+    "protobufjs": "7.2.4"
   },
   "devDependencies": {
     "@jest/globals": "29.5.0",
