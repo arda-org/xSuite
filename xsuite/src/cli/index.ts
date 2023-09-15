@@ -1,5 +1,7 @@
+import fs from "node:fs";
+import path from "node:path";
 import { Command } from "commander";
-import { version } from "../package.json";
+import { pkgPath } from "../_pkgPath";
 import {
   newWalletAction,
   requestXegldAction,
@@ -17,6 +19,10 @@ if (process.env["PWD"]) {
 }
 
 const program = new Command();
+
+const { version } = JSON.parse(
+  fs.readFileSync(path.resolve(pkgPath, "package.json"), "utf-8"),
+);
 
 program.version(version);
 

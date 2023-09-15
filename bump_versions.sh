@@ -33,8 +33,6 @@ install_flag=false
 
 bump_version "xsuite"
 
-bump_version "xsuite-cli"
-
 if $install_flag ; then
   pnpm install
   modified_files+=("pnpm-lock.yaml")

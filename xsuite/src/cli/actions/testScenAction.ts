@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import { Readable } from "stream";
-import { finished } from "stream/promises";
-import { log } from "xsuite/_stdio";
-import { xsuiteCliPath } from "../path";
+import { Readable } from "node:stream";
+import { finished } from "node:stream/promises";
+import { pkgPath } from "../../_pkgPath";
+import { log } from "../../_stdio";
 import { logTitle, logAndRunCommand } from "./helpers";
 
 const repoUrl = "https://github.com/arda-org/xSuite";
@@ -14,7 +14,7 @@ export const testScenAction = async () => {
   logTitle("Testing contract with scenarios...");
   const binaryOs = getBinaryOs();
   const localBinaryName = `${BINARY_NAME}-${binaryOs}-${TAG}`;
-  const binaryPath = path.join(xsuiteCliPath, "bin", localBinaryName);
+  const binaryPath = path.join(pkgPath, "bin", localBinaryName);
   if (!fs.existsSync(binaryPath)) {
     log(`Downloading ${localBinaryName}...`);
     const url = `${repoUrl}/releases/download/${BINARY_NAME}-${TAG}/${BINARY_NAME}-${binaryOs}`;
