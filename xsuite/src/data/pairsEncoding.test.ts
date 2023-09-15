@@ -1,13 +1,13 @@
 import { test, expect, beforeEach, afterEach, describe } from "@jest/globals";
 import { assertAllPairs } from "../assert";
-import { SWorld, SWorldContract, SWorldWallet, readFileHex } from "../world";
+import { SWorld, SContract, SWallet, readFileHex } from "../world";
 import { enc } from "./encoding";
 import { hexToHexString } from "./hex";
 import { pEnc } from "./pairsEncoding";
 
 let world: SWorld;
-let wallet: SWorldWallet;
-let contract: SWorldContract;
+let wallet: SWallet;
+let contract: SContract;
 
 const fftId = "FFT-abcdef";
 const sftId = "SFT-abcdef";
