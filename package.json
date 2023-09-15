@@ -5,13 +5,11 @@
     "build-xsuite-simulnet": "cd xsuite-simulnet && pnpm build",
     "build-xsuite": "cd xsuite && pnpm build",
     "test-xsuite": "cd xsuite && pnpm test",
-    "build-xsuite-cli": "cd xsuite-cli && pnpm build",
-    "test-xsuite-cli": "cd xsuite-cli && pnpm test",
     "verify-xsuite-wasms": "cd xsuite && pnpm verify-wasms",
     "build-contracts": "sc-meta all build --path contracts --locked --target-dir-all $(pwd)/target",
     "typecheck-contracts": "pnpm --filter \"./contracts/**\" typecheck",
     "test-contracts": "pnpm --filter \"./contracts/**\" test",
-    "ci-main": "pnpm lint && pnpm build-xsuite-simulnet && pnpm build-xsuite && pnpm test-xsuite && pnpm build-xsuite-cli && pnpm test-xsuite-cli && pnpm verify-xsuite-wasms && pnpm build-contracts && pnpm typecheck-contracts && pnpm test-contracts",
+    "ci-main": "pnpm lint && pnpm build-xsuite-simulnet && pnpm build-xsuite && pnpm test-xsuite && pnpm verify-xsuite-wasms && pnpm build-contracts && pnpm typecheck-contracts && pnpm test-contracts",
     "dev-docs": "cd docs && pnpm dev",
     "build-docs": "cd docs && pnpm build"
   },
@@ -23,6 +21,6 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-prettier": "^5.0.0",
     "prettier": "^3.0.0",
-    "xsuite-cli": "workspace:^"
+    "xsuite": "workspace:^"
   }
 }

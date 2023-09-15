@@ -4,7 +4,7 @@ import { afterEach, beforeEach, expect, test } from "@jest/globals";
 import { input, stdoutInt } from "../_stdio";
 import { Keystore, KeystoreSigner } from "./signer";
 
-const tmpDir = "/tmp/xsuite-cli-tests";
+const tmpDir = "/tmp/xsuite-tests";
 const walletPath = path.resolve(tmpDir, "wallet.json");
 
 beforeEach(() => {

@@ -4,8 +4,8 @@ import { test, beforeEach, afterEach, expect } from "@jest/globals";
 import chalk from "chalk";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
-import { stdoutInt, input } from "xsuite/_stdio";
-import { Keystore } from "xsuite/world";
+import { stdoutInt, input } from "../_stdio";
+import { Keystore } from "../world";
 import {
   buildAction,
   newAction,
@@ -17,7 +17,8 @@ import {
 } from "./actions";
 import { rustToolchain, rustTarget, scmetaCrate } from "./rustSettings";
 
-const tmpDir = "/tmp/xsuite-cli-tests";
+const cwd = process.cwd();
+const tmpDir = "/tmp/xsuite-tests";
 
 beforeEach(() => {
   fs.mkdirSync(tmpDir);
@@ -26,6 +27,7 @@ beforeEach(() => {
 
 afterEach(() => {
   fs.rmSync(tmpDir, { recursive: true, force: true });
+  process.chdir(cwd);
 });
 
 test("new-wallet --wallet wallet.json", async () => {
@@ -230,7 +232,7 @@ test("new --dir contract && build && test-rust && test-scen", async () => {
     "",
   ]);
 
-  const targetDir = path.join(__dirname, "..", "..", "target");
+  const targetDir = path.join(__dirname, "..", "..", "..", "target");
   process.chdir(dirPath);
 
   stdoutInt.start();
@@ -252,7 +254,7 @@ test("new --dir contract && build && test-rust && test-scen", async () => {
   ]);
 
   const scenexecName = "scenexec-ubuntu-20.04-v1.4.77";
-  const scenexecPath = path.join(__dirname, "..", "bin", scenexecName);
+  const scenexecPath = path.join(__dirname, "..", "..", "bin", scenexecName);
   fs.rmSync(scenexecPath, { force: true });
   stdoutInt.start();
   await testScenAction();

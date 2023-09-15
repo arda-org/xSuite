@@ -25,8 +25,6 @@ release_version "xsuite-simulnet"
 
 release_version "xsuite"
 
-release_version "xsuite-cli"
-
 if [ ${#modified_files[@]} -ne 0 ]; then
   for file in "${modified_files[@]}"; do
     git add "$file"

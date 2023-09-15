@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import chalk from "chalk";
-import { log } from "xsuite/_stdio";
-import { Keystore } from "xsuite/world";
+import { log } from "../../_stdio";
+import { Keystore } from "../../world";
 import { logError, logSuccess } from "./helpers";
 
 export const newWalletAction = async ({

@@ -1,8 +1,8 @@
 import { SignableMessage } from "@multiversx/sdk-core";
 import { NativeAuthClient } from "@multiversx/sdk-native-auth-client";
-import { log } from "xsuite/_stdio";
-import { Proxy } from "xsuite/proxy";
-import { KeystoreSigner } from "xsuite/world";
+import { log } from "../../_stdio";
+import { Proxy } from "../../proxy";
+import { KeystoreSigner } from "../../world";
 import { logError, logSuccess } from "./helpers";
 
 export const requestXegldAction = async ({

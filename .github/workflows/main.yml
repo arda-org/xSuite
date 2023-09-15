@@ -28,7 +28,7 @@ jobs:
           path: |
             ~/.rustup/toolchains
             ~/.cargo
-          key: ${{ runner.os }}-rust-${{ hashFiles('xsuite-cli/src/rustSettings.ts') }}-${{ hashFiles('contracts/**/Cargo.lock') }}
+          key: ${{ runner.os }}-rust-${{ hashFiles('xsuite/src/cli/rustSettings.ts') }}-${{ hashFiles('contracts/**/Cargo.lock') }}
           restore-keys: ${{ runner.os }}-rust-
 
       - name: Cache Rust target folder
@@ -54,16 +54,10 @@ jobs:
         run: pnpm build-xsuite
 
       - name: Test xsuite
-        run: pnpm test-xsuite
-
-      - name: Build xsuite-cli
-        run: pnpm build-xsuite-cli
-
-      - name: Test xsuite-cli
         run: |
           git config --global user.email "you@example.com"
           git config --global user.name "Your Name"
-          pnpm test-xsuite-cli
+          pnpm test-xsuite
 
       - name: Install Rust
         run: pnpm xsuite install-rust
