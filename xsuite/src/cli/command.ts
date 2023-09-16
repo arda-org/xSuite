@@ -35,8 +35,8 @@ command
 command
   .command("new")
   .description("Create a new blank contract.")
-  .requiredOption("--dir <dir>", "Contract dir")
-  .option("--starter <starter>", "Contract to start from")
+  .requiredOption("--dir <DIR>", "Contract dir")
+  .option("--starter <STARTER>", "Contract to start from")
   .option("--no-install", "Skip package installation")
   .option("--no-git", "Skip git initialization")
   .action(newAction);
@@ -44,13 +44,13 @@ command
 command
   .command("build")
   .description("Build contract.")
-  .option("--target-dir <target-dir>", "Target directory used by Rust compiler")
+  .option("--target-dir <TARGET_DIR>", "Target directory used by Rust compiler")
   .action(buildAction);
 
 command
   .command("test-rust")
   .description("Test contract with Rust tests.")
-  .option("--target-dir <target-dir>", "Target directory used by Rust compiler")
+  .option("--target-dir <TARGET_DIR>", "Target directory used by Rust compiler")
   .action(testRustAction);
 
 command
@@ -61,13 +61,13 @@ command
 command
   .command("new-wallet")
   .description("Create a new wallet.")
-  .requiredOption("--wallet <wallet>", "Wallet path")
-  .option("--password <password>", "Wallet password")
+  .requiredOption("--wallet <WALLET>", "Wallet path")
+  .option("--password <PASSWORD>", "Wallet password")
   .action(newWalletAction);
 
 command
   .command("request-xegld")
   .description("Request 30 xEGLD (once per day).")
-  .requiredOption("--wallet <path>", "Wallet path")
-  .option("--password <password>", "Wallet password")
+  .requiredOption("--wallet <WALLET>", "Wallet path")
+  .option("--password <PASSWORD>", "Wallet password")
   .action(requestXegldAction);
