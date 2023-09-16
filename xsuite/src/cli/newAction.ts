@@ -7,7 +7,7 @@ import stream from "node:stream";
 import util from "node:util";
 import chalk from "chalk";
 import tar from "tar";
-import { log } from "../../_stdio";
+import { log } from "../_stdio";
 import { logTitle, logAndRunCommand, logCommand, logError } from "./helpers";
 
 export const newAction = async ({

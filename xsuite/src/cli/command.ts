@@ -2,17 +2,15 @@ import fs from "node:fs";
 import path from "node:path";
 import { Command } from "commander";
 import { pkgPath } from "../_pkgPath";
-import {
-  newWalletAction,
-  requestXegldAction,
-  installRustAction,
-  testRustAction,
-  testScenAction,
-  buildAction,
-  newAction,
-  uninstallRustAction,
-} from "./actions";
+import { buildAction } from "./buildAction";
+import { installRustAction } from "./installRustAction";
+import { newAction } from "./newAction";
+import { newWalletAction } from "./newWalletAction";
+import { requestXegldAction } from "./requestXegldAction";
 import { scmetaCrate, rustTarget, rustToolchain } from "./rustSettings";
+import { testRustAction } from "./testRustAction";
+import { testScenAction } from "./testScenAction";
+import { uninstallRustAction } from "./uninstallRustAction";
 
 const { version } = JSON.parse(
   fs.readFileSync(path.resolve(pkgPath, "package.json"), "utf-8"),

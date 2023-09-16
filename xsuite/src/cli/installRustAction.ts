@@ -1,5 +1,5 @@
-import { scmetaCrate, rustTarget, rustToolchain } from "../rustSettings";
 import { logTitle, logAndRunCommand } from "./helpers";
+import { scmetaCrate, rustTarget, rustToolchain } from "./rustSettings";
 
 export const installRustAction = () => {
   logTitle(

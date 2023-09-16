@@ -2,8 +2,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { Readable } from "node:stream";
 import { finished } from "node:stream/promises";
-import { pkgPath } from "../../_pkgPath";
-import { log } from "../../_stdio";
+import { pkgPath } from "../_pkgPath";
+import { log } from "../_stdio";
 import { logTitle, logAndRunCommand } from "./helpers";
 
 const repoUrl = "https://github.com/arda-org/xSuite";
