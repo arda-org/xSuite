@@ -231,6 +231,7 @@ test("new --dir contract && build --locked && test-rust && test-scen", async () 
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Building contract..."),
+    `(1/1) Building "${dirPath}"...`,
     chalk.cyan(
       `$ cargo run --target-dir ${targetDir} build --locked --target-dir ${targetDir}`,
     ),

@@ -48,6 +48,7 @@ command
     "--locked",
     "Require the Cargo.lock in the wasm crate to be up to date.",
   )
+  .option("-r, --recursive", "Build all contracts under the directory.")
   .option("--target-dir <TARGET_DIR>", "Target directory used by Rust compiler")
   .action(buildAction);
 
