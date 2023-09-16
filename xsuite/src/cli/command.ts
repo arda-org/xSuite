@@ -7,7 +7,7 @@ import { installRustAction } from "./installRustAction";
 import { newAction } from "./newAction";
 import { newWalletAction } from "./newWalletAction";
 import { requestXegldAction } from "./requestXegldAction";
-import { scmetaCrate, rustTarget, rustToolchain } from "./rustSettings";
+import { rustTarget, rustToolchain } from "./rustSettings";
 import { testRustAction } from "./testRustAction";
 import { testScenAction } from "./testScenAction";
 import { uninstallRustAction } from "./uninstallRustAction";
@@ -23,7 +23,7 @@ command.version(version);
 command
   .command("install-rust")
   .description(
-    `Install Rust with rustup: toolchain ${rustToolchain}, target ${rustTarget}, crate ${scmetaCrate.name}.`,
+    `Install Rust with rustup: toolchain ${rustToolchain} & target ${rustTarget}.`,
   )
   .action(installRustAction);
 
@@ -44,6 +44,11 @@ command
 command
   .command("build")
   .description("Build contract.")
+  .option(
+    "--locked",
+    "Require the Cargo.lock in the wasm crate to be up to date.",
+  )
+  .option("-r, --recursive", "Build all contracts under the directory.")
   .option("--target-dir <TARGET_DIR>", "Target directory used by Rust compiler")
   .action(buildAction);
 

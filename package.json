@@ -6,7 +6,7 @@
     "build-xsuite": "cd xsuite && pnpm build",
     "test-xsuite": "cd xsuite && pnpm test",
     "verify-xsuite-wasms": "cd xsuite && pnpm verify-wasms",
-    "build-contracts": "sc-meta all build --path contracts --locked --target-dir-all $(pwd)/target",
+    "build-contracts": "cd contracts && xsuite build -r --locked --target-dir $(pwd)/../target",
     "typecheck-contracts": "pnpm --filter \"./contracts/**\" typecheck",
     "test-contracts": "pnpm --filter \"./contracts/**\" test",
     "ci-main": "pnpm lint && pnpm build-xsuite-simulnet && pnpm build-xsuite && pnpm test-xsuite && pnpm verify-xsuite-wasms && pnpm build-contracts && pnpm typecheck-contracts && pnpm test-contracts",
