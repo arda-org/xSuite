@@ -6,15 +6,7 @@ import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { stdoutInt, input } from "../_stdio";
 import { Keystore } from "../world";
-import {
-  buildAction,
-  newAction,
-  newWalletAction,
-  requestXegldAction,
-  installRustAction,
-  testRustAction,
-  testScenAction,
-} from "./actions";
+import { command } from "./command";
 import { rustToolchain, rustTarget, scmetaCrate } from "./rustSettings";
 
 const cwd = process.cwd();
@@ -34,7 +26,8 @@ test("new-wallet --wallet wallet.json", async () => {
   const walletPath = path.resolve("wallet.json");
   stdoutInt.start();
   input.injected.push("1234", "1234");
-  const keystore = (await newWalletAction({ wallet: walletPath }))!;
+  await run(`new-wallet --wallet ${walletPath}`);
+  const keystore = Keystore.fromFile_unsafe(walletPath, "1234");
   stdoutInt.stop();
   expect(fs.existsSync(walletPath)).toEqual(true);
   expect(stdoutInt.data.split("\n")).toEqual([
@@ -60,7 +53,7 @@ test("new-wallet --wallet wallet.json | error: passwords don't match", async () 
   const walletPath = path.resolve("wallet.json");
   stdoutInt.start();
   input.injected.push("1234", "1235");
-  await newWalletAction({ wallet: walletPath });
+  await run(`new-wallet --wallet ${walletPath}`);
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     `Creating keystore wallet at "${walletPath}"...`,
@@ -74,10 +67,8 @@ test("new-wallet --wallet wallet.json | error: passwords don't match", async () 
 test("new-wallet --wallet wallet.json --password 1234", async () => {
   const walletPath = path.resolve("wallet.json");
   stdoutInt.start();
-  const keystore = (await newWalletAction({
-    wallet: walletPath,
-    password: "1234",
-  }))!;
+  await run(`new-wallet --wallet ${walletPath} --password 1234`);
+  const keystore = Keystore.fromFile_unsafe(walletPath, "1234");
   stdoutInt.stop();
   expect(fs.existsSync(walletPath)).toEqual(true);
   expect(stdoutInt.data.split("\n")).toEqual([
@@ -99,7 +90,7 @@ test("new-wallet --wallet wallet.json --password 1234 | error: already exists", 
   const walletPath = path.resolve("wallet.json");
   fs.writeFileSync(walletPath, "");
   stdoutInt.start();
-  await newWalletAction({ wallet: walletPath, password: "1234" });
+  await run(`new-wallet --wallet ${walletPath} --password 1234`);
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.red(`Wallet already exists at "${walletPath}".`),
@@ -158,8 +149,8 @@ test("request-xegld --wallet wallet.json", async () => {
   server.listen();
   stdoutInt.start();
   input.injected.push("1234", "1234");
-  await requestXegldAction({ wallet: walletPath });
-  await requestXegldAction({ wallet: walletPath, password: "1234" });
+  await run(`request-xegld --wallet ${walletPath}`);
+  await run(`request-xegld --wallet ${walletPath} --password 1234`);
   stdoutInt.stop();
   server.close();
   expect(stdoutInt.data.split("\n")).toEqual([
@@ -176,7 +167,7 @@ test("request-xegld --wallet wallet.json", async () => {
 
 test("install-rust", async () => {
   stdoutInt.start();
-  installRustAction();
+  await run("install-rust");
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue(
@@ -196,7 +187,7 @@ test("install-rust", async () => {
 
 test("new --dir contract && build && test-rust && test-scen", async () => {
   stdoutInt.start();
-  await newAction({ dir: "contract", install: true, git: true });
+  await run("new --dir contract");
   stdoutInt.stop();
   expect(fs.readdirSync(process.cwd()).length).toEqual(1);
   const dirPath = path.resolve("contract");
@@ -236,7 +227,7 @@ test("new --dir contract && build && test-rust && test-scen", async () => {
   process.chdir(dirPath);
 
   stdoutInt.start();
-  buildAction(["--target-dir-all", targetDir]);
+  await run(`build --target-dir ${targetDir}`);
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Building contract..."),
@@ -245,7 +236,7 @@ test("new --dir contract && build && test-rust && test-scen", async () => {
   ]);
 
   stdoutInt.start();
-  testRustAction({ env: { ...process.env, CARGO_TARGET_DIR: targetDir } });
+  await run(`test-rust --target-dir ${targetDir}`);
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Testing contract with Rust tests..."),
@@ -257,7 +248,7 @@ test("new --dir contract && build && test-rust && test-scen", async () => {
   const scenexecPath = path.join(__dirname, "..", "..", "bin", scenexecName);
   fs.rmSync(scenexecPath, { force: true });
   stdoutInt.start();
-  await testScenAction();
+  await run("test-scen");
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Testing contract with scenarios..."),
@@ -268,11 +259,12 @@ test("new --dir contract && build && test-rust && test-scen", async () => {
 }, 600_000);
 
 test(`new --starter vested-transfers --dir contract --no-git --no-install`, async () => {
+  const contract = "vested-transfers";
   stdoutInt.start();
-  await newAction({ contract: "vested-transfers", dir: "contract" });
+  await run(`new --starter ${contract} --dir contract --no-git --no-install`);
   stdoutInt.stop();
   expect(fs.readdirSync(process.cwd()).length).toEqual(1);
-  const contractChalk = chalk.magenta("vested-transfers");
+  const contractChalk = chalk.magenta(contract);
   const dirPath = path.resolve("contract");
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue(`Downloading contract ${contractChalk} in "${dirPath}"...`),
@@ -301,10 +293,12 @@ test(`new --starter vested-transfers --dir contract --no-git --no-install`, asyn
 test("new --dir contract | error: already exists", async () => {
   fs.mkdirSync("contract");
   stdoutInt.start();
-  await newAction({ dir: "contract", install: true, git: true });
+  await run("new --dir contract");
   stdoutInt.stop();
   const dirPath = path.resolve("contract");
   expect(stdoutInt.data).toEqual(
     chalk.red(`Directory already exists at "${dirPath}".`) + "\n",
   );
 });
+
+const run = (c: string) => command.parseAsync(c.split(" "), { from: "user" });

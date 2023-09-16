@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import path from "node:path";
 import chalk from "chalk";
-import { log } from "../../_stdio";
-import { Keystore } from "../../world";
+import { log } from "../_stdio";
+import { Keystore } from "../world";
 import { logError, logSuccess } from "./helpers";
 
 export const newWalletAction = async ({
@@ -41,5 +41,4 @@ export const newWalletAction = async ({
       `Don't forget to backup the private key in a secure place.`,
     ),
   );
-  return keystore;
 };

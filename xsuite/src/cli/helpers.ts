@@ -3,7 +3,7 @@ import {
   spawnSync,
 } from "node:child_process";
 import chalk from "chalk";
-import { log } from "../../_stdio";
+import { log } from "../_stdio";
 
 export const logTitle = (title: string) => log(chalk.blue(title));
 
