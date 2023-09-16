@@ -7,6 +7,7 @@ import stream from "node:stream";
 import util from "node:util";
 import chalk from "chalk";
 import tar from "tar";
+import { pkgPath } from "../_pkgPath";
 import { log } from "../_stdio";
 import { logTitle, logAndRunCommand, logCommand, logError } from "./helpers";
 
@@ -62,21 +63,37 @@ export const newAction = async ({
 };
 
 const downloadAndExtractContract = async (contract: string, cwd: string) => {
-  const file = await downloadTar(
-    "https://codeload.github.com/arda-org/xSuite/tar.gz/main",
-  );
+  const [archive, xsuiteVersion] = process.env["GITHUB_SHA"]
+    ? await Promise.all([
+        downloadXsuiteRepoArchive(process.env["GITHUB_SHA"]),
+        `file:${pkgPath}`,
+      ])
+    : await Promise.all([
+        downloadXsuiteRepoArchive("main"),
+        getXsuitePkgLatestVersion(),
+      ]);
   await tar.x({
-    file,
+    file: archive,
     strip: 2 + contract.split("/").length,
-    filter: (p) => p.includes(`xSuite-main/contracts/${contract}/`),
+    filter: (p) => p.includes(`/contracts/${contract}/`),
     cwd,
   });
-  fs.unlinkSync(file);
+  fs.unlinkSync(archive);
+  const pkgjsonPath = path.join(cwd, "package.json");
+  let pkgjson = fs.readFileSync(pkgjsonPath, "utf-8");
+  pkgjson = pkgjson.replace(
+    '"xsuite": "workspace:*"',
+    `"xsuite": "${xsuiteVersion}"`,
+  );
+  fs.writeFileSync(pkgjsonPath, pkgjson);
 };
 
 const pipeline = util.promisify(stream.Stream.pipeline);
 
-const downloadTar = (url: string) => {
+const downloadXsuiteRepoArchive = (sha: string) =>
+  downloadArchive(`https://codeload.github.com/arda-org/xSuite/tar.gz/${sha}`);
+
+const downloadArchive = (url: string) => {
   const file = path.join(os.tmpdir(), `xSuite-contract-${Date.now()}`);
   return new Promise<string>((resolve, reject) => {
     https
@@ -88,6 +105,11 @@ const downloadTar = (url: string) => {
       .on("error", reject);
   });
 };
+
+const getXsuitePkgLatestVersion = () =>
+  fetch("https://registry.npmjs.org/xsuite/latest")
+    .then((r) => r.json())
+    .then((r) => r.version);
 
 const tryGitInit = (cwd: string): boolean => {
   try {

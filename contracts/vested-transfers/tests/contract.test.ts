@@ -1,21 +1,21 @@
 import { test, beforeEach, afterEach } from "vitest";
 import { assertAccount, assertHexList } from "xsuite/assert";
 import { e } from "xsuite/data";
-import { FWorld, FWorldWallet, FWorldContract } from "xsuite/world";
+import { SWorld, SWallet, SContract } from "xsuite/world";
 
-let world: FWorld;
-let deployer: FWorldWallet;
-let contract: FWorldContract;
-let sender1: FWorldWallet;
-let sender2: FWorldWallet;
-let receiver1: FWorldWallet;
-let receiver2: FWorldWallet;
-let executor: FWorldWallet;
+let world: SWorld;
+let deployer: SWallet;
+let contract: SContract;
+let sender1: SWallet;
+let sender2: SWallet;
+let receiver1: SWallet;
+let receiver2: SWallet;
+let executor: SWallet;
 const egldId = "EGLD";
 const sftId = "SFT-abcdef";
 
 beforeEach(async () => {
-  world = await FWorld.start();
+  world = await SWorld.start();
   deployer = await world.createWallet();
   ({ contract } = await deployer.deployContract({
     code: "file:output/contract.wasm",
