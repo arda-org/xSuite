@@ -1,3 +1,3 @@
 import path from "node:path";
 
-export const pkgPath = path.join(__dirname, "..");
+export const pkgPath = path.resolve(__dirname, "..");

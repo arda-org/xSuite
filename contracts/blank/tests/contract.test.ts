@@ -1,13 +1,13 @@
 import { test, beforeEach, afterEach } from "vitest";
 import { assertAccount } from "xsuite/assert";
-import { FWorld, FWorldWallet, FWorldContract } from "xsuite/world";
+import { SWorld, SWallet, SContract } from "xsuite/world";
 
-let world: FWorld;
-let deployer: FWorldWallet;
-let contract: FWorldContract;
+let world: SWorld;
+let deployer: SWallet;
+let contract: SContract;
 
 beforeEach(async () => {
-  world = await FWorld.start();
+  world = await SWorld.start();
   deployer = await world.createWallet();
   ({ contract } = await deployer.deployContract({
     code: "file:output/contract.wasm",
