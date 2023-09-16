@@ -7,7 +7,7 @@ import { setupServer } from "msw/node";
 import { stdoutInt, input } from "../_stdio";
 import { Keystore } from "../world";
 import { command } from "./command";
-import { rustToolchain, rustTarget, scmetaCrate } from "./rustSettings";
+import { rustToolchain, rustTarget } from "./rustSettings";
 
 const cwd = process.cwd();
 const tmpDir = "/tmp/xsuite-tests";
@@ -171,15 +171,10 @@ test("install-rust", async () => {
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue(
-      `Installing Rust: toolchain ${rustToolchain}, target ${rustTarget}, crate ${scmetaCrate.name}...`,
+      `Installing Rust: toolchain ${rustToolchain} & target ${rustTarget}...`,
     ),
     chalk.cyan(
-      `$ sh -c 'curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain ${rustToolchain} -y \\`,
-    ),
-    chalk.cyan('    && . "$HOME/.cargo/env" \\'),
-    chalk.cyan(`    && rustup target add ${rustTarget} \\`),
-    chalk.cyan(
-      `    && cargo install ${scmetaCrate.name} --version ${scmetaCrate.version}'`,
+      `$ curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain ${rustToolchain} -t ${rustTarget} -y`,
     ),
     "",
   ]);

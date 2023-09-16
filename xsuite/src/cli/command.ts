@@ -7,7 +7,7 @@ import { installRustAction } from "./installRustAction";
 import { newAction } from "./newAction";
 import { newWalletAction } from "./newWalletAction";
 import { requestXegldAction } from "./requestXegldAction";
-import { scmetaCrate, rustTarget, rustToolchain } from "./rustSettings";
+import { rustTarget, rustToolchain } from "./rustSettings";
 import { testRustAction } from "./testRustAction";
 import { testScenAction } from "./testScenAction";
 import { uninstallRustAction } from "./uninstallRustAction";
@@ -23,7 +23,7 @@ command.version(version);
 command
   .command("install-rust")
   .description(
-    `Install Rust with rustup: toolchain ${rustToolchain}, target ${rustTarget}, crate ${scmetaCrate.name}.`,
+    `Install Rust with rustup: toolchain ${rustToolchain} & target ${rustTarget}.`,
   )
   .action(installRustAction);
 
