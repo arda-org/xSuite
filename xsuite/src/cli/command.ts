@@ -46,9 +46,13 @@ command
   .description("Build contract.")
   .option(
     "--locked",
-    "Require the Cargo.lock in the wasm crate to be up to date.",
+    "Require the Cargo.lock in the wasm crate to be up to date",
   )
-  .option("-r, --recursive", "Build all contracts under the directory.")
+  .option(
+    "--dir <DIR>",
+    "Directory in which the command is executed (default: current directory)",
+  )
+  .option("-r, --recursive", "Build all contracts under the directory")
   .option("--target-dir <TARGET_DIR>", "Target directory used by Rust compiler")
   .action(buildAction);
 

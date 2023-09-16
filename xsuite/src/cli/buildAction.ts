@@ -5,14 +5,16 @@ import { logTitle, logAndRunCommand, logError } from "./helpers";
 
 export const buildAction = ({
   locked,
+  dir,
   recursive,
   targetDir,
 }: {
   locked?: boolean;
+  dir?: string;
   recursive?: boolean;
   targetDir?: string;
 }) => {
-  const startDir = process.cwd();
+  const startDir = dir ?? process.cwd();
   const dirs: string[] = [];
   if (recursive) {
     dirs.push(...findBuildableDirs(startDir));

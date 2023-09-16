@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                            8
+// Endpoints:                           10
 // Async Callback (empty):               1
-// Total number of exported functions:  10
+// Total number of exported functions:  12
 
 #![no_std]
 #![feature(lang_items)]
@@ -16,10 +16,12 @@ multiversx_sc_wasm_adapter::allocator!();
 multiversx_sc_wasm_adapter::panic_handler!();
 
 multiversx_sc_wasm_adapter::endpoints! {
-    storage
+    mapper
     (
         single_add
         single_remove
+        unordered_set_add
+        unordered_set_remove
         set_add
         set_remove
         map_add
