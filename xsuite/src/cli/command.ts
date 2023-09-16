@@ -44,6 +44,10 @@ command
 command
   .command("build")
   .description("Build contract.")
+  .option(
+    "--locked",
+    "Require the Cargo.lock in the wasm crate to be up to date.",
+  )
   .option("--target-dir <TARGET_DIR>", "Target directory used by Rust compiler")
   .action(buildAction);
 

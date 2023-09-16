@@ -185,7 +185,7 @@ test("install-rust", async () => {
   ]);
 });
 
-test("new --dir contract && build && test-rust && test-scen", async () => {
+test("new --dir contract && build --locked && test-rust && test-scen", async () => {
   stdoutInt.start();
   await run("new --dir contract");
   stdoutInt.stop();
@@ -227,12 +227,12 @@ test("new --dir contract && build && test-rust && test-scen", async () => {
   process.chdir(dirPath);
 
   stdoutInt.start();
-  await run(`build --target-dir ${targetDir}`);
+  await run(`build --locked --target-dir ${targetDir}`);
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Building contract..."),
     chalk.cyan(
-      `$ cargo run --target-dir ${targetDir} build --target-dir ${targetDir}`,
+      `$ cargo run --target-dir ${targetDir} build --locked --target-dir ${targetDir}`,
     ),
     "",
   ]);
