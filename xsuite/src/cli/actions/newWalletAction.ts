@@ -41,5 +41,4 @@ export const newWalletAction = async ({
       `Don't forget to backup the private key in a secure place.`,
     ),
   );
-  return keystore;
 };

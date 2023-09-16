@@ -1,10 +1,10 @@
-import { SpawnSyncOptionsWithBufferEncoding } from "node:child_process";
 import { logTitle, logAndRunCommand } from "./helpers";
 
-export const buildAction = (
-  args: string[],
-  options?: SpawnSyncOptionsWithBufferEncoding,
-) => {
+export const buildAction = ({ targetDir }: { targetDir?: string }) => {
   logTitle("Building contract...");
-  logAndRunCommand("sc-meta", ["all", "build", ...args], options);
+  const args = ["all", "build"];
+  if (targetDir !== undefined) {
+    args.push("--target-dir-all", targetDir);
+  }
+  logAndRunCommand("sc-meta", args);
 };
