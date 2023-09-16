@@ -231,7 +231,9 @@ test("new --dir contract && build && test-rust && test-scen", async () => {
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Building contract..."),
-    chalk.cyan(`$ sc-meta all build --target-dir-all ${targetDir}`),
+    chalk.cyan(
+      `$ cargo run --target-dir ${targetDir} build --target-dir ${targetDir}`,
+    ),
     "",
   ]);
 
@@ -240,7 +242,7 @@ test("new --dir contract && build && test-rust && test-scen", async () => {
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Testing contract with Rust tests..."),
-    chalk.cyan("$ cargo test"),
+    chalk.cyan(`$ cargo test --target-dir ${targetDir}`),
     "",
   ]);
 

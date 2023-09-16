@@ -2,9 +2,13 @@ import { logTitle, logAndRunCommand } from "./helpers";
 
 export const buildAction = ({ targetDir }: { targetDir?: string }) => {
   logTitle("Building contract...");
-  const args = ["all", "build"];
+  const args = ["run"];
   if (targetDir !== undefined) {
-    args.push("--target-dir-all", targetDir);
+    args.push("--target-dir", targetDir);
   }
-  logAndRunCommand("sc-meta", args);
+  args.push("build");
+  if (targetDir !== undefined) {
+    args.push("--target-dir", targetDir);
+  }
+  logAndRunCommand("cargo", args, { cwd: "meta" });
 };
