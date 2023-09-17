@@ -20,13 +20,11 @@ First, install `xsuite`:
 npm install -g xsuite
 ```
 
-A new command `xsuite` is now available in your terminal. With this command, install Rust on your machine:
+Install Rust with the newly available `xsuite` command:
 
 ```
 xsuite install-rust
 ```
-
-*Note: If you already have Rust installed and the `cargo` command available you can skip this step (eg: if you use `mxpy` or have manually installed Rust before)*
 
 Create a new blank contract in the directory `my-contract` and open it:
 
@@ -67,14 +65,18 @@ npm run interact:devnet deploy
 
 ## Starter Contracts (audited)
 
-Arda team has created starter contracts to be used as a great starting point for the development of your new smart contract and to save a significant amount of time into setting up the codebase and writing the initial logic. Starter contracts are **audited by Arda**.
+Arda team has created starter contracts to be used as a great starting point for the development of your new smart contract and to save you a significant amount of time setting up the codebase and writing the initial logic. Starter contracts are **audited by Arda**.
+
+To create a new contract from a starter contract, run:
+
+```
+xsuite new --starter <starter> --dir <dir>
+```
 
 The starter contracts available:
 
 - [blank](https://github.com/arda-org/xSuite/tree/main/contracts/blank): An empty contract that comes fully set up with tests and blockchain interactions.
 - [vested-transfers](https://github.com/arda-org/xSuite/tree/main/contracts/vested-transfers): A contract for vested transfers, with tests and blockchain interactions.
-
-You can create a new contract from a starter contract by running `xsuite new --starter <starter> --dir <dir>`.
 
 ## Onboarding and Training
 
