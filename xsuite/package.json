@@ -9,7 +9,7 @@
     "build": "rimraf ./dist && tsc",
     "build-wasms": "bash build_wasms.sh",
     "verify-wasms": "pnpm build-wasms && (git status | grep -q \\\\.wasm && exit 1 || exit 0)",
-    "test": "GITHUB_SHA=$(git rev-parse --abbrev-ref HEAD) jest src/",
+    "test": "jest src/",
     "open-coverage": "open ./coverage/lcov-report/index.html",
     "try": "tsx scripts/try.ts"
   },

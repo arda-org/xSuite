@@ -3,7 +3,7 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { finished } from "node:stream/promises";
 import { Command } from "commander";
-import { pkgPath } from "../_pkgPath";
+import { pkgPath } from "../_pkg";
 import { log } from "../_stdio";
 import { logTitle, logAndRunCommand } from "./helpers";
 

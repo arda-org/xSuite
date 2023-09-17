@@ -8,7 +8,6 @@ import util from "node:util";
 import chalk from "chalk";
 import { Command } from "commander";
 import tar from "tar";
-import { pkgPath } from "../_pkgPath";
 import { log } from "../_stdio";
 import { logTitle, logAndRunCommand, logCommand, logError } from "./helpers";
 
@@ -75,15 +74,19 @@ const action = async ({
 };
 
 const downloadAndExtractContract = async (contract: string, cwd: string) => {
-  const [archive, xsuiteVersion] = process.env["GITHUB_SHA"]
-    ? await Promise.all([
-        downloadXsuiteRepoArchive(process.env["GITHUB_SHA"]),
-        `file:${pkgPath}`,
-      ])
-    : await Promise.all([
-        downloadXsuiteRepoArchive("main"),
-        getXsuitePkgLatestVersion(),
-      ]);
+  const archive = await downloadArchive(
+    `https://codeload.github.com/arda-org/xSuite/tar.gz/main`,
+  );
+  const xsuiteVersion = await new Promise<string>((r) => {
+    tar.t({
+      file: archive,
+      filter: (p) => p.includes(`/xsuite/package.json`),
+      onentry: async (e) => {
+        const f = (await e.concat()).toString();
+        r(JSON.parse(f)["version"]);
+      },
+    });
+  });
   await tar.x({
     file: archive,
     strip: 2 + contract.split("/").length,
@@ -102,9 +105,6 @@ const downloadAndExtractContract = async (contract: string, cwd: string) => {
 
 const pipeline = util.promisify(stream.Stream.pipeline);
 
-const downloadXsuiteRepoArchive = (sha: string) =>
-  downloadArchive(`https://codeload.github.com/arda-org/xSuite/tar.gz/${sha}`);
-
 const downloadArchive = (url: string) => {
   const file = path.join(os.tmpdir(), `xSuite-contract-${Date.now()}`);
   return new Promise<string>((resolve, reject) => {
@@ -117,11 +117,6 @@ const downloadArchive = (url: string) => {
       .on("error", reject);
   });
 };
-
-const getXsuitePkgLatestVersion = () =>
-  fetch("https://registry.npmjs.org/xsuite/latest")
-    .then((r) => r.json())
-    .then((r) => r.version);
 
 const tryGitInit = (cwd: string): boolean => {
   try {
