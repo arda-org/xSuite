@@ -6,7 +6,7 @@ import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { stdoutInt, input } from "../_stdio";
 import { Keystore } from "../world";
-import { command } from "./command";
+import { getCommand } from "./command";
 import { rustToolchain, rustTarget } from "./rustSettings";
 
 const cwd = process.cwd();
@@ -180,7 +180,7 @@ test("install-rust", async () => {
   ]);
 });
 
-test("new --dir contract && build --locked && test-rust && test-scen", async () => {
+test("new --dir contract && build --locked && build -r && test-rust && test-scen", async () => {
   stdoutInt.start();
   await run("new --dir contract");
   stdoutInt.stop();
@@ -229,6 +229,18 @@ test("new --dir contract && build --locked && test-rust && test-scen", async () 
     `(1/1) Building "${dirPath}"...`,
     chalk.cyan(
       `$ cargo run --target-dir ${targetDir} build --locked --target-dir ${targetDir}`,
+    ),
+    "",
+  ]);
+
+  stdoutInt.start();
+  await run(`build -r --target-dir ${targetDir}`);
+  stdoutInt.stop();
+  expect(stdoutInt.data.split("\n")).toEqual([
+    chalk.blue("Building contract..."),
+    `(1/1) Building "${dirPath}"...`,
+    chalk.cyan(
+      `$ cargo run --target-dir ${targetDir} build --target-dir ${targetDir}`,
     ),
     "",
   ]);
@@ -299,4 +311,5 @@ test("new --dir contract | error: already exists", async () => {
   );
 });
 
-const run = (c: string) => command.parseAsync(c.split(" "), { from: "user" });
+const run = (c: string) =>
+  getCommand().parseAsync(c.split(" "), { from: "user" });
