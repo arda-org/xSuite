@@ -1,6 +1,6 @@
 {
   "index": "Getting Started",
-  "contract": "New Contract",
+  "new-contract": "New Contract",
   "tests": "Contract Testing",
   "interact": "Contract Interaction",
   "encoding": "Data Encoding",
