@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { Command } from "commander";
 import { pkgPath } from "../_pkgPath";
-import { buildAction } from "./buildAction";
+import { buildAction, defaultIgnore } from "./buildAction";
 import { installRustAction } from "./installRustAction";
 import { newAction } from "./newAction";
 import { newWalletAction } from "./newWalletAction";
@@ -44,6 +44,10 @@ command
 command
   .command("build")
   .description("Build contract.")
+  .option(
+    "--ignore <IGNORE>",
+    `Ignore all directories matching the RegExp (default: ${defaultIgnore})`,
+  )
   .option(
     "--locked",
     "Require the Cargo.lock in the wasm crate to be up to date",

@@ -4,11 +4,13 @@ import { log } from "../_stdio";
 import { logTitle, logAndRunCommand, logError } from "./helpers";
 
 export const buildAction = ({
+  ignore,
   locked,
   dir,
   recursive,
   targetDir,
 }: {
+  ignore?: string;
   locked?: boolean;
   dir?: string;
   recursive?: boolean;
@@ -17,7 +19,8 @@ export const buildAction = ({
   const startDir = dir ?? process.cwd();
   const dirs: string[] = [];
   if (recursive) {
-    dirs.push(...findBuildableDirs(startDir));
+    const ignoreRegex = new RegExp(ignore ?? defaultIgnore);
+    dirs.push(...findBuildableDirs(startDir, ignoreRegex));
   } else {
     if (isDirBuildable(startDir)) {
       dirs.push(startDir);
@@ -46,16 +49,18 @@ export const buildAction = ({
   }
 };
 
-const findBuildableDirs = (startDir: string) => {
+const findBuildableDirs = (startDir: string, ignoreRegex: RegExp) => {
   const results: string[] = [];
   if (isDirBuildable(startDir)) {
     results.push(startDir);
-  }
-  const files = fs.readdirSync(startDir);
-  for (const file of files) {
-    const p = path.join(startDir, file);
-    if (fs.statSync(p).isDirectory()) {
-      results.push(...findBuildableDirs(p));
+  } else {
+    const files = fs.readdirSync(startDir);
+    for (const file of files) {
+      const p = path.join(startDir, file);
+      if (fs.statSync(p).isDirectory()) {
+        if (ignoreRegex.test(file)) continue;
+        results.push(...findBuildableDirs(p, ignoreRegex));
+      }
     }
   }
   return results;
@@ -73,3 +78,5 @@ const isDirBuildable = (p: string) => {
     fs.existsSync(metaPath) && fs.statSync(metaPath).isDirectory();
   return (mvxJsonFileExists || elrondJsonFileExists) && metaDirExists;
 };
+
+export const defaultIgnore = "^(target|node_modules|(\\..*))$";
