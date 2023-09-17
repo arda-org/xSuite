@@ -6,12 +6,24 @@ import path from "node:path";
 import stream from "node:stream";
 import util from "node:util";
 import chalk from "chalk";
+import { Command } from "commander";
 import tar from "tar";
 import { pkgPath } from "../_pkgPath";
 import { log } from "../_stdio";
 import { logTitle, logAndRunCommand, logCommand, logError } from "./helpers";
 
-export const newAction = async ({
+export const registerNewCmd = (cmd: Command) => {
+  cmd
+    .command("new")
+    .description("Create a new blank contract.")
+    .requiredOption("--dir <DIR>", "Contract dir")
+    .option("--starter <STARTER>", "Contract to start from")
+    .option("--no-install", "Skip package installation")
+    .option("--no-git", "Skip git initialization")
+    .action(action);
+};
+
+const action = async ({
   dir,
   starter = "blank",
   install,

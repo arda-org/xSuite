@@ -1,7 +1,17 @@
+import { Command } from "commander";
 import { logTitle, logAndRunCommand } from "./helpers";
 import { rustTarget, rustToolchain } from "./rustSettings";
 
-export const installRustAction = () => {
+export const registerInstallRustCmd = (cmd: Command) => {
+  cmd
+    .command("install-rust")
+    .description(
+      `Install Rust with rustup: toolchain ${rustToolchain} & target ${rustTarget}.`,
+    )
+    .action(action);
+};
+
+const action = () => {
   logTitle(
     `Installing Rust: toolchain ${rustToolchain} & target ${rustTarget}...`,
   );

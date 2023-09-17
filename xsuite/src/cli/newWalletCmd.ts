@@ -1,11 +1,21 @@
 import fs from "node:fs";
 import path from "node:path";
 import chalk from "chalk";
+import { Command } from "commander";
 import { log } from "../_stdio";
 import { Keystore } from "../world";
 import { logError, logSuccess } from "./helpers";
 
-export const newWalletAction = async ({
+export const registerNewWalletCmd = (cmd: Command) => {
+  cmd
+    .command("new-wallet")
+    .description("Create a new wallet.")
+    .requiredOption("--wallet <WALLET>", "Wallet path")
+    .option("--password <PASSWORD>", "Wallet password")
+    .action(action);
+};
+
+const action = async ({
   wallet: walletPath,
   password,
 }: {

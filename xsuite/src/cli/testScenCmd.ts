@@ -2,15 +2,23 @@ import fs from "node:fs";
 import path from "node:path";
 import { Readable } from "node:stream";
 import { finished } from "node:stream/promises";
+import { Command } from "commander";
 import { pkgPath } from "../_pkgPath";
 import { log } from "../_stdio";
 import { logTitle, logAndRunCommand } from "./helpers";
+
+export const registerTestScenCmd = (cmd: Command) => {
+  cmd
+    .command("test-scen")
+    .description("Test contract with scenarios.")
+    .action(action);
+};
 
 const repoUrl = "https://github.com/arda-org/xSuite";
 const TAG = "v1.4.77";
 const BINARY_NAME = "scenexec";
 
-export const testScenAction = async () => {
+const action = async () => {
   logTitle("Testing contract with scenarios...");
   const binaryOs = getBinaryOs();
   const localBinaryName = `${BINARY_NAME}-${binaryOs}-${TAG}`;

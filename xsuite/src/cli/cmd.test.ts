@@ -6,7 +6,7 @@ import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { stdoutInt, input } from "../_stdio";
 import { Keystore } from "../world";
-import { getCommand } from "./command";
+import { getCommand } from "./cmd";
 import { rustToolchain, rustTarget } from "./rustSettings";
 
 const cwd = process.cwd();

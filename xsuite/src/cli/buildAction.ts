@@ -1,9 +1,34 @@
 import fs from "node:fs";
 import path from "node:path";
+import { Command } from "commander";
 import { log } from "../_stdio";
 import { logTitle, logAndRunCommand, logError } from "./helpers";
 
-export const buildAction = ({
+export const registerBuildCmd = (cmd: Command) => {
+  cmd
+    .command("build")
+    .description("Build contract.")
+    .option(
+      "--ignore <IGNORE>",
+      `Ignore all directories matching the RegExp (default: ${defaultIgnore})`,
+    )
+    .option(
+      "--locked",
+      "Require the Cargo.lock in the wasm crate to be up to date",
+    )
+    .option(
+      "--dir <DIR>",
+      "Directory in which the command is executed (default: current directory)",
+    )
+    .option("-r, --recursive", "Build all contracts under the directory")
+    .option(
+      "--target-dir <TARGET_DIR>",
+      "Target directory used by Rust compiler",
+    )
+    .action(action);
+};
+
+const action = ({
   ignore,
   locked,
   dir,
@@ -79,4 +104,4 @@ const isDirBuildable = (p: string) => {
   return (mvxJsonFileExists || elrondJsonFileExists) && metaDirExists;
 };
 
-export const defaultIgnore = "^(target|node_modules|(\\..*))$";
+const defaultIgnore = "^(target|node_modules|(\\..*))$";
