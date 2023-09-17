@@ -1,7 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
 import { Command } from "commander";
-import { pkgPath } from "../_pkgPath";
+import { pkgVersion } from "../_pkg";
 import { registerBuildCmd } from "./buildAction";
 import { registerInstallRustCmd } from "./installRustCmd";
 import { registerNewCmd } from "./newCmd";
@@ -11,13 +9,9 @@ import { registerTestRustCmd } from "./testRustCmd";
 import { registerTestScenCmd } from "./testScenCmd";
 import { registerUninstallRustCmd } from "./uninstallRustCmd";
 
-const { version } = JSON.parse(
-  fs.readFileSync(path.resolve(pkgPath, "package.json"), "utf-8"),
-);
-
 export const getCommand = () => {
   const cmd = new Command();
-  cmd.version(version);
+  cmd.version(pkgVersion);
   registerInstallRustCmd(cmd);
   registerUninstallRustCmd(cmd);
   registerNewCmd(cmd);
