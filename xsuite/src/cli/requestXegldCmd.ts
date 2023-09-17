@@ -1,11 +1,21 @@
 import { SignableMessage } from "@multiversx/sdk-core";
 import { NativeAuthClient } from "@multiversx/sdk-native-auth-client";
+import { Command } from "commander";
 import { log } from "../_stdio";
 import { Proxy } from "../proxy";
 import { KeystoreSigner } from "../world";
 import { logError, logSuccess } from "./helpers";
 
-export const requestXegldAction = async ({
+export const registerRequestXegldCmd = (cmd: Command) => {
+  cmd
+    .command("request-xegld")
+    .description("Request 30 xEGLD (once per day).")
+    .requiredOption("--wallet <WALLET>", "Wallet path")
+    .option("--password <PASSWORD>", "Wallet password")
+    .action(action);
+};
+
+const action = async ({
   wallet: walletPath,
   password,
 }: {
