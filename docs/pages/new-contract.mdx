@@ -1,32 +1,61 @@
 # New Contract
 
+The recommended way to setup a new contract is to use xSuite CLI. We also show how to setup a new contract without using the CLI.
+
 ## Setup contract using CLI
 
-You can create a new contract using xSuite, starting from one of the two available [starter contracts](/#starter-contracts-audited):
-
-`xsuite new --dir my-contract` - to start from the `blank` contract
-
-`xsuite new --starter vested-transfers --dir my-contract` - to start from the `vested-transfers` contract
-
-## Manually setup contract
-
-xSuite can also be added to existing contracts.
-
-Init a new `npm` package in the root of your contracts and install the xSuite library and we also recommend setting up Typescript:
+To create a new blank contract:
 
 ```
-npm init
-npm i --save-dev xsuite typescript tsx
+xsuite new --dir <DIR>
 ```
 
-### Setting up tests
+To create a new contract from a starter contract (audited by Arda):
 
-Tests are run using `vitest`:
 ```
-npm i --save-dev vitest
+xsuite new --starter <STARTER> --dir <DIR>
+```
+
+Starter contracts are a great starting point for your new smart contract. They will save you significant time setting up the codebase and writing the initial logic. They are **audited by Arda**. Available starter contracts:
+
+- [blank](https://github.com/arda-org/xSuite/tree/main/contracts/blank): An empty contract that comes fully set up with tests and blockchain interactions.
+
+  ```
+  xsuite new --starter blank --dir <DIR>
+  ```
+
+- [vested-transfers](https://github.com/arda-org/xSuite/tree/main/contracts/vested-transfers): A contract for vested transfers, with tests and blockchain interactions.
+
+  ```
+  xsuite new --starter vested-transfers --dir <DIR>
+  ```
+
+## Setup contract manually
+
+Create a new directory and init a package there:
+
+```
+mkdir my-contract
+cd my-contract
+npm init -y
+```
+
+Add `xsuite` package and we also recommend adding TypeScript (`typescript` to type-check and `tsx` to run `.ts` files):
+
+```
+npm i -D xsuite typescript tsx
+```
+
+### Building and testing
+
+Add `vitest` package to run tests:
+
+```
+npm i -D vitest
 ```
 
 Add the following `scripts` in the `package.json` file:
+
 ```
   "scripts": {
     "build": "xsuite build",
@@ -36,6 +65,7 @@ Add the following `scripts` in the `package.json` file:
 ```
 
 Create the `tests` directory:
+
 ```
 mkdir tests
 ```
@@ -45,14 +75,14 @@ Create the first test file under `tests/contract.test.ts`, with the following co
 ```ts
 import { test, beforeEach, afterEach } from "vitest";
 import { assertAccount } from "xsuite/assert";
-import { FWorld, FWorldWallet, FWorldContract } from "xsuite/world";
+import { SWorld, SWallet, SContract } from "xsuite/world";
 
-let world: FWorld;
-let deployer: FWorldWallet;
-let contract: FWorldContract;
+let world: SWorld;
+let deployer: SWallet;
+let contract: SContract;
 
 beforeEach(async () => {
-  world = await FWorld.start();
+  world = await SWorld.start();
   deployer = await world.createWallet();
   ({ contract } = await deployer.deployContract({
     code: "file:output/contract.wasm",
@@ -71,26 +101,28 @@ test("Test", async () => {
     hasPairs: [],
   });
 });
-
 ```
 
-At this point you can build the contract using `npm run build` and run tests with `npm run test`.
+At this point, you can build the contract using `npm run build` and run tests with `npm run test`.
 
-### Setting up interactions
+### Interacting
 
-Interactions use `commander` to easily declare CLI commands:
+Interactions use `commander` package to easily declare CLI commands:
+
 ```
-npm i --save-dev commander
+npm i -D commander
 ```
 
-Add the following `scripts` under the appropriate key in the `package.json` file:
+Add the following scripts in the `scripts` of the `package.json` file:
+
 ```
 "interact:devnet": "CHAIN=devnet tsx interact/index.ts",
 "interact:testnet": "CHAIN=testnet tsx interact/index.ts",
-"interact:mainnet": "CHAIN=mainnet tsx interact/index.ts"
+"interact:mainnet": "CHAIN=mainnet tsx interact/index.ts",
 ```
 
 Create the `interact/data.json` file with the following content:
+
 ```json
 {
   "code": "file:output/contract.wasm",
@@ -100,10 +132,10 @@ Create the `interact/data.json` file with the following content:
     "mainnet": ""
   }
 }
-
 ```
 
 Create the `interact/index.ts` file with the following content:
+
 ```ts
 import { Command } from "commander";
 import { envChain } from "xsuite/interact";
@@ -152,11 +184,8 @@ program.command("ClaimDeveloperRewards").action(async () => {
 });
 
 program.parse(process.argv);
-
 ```
 
-Edit the above files to suit your contract needs. At this point, you should be able to run tests with `npm run test` and the interactions with `npm run interact:devnet deploy`.
+At this point, you should be able to run interactions. For example, if you want to deploy the contract on devnet: `npm run interact:devnet deploy`.
 
-*Note: The interactions use a `wallet.json` file which can be generated using `xsuite new-wallet --wallet wallet.json`*
-
-Of course, if you only need tests or interactions for your contract you can follow the steps only for what interests you.
+_Note: The interactions use a `wallet.json` file which can be generated using `xsuite new-wallet --wallet wallet.json`._
