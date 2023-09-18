@@ -1,6 +1,6 @@
 import { Callout } from "nextra/components";
 
-# Testing Contracts
+# Test Contract
 
 **xSuite** can be used to easily test contracts by abstracting away the [MultiversX Serialization Format](https://docs.multiversx.com/developers/developer-reference/serialization-format) as well as providing other useful helpers.
 
@@ -57,7 +57,7 @@ beforeEach(async () => {
     code: "file:output/contract.wasm",
     codeMetadata: [],
     gasLimit: 10_000_000,
-    codeArgs: [e.Str('ourString')],
+    codeArgs: [e.Str("ourString")],
   }));
 });
 
@@ -72,17 +72,18 @@ We also create the `deployer` wallet using `world.createWallet()`, which will be
 
 The `e` is a helper that lets you easily encode data in the format that the MultiversX blockchain understands. Here, `e.Str()` will convert the data in a format that can be recognized by the `ManagedBuffer` type in a Rust Smart Contract.
 
-More details about encoding blockchain data on the [Data Encoding](/encoding) page.
+More details about encoding blockchain data on the [Data Encoding](/data-encoding) page.
 
 ### Test case
 
 Finally, we can write our first basic test case:
+
 ```ts
 test("Test", async () => {
   assertAccount(await contract.getAccountWithPairs(), {
     balance: 0n,
     hasPairs: [
-      e.p.Mapper("ourStringStorageKey").Value(e.Str('ourString')),
+      e.p.Mapper("ourStringStorageKey").Value(e.Str("ourString")),
     ],
   });
 });
@@ -94,7 +95,7 @@ Using `hasPairs` we can test that the contract contains the pairs provided (use 
 
 The `e.p` is a helper that lets you easily encode storage mappers in the format that the MultiversX blockchain understands. Here, `e.p.Mapper()` represents a simple `SingleValueMapper` type from a Rust Smart Contract. Using `.Value()` we can assert that it contains the value we expect.
 
-More details about storage mappers [here](/encoding#storage-mappers).
+More details about storage mappers [here](/data-encoding#storage-mappers).
 
 ### Full basic test file code
 
@@ -115,7 +116,7 @@ beforeEach(async () => {
     code: "file:output/contract.wasm",
     codeMetadata: [],
     gasLimit: 10_000_000,
-    codeArgs: [e.Str('ourString')],
+    codeArgs: [e.Str("ourString")],
   }));
 });
 
@@ -127,7 +128,7 @@ test("Test", async () => {
   assertAccount(await contract.getAccountWithPairs(), {
     balance: 0n,
     hasPairs: [
-      e.p.Mapper("ourStringStorageKey").Value(e.Str('ourString')),
+      e.p.Mapper("ourStringStorageKey").Value(e.Str("ourString")),
     ],
   });
 });
@@ -136,12 +137,13 @@ test("Test", async () => {
 ## Creating wallets
 
 You can create wallets from a `FWorld` object using the `createWallet` method. When creating a wallet you can specify it's EGLD balance as well as other pairs, like ESDT tokens or storage keys.
+
 ```ts
 const deployer: FWorldWallet = await world.createWallet({
   balance: 10_000_000_000n,
   pairs: [
     e.p.Esdts([
-      { id: 'TOKEN-123456', amount: 100_000 },
+      { id: "TOKEN-123456", amount: 100_000 },
     ])
   ],
 });
@@ -152,6 +154,7 @@ const deployer: FWorldWallet = await world.createWallet({
 ### Deploying contracts
 
 Contracts can be deployed by an `FWorldWallet` object
+
 ```ts
 const { contract, address } = await deployer.deployContract({
   code: "file:output/contract.wasm",
@@ -166,22 +169,24 @@ const { contract, address } = await deployer.deployContract({
 The `contract` is an instance of `FWorldContract` and `address` is a string with the Bech32 address of the contract.
 
 When deploying a contract you can specify:
+
 - `code` - in this case from a wasm file, but it can also be a string of the full contract code
 - `codeMetadata` - flags like `upgradeable`, `payable` etc,
 - `gasLimit` - the gas limit to use for the transaction
 - `codeArgs` - arguments used in the `init` function of the contract
 
-Use the `e` helper utility to encode the data (see [Data Encoding](/encoding)).
+Use the `e` helper utility to encode the data (see [Data Encoding](/data-encoding)).
 
 ### Calling contracts
 
 Contracts can be easily called from a `FWorldWallet` object using the `callContract` method and specifying which contract to call in the `callee` field.
+
 ```ts
 const result = await wallet.callContract({
   callee: contract,
   gasLimit: 5_000_000,
-  funcName: 'addWhitelistedToken',
-  funcArgs: [e.Str('TOKEN-123456')],
+  funcName: "addWhitelistedToken",
+  funcArgs: [e.Str("TOKEN-123456")],
   value: 1_000, // egld to send in the transaction
 });
 ```
@@ -191,50 +196,55 @@ The `result` contains the `tx` (transaction) and `returnData` fields.
 #### Sending ESDTs
 
 To call a contract with ESDT tokens use the `esdts` field:
+
 ```ts
 const result = await wallet.callContract({
   callee: contract,
   gasLimit: 20_000_000,
-  funcName: 'swap',
+  funcName: "swap",
   funcArgs: [
-    e.Str('TOKEN-123456'),
+    e.Str("TOKEN-123456"),
   ],
-  esdts: [{ id: 'TOKEN-123456', amount: BigInt(1_000) }]
+  esdts: [{ id: "TOKEN-123456", amount: BigInt(1_000) }],
 });
 ```
 
 #### Checking errors
 
 You can also easily assert that a transaction failed with the appropriate code or message using the `assertFail` method:
+
 ```ts
 await deployer.callContract({
   callee: contract,
   gasLimit: 10_000_000,
-  funcName: 'test',
+  funcName: "test",
   funcArgs: [],
-}).assertFail({ code: 4, message: 'Some error' });
-````
+}).assertFail({ code: 4, message: "Some error" });
+```
 
 ### Querying contracts
 
 You can query a contract directly from a `FWorld` object using the `query` method and specifying which contract to query in the `callee` field.
+
 ```ts
 const { returnData, returnCode, returnMessage } = await world.query({
   callee: contract,
   funcName: "getWhitelistedToken",
-  funcArgs: [e.Str('TOKEN-123456')],
+  funcArgs: [e.Str("TOKEN-123456")],
 });
 ```
 
 In order to decode the `returnData` you can use the `d` helper from the `xsuite/data` package. More info [here](/encoding#data-decoding).
+
 ```ts
 import { assert } from "vitest";
-import { d } from "xsuite/data"
+import { d } from "xsuite/data";
+
 const tokenData = d.Tuple({
   token: d.Str(),
 }).topDecode(returnData[0]);
 
-assert(tokenData.token === 'TOKEN-123456');
+assert(tokenData.token === "TOKEN-123456");
 ```
 
 ## Asserting account data
@@ -246,6 +256,7 @@ In MultiversX, ESDT and storage data is actually stored in the same place, the `
 An account is an address that exists on the MultiversX blockchain. It can represent a simple wallet address or a smart contract address (which have an additional `code` field). Since they are both accounts, they can both have ESDTs or storage data associated with them.
 
 We can assert that an account has the pairs we want using `assertAccount` function. Here, we have two fields we can use:
+
 - `hasPairs` - will check if the account has the pairs we want, but the account can also have other pairs that we have not specified
 - `allPairs` - will check if the account has these EXACT pairs we want, if it has extra pairs the assertion will fail (this is similar to how MultiversX Scenarios work)
 
@@ -254,16 +265,17 @@ You can use whichever works best for you, but we recommend using `allPairs` to m
 ### Checking balance & ESDTs
 
 We can use the `assertAccount` function to test that an account has a specific EGLD balance and has specific ESDTs. The ESDTs can be Simple tokens (fungible), NFTs or SFTs.
+
 ```ts
 const pairs = await contract.getAccountWithPairs();
 assertAccount(pairs, {
   balance: 1_000,
   allPairs: [
     e.p.Esdts([
-      { id: 'TOKEN-123456', amount: 2_000 },
-      { id: 'NFT-123456', nonce: 1, name: 'Nft Name', uris: ['url'] },
-      { id: 'SFT-123456', nonce: 1, amount: 3_000, name: 'Sft Name', uris: ['url'] },
-      { id: 'META-123456', nonce: 1, amount: 3_000, attrs: e.Tuple(e.Str('test')) },
+      { id: "TOKEN-123456", amount: 2_000 },
+      { id: "NFT-123456", nonce: 1, name: "Nft Name", uris: ["url"] },
+      { id: "SFT-123456", nonce: 1, amount: 3_000, name: "Sft Name", uris: ["url"] },
+      { id: "META-123456", nonce: 1, amount: 3_000, attrs: e.Tuple(e.Str("test")) },
     ]),
   ],
 });
@@ -287,6 +299,7 @@ assertAccount(pairs, {
 ## Mocking account data
 
 Sometimes it is hard to arrive to a specific state of your smart contract, maybe because it will take too many transactions to arrive to that state or because there are some tricky errors that appear only in very specific cases. In those cases you can directly set the storage keys of a smart contract or any ESDTs amount & roles to whatever you want using the `contract.setAccount()` function:
+
 ```ts
 await contract.setAccount({
   ...(await contract.getAccount()),
@@ -295,38 +308,40 @@ await contract.setAccount({
   pairs: [
     // Manually setting storage keys
     e.p.Mapper("mock_address").Value(e.Addr(mockAddress)),
-    e.p.Mapper("supported_tokens", e.Str('TOKEN-123456')).Value(e.Tuple(
+    e.p.Mapper("supported_tokens", e.Str("TOKEN-123456")).Value(e.Tuple(
       e.U8(1),
-      e.Str('OTHER-654321'),
+      e.Str("OTHER-654321"),
       e.U(0),
     )),
 
     // Manually setting ESDTs & roles
-    e.p.Esdts([{ id: 'TOKEN-123456', amount: 1_000, roles: ['ESDTRoleLocalBurn', 'ESDTRoleLocalMint'] }]),
-  ]
+    e.p.Esdts([{ id: "TOKEN-123456", amount: 1_000, roles: ["ESDTRoleLocalBurn", "ESDTRoleLocalMint"] }]),
+  ],
 });
 ```
 
 This override the `pairs` of the account to what we set here. Make sure to also specify the `owner` and appropriate `codeMetadata` for the contract since they will be lost when using the `setAccount` function.
 
-
 <Callout type="warning" emoji="⚠️">
-  Due to a current bug in the underlying MultiversX Scenarios library, you should always specify `payable` in the `codeMetadata` of the `setAccount` method in order for payable endpoints to continue to work properly.
+  Due to a current bug in the underlying MultiversX Scenarios library, you
+  should always specify `payable` in the `codeMetadata` of the `setAccount`
+  method in order for payable endpoints to continue to work properly.
 </Callout>
 
 ## Advanced tests
 
 Using **xSuite** you can write even advanced tests easily.
+
 ```ts
 test("Validate", async () => {
   await contract.setAccount({
     ...(await contract.getAccount()),
     owner: deployer,
-    codeMetadata: ['payable'],
+    codeMetadata: ["payable"],
     pairs: [
       // Manually set next_epoch
-      e.p.Mapper("next_epoch", e.Str('TOKEN-123456')).Value(e.U64(10)),
-    ]
+      e.p.Mapper("next_epoch", e.Str("TOKEN-123456")).Value(e.U64(10)),
+    ],
   });
 
   await deployer.callContract({
@@ -334,10 +349,10 @@ test("Validate", async () => {
     gasLimit: 10_000_000,
     funcName: "validate",
     funcArgs: [
-      e.Str('TOKEN-123456'),
+      e.Str("TOKEN-123456"),
     ],
     value: 1_000,
-  }).assertFail({ code: 4, message: 'Invalid epoch' });
+  }).assertFail({ code: 4, message: "Invalid epoch" });
 
   world.setCurrentBlockInfo({
     epoch: 10,
@@ -348,7 +363,7 @@ test("Validate", async () => {
     gasLimit: 10_000_000,
     funcName: "validate",
     funcArgs: [
-      e.Str('TOKEN-123456'),
+      e.Str("TOKEN-123456"),
     ],
     value: 1_000,
   });
@@ -358,7 +373,7 @@ test("Validate", async () => {
     balance: 1_000, // Assert that balance changed
     allPairs: [
       // Test that next_epoch was modified accordingly
-      e.p.Mapper("next_epoch", e.Str('TOKEN-123456')).Value(e.U64(20)),
+      e.p.Mapper("next_epoch", e.Str("TOKEN-123456")).Value(e.U64(20)),
     ],
   });
 
@@ -384,12 +399,14 @@ The `FWorld` class represents an abstraction over a mock MultiversX blockchain a
 - `createWallet(account?: Omit<Account, "address">): Promise<FWorldWallet>;` - creates a new wallet account on the blockchain
 - `setAccount(account: Account): Promise<any>;` - allows to set the data of an account on the blockchain; this is useful for setting storage keys or ESDTs directly for a contract
 - `setCurrentBlockInfo(block: Block): Promise<any>;` - allows to set current block info, like the timestamp, nonce, round & epoch:
+
 ```ts
 world.setCurrentBlockInfo({
   nonce: 0,
   epoch: 0,
 });
 ```
+
 - `terminate(): Promise<void>;` - stops the underlying blockchain; should be called in `afterEach` to make sure that the underlying blockchain is properly shutdown
 
 The class also inherits from the `World` class, so it has all the functions form that class as well, like `deployContract`, `callContract` and `query`. Checkout out [here](/interact#the-world-object) for more information about that.

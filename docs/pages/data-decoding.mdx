@@ -3,13 +3,17 @@
 The `d` utility provides almost the same data types as the `e` utility, but instead of encoding the data it allows decoding of the data. It is useful when wanting to decode data returned by a query.
 
 For example if we would want to decode the data returned by `positions` storage mapper from above we could use:
+
 ```ts
 import { e, d } from "xsuite/data";
 
 const { returnData } = await world.query({
   callee: contract,
   funcName: "positions",
-  funcArgs: [e.Addr(address), e.Str('TOKEN-123456')],
+  funcArgs: [
+    e.Addr(address),
+    e.Str("TOKEN-123456")
+  ],
 });
 
 const positions = d.List(
@@ -21,4 +25,4 @@ const positions = d.List(
 ).topDecode(returnData[0]);
 ```
 
-The supported types are identically to the ones from the [Data Encoding](/encoding) page.
+The supported types are identically to the ones from the [Data Encoding](/data-encoding) page.
