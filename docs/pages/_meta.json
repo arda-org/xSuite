@@ -1,5 +1,7 @@
 {
-  "index": "Getting Started",
+  "index": "Welcome",
+  "getting-started": "Getting Started",
+  "install-xsuite": "Install xSuite",
   "new-contract": "New Contract",
   "build-contract": "Build Contract",
   "test-contract": "Test Contract",
