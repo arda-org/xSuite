@@ -1,7 +1,13 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/arda-org/xSuite/main/Logo.png" height="128">
-  <h1 align="center">xSuite</h1>
-</p>
+<a href="https://xsuite.dev">
+  <p align="center">
+    <img src="https://raw.githubusercontent.com/arda-org/xSuite/main/Logo.png" height="128">
+  </p>
+</a>
+<h1 align="center">
+  <a href="https://xsuite.dev">
+    xSuite
+  </a>
+</h1>
 
 <p align="center">
   <a href="https://arda.run">
