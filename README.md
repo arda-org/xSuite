@@ -1,6 +1,6 @@
 <a href="https://xsuite.dev">
   <p align="center">
-    <img src="https://raw.githubusercontent.com/arda-org/xSuite/main/Logo.png" height="128">
+    <img src="./Logo.png" height="128">
   </p>
 </a>
 <h1 align="center">
@@ -20,7 +20,15 @@
 
 xSuite is the full suite for efficiently developing high-quality MultiversX smart contracts. Init, build, test, deploy contracts in seconds.
 
-xSuite is [made by Arda team](https://arda.run) and is the result of their deep expertise from building numerous dApps and auditing [35+ contracts](https://arda.run/audits). xSuite is extensively tested with 450+ tests and 100% test coverage of critical parts, to ensure it is always safe and reliable.
+xSuite is made by [the Arda team](https://arda.run) and is the result of their deep expertise from building numerous dApps and auditing [35+ contracts](https://arda.run/audits). xSuite is extensively tested with 450+ tests and 100% test coverage of critical parts, to ensure it is always safe and reliable.
+
+A big thank you to [the Buidly team](https://twitter.com/buidly_) who intensively used xSuite in their projects, provided valuable feedback and drafted the first version of the documentation.
+
+<a href="https://twitter.com/buidly_">
+  <p align="center">
+    <img src="./docs/public/Buidly.png" />
+  </p>
+</a>
 
 > :warning: xSuite is in beta phase.
 
@@ -30,7 +38,7 @@ Visit [https://xsuite.dev](https://xsuite.dev) to view the full documentation.
 
 ## Starter Contracts (audited)
 
-Arda team has created starter contracts to be used as a great starting point for the development of your new smart contract and to save you a significant amount of time setting up the codebase and writing the initial logic. Starter contracts are **audited by Arda**.
+The Arda team has created starter contracts to be used as a great starting point for the development of your new smart contract and to save you a significant amount of time setting up the codebase and writing the initial logic. Starter contracts are **audited by Arda**.
 
 ## Onboarding and Training
 
