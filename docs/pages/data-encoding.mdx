@@ -1,56 +1,56 @@
-# Data encoding
+# Data Encoding
 
-The `xSuite/data` package provides the `e` and `d` utilities to easily convert data to/from the MultiversX format into a more readable form.
+The `xSuite/data` package provides the `e` utility to easily convert data to the MultiversX format.
 
 ```ts
-import { e, d } from "xsuite/data";
+import { e } from "xsuite/data";
 ```
 
 ## Available data types
 
-The `e` utility provides several data types to help convert any kind of data into a the format that a Rust Smart Contract understands. All the data types are detailed below along with their Rust counterparts. They are available under the `e` helper. (eg: `e.Str`, `e.U64` etc)
+The `e` utility provides several data types to help convert any kind of data into the format that a Rust Smart Contract understands. All the data types are detailed below along with their Rust counterparts. They are available under the `e` helper (e.g. `e.Str`, `e.U64`, etc).
 
-### Buffer
+### e.Buffer
 
 - Encodes a hex string or byte array as bytes for use with a `ManagedBuffer`. Adds the length of the data at the beginning when nest encoded.
 
-### Bytes
+### e.Bytes
 
 - Similar to `Buffer`, but doesn't append any length even when nest encoded.
 
-### Str
+### e.Str
 
 - Encodes a string for use with string data types such as `ManagedBuffer` or `TokenIdentifier`. Adds the length of the string at the beginning when nest encoded.
 
-### CstStr
+### e.CstStr
 
 - Similar to `Str`, but doesn't append any length even when nest encoded.
 
-### Addr
+### e.Addr
 
-- Encodes an address (bech32, hex etc) for use with a `ManagedAddress`
+- Encodes an address (bech32, hex etc) for use with a `ManagedAddress`.
 
-### Bool
+### e.Bool
 
-- Encodes a boolean for use with a `bool`
+- Encodes a boolean for use with a `bool`.
 
-### U8, U16, U32, U64
+### e.U8, e.U16, e.U32, e.U64
 
-- Encodes numbers for use with a `u8`, `u16`, `u32`, and `u64` respectively
+- Encodes numbers for use with a `u8`, `u16`, `u32`, and `u64` respectively.
 
-### U
+### e.U
 
-- Encodes big numbers for use with a `BigUInt`
+- Encodes big numbers for use with a `BigUInt`.
 
-### I8, I16, I32, I64
+### e.I8, e.I16, e.I32, e.I64
 
-- Encodes numbers for use with a `i8`, `i16`, `i32`, and `i64` respectively
+- Encodes numbers for use with a `i8`, `i16`, `i32`, and `i64` respectively.
 
-### I
+### e.I
 
-- Encodes big numbers for use with a `BigInt`
+- Encodes big numbers for use with a `BigInt`.
 
-### Tuple
+### e.Tuple
 
 - Encodes arbitrary data structures for use with composite data types such as `struct` or `MultiValueN`. Uses nest encoding for the underlying data.
 
@@ -72,7 +72,7 @@ pub struct Data<M: ManagedTypeApi> {
 }
 ```
 
-### List
+### e.List
 
 - Encodes an array of values for use with vector data types such as `ManagedVec`, `MultiValueManagedVec` or `MultiValueEncoded`. Uses nest encoding for the underlying data. Adds the length of the array at the beginning when it is itself nest encoded i.e. as part of a `Tuple`.
 
@@ -80,7 +80,7 @@ pub struct Data<M: ManagedTypeApi> {
 e.List(e.U64(1), e.U64(2)),
 ```
 
-### Option
+### e.Option
 
 - Encodes arbitrary data for use with an `Option` (not to be confused with an `OptionalValue`). It appends `01` (hex) at the start of the value if the value is not `null`, or is simply `00` (hex).
 
@@ -119,9 +119,9 @@ await deployer.callContract({
 
 ## Storage mappers
 
-Under `e.p.Mapper` there are utilities to easily encode storage keys as well as the data from the storage in the correct format. This is used together with the `assertAccount` utility from `xSuite/assert` and the `hasPairs`/`allPairs` key, to check that an account has the appropriate storage data.
+Under `e.p.Mapper` there are utilities to easily encode storage mappers. This is used together with the `assertAccount` utility from `xSuite/assert` and the `hasPairs`/`allPairs` key, to check that an account has the appropriate storage data.
 
-It accepts the `name` of the storage key as a first argument and optionally any number of nested storage keys:
+It accepts the name of the storage mapper as a first argument and optionally storage mapper arguments:
 
 ```ts
 e.p.Mapper("paused");
@@ -130,23 +130,23 @@ e.p.Mapper("tokens", e.Str("TOKEN-123456"));
 
 The `e.p.Mapper` returns a type with the following helper functions for the commonly used storage mappers:
 
-### Value
+### e.p.Mapper(...).Value
 
 - For use with a `SingleValueMapper`
 
-### UnorderedSet
+### e.p.Mapper(...).UnorderedSet
 
 - For use with a `UnorderedSetMapper`
 
-### Set
+### e.p.Mapper(...).Set
 
 - For use with a `SetMapper`
 
-### Map
+### e.p.Mapper(...).Map
 
 - For use with a `MapMapper`
 
-### Vec
+### e.p.Mapper(...).Vec
 
 - For use with a `VecMapper`
 
@@ -204,7 +204,7 @@ fn positions(&self, address: &ManagedAddress, token: &TokenIdentifier) -> VecMap
 
 ## ESDTs
 
-Under `e.p.Esdts` there are utilities to easily encode pairs for ESDTs and assert that an account has the appropriate tokens.
+Under `e.p.Esdts` there are utilities to easily encode ESDTs and assert that an account has the appropriate tokens.
 
 ```ts
 assertAccount(pairs, {
