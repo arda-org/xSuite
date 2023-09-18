@@ -2,7 +2,7 @@
   "index": "Welcome",
   "getting-started": "Getting Started",
   "install-xsuite": "Install xSuite",
-  "new-contract": "New Contract",
+  "initialize-contract": "Initialize Contract",
   "build-contract": "Build Contract",
   "test-contract": "Test Contract",
   "interact-contract": "Interact with Contract",

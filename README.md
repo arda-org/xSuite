@@ -38,7 +38,7 @@ Visit [https://xsuite.dev](https://xsuite.dev) to view the full documentation.
 
 ## Starter Contracts (audited)
 
-Starter contracts are a great starting point for your new smart contract. They will save you significant time setting up the codebase and writing the initial logic. They are **audited by Arda**. [View starter contracts](https://xsuite.dev/new-contract).
+Starter contracts are a great starting point for your new smart contract. They will save you significant time setting up the codebase and writing the initial logic. They are **audited by Arda**. [View starter contracts](https://xsuite.dev/initialize-contract).
 
 ## Onboarding and Training
 
