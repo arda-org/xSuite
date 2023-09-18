@@ -35,14 +35,13 @@ export default {
   },
   useNextSeoProps() {
     const { asPath } = useRouter();
-    if (asPath !== "/") {
+    if (asPath === "/") {
       return {
-        titleTemplate: `%s – ${websiteName}`,
+        titleTemplate: `${websiteName}: Suite to develop MultiversX contracts`,
       };
     }
     return {
-      titleTemplate: websiteName,
+      titleTemplate: `%s | ${websiteName}`,
     };
   },
-
 };
