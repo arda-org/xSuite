@@ -29,10 +29,13 @@ jobs:
           node-version: 18
           pnpm-version: 8
 
-      - name: Build
+      - name: Buid xsuite
+        run: pnpm build-xsuite
+
+      - name: Build docs
         run: pnpm build-docs
 
-      - name: Publish
+      - name: Publish docs
         uses: cloudflare/pages-action@1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}

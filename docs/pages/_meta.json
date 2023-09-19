@@ -8,5 +8,12 @@
   "interact-contract": "Interact with Contract",
   "data-encoding": "Data Encoding",
   "data-decoding": "Data Decoding",
-  "cli": "CLI"
+  "cli": "CLI",
+  "data-converter": {
+    "title": "Data Converter",
+    "type": "page",
+    "theme": {
+      "layout": "full"
+    }
+  }
 }
