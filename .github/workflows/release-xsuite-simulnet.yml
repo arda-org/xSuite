@@ -63,6 +63,6 @@ jobs:
           skip-install: true
 
       - name: Publish xsuite-simulnet to NPM
-        run: git config core.fileMode false && cd xsuite-simulnet && pnpm publish
+        run: git config core.fileMode false && cd xsuite-simulnet && pnpm publish --publish-branch dev --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

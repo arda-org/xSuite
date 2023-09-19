@@ -1,6 +1,9 @@
 name: Deploy docs
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
   workflow_dispatch:
 
