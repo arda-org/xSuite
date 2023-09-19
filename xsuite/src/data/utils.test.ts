@@ -1,10 +1,5 @@
 import { describe, it, expect } from "@jest/globals";
-import {
-  b64ToHexString,
-  bytesToHexString,
-  hexStringToBytes,
-  hexToB64String,
-} from "./utils";
+import { b64ToHexString, bytesToHexString, hexStringToBytes } from "./utils";
 
 describe("bytesToHexString", () => {
   it("should convert bytes to a hex string", () => {
@@ -49,13 +44,5 @@ describe("b64ToHexString", () => {
     const actualHex = b64ToHexString("aGVsbG8=");
     const expectedHex = "68656c6c6f";
     expect(actualHex).toEqual(expectedHex);
-  });
-});
-
-describe("hexToB64String", () => {
-  it("should convert a hex string to base64 string", () => {
-    const actualB64 = hexToB64String("68656c6c6f");
-    const expectedB64 = "aGVsbG8=";
-    expect(actualB64).toEqual(expectedB64);
   });
 });

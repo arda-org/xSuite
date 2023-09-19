@@ -1,6 +1,5 @@
 import { test, beforeEach, afterEach } from "vitest";
-import { assertAccount } from "xsuite/assert";
-import { SWorld, SWallet, SContract } from "xsuite/world";
+import { assertAccount, SWorld, SWallet, SContract } from "xsuite";
 
 let world: SWorld;
 let deployer: SWallet;

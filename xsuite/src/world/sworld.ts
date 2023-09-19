@@ -1,4 +1,6 @@
-import { Account, Block, SProxy, DeployContractTxParams } from "../proxy";
+import { SProxy } from "../proxy";
+import { DeployContractTxParams } from "../proxy/proxy";
+import { Account, Block } from "../proxy/sproxy";
 import { DummySigner, Signer } from "./signer";
 import { startSimulnet } from "./simulnet";
 import { isContractAddress, numberToBytesAddress } from "./utils";

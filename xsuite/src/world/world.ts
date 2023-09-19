@@ -1,14 +1,14 @@
-import { AddressEncodable } from "../data";
+import { AddressEncodable } from "../data/AddressEncodable";
 import {
   CallContractTxParams,
   DeployContractTxParams,
+  Query,
   TransferTxParams,
-  UpgradeContractTxParams,
   Tx,
   TxParams,
+  UpgradeContractTxParams,
   Proxy,
-  Query,
-} from "../proxy";
+} from "../proxy/proxy";
 import { KeystoreSigner, Signer } from "./signer";
 import { readFileHex } from "./utils";
 

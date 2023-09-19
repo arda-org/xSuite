@@ -22,6 +22,8 @@
     "data.d.ts",
     "data.js",
     "dist",
+    "index.d.ts",
+    "index.js",
     "interact.d.ts",
     "interact.js",
     "proxy.d.ts",

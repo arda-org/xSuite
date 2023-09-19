@@ -1,0 +1,56 @@
+import assert from "node:assert";
+import { Pairs, pairsToRawPairs } from "../data/pairs";
+import { Proxy } from "../proxy";
+
+export const assertHasPairs = (actualPairs: Pairs, hasPairs: Pairs) => {
+  const rawActualPairs = pairsToRawPairs(actualPairs);
+  const rawHasPairs = pairsToRawPairs(hasPairs);
+  for (const k in rawHasPairs) {
+    assert.strictEqual(rawActualPairs[k] ?? "", rawHasPairs[k] ?? "");
+  }
+};
+
+export const assertAllPairs = (actualPairs: Pairs, allPairs: Pairs) => {
+  const rawActualPairs = pairsToRawPairs(actualPairs);
+  const rawAllPairs = pairsToRawPairs(allPairs);
+  const keys = new Set([
+    ...Object.keys(rawActualPairs),
+    ...Object.keys(rawAllPairs),
+  ]);
+  for (const k of keys) {
+    assert.strictEqual(rawActualPairs[k] ?? "", rawAllPairs[k] ?? "");
+  }
+};
+
+export const assertAccount = (
+  actualAccount: ActualAccount,
+  { code, nonce, balance, hasPairs, allPairs }: ExpectedAccount,
+) => {
+  if (code !== undefined) {
+    assert.strictEqual(actualAccount.code, code);
+  }
+  if (nonce !== undefined) {
+    assert.strictEqual(actualAccount.nonce, nonce);
+  }
+  if (balance !== undefined) {
+    assert.strictEqual(actualAccount.balance, BigInt(balance));
+  }
+  if (hasPairs !== undefined) {
+    assertHasPairs(actualAccount.pairs ?? {}, hasPairs);
+  }
+  if (allPairs !== undefined) {
+    assertAllPairs(actualAccount.pairs ?? {}, allPairs);
+  }
+};
+
+type ActualAccount = Partial<
+  Awaited<ReturnType<typeof Proxy.getAccountWithPairs>>
+>;
+
+type ExpectedAccount = {
+  code?: string;
+  nonce?: number;
+  balance?: number | bigint;
+  hasPairs?: Pairs;
+  allPairs?: Pairs;
+};

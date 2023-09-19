@@ -1,6 +1,5 @@
 import { Command } from "commander";
-import { envChain } from "xsuite/interact";
-import { World } from "xsuite/world";
+import { envChain, World } from "xsuite";
 import data from "./data.json";
 
 const world = World.new({

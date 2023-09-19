@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import { Address, addressToHexString } from "../data";
+import { Address, addressToHexString } from "../data/address";
 
 export const readFileHex = (path: string) => {
   return fs.readFileSync(path, "hex");

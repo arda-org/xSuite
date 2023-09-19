@@ -3,7 +3,7 @@ import { NativeAuthClient } from "@multiversx/sdk-native-auth-client";
 import { Command } from "commander";
 import { log } from "../_stdio";
 import { Proxy } from "../proxy";
-import { KeystoreSigner } from "../world";
+import { KeystoreSigner } from "../world/signer";
 import { logError, logSuccess } from "./helpers";
 
 export const registerRequestXegldCmd = (cmd: Command) => {

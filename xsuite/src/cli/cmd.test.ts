@@ -5,7 +5,7 @@ import chalk from "chalk";
 import { rest } from "msw";
 import { setupServer } from "msw/node";
 import { stdoutInt, input } from "../_stdio";
-import { Keystore } from "../world";
+import { Keystore } from "../world/signer";
 import { getCommand } from "./cmd";
 import { rustToolchain, rustTarget } from "./rustSettings";
 

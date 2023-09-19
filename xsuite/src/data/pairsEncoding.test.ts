@@ -1,6 +1,6 @@
 import { test, expect, beforeEach, afterEach, describe } from "@jest/globals";
-import { assertAllPairs } from "../assert";
-import { SWorld, SContract, SWallet, readFileHex } from "../world";
+import { assertAllPairs } from "../assert/account";
+import { SWorld, SContract, SWallet } from "../world";
 import { enc } from "./encoding";
 import { hexToHexString } from "./hex";
 import { pEnc } from "./pairsEncoding";
@@ -24,7 +24,7 @@ afterEach(async () => {
 describe("Mapper", () => {
   beforeEach(async () => {
     ({ contract } = await wallet.deployContract({
-      code: readFileHex("contracts/mapper/output/mapper.wasm"),
+      code: "file:contracts/mapper/output/mapper.wasm",
       codeMetadata: [],
       gasLimit: 10_000_000,
     }));
@@ -211,7 +211,7 @@ describe("Mapper", () => {
 describe("Esdt", () => {
   beforeEach(async () => {
     contract = await world.createContract({
-      code: readFileHex("contracts/esdt/output/esdt.wasm"),
+      code: "file:contracts/esdt/output/esdt.wasm",
       pairs: [
         pEnc.Esdts([
           {
