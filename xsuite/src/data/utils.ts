@@ -20,5 +20,13 @@ export const b64ToHexString = (b64: string) => {
   }).join("");
 };
 
+export const hexToB64String = (hex: string) => {
+  let str = "";
+  for (let i = 0; i < hex.length; i += 2) {
+    str += String.fromCharCode(parseInt(hex.slice(i, i + 2), 16));
+  }
+  return btoa(str);
+};
+
 export const stringToBytes = (string: string) =>
   new TextEncoder().encode(string);
