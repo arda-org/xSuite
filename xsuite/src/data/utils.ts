@@ -10,8 +10,8 @@ export const hexStringToBytes = (hexString: string) => {
   if (!/^[0-9a-fA-F]*$/.test(hexString)) {
     throw new Error("Invalid hex string.");
   }
-  const pairs = hexString.match(/.{2}/g) ?? [];
-  return Uint8Array.from(pairs.map((h) => parseInt(h, 16)));
+  const hs = hexString.match(/.{2}/g) ?? [];
+  return Uint8Array.from(hs.map((h) => parseInt(h, 16)));
 };
 
 export const b64ToHexString = (b64: string) => {

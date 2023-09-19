@@ -1,30 +1,30 @@
 import assert from "node:assert";
-import { Pairs, pairsToRawPairs } from "../data/pairs";
+import { Kvs, kvsToRawKvs } from "../data/kvs";
 import { Proxy } from "../proxy";
 
-export const assertHasPairs = (actualPairs: Pairs, hasPairs: Pairs) => {
-  const rawActualPairs = pairsToRawPairs(actualPairs);
-  const rawHasPairs = pairsToRawPairs(hasPairs);
-  for (const k in rawHasPairs) {
-    assert.strictEqual(rawActualPairs[k] ?? "", rawHasPairs[k] ?? "");
+export const assertHasKvs = (actualKvs: Kvs, hasKvs: Kvs) => {
+  const rawActualKvs = kvsToRawKvs(actualKvs);
+  const rawHasKvs = kvsToRawKvs(hasKvs);
+  for (const k in rawHasKvs) {
+    assert.strictEqual(rawActualKvs[k] ?? "", rawHasKvs[k] ?? "");
   }
 };
 
-export const assertAllPairs = (actualPairs: Pairs, allPairs: Pairs) => {
-  const rawActualPairs = pairsToRawPairs(actualPairs);
-  const rawAllPairs = pairsToRawPairs(allPairs);
+export const assertAllKvs = (actualKvs: Kvs, allKvs: Kvs) => {
+  const rawActualKvs = kvsToRawKvs(actualKvs);
+  const rawAllKvs = kvsToRawKvs(allKvs);
   const keys = new Set([
-    ...Object.keys(rawActualPairs),
-    ...Object.keys(rawAllPairs),
+    ...Object.keys(rawActualKvs),
+    ...Object.keys(rawAllKvs),
   ]);
   for (const k of keys) {
-    assert.strictEqual(rawActualPairs[k] ?? "", rawAllPairs[k] ?? "");
+    assert.strictEqual(rawActualKvs[k] ?? "", rawAllKvs[k] ?? "");
   }
 };
 
 export const assertAccount = (
   actualAccount: ActualAccount,
-  { code, nonce, balance, hasPairs, allPairs }: ExpectedAccount,
+  { code, nonce, balance, hasKvs, allKvs }: ExpectedAccount,
 ) => {
   if (code !== undefined) {
     assert.strictEqual(actualAccount.code, code);
@@ -35,22 +35,22 @@ export const assertAccount = (
   if (balance !== undefined) {
     assert.strictEqual(actualAccount.balance, BigInt(balance));
   }
-  if (hasPairs !== undefined) {
-    assertHasPairs(actualAccount.pairs ?? {}, hasPairs);
+  if (hasKvs !== undefined) {
+    assertHasKvs(actualAccount.kvs ?? {}, hasKvs);
   }
-  if (allPairs !== undefined) {
-    assertAllPairs(actualAccount.pairs ?? {}, allPairs);
+  if (allKvs !== undefined) {
+    assertAllKvs(actualAccount.kvs ?? {}, allKvs);
   }
 };
 
 type ActualAccount = Partial<
-  Awaited<ReturnType<typeof Proxy.getAccountWithPairs>>
+  Awaited<ReturnType<typeof Proxy.getAccountWithKvs>>
 >;
 
 type ExpectedAccount = {
   code?: string;
   nonce?: number;
   balance?: number | bigint;
-  hasPairs?: Pairs;
-  allPairs?: Pairs;
+  hasKvs?: Kvs;
+  allKvs?: Kvs;
 };

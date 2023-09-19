@@ -119,12 +119,12 @@ export class Wallet extends Signer {
     return this.proxy.getAccount(this);
   }
 
-  getAccountPairs() {
-    return this.proxy.getAccountPairs(this);
+  getAccountKvs() {
+    return this.proxy.getAccountKvs(this);
   }
 
-  getAccountWithPairs() {
-    return this.proxy.getAccountWithPairs(this);
+  getAccountWithKvs() {
+    return this.proxy.getAccountWithKvs(this);
   }
 
   executeTx(
@@ -263,12 +263,12 @@ export class Contract extends AddressEncodable {
     return this.proxy.getAccount(this);
   }
 
-  getAccountPairs() {
-    return this.proxy.getAccountPairs(this);
+  getAccountKvs() {
+    return this.proxy.getAccountKvs(this);
   }
 
-  getAccountWithPairs() {
-    return this.proxy.getAccountWithPairs(this);
+  getAccountWithKvs() {
+    return this.proxy.getAccountWithKvs(this);
   }
 }
 

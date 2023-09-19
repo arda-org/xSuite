@@ -62,8 +62,8 @@ export class SWorld extends World {
     return contract;
   }
 
-  getSystemAccountPairs() {
-    return this.proxy.getAccountPairs(systemAccountAddress);
+  getSystemAccountKvs() {
+    return this.proxy.getAccountKvs(systemAccountAddress);
   }
 
   setSystemAccount(account: Omit<Account, "address">) {

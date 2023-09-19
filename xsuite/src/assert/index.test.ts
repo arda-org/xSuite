@@ -1,5 +1,5 @@
 import { test, expect } from "@jest/globals";
-import { assertAllPairs, assertHasPairs, assertAccount } from "./account";
+import { assertAllKvs, assertHasKvs, assertAccount } from "./account";
 import { assertHexList } from "./hexList";
 
 test("assertHexList - matching", () => {
@@ -10,41 +10,41 @@ test("assertHexList - not matching", () => {
   expect(() => assertHexList(["00"], ["01"])).toThrow();
 });
 
-test("assertHasPairs - matching", () => {
-  assertHasPairs({ "01": "01", "03": "03" }, { "01": "01", "02": "" });
+test("assertHasKvs - matching", () => {
+  assertHasKvs({ "01": "01", "03": "03" }, { "01": "01", "02": "" });
 });
 
-test("assertHasPairs - value not maching", () => {
+test("assertHasKvs - value not maching", () => {
   expect(() =>
-    assertHasPairs({ "01": "01", "02": "02" }, { "01": "01", "02": "" }),
+    assertHasKvs({ "01": "01", "02": "02" }, { "01": "01", "02": "" }),
   ).toThrow();
 });
 
-test("assertHasPairs - value missing", () => {
+test("assertHasKvs - value missing", () => {
   expect(() =>
-    assertHasPairs({ "01": "01" }, { "01": "01", "03": "03" }),
+    assertHasKvs({ "01": "01" }, { "01": "01", "03": "03" }),
   ).toThrow();
 });
 
-test("assertAllPairs - matching", () => {
-  assertAllPairs({ "01": "01" }, { "01": "01", "02": "" });
+test("assertAllKvs - matching", () => {
+  assertAllKvs({ "01": "01" }, { "01": "01", "02": "" });
 });
 
-test("assertAllPairs - value not maching", () => {
+test("assertAllKvs - value not maching", () => {
   expect(() =>
-    assertAllPairs({ "01": "01", "02": "" }, { "01": "01", "02": "02" }),
+    assertAllKvs({ "01": "01", "02": "" }, { "01": "01", "02": "02" }),
   ).toThrow();
 });
 
-test("assertAllPairs - value missing", () => {
+test("assertAllKvs - value missing", () => {
   expect(() =>
-    assertAllPairs({ "01": "01" }, { "01": "01", "03": "03" }),
+    assertAllKvs({ "01": "01" }, { "01": "01", "03": "03" }),
   ).toThrow();
 });
 
-test("assertAllPairs - value in excess", () => {
+test("assertAllKvs - value in excess", () => {
   expect(() =>
-    assertAllPairs({ "01": "01", "02": "02" }, { "01": "01" }),
+    assertAllKvs({ "01": "01", "02": "02" }, { "01": "01" }),
   ).toThrow();
 });
 
@@ -52,13 +52,13 @@ test("assertAccount", () => {
   assertAccount(
     {
       balance: 10n,
-      pairs: {
+      kvs: {
         "01": "01",
       },
     },
     {
       balance: 10n,
-      hasPairs: [
+      hasKvs: [
         ["01", "01"],
         ["02", ""],
       ],

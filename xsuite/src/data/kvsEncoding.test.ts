@@ -1,9 +1,9 @@
 import { test, expect, beforeEach, afterEach, describe } from "@jest/globals";
-import { assertAllPairs } from "../assert/account";
+import { assertAllKvs } from "../assert/account";
 import { SWorld, SContract, SWallet } from "../world";
 import { enc } from "./encoding";
 import { hexToHexString } from "./hex";
-import { pEnc } from "./pairsEncoding";
+import { kvsEnc } from "./kvsEncoding";
 
 let world: SWorld;
 let wallet: SWallet;
@@ -37,14 +37,14 @@ describe("Mapper", () => {
       funcArgs: [enc.Str("a"), enc.U64(1)],
       gasLimit: 10_000_000,
     });
-    assertAllPairs(
-      pEnc.Mapper("single", enc.Str("a")).Value(enc.U64(1)),
-      await contract.getAccountPairs(),
+    assertAllKvs(
+      kvsEnc.Mapper("single", enc.Str("a")).Value(enc.U64(1)),
+      await contract.getAccountKvs(),
     );
     expect(async () =>
-      assertAllPairs(
-        pEnc.Mapper("single", enc.Str("a")).Value(null),
-        await contract.getAccountPairs(),
+      assertAllKvs(
+        kvsEnc.Mapper("single", enc.Str("a")).Value(null),
+        await contract.getAccountKvs(),
       ),
     ).rejects.toThrow();
     await wallet.callContract({
@@ -53,9 +53,9 @@ describe("Mapper", () => {
       funcArgs: [enc.Str("a")],
       gasLimit: 10_000_000,
     });
-    assertAllPairs(
-      pEnc.Mapper("single", enc.Str("a")).Value(null),
-      await contract.getAccountPairs(),
+    assertAllKvs(
+      kvsEnc.Mapper("single", enc.Str("a")).Value(null),
+      await contract.getAccountKvs(),
     );
   });
 
@@ -66,16 +66,16 @@ describe("Mapper", () => {
       funcArgs: [enc.U64(1), enc.U(10), enc.U(20)],
       gasLimit: 10_000_000,
     });
-    assertAllPairs(
-      pEnc
+    assertAllKvs(
+      kvsEnc
         .Mapper("unordered_set", enc.U64(1))
         .UnorderedSet([enc.U(10), enc.U(20)]),
-      await contract.getAccountPairs(),
+      await contract.getAccountKvs(),
     );
     expect(async () =>
-      assertAllPairs(
-        pEnc.Mapper("unordered_set", enc.U64(1)).UnorderedSet(null),
-        await contract.getAccountPairs(),
+      assertAllKvs(
+        kvsEnc.Mapper("unordered_set", enc.U64(1)).UnorderedSet(null),
+        await contract.getAccountKvs(),
       ),
     ).rejects.toThrow();
     await wallet.callContract({
@@ -84,9 +84,9 @@ describe("Mapper", () => {
       funcArgs: [enc.U64(1), enc.U(10), enc.U(20)],
       gasLimit: 10_000_000,
     });
-    assertAllPairs(
-      pEnc.Mapper("unordered_set", enc.U64(1)).UnorderedSet(null),
-      await contract.getAccountPairs(),
+    assertAllKvs(
+      kvsEnc.Mapper("unordered_set", enc.U64(1)).UnorderedSet(null),
+      await contract.getAccountKvs(),
     );
   });
 
@@ -103,18 +103,18 @@ describe("Mapper", () => {
       funcArgs: [enc.U64(1), enc.U(20)],
       gasLimit: 10_000_000,
     });
-    assertAllPairs(
-      pEnc.Mapper("set", enc.U64(1)).Set([
+    assertAllKvs(
+      kvsEnc.Mapper("set", enc.U64(1)).Set([
         [3, enc.U(30)],
         [1, enc.U(10)],
         [4, enc.U(40)],
       ]),
-      await contract.getAccountPairs(),
+      await contract.getAccountKvs(),
     );
     expect(async () =>
-      assertAllPairs(
-        pEnc.Mapper("set", enc.U64(1)).Set(null),
-        await contract.getAccountPairs(),
+      assertAllKvs(
+        kvsEnc.Mapper("set", enc.U64(1)).Set(null),
+        await contract.getAccountKvs(),
       ),
     ).rejects.toThrow();
     await wallet.callContract({
@@ -123,14 +123,14 @@ describe("Mapper", () => {
       funcArgs: [enc.U64(1), enc.U(10), enc.U(30), enc.U(40)],
       gasLimit: 10_000_000,
     });
-    assertAllPairs(
-      pEnc.Mapper("set", enc.U64(1)).Set(null),
-      await contract.getAccountPairs(),
+    assertAllKvs(
+      kvsEnc.Mapper("set", enc.U64(1)).Set(null),
+      await contract.getAccountKvs(),
     );
   });
 
   test("p.Mapper.Set - Negative id", () => {
-    expect(() => pEnc.Mapper("set").Set([[0, enc.U64(0)]])).toThrow(
+    expect(() => kvsEnc.Mapper("set").Set([[0, enc.U64(0)]])).toThrow(
       "Negative id not allowed.",
     );
   });
@@ -153,17 +153,17 @@ describe("Mapper", () => {
       funcArgs: [enc.U(1), enc.Str("b")],
       gasLimit: 10_000_000,
     });
-    assertAllPairs(
-      pEnc.Mapper("map", enc.U(1)).Map([
+    assertAllKvs(
+      kvsEnc.Mapper("map", enc.U(1)).Map([
         [3, enc.Str("c"), enc.U64(30)],
         [1, enc.Str("a"), enc.U64(10)],
       ]),
-      await contract.getAccountPairs(),
+      await contract.getAccountKvs(),
     );
     expect(async () =>
-      assertAllPairs(
-        pEnc.Mapper("map", enc.U(1)).Map(null),
-        await contract.getAccountPairs(),
+      assertAllKvs(
+        kvsEnc.Mapper("map", enc.U(1)).Map(null),
+        await contract.getAccountKvs(),
       ),
     ).rejects.toThrow();
     await wallet.callContract({
@@ -172,9 +172,9 @@ describe("Mapper", () => {
       funcArgs: [enc.U(1), enc.Str("a"), enc.Str("c")],
       gasLimit: 10_000_000,
     });
-    assertAllPairs(
-      pEnc.Mapper("map", enc.U(1)).Map(null),
-      await contract.getAccountPairs(),
+    assertAllKvs(
+      kvsEnc.Mapper("map", enc.U(1)).Map(null),
+      await contract.getAccountKvs(),
     );
   });
 
@@ -185,14 +185,14 @@ describe("Mapper", () => {
       funcArgs: [enc.U64(1), enc.U(2), enc.U64(1), enc.U64(2)],
       gasLimit: 10_000_000,
     });
-    assertAllPairs(
-      pEnc.Mapper("vec", enc.U64(1), enc.U(2)).Vec([enc.U64(1), enc.U64(2)]),
-      await contract.getAccountPairs(),
+    assertAllKvs(
+      kvsEnc.Mapper("vec", enc.U64(1), enc.U(2)).Vec([enc.U64(1), enc.U64(2)]),
+      await contract.getAccountKvs(),
     );
     expect(async () =>
-      assertAllPairs(
-        pEnc.Mapper("vec", enc.U64(1), enc.U(2)).Vec(null),
-        await contract.getAccountPairs(),
+      assertAllKvs(
+        kvsEnc.Mapper("vec", enc.U64(1), enc.U(2)).Vec(null),
+        await contract.getAccountKvs(),
       ),
     ).rejects.toThrow();
     await wallet.callContract({
@@ -201,9 +201,9 @@ describe("Mapper", () => {
       funcArgs: [enc.U64(1), enc.U(2), enc.U32(2), enc.U32(1)],
       gasLimit: 10_000_000,
     });
-    assertAllPairs(
-      pEnc.Mapper("vec", enc.U64(1), enc.U(2)).Vec(null),
-      await contract.getAccountPairs(),
+    assertAllKvs(
+      kvsEnc.Mapper("vec", enc.U64(1), enc.U(2)).Vec(null),
+      await contract.getAccountKvs(),
     );
   });
 });
@@ -212,8 +212,8 @@ describe("Esdt", () => {
   beforeEach(async () => {
     contract = await world.createContract({
       code: "file:contracts/esdt/output/esdt.wasm",
-      pairs: [
-        pEnc.Esdts([
+      kvs: [
+        kvsEnc.Esdts([
           {
             id: fftId,
             roles: ["ESDTRoleLocalMint"],
@@ -275,16 +275,16 @@ describe("Esdt", () => {
       ],
       gasLimit: 10_000_000,
     });
-    assertAllPairs(
-      pEnc.Esdts([
+    assertAllKvs(
+      kvsEnc.Esdts([
         { id: fftId, amount: fftAmount },
         { id: sftId, nonce: 1, amount: sftAmount1 },
         { id: sftId, nonce: 2, amount: sftAmount2 },
       ]),
-      await wallet.getAccountPairs(),
+      await wallet.getAccountKvs(),
     );
-    assertAllPairs(
-      pEnc.Esdts([
+    assertAllKvs(
+      kvsEnc.Esdts([
         {
           id: fftId,
           roles: ["ESDTRoleLocalMint"],
@@ -295,10 +295,10 @@ describe("Esdt", () => {
           lastNonce: 2,
         },
       ]),
-      await contract.getAccountPairs(),
+      await contract.getAccountKvs(),
     );
-    assertAllPairs(
-      pEnc.Esdts([
+    assertAllKvs(
+      kvsEnc.Esdts([
         {
           id: sftId,
           nonce: 1,
@@ -326,13 +326,13 @@ describe("Esdt", () => {
           attrs: sftAttrs2,
         },
       ]),
-      await world.getSystemAccountPairs(),
+      await world.getSystemAccountKvs(),
     );
   });
 
   test("s.Esdts - amount 0", () => {
     expect(
-      pEnc
+      kvsEnc
         .Esdts([
           { id: fftId, amount: 0n },
           { id: sftId, nonce: 1, amount: 0n },
