@@ -1,5 +1,5 @@
 import { enc } from "./encoding";
-import { pEnc } from "./pairsEncoding";
+import { kvsEnc } from "./kvsEncoding";
 
 export { d } from "./decoding";
-export const e = { ...enc, p: pEnc };
+export const e = { ...enc, kvs: kvsEnc };

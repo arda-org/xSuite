@@ -1,5 +1,5 @@
 import { Address } from "../data/address";
-import { Pairs, RawPairs, pairsToRawPairs } from "../data/pairs";
+import { Kvs, RawKvs, kvsToRawKvs } from "../data/kvs";
 import { CodeMetadata, codeMetadataToHexString, Proxy } from "./proxy";
 
 export class SProxy extends Proxy {
@@ -42,8 +42,7 @@ const accountToRawAccount = (account: Account): RawAccount => {
     address: account.address.toString(),
     nonce: account.nonce,
     balance: account.balance?.toString(),
-    pairs:
-      account.pairs !== undefined ? pairsToRawPairs(account.pairs) : undefined,
+    kvs: account.kvs !== undefined ? kvsToRawKvs(account.kvs) : undefined,
     code: account.code,
     codeMetadata:
       account.codeMetadata !== undefined
@@ -57,7 +56,7 @@ export type Account = {
   address: Address;
   nonce?: number;
   balance?: number | bigint;
-  pairs?: Pairs;
+  kvs?: Kvs;
   code?: string;
   codeMetadata?: CodeMetadata;
   owner?: Address;
@@ -67,7 +66,7 @@ type RawAccount = {
   address: string;
   nonce?: number;
   balance?: string;
-  pairs?: RawPairs;
+  kvs?: RawKvs;
   code?: string;
   codeMetadata?: string;
   owner?: string;

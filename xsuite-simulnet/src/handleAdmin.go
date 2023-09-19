@@ -32,8 +32,8 @@ func (ae *Executor) HandleAdminSetAccount(r *http.Request) (interface{}, error) 
 	if err != nil {
 		return nil, err
 	}
-	if rawAccount.Pairs != nil {
-		for key, value := range *rawAccount.Pairs {
+	if rawAccount.Kvs != nil {
+		for key, value := range *rawAccount.Kvs {
 			_key, err := hex.DecodeString(key)
 			if err != nil {
 				return nil, err
@@ -105,7 +105,7 @@ type RawAccount struct {
 	Address 			string
 	Nonce 				uint64
 	Balance 			string
-	Pairs   			*map[string]string
+	Kvs   			*map[string]string
 	Code 					*string
 	CodeMetadata	*string
 	Owner					*string
