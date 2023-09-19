@@ -1,4 +1,5 @@
-import { Address, Pairs, pairsToRawPairs, RawPairs } from "../data";
+import { Address } from "../data/address";
+import { Pairs, RawPairs, pairsToRawPairs } from "../data/pairs";
 import { CodeMetadata, codeMetadataToHexString, Proxy } from "./proxy";
 
 export class SProxy extends Proxy {

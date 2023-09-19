@@ -3,7 +3,7 @@ import path from "node:path";
 import chalk from "chalk";
 import { Command } from "commander";
 import { log } from "../_stdio";
-import { Keystore } from "../world";
+import { Keystore } from "../world/signer";
 import { logError, logSuccess } from "./helpers";
 
 export const registerNewWalletCmd = (cmd: Command) => {

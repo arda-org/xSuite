@@ -1,10 +1,6 @@
 import { test, expect } from "@jest/globals";
-import {
-  assertHexList,
-  assertAccount,
-  assertHasPairs,
-  assertAllPairs,
-} from "./index";
+import { assertAllPairs, assertHasPairs, assertAccount } from "./account";
+import { assertHexList } from "./hexList";
 
 test("assertHexList - matching", () => {
   assertHexList(["00"], ["00"]);

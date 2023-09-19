@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, expect, test } from "@jest/globals";
 import { assertAccount, assertHexList } from "../assert";
-import { d, e, pairsToRawPairs } from "../data";
+import { d, e } from "../data";
+import { pairsToRawPairs } from "../data/pairs";
 import { SWorld, SContract, SWallet } from "./sworld";
 import { isContractAddress, readFileHex } from "./utils";
 

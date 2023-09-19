@@ -1,13 +1,9 @@
-import {
-  Encodable,
-  e,
-  b64ToHexString,
-  Hex,
-  hexToHexString,
-  Address,
-  addressToHexString,
-  RawPairs,
-} from "../data";
+import { e } from "../data";
+import { Encodable } from "../data/Encodable";
+import { Address, addressToHexString } from "../data/address";
+import { Hex, hexToHexString } from "../data/hex";
+import { RawPairs } from "../data/pairs";
+import { b64ToHexString } from "../data/utils";
 
 export class Proxy {
   baseUrl: string;
