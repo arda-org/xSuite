@@ -47,9 +47,9 @@ afterEach(async () => {
 });
 
 test("Test", async () => {
-  assertAccount(await contract.getAccountWithPairs(), {
+  assertAccount(await contract.getAccountWithKvs(), {
     balance: 0n,
-    hasPairs: [e.p.Mapper("ourStringStorageKey").Value(e.Str("ourString"))],
+    hasKvs: [e.kvs.Mapper("ourStringStorageKey").Value(e.Str("ourString"))],
   });
 });
 ```
@@ -126,32 +126,32 @@ Finally, we can write our first basic test case:
 
 ```ts
 test("Test", async () => {
-  assertAccount(await contract.getAccountWithPairs(), {
+  assertAccount(await contract.getAccountWithKvs(), {
     balance: 0n,
-    hasPairs: [
-      e.p.Mapper("ourStringStorageKey").Value(e.Str("ourString")),
+    hasKvs: [
+      e.kvs.Mapper("ourStringStorageKey").Value(e.Str("ourString")),
     ],
   });
 });
 ```
 
-Here, using `assertAccount`, we will test that the contract we deployed has the correct balance and storage we expect. `contract.getAccountWithPairs()` will fetch the account of the contract with all its pairs from the simulnet.
+Here, using `assertAccount`, we will test that the contract we deployed has the correct balance and storage we expect. `contract.getAccountWithKvs()` will fetch the account of the contract with all its kvs (short for "key-value pairs") from the simulnet.
 
-Using `hasPairs` we can test that the contract contains the pairs provided (use `allPairs` if you want to test that the contract contains exactly all the pairs provided).
+Using `hasKvs` we can test that the contract contains the kvs provided (use `allKvs` if you want to test that the contract contains exactly all the kvs provided).
 
-The `e.p` is a helper that lets you easily encode storage mappers in the format that the MultiversX blockchain understands. Here, `e.p.Mapper()` represents a simple `SingleValueMapper` type from a Rust Smart Contract. Using `.Value()` we can assert that it contains the value we expect.
+The `e.p` is a helper that lets you easily encode storage mappers in the format that the MultiversX blockchain understands. Here, `e.kvs.Mapper()` represents a simple `SingleValueMapper` type from a Rust Smart Contract. Using `.Value()` we can assert that it contains the value we expect.
 
 More details about storage mappers encoding [here](/data-encoding#storage-mappers).
 
 ## Creating wallets
 
-You can create wallets from a `SWorld` object using the `createWallet` method. When creating a wallet you can specify its EGLD balance as well as pairs, like ESDT tokens or storage.
+You can create wallets from a `SWorld` object using the `createWallet` method. When creating a wallet you can specify its EGLD balance as well as kvs, like ESDT tokens or storage.
 
 ```ts
 const deployer: SWallet = await world.createWallet({
   balance: 10_000_000_000n,
-  pairs: [
-    e.p.Esdts([
+  kvs: [
+    e.kvs.Esdts([
       { id: "TOKEN-123456", amount: 100_000 },
     ]),
   ],
@@ -258,29 +258,29 @@ expect(tokenData.token).toEqual("TOKEN-123456");
 
 ## Asserting account data
 
-### Pairs & accounts
+### Kvs & accounts
 
-In MultiversX, ESDT and storage data is actually stored in the same place, the `pairs` of an account. That is why all the objects that abstract the blockchain from xSuite use the general term `pairs` instead of specifying separately the ESDT and storage data.
+In MultiversX, ESDT and storage data is actually stored in the same place, the `kvs` of an account (short for "key-value pairs"). That is why all the objects that abstract the blockchain from xSuite use the general term `kvs` instead of specifying separately the ESDTs and storage data.
 
 An account is an address that exists on the MultiversX blockchain. It can represent a wallet address or a smart contract address (which have an additional `code` field). Since they are both accounts, they can both have ESDTs or storage data associated with them.
 
-We can assert that an account has the pairs we want using `assertAccount` function. Here, we have two fields we can use:
+We can assert that an account has the kvs we want using `assertAccount` function. Here, we have two fields we can use:
 
-- `hasPairs` - will check if the account has the pairs we want, but the account can also have other pairs that we have not specified
-- `allPairs` - will check if the account has these EXACT pairs we want, if it has extra pairs the assertion will fail (this is similar to how MultiversX Scenarios work)
+- `hasKvs` - will check if the account has the kvs we want, but the account can also have other kvs that we have not specified
+- `allKvs` - will check if the account has these EXACT kvs we want, if it has extra kvs the assertion will fail (this is similar to how MultiversX Scenarios work)
 
-You can use whichever works best for you. We recommend using `allPairs` to make sure your contract doesn't have any unwanted pairs, but sometimes it may be easier to use `hasPairs`, when there are a lot of storage or when debugging.
+You can use whichever works best for you. We recommend using `allKvs` to make sure your contract doesn't have any unwanted kvs, but sometimes it may be easier to use `hasKvs`, when there are a lot of storage or when debugging.
 
 ### Checking balance & ESDTs
 
 We can use the `assertAccount` function to test that an account has a specific EGLD balance and has specific ESDTs. The ESDTs can be fungible tokens, SFTs or NFTs.
 
 ```ts
-const pairs = await contract.getAccountWithPairs();
-assertAccount(pairs, {
+const account = await contract.getAccountWithKvs();
+assertAccount(account, {
   balance: 1_000,
-  allPairs: [
-    e.p.Esdts([
+  allKvs: [
+    e.kvs.Esdts([
       { id: "TOKEN-123456", amount: 2_000 },
       { id: "NFT-123456", nonce: 1, name: "Nft Name", uris: ["url"] },
       { id: "SFT-123456", nonce: 1, amount: 3_000, name: "Sft Name", uris: ["url"] },
@@ -295,12 +295,12 @@ assertAccount(pairs, {
 The helper `e.p` can be used to check storage. More details about storage mappers encoding [here](/data-encoding#storage-mappers).
 
 ```ts
-const pairs = await contract.getAccountWithPairs();
-assertAccount(pairs, {
+const account = await contract.getAccountWithKvs();
+assertAccount(account, {
   balance: 0n,
-  allPairs: [
-    e.p.Mapper("pause_module:paused").Value(e.Bool(false)),
-    e.p.Mapper("fee_percent").Value(e.U64(100)),
+  allKvs: [
+    e.kvs.Mapper("pause_module:paused").Value(e.Bool(false)),
+    e.kvs.Mapper("fee_percent").Value(e.U64(100)),
   ],
 });
 ```
@@ -314,22 +314,22 @@ await contract.setAccount({
   ...(await contract.getAccount()),
   owner: deployer,
   codeMetadata: ["upgradable", "payable"],
-  pairs: [
+  kvs: [
     // Manually setting storage keys
-    e.p.Mapper("mock_address").Value(e.Addr(mockAddress)),
-    e.p.Mapper("supported_tokens", e.Str("TOKEN-123456")).Value(e.Tuple(
+    e.kvs.Mapper("mock_address").Value(e.Addr(mockAddress)),
+    e.kvs.Mapper("supported_tokens", e.Str("TOKEN-123456")).Value(e.Tuple(
       e.U8(1),
       e.Str("OTHER-654321"),
       e.U(0),
     )),
 
     // Manually setting ESDTs & roles
-    e.p.Esdts([{ id: "TOKEN-123456", amount: 1_000, roles: ["ESDTRoleLocalBurn", "ESDTRoleLocalMint"] }]),
+    e.kvs.Esdts([{ id: "TOKEN-123456", amount: 1_000, roles: ["ESDTRoleLocalBurn", "ESDTRoleLocalMint"] }]),
   ],
 });
 ```
 
-This overrides the `pairs` of the account to what we set here. Make sure to also specify the `owner` and appropriate `codeMetadata` for the contract since they will be lost when using the `setAccount` function.
+This overrides the `kvs` of the account to what we set here. Make sure to also specify the `owner` and appropriate `codeMetadata` for the contract since they will be lost when using the `setAccount` function.
 
 <Callout type="warning" emoji="⚠️">
   Due to a current bug in the underlying MultiversX Scenarios executor, you
@@ -347,9 +347,9 @@ test("Validate", async () => {
     ...(await contract.getAccount()),
     owner: deployer,
     codeMetadata: ["payable"],
-    pairs: [
+    kvs: [
       // Manually set next_epoch
-      e.p.Mapper("next_epoch", e.Str("TOKEN-123456")).Value(e.U64(10)),
+      e.kvs.Mapper("next_epoch", e.Str("TOKEN-123456")).Value(e.U64(10)),
     ],
   });
 
@@ -377,17 +377,15 @@ test("Validate", async () => {
     value: 1_000,
   });
 
-  let pairs = await contract.getAccountWithPairs();
-  assertAccount(pairs, {
+  assertAccount(await contract.getAccountWithKvs(), {
     balance: 1_000, // Assert that balance changed
-    allPairs: [
+    allKvs: [
       // Test that next_epoch was modified accordingly
-      e.p.Mapper("next_epoch", e.Str("TOKEN-123456")).Value(e.U64(20)),
+      e.kvs.Mapper("next_epoch", e.Str("TOKEN-123456")).Value(e.U64(20)),
     ],
   });
 
-  let pairsDeployer = await deployer.getAccountWithPairs();
-  assertAccount(pairsDeployer, {
+  assertAccount(await deployer.getAccountWithKvs(), {
     balance: 0, // Assuming initial balance was 1_000 for deployer
   });
 });
@@ -396,5 +394,5 @@ test("Validate", async () => {
 Above we first mock the account data to set it to what we want using `setAccount`. Then we do a contract call using `callContract` which fails, and we can assert that using `assertFail`.
 Then, we set the world `epoch` to what we want and do the transaction again, this time we expect it to succeed.
 
-Then we check that the `pairs` of the contract and the deployer account changed to what we expect.
+Then we check that the `kvs` of the contract and the deployer account changed to what we expect.
 In this case `next_epoch` value was changed to `20` and `1_000` EGLD was transfered from the deployer account to the contract.
