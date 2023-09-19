@@ -1,80 +1,36 @@
+---
+title: "xSuite: Suite to develop MultiversX contracts"
+---
+
 import { Callout } from "nextra/components";
 
-# Getting Started
+# Welcome
 
 xSuite is the full suite for efficiently developing high-quality MultiversX smart contracts. Init, build, test, deploy contracts in seconds.
 
-xSuite is [made by Arda team](https://arda.run) and is the result of their deep expertise from building numerous dApps and auditing [35+ contracts](https://arda.run/audits). xSuite is extensively tested with 450+ tests and 100% test coverage of critical parts, to ensure it is always safe and reliable.
+xSuite is made by [the Arda team](https://arda.run) and is the result of their deep expertise from building numerous dApps and auditing [35+ contracts](https://arda.run/audits). xSuite is extensively tested with 450+ tests and 100% test coverage of critical parts, to ensure it is always safe and reliable.
+
+A big thank you to [the Buidly team](https://twitter.com/buidly_) who intensively used xSuite in their projects, provided valuable feedback and drafted the first version of the documentation.
+
+<a
+  href="https://twitter.com/buidly_"
+  target="_blank"
+  style={{ display: "flex", justifyContent: "center", marginTop: "1rem" }}
+>
+  <img src="/Buidly.png" />
+</a>
 
 <Callout type="warning" emoji="⚠️">
   xSuite is in beta phase.
 </Callout>
 
-## Your first contract deployed in seconds
+## Starter Contracts (audited)
 
-Let's build, test and deploy your first MultiversX contract in seconds, with no requirement except Node.js 18+ being already installed on your machine.
-
-First, install `xsuite-cli`:
-
-```
-npm install -g xsuite-cli
-```
-
-A new command `xsuite` is now available in your terminal. With this command, install Rust on your machine:
-
-```
-xsuite install-rust
-```
-
-Create a new blank contract in the directory `my-contract` and open it:
-
-```
-xsuite new --dir my-contract
-cd my-contract
-```
-
-Create a new wallet, encrypted with the password of your choice:
-
-```
-xsuite new-wallet --wallet wallet.json
-```
-
-Fund this new wallet with 30 xEGLD, the fake EGLD of devnet:
-
-```
-xsuite request-xegld --wallet wallet.json
-```
-
-Build the contract:
-
-```
-npm run build
-```
-
-Test the contract:
-
-```
-npm run test
-```
-
-Deploy the contract to MultiversX devnet:
-
-```
-npm run interact:devnet deploy
-```
+Starter contracts are a great starting point for your new smart contract. They will save you significant time setting up the codebase and writing the initial logic. They are **audited by Arda**. [View starter contracts](/initiliaze-contract).
 
 ## Onboarding and Training
 
 If you want you or your team to receive a personal onboarding and training to xSuite, please contact [Lucas Willems](https://t.me/LucasWillems).
-
-## Starter Contracts (audited)
-
-Arda team has created starter contracts to be used as a great starting point for the development of your new smart contract and to save a significant amount of time into setting up the codebase and writing the initial logic. Starter contracts are **audited by Arda**.
-
-The starter contracts available:
-
-- [blank](https://github.com/arda-org/xSuite/tree/main/contracts/blank): An empty contract that comes fully set up with tests and blockchain interactions.
-- [vested-transfers](https://github.com/arda-org/xSuite/tree/main/contracts/vested-transfers): A contract for vested transfers, with tests and blockchain interactions.
 
 ## Who is using xSuite?
 

@@ -1,13 +1,15 @@
 import { useRouter } from "next/router";
 import logoUrl from "../Logo.png";
 
-export const websiteName = "xSuite";
-
 export default {
+  nextThemes: {
+    defaultTheme: "light",
+  },
+  darkMode: false,
   logo: (
     <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
       <img src={logoUrl.src} width="32" height="32" />
-      <b style={{ fontSize: "24px" }}>{websiteName}</b>
+      <b style={{ fontSize: "24px" }}>xSuite</b>
     </div>
   ),
   project: {
@@ -37,11 +39,8 @@ export default {
     const { asPath } = useRouter();
     if (asPath !== "/") {
       return {
-        titleTemplate: `%s – ${websiteName}`,
+        titleTemplate: `%s | xSuite`,
       };
     }
-    return {
-      titleTemplate: websiteName,
-    };
   },
 };

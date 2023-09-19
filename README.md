@@ -1,7 +1,13 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/arda-org/xSuite/main/Logo.png" height="128">
-  <h1 align="center">xSuite</h1>
-</p>
+<a href="https://xsuite.dev">
+  <p align="center">
+    <img src="./Logo.png" height="128">
+  </p>
+</a>
+<h1 align="center">
+  <a href="https://xsuite.dev">
+    xSuite
+  </a>
+</h1>
 
 <p align="center">
   <a href="https://arda.run">
@@ -14,7 +20,15 @@
 
 xSuite is the full suite for efficiently developing high-quality MultiversX smart contracts. Init, build, test, deploy contracts in seconds.
 
-xSuite is [made by Arda team](https://arda.run) and is the result of their deep expertise from building numerous dApps and auditing [35+ contracts](https://arda.run/audits). xSuite is extensively tested with 450+ tests and 100% test coverage of critical parts, to ensure it is always safe and reliable.
+xSuite is made by [the Arda team](https://arda.run) and is the result of their deep expertise from building numerous dApps and auditing [35+ contracts](https://arda.run/audits). xSuite is extensively tested with 450+ tests and 100% test coverage of critical parts, to ensure it is always safe and reliable.
+
+A big thank you to [the Buidly team](https://twitter.com/buidly_) who intensively used xSuite in their projects, provided valuable feedback and drafted the first version of the documentation.
+
+<a href="https://twitter.com/buidly_">
+  <p align="center">
+    <img src="./docs/public/Buidly.png" />
+  </p>
+</a>
 
 > :warning: xSuite is in beta phase.
 
@@ -22,18 +36,13 @@ xSuite is [made by Arda team](https://arda.run) and is the result of their deep 
 
 Visit [https://xsuite.dev](https://xsuite.dev) to view the full documentation.
 
+## Starter Contracts (audited)
+
+Starter contracts are a great starting point for your new smart contract. They will save you significant time setting up the codebase and writing the initial logic. They are **audited by Arda**. [View starter contracts](https://xsuite.dev/initialize-contract).
+
 ## Onboarding and Training
 
 If you want you or your team to receive a personal onboarding and training to xSuite, please contact [Lucas Willems](https://t.me/LucasWillems).
-
-## Starter Contracts (audited)
-
-Arda team has created starter contracts to be used as a great starting point for the development of your new smart contract and to save a significant amount of time into setting up the codebase and writing the initial logic. Starter contracts are **audited by Arda**.
-
-The starter contracts available:
-
-- [blank](https://github.com/arda-org/xSuite/tree/main/contracts/blank): An empty contract that comes fully set up with tests and blockchain interactions.
-- [vested-transfers](https://github.com/arda-org/xSuite/tree/main/contracts/vested-transfers): A contract for vested transfers, with tests and blockchain interactions.
 
 ## Who is using xSuite?
 

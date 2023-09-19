@@ -1,0 +1,398 @@
+import { Callout } from "nextra/components";
+
+# Test Contract
+
+The 3rd step is to test your contract. xSuite makes testing super simple. It provides a **simulated blockchain** called **simulnet** and a JavaScript library to test your contract against the simulnet.
+
+Compared to the real blockchain (e.g. the devnet), the simulnet has the advantage to execute transactions instantly and to provide adminstrator operations (e.g. `setAccount`). This allows to run tests super quickly and to easily configure the blockchain in specific states.
+
+<Callout type="warning" emoji="⚠️">
+  At the moment, the simulnet doesn't reproduce the exact behavior of the real
+  blockchain. It is just a wrapper around the VM and uses the same engine as the
+  [MultiversX scenarios
+  executor](https://docs.multiversx.com/developers/scenario-reference/overview).
+</Callout>
+
+The simulnet implements the same API as the real blockchain (devnet / testnet / mainnet) with additional adminstrator endpoints. Therefore, if your code is able to interact with the simulnet, it will also be able to interact with the real blockchain with nearly no modification.
+
+In addition to the simulnet, xSuite provides a JavaScript library to make easy interacting with the simulnet.
+
+## Your first test
+
+A test is just a `.test.ts` (or `.test.js`) file in the `tests` directory. Tests are run using [vitest](https://vitest.dev/guide/) and use `xsuite` to easily interacting with the simulnet.
+
+Here is a basic test to check if a contract has been been successfully deployed:
+
+```ts
+import { test, beforeEach, afterEach } from "vitest";
+import { assertAccount, SWorld, SWallet, SContract, e } from "xsuite";
+
+let world: SWorld;
+let deployer: SWallet;
+let contract: SContract;
+
+beforeEach(async () => {
+  world = await SWorld.start();
+  deployer = await world.createWallet();
+  ({ contract } = await deployer.deployContract({
+    code: "file:output/contract.wasm",
+    codeMetadata: [],
+    gasLimit: 10_000_000,
+    codeArgs: [e.Str("ourString")],
+  }));
+});
+
+afterEach(async () => {
+  await world.terminate();
+});
+
+test("Test", async () => {
+  assertAccount(await contract.getAccountWithKvs(), {
+    balance: 0n,
+    hasKvs: [e.kvs.Mapper("ourStringStorageKey").Value(e.Str("ourString"))],
+  });
+});
+```
+
+This test can be put in `tests/contract.test.ts`. Let's break the file down and explain it.
+
+### Imports
+
+The following imports are needed at the top of the file:
+
+```ts
+import { test, beforeEach, afterEach } from "vitest";
+import { assertAccount, SWorld, SWallet, SContract, e } from "xsuite";
+```
+
+We use the `test`, `beforeEach` and `afterEach` hooks from `vitest`. These are functions in which we will write our test's code as well as code that we want to run before/after each test respectively.
+
+`assertAccount` is used to assert that an address (account) on MultiversX contains the data we expect (token balances, storage, etc).
+
+The impots `SWorld, SWallet, SContract` and `e` will be detailed later.
+
+### "Simulated" world, wallet & contract
+
+Next, we need to define some variables:
+
+```ts
+let world: SWorld;
+let deployer: SWallet;
+let contract: SContract;
+```
+
+The `SWorld` simplifies all the interactions with the simulnet.
+
+The `SWallet` represents a wallet on the simulnet and simplifies interactions with it.
+
+The `SContract` represents a contract on the simulnet and simplifies interactions with it.
+
+### beforeEach & afterEach hooks (initializing variables)
+
+Now that we have defined the imports and the variables, we need to initialize them.
+
+```ts
+beforeEach(async () => {
+  world = await SWorld.start();
+  deployer = await world.createWallet();
+  ({ contract } = await deployer.deployContract({
+    code: "file:output/contract.wasm",
+    codeMetadata: [],
+    gasLimit: 10_000_000,
+    codeArgs: [e.Str("ourString")],
+  }));
+});
+
+afterEach(async () => {
+  await world.terminate();
+});
+```
+
+Before the test starts, in the `beforeEach` hook:
+
+- We start the simulnet using `SWorld.start()` and save a reference to it in the `world` variable.
+- We create the `deployer` wallet using `world.createWallet()`.
+- We deploy our contract using `deployer.deployContract()`. This will deploy the contract with the code of the file and the specified code arguments.
+
+After the test ends, in the `afterEach` hook, we stop the simulnet using `world.terminate()`.
+
+The `e` is a helper that lets you easily encode data in the format that the MultiversX blockchain understands. Here, `e.Str()` will convert the data in a format that can be recognized by the `ManagedBuffer` type in a Rust Smart Contract.
+
+More details about encoding blockchain data on the [Data Encoding](/data-encoding) page.
+
+### Test case
+
+Finally, we can write our first basic test case:
+
+```ts
+test("Test", async () => {
+  assertAccount(await contract.getAccountWithKvs(), {
+    balance: 0n,
+    hasKvs: [
+      e.kvs.Mapper("ourStringStorageKey").Value(e.Str("ourString")),
+    ],
+  });
+});
+```
+
+Here, using `assertAccount`, we will test that the contract we deployed has the correct balance and storage we expect. `contract.getAccountWithKvs()` will fetch the account of the contract with all its kvs (short for "key-value pairs") from the simulnet.
+
+Using `hasKvs` we can test that the contract contains the kvs provided (use `allKvs` if you want to test that the contract contains exactly all the kvs provided).
+
+The `e.p` is a helper that lets you easily encode storage mappers in the format that the MultiversX blockchain understands. Here, `e.kvs.Mapper()` represents a simple `SingleValueMapper` type from a Rust Smart Contract. Using `.Value()` we can assert that it contains the value we expect.
+
+More details about storage mappers encoding [here](/data-encoding#storage-mappers).
+
+## Creating wallets
+
+You can create wallets from a `SWorld` object using the `createWallet` method. When creating a wallet you can specify its EGLD balance as well as kvs, like ESDT tokens or storage.
+
+```ts
+const deployer: SWallet = await world.createWallet({
+  balance: 10_000_000_000n,
+  kvs: [
+    e.kvs.Esdts([
+      { id: "TOKEN-123456", amount: 100_000 },
+    ]),
+  ],
+});
+```
+
+## Contract operations
+
+### Deploy contract
+
+A contract can be deployed by an `SWallet` object using the `deployContract` method:
+
+```ts
+const { contract, address } = await deployer.deployContract({
+  code: "file:output/contract.wasm",
+  codeMetadata: ["upgradeable"],
+  gasLimit: 100_000_000,
+  codeArgs: [
+    e.Str('ourString'),
+  ],
+});
+```
+
+The `contract` is an instance of `SContract` and `address` is a string containing the Bech32 address of the contract.
+
+When deploying a contract you can specify:
+
+- `code` - in this case from a wasm file, but it can also be the string of the hex contract code,
+- `codeMetadata` - flags like `upgradeable`, `payable`, etc,
+- `gasLimit` - the gas limit to use for the transaction,
+- `codeArgs` - arguments used in the `init` function of the contract.
+
+Use the `e` helper to encode the data (see [Data Encoding](/data-encoding)).
+
+### Call contract
+
+A contract can be called by an `SWallet` object using the `callContract` method and specifying which contract to call in the `callee` field.
+
+```ts
+const result = await wallet.callContract({
+  callee: contract,
+  gasLimit: 5_000_000,
+  funcName: "addWhitelistedToken",
+  funcArgs: [e.Str("TOKEN-123456")],
+  value: 1_000, // egld to send in the transaction
+});
+```
+
+The `result` contains the `tx` (transaction) and `returnData` fields.
+
+### Call contract with ESDTs
+
+To call a contract with ESDT tokens use the `esdts` field:
+
+```ts
+const result = await wallet.callContract({
+  callee: contract,
+  gasLimit: 20_000_000,
+  funcName: "swap",
+  funcArgs: [
+    e.Str("TOKEN-123456"),
+  ],
+  esdts: [{ id: "TOKEN-123456", amount: BigInt(1_000) }],
+});
+```
+
+### Check errors
+
+You can also easily assert that a transaction failed with the appropriate code or message using the `assertFail` method:
+
+```ts
+await deployer.callContract({
+  callee: contract,
+  gasLimit: 10_000_000,
+  funcName: "test",
+  funcArgs: [],
+}).assertFail({ code: 4, message: "Some error" });
+```
+
+### Query contract
+
+You can query a contract directly from a `SWorld` object using the `query` method and specifying which contract to query in the `callee` field.
+
+```ts
+const { returnData, returnCode, returnMessage } = await world.query({
+  callee: contract,
+  funcName: "getWhitelistedToken",
+  funcArgs: [e.Str("TOKEN-123456")],
+});
+```
+
+In order to decode the `returnData` you can use the `d` helper from the `xsuite` package. More info [here](/data-decoding).
+
+```ts
+import { expect } from "vitest";
+import { d } from "xsuite";
+
+const tokenData = d.Tuple({
+  token: d.Str(),
+}).topDecode(returnData[0]);
+
+expect(tokenData.token).toEqual("TOKEN-123456");
+```
+
+## Asserting account data
+
+### Kvs & accounts
+
+In MultiversX, ESDT and storage data is actually stored in the same place, the `kvs` of an account (short for "key-value pairs"). That is why all the objects that abstract the blockchain from xSuite use the general term `kvs` instead of specifying separately the ESDTs and storage data.
+
+An account is an address that exists on the MultiversX blockchain. It can represent a wallet address or a smart contract address (which have an additional `code` field). Since they are both accounts, they can both have ESDTs or storage data associated with them.
+
+We can assert that an account has the kvs we want using `assertAccount` function. Here, we have two fields we can use:
+
+- `hasKvs` - will check if the account has the kvs we want, but the account can also have other kvs that we have not specified
+- `allKvs` - will check if the account has these EXACT kvs we want, if it has extra kvs the assertion will fail (this is similar to how MultiversX Scenarios work)
+
+You can use whichever works best for you. We recommend using `allKvs` to make sure your contract doesn't have any unwanted kvs, but sometimes it may be easier to use `hasKvs`, when there are a lot of storage or when debugging.
+
+### Checking balance & ESDTs
+
+We can use the `assertAccount` function to test that an account has a specific EGLD balance and has specific ESDTs. The ESDTs can be fungible tokens, SFTs or NFTs.
+
+```ts
+const account = await contract.getAccountWithKvs();
+assertAccount(account, {
+  balance: 1_000,
+  allKvs: [
+    e.kvs.Esdts([
+      { id: "TOKEN-123456", amount: 2_000 },
+      { id: "NFT-123456", nonce: 1, name: "Nft Name", uris: ["url"] },
+      { id: "SFT-123456", nonce: 1, amount: 3_000, name: "Sft Name", uris: ["url"] },
+      { id: "META-123456", nonce: 1, amount: 3_000, attrs: e.Tuple(e.Str("test")) },
+    ]),
+  ],
+});
+```
+
+### Checking storage
+
+The helper `e.p` can be used to check storage. More details about storage mappers encoding [here](/data-encoding#storage-mappers).
+
+```ts
+const account = await contract.getAccountWithKvs();
+assertAccount(account, {
+  balance: 0n,
+  allKvs: [
+    e.kvs.Mapper("pause_module:paused").Value(e.Bool(false)),
+    e.kvs.Mapper("fee_percent").Value(e.U64(100)),
+  ],
+});
+```
+
+## Mocking account data
+
+Sometimes it is hard to arrive to a specific state of your smart contract, maybe because it will take too many transactions to arrive to that state or because there are some tricky errors that appear only in very specific cases. In those cases you can directly set the storage keys of a smart contract or any ESDTs amount & roles to whatever you want using the `contract.setAccount()` function:
+
+```ts
+await contract.setAccount({
+  ...(await contract.getAccount()),
+  owner: deployer,
+  codeMetadata: ["upgradable", "payable"],
+  kvs: [
+    // Manually setting storage keys
+    e.kvs.Mapper("mock_address").Value(e.Addr(mockAddress)),
+    e.kvs.Mapper("supported_tokens", e.Str("TOKEN-123456")).Value(e.Tuple(
+      e.U8(1),
+      e.Str("OTHER-654321"),
+      e.U(0),
+    )),
+
+    // Manually setting ESDTs & roles
+    e.kvs.Esdts([{ id: "TOKEN-123456", amount: 1_000, roles: ["ESDTRoleLocalBurn", "ESDTRoleLocalMint"] }]),
+  ],
+});
+```
+
+This overrides the `kvs` of the account to what we set here. Make sure to also specify the `owner` and appropriate `codeMetadata` for the contract since they will be lost when using the `setAccount` function.
+
+<Callout type="warning" emoji="⚠️">
+  Due to a current bug in the underlying MultiversX Scenarios executor, you
+  should always specify `payable` in the `codeMetadata` of the `setAccount`
+  method in order for payable endpoints to continue to work properly.
+</Callout>
+
+## Advanced tests
+
+With xSuite, you can also write advanced tests easily.
+
+```ts
+test("Validate", async () => {
+  await contract.setAccount({
+    ...(await contract.getAccount()),
+    owner: deployer,
+    codeMetadata: ["payable"],
+    kvs: [
+      // Manually set next_epoch
+      e.kvs.Mapper("next_epoch", e.Str("TOKEN-123456")).Value(e.U64(10)),
+    ],
+  });
+
+  await deployer.callContract({
+    callee: contract,
+    gasLimit: 10_000_000,
+    funcName: "validate",
+    funcArgs: [
+      e.Str("TOKEN-123456"),
+    ],
+    value: 1_000,
+  }).assertFail({ code: 4, message: "Invalid epoch" });
+
+  world.setCurrentBlockInfo({
+    epoch: 10,
+  });
+
+  await deployer.callContract({
+    callee: contract,
+    gasLimit: 10_000_000,
+    funcName: "validate",
+    funcArgs: [
+      e.Str("TOKEN-123456"),
+    ],
+    value: 1_000,
+  });
+
+  assertAccount(await contract.getAccountWithKvs(), {
+    balance: 1_000, // Assert that balance changed
+    allKvs: [
+      // Test that next_epoch was modified accordingly
+      e.kvs.Mapper("next_epoch", e.Str("TOKEN-123456")).Value(e.U64(20)),
+    ],
+  });
+
+  assertAccount(await deployer.getAccountWithKvs(), {
+    balance: 0, // Assuming initial balance was 1_000 for deployer
+  });
+});
+```
+
+Above we first mock the account data to set it to what we want using `setAccount`. Then we do a contract call using `callContract` which fails, and we can assert that using `assertFail`.
+Then, we set the world `epoch` to what we want and do the transaction again, this time we expect it to succeed.
+
+Then we check that the `kvs` of the contract and the deployer account changed to what we expect.
+In this case `next_epoch` value was changed to `20` and `1_000` EGLD was transfered from the deployer account to the contract.

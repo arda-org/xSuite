@@ -1,0 +1,221 @@
+# Data Encoding
+
+`xsuite` package provides the `e` utility to easily convert data to the MultiversX format.
+
+```ts
+import { e } from "xsuite";
+```
+
+## Available data types
+
+The `e` utility provides several data types to help convert any kind of data into the format that a Rust Smart Contract understands. All the data types are detailed below along with their Rust counterparts. They are available under the `e` helper (e.g. `e.Str`, `e.U64`, etc).
+
+### e.Buffer
+
+- Encodes a hex string or byte array as bytes for use with a `ManagedBuffer`. Adds the length of the data at the beginning when nest encoded.
+
+### e.Bytes
+
+- Similar to `Buffer`, but doesn't append any length even when nest encoded.
+
+### e.Str
+
+- Encodes a string for use with string data types such as `ManagedBuffer` or `TokenIdentifier`. Adds the length of the string at the beginning when nest encoded.
+
+### e.CstStr
+
+- Similar to `Str`, but doesn't append any length even when nest encoded.
+
+### e.Addr
+
+- Encodes an address (bech32, hex etc) for use with a `ManagedAddress`.
+
+### e.Bool
+
+- Encodes a boolean for use with a `bool`.
+
+### e.U8, e.U16, e.U32, e.U64
+
+- Encodes numbers for use with a `u8`, `u16`, `u32`, and `u64` respectively.
+
+### e.U
+
+- Encodes big numbers for use with a `BigUInt`.
+
+### e.I8, e.I16, e.I32, e.I64
+
+- Encodes numbers for use with a `i8`, `i16`, `i32`, and `i64` respectively.
+
+### e.I
+
+- Encodes big numbers for use with a `BigInt`.
+
+### e.Tuple
+
+- Encodes arbitrary data structures for use with composite data types such as `struct` or `MultiValueN`. Uses nest encoding for the underlying data.
+
+```ts
+e.Tuple(
+  e.Str('TOKEN-123456'),
+  e.U32(BigInt(1)),
+  e.U(BigInt(3)),
+),
+```
+
+This would be the equivalent of the following `struct` written in Rust:
+
+```rust
+pub struct Data<M: ManagedTypeApi> {
+    pub token: TokenIdentifier<M>,
+    pub timestamp: u32,
+    pub price: BigUint<M>,
+}
+```
+
+### e.List
+
+- Encodes an array of values for use with vector data types such as `ManagedVec`, `MultiValueManagedVec` or `MultiValueEncoded`. Uses nest encoding for the underlying data. Adds the length of the array at the beginning when it is itself nest encoded i.e. as part of a `Tuple`.
+
+```ts
+e.List(e.U64(1), e.U64(2)),
+```
+
+### e.Option
+
+- Encodes arbitrary data for use with an `Option` (not to be confused with an `OptionalValue`). It appends `01` (hex) at the start of the value if the value is not `null`, or is simply `00` (hex).
+
+## Advanced data types example
+
+The above data types can be combined to pass complex data as part of a contract call or query, for example:
+
+```ts
+await deployer.callContract({
+  callee: contract,
+  gasLimit: 10_000_000,
+  funcName: "test",
+  funcArgs: [
+    e.Bytes("0101"),
+    e.Addr(deployer.toString()),
+    e.Option(null),
+    e.Tuple(
+      e.U32(2),
+      e.List(e.U64(1), e.U64(2)),
+    ),
+    e.List(
+      e.Tuple(
+        e.Str("TOKEN-123456"),
+        e.U32(BigInt(1)),
+        e.U(BigInt(3)),
+      ),
+      e.Tuple(
+        e.Str("TOKEN2-123456"),
+        e.U32(BigInt(2)),
+        e.U(BigInt(4)),
+      ),
+    )
+  ],
+});
+```
+
+## Storage mappers
+
+Under `e.kvs.Mapper` there are utilities to easily encode storage mappers. This is used together with the `assertAccount` utility from `xsuite` and the `hasKvs`/`allKvs` key, to check that an account has the appropriate storage data.
+
+It accepts the name of the storage mapper as a first argument and optionally storage mapper arguments:
+
+```ts
+e.kvs.Mapper("paused");
+e.kvs.Mapper("tokens", e.Str("TOKEN-123456"));
+```
+
+The `e.kvs.Mapper` returns a type with the following helper functions for the commonly used storage mappers:
+
+### e.kvs.Mapper(...).Value
+
+- For use with a `SingleValueMapper`
+
+### e.kvs.Mapper(...).UnorderedSet
+
+- For use with a `UnorderedSetMapper`
+
+### e.kvs.Mapper(...).Set
+
+- For use with a `SetMapper`
+
+### e.kvs.Mapper(...).Map
+
+- For use with a `MapMapper`
+
+### e.kvs.Mapper(...).Vec
+
+- For use with a `VecMapper`
+
+## Advanced storage mapper example
+
+Below you can find an example of how to assert complex storage values, with the equivalent storage mappers from smart contract code:
+
+```ts
+assertAccount(account, {
+  allKvs: [
+    e.kvs.Mapper("fee").Value(e.U(1_000)),
+
+    e.kvs.Mapper("active", e.Str("TOKEN-123456")).Value(e.Bool(true)),
+
+    e.kvs.Mapper("tokens").UnorderedSet([e.Str("TOKEN-123456")]),
+
+    e.kvs.Mapper("positions", e.Addr(address), e.Str("TOKEN-123456")).Vec([
+      e.Tuple(
+        e.Str("NAME1"),
+        e.U32(BigInt(1)),
+        e.U(BigInt(3)),
+      ),
+      e.Tuple(
+        e.Str("NAME2"),
+        e.U32(BigInt(2)),
+        e.U(BigInt(4)),
+      ),
+    ]),
+  ],
+});
+```
+
+This would be equivalent of the following storage mappers written in Rust:
+
+```rust
+#[storage_mapper("fee")]
+fn fee(&self) -> SingleValueMapper<BigUint>;
+
+#[storage_mapper("active")]
+fn active(&self, token: TokenIdentifier) -> SingleValueMapper<bool>;
+
+#[storage_mapper("tokens")]
+fn tokens(&self) -> UnorderedSetMapper<TokenIdentifier>;
+
+pub struct Position<M: ManagedTypeApi> {
+    pub name: ManagedBuffer<M>,
+    pub timestamp: u32,
+    pub price: BigUint<M>,
+}
+
+#[view]
+#[storage_mapper("positions")]
+fn positions(&self, address: &ManagedAddress, token: &TokenIdentifier) -> VecMapper<Position<Self::Api>>;
+```
+
+## ESDTs
+
+Under `e.kvs.Esdts` there are utilities to easily encode ESDTs and assert that an account has the appropriate tokens.
+
+```ts
+assertAccount(account, {
+  balance: 1_000,
+  allKvs: [
+    e.kvs.Esdts([
+      { id: "TOKEN-123456", amount: 2_000 },
+      { id: "NFT-123456", nonce: 1, name: "Nft Name", uris: ["url"] },
+      { id: "SFT-123456", nonce: 1, amount: 3_000, name: "Sft Name", uris: ["url"] },
+      { id: "META-123456", nonce: 1, amount: 3_000, attrs: e.Tuple(e.Str("test")) },
+    ]),
+  ],
+});
+```

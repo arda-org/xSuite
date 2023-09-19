@@ -1,0 +1,23 @@
+# CLI
+
+xSuite utility provides the following commands:
+
+- `xsuite install-rust` - installs Rust with rustup
+- `xsuite uninstall-rust` - uninstalls Rust with rustup
+- `xsuite new` - creates a new blank contract; currently it has the following options:
+    - `--dir <DIR>` - specify the contract dir
+    - `--starter <STARTER>` - specify the contract to start from
+    - `--no-install` - skip package installation
+    - `--no-git` - skip git initialization
+- `xsuite build` - builds a contract; currently it has the following options:
+    - `-r, --recursive` - builds all contracts under the directory
+- `xsuite test-rust` - runs contract Rust tests
+- `xsuite test-scen` - runs contract scenarios tests
+- `xsuite new-wallet` - creates a new wallet file; currently it has the following options:
+    - `--wallet <WALLET>` - specify the wallet path
+    - `--password <PASSWORD>` - specify the wallet password
+- `xsuite request-xegld` - requests XEGLD tokens for a wallet; currently it has the following options:
+    - `--wallet <WALLET>` - specify the wallet path
+    - `--password <PASSWORD>` - specify the wallet password
+
+To learn more about the commands you can run `xsuite --help` for a general help or for example `xsuite new --help` for a help for a specific command.

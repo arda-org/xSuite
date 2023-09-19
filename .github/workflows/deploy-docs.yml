@@ -1,0 +1,45 @@
+name: Deploy docs
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04
+
+    permissions:
+      contents: read
+      deployments: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Cache Next.js .next directory
+        uses: actions/cache@v3
+        with:
+          path: docs/.next/cache
+          key: ${{ runner.os }}-docs-cache-${{ hashFiles('docs/**') }}
+          restore-keys: ${{ runner.os }}-docs-cache-
+
+      - name: Use Node.js & pnpm
+        uses: ./.github/actions/node-pnpm
+        with:
+          node-version: 18
+          pnpm-version: 8
+
+      - name: Buid xsuite
+        run: pnpm build-xsuite
+
+      - name: Build docs
+        run: pnpm build-docs
+
+      - name: Publish docs
+        uses: cloudflare/pages-action@1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: xsuite
+          directory: docs/out
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}

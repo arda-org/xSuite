@@ -1,3 +1,19 @@
 {
-  "index": "Getting Started"
+  "index": "Welcome",
+  "getting-started": "Getting Started",
+  "install-xsuite": "Install xSuite",
+  "initialize-contract": "Initialize Contract",
+  "build-contract": "Build Contract",
+  "test-contract": "Test Contract",
+  "interact-contract": "Interact with Contract",
+  "data-encoding": "Data Encoding",
+  "data-decoding": "Data Decoding",
+  "cli": "CLI",
+  "data-converter": {
+    "title": "Data Converter",
+    "type": "page",
+    "theme": {
+      "layout": "full"
+    }
+  }
 }

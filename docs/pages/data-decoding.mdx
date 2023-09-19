@@ -1,0 +1,36 @@
+# Data Decoding
+
+The `d` utility provides almost the same data types as the `e` utility, but instead of encoding the data it allows decoding of the data. It is useful when wanting to decode data returned by a query.
+
+For example, if the contract has the `positions` storage mapper:
+
+```
+#[view]
+#[storage_mapper("positions")]
+fn positions(&self, address: &ManagedAddress, token: &TokenIdentifier) -> VecMapper<Position<Self::Api>>;
+```
+
+and we would want to decode the data returned by the mapper, we could use:
+
+```ts
+import { e, d } from "xsuite";
+
+const { returnData } = await world.query({
+  callee: contract,
+  funcName: "positions",
+  funcArgs: [
+    e.Addr(address),
+    e.Str("TOKEN-123456")
+  ],
+});
+
+const positions = d.List(
+  d.Tuple({
+    name: d.Str(),
+    timestamp: d.U32(),
+    price: d.U(),
+  })
+).topDecode(returnData[0]);
+```
+
+The supported types are identically to the ones from the [Data Encoding](/data-encoding) page.

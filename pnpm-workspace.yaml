@@ -1,6 +1,5 @@
 packages:
   - "docs"
   - "xsuite"
-  - "xsuite-cli"
-  - "xsuite-fproxy"
+  - "xsuite-simulnet"
   - "contracts/*"

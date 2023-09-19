@@ -5,9 +5,8 @@ modified_files=()
 updated_modules=()
 
 release_version() {
-  local module=$1
-
-  package_json="$root_dir/$module/package.json"
+  package_json="$root_dir/$1/package.json"
+  module=$(jq -r ".name" "$package_json")
   old_version=$(jq -r ".version" "$package_json")
 
   echo -n "$module@$old_version. New version: "
@@ -22,11 +21,9 @@ release_version() {
   fi
 }
 
-release_version "xsuite-fproxy"
+release_version "xsuite-simulnet"
 
 release_version "xsuite"
-
-release_version "xsuite-cli"
 
 if [ ${#modified_files[@]} -ne 0 ]; then
   for file in "${modified_files[@]}"; do

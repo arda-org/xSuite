@@ -1,21 +1,21 @@
-import { Address, AddressEncodable } from "../data";
+import { AddressEncodable } from "../data/AddressEncodable";
 import {
   CallContractTxParams,
   DeployContractTxParams,
+  Query,
   TransferTxParams,
-  UpgradeContractTxParams,
   Tx,
   TxParams,
+  UpgradeContractTxParams,
   Proxy,
-  Query,
-} from "../proxy";
+} from "../proxy/proxy";
 import { KeystoreSigner, Signer } from "./signer";
 import { readFileHex } from "./utils";
 
 export class World {
   proxy: Proxy;
-  #chainId: string;
-  #gasPrice?: number;
+  chainId: string;
+  gasPrice?: number;
 
   constructor({
     proxy,
@@ -27,8 +27,8 @@ export class World {
     gasPrice?: number;
   }) {
     this.proxy = proxy;
-    this.#chainId = chainId;
-    this.#gasPrice = gasPrice;
+    this.chainId = chainId;
+    this.gasPrice = gasPrice;
   }
 
   static new({
@@ -44,64 +44,108 @@ export class World {
   }
 
   newWallet(signer: Signer) {
-    return new WorldWallet(this, signer);
+    return new Wallet({
+      proxy: this.proxy,
+      signer,
+      chainId: this.chainId,
+      gasPrice: this.gasPrice,
+    });
   }
 
   async newWalletFromFile(filePath: string) {
-    return new WorldWallet(this, await KeystoreSigner.fromFile(filePath));
+    return new Wallet({
+      proxy: this.proxy,
+      signer: await KeystoreSigner.fromFile(filePath),
+      chainId: this.chainId,
+      gasPrice: this.gasPrice,
+    });
   }
 
   newWalletFromFile_unsafe(filePath: string, password: string) {
-    return new WorldWallet(
-      this,
-      KeystoreSigner.fromFile_unsafe(filePath, password),
-    );
+    return new Wallet({
+      proxy: this.proxy,
+      signer: KeystoreSigner.fromFile_unsafe(filePath, password),
+      chainId: this.chainId,
+      gasPrice: this.gasPrice,
+    });
   }
 
   newContract(address: string | Uint8Array) {
-    return new WorldContract(this, address);
+    return new Contract({ address, proxy: this.proxy });
   }
 
-  getAccountNonce(address: Address) {
-    return this.proxy.getAccountNonce(address);
+  query(query: Query) {
+    return this.proxy.query(query);
+  }
+}
+
+export class Wallet extends Signer {
+  signer: Signer;
+  proxy: Proxy;
+  chainId: string;
+  gasPrice?: number;
+
+  constructor({
+    signer,
+    proxy,
+    chainId,
+    gasPrice,
+  }: {
+    signer: Signer;
+    proxy: Proxy;
+    chainId: string;
+    gasPrice?: number;
+  }) {
+    super(signer.toTopBytes());
+    this.proxy = proxy;
+    this.signer = signer;
+    this.chainId = chainId;
+    this.gasPrice = gasPrice;
   }
 
-  getAccountBalance(address: Address) {
-    return this.proxy.getAccountBalance(address);
+  sign(data: Buffer): Promise<Buffer> {
+    return this.signer.sign(data);
   }
 
-  getAccount(address: Address) {
-    return this.proxy.getAccount(address);
+  getAccountNonce() {
+    return this.proxy.getAccountNonce(this);
   }
 
-  getAccountPairs(address: Address) {
-    return this.proxy.getAccountPairs(address);
+  getAccountBalance() {
+    return this.proxy.getAccountBalance(this);
   }
 
-  getAccountWithPairs(address: Address) {
-    return this.proxy.getAccountWithPairs(address);
+  getAccount() {
+    return this.proxy.getAccount(this);
+  }
+
+  getAccountKvs() {
+    return this.proxy.getAccountKvs(this);
+  }
+
+  getAccountWithKvs() {
+    return this.proxy.getAccountWithKvs(this);
   }
 
   executeTx(
-    sender: Signer,
     txParams: Omit<TxParams, "sender" | "nonce" | "chainId">,
   ): TxResultPromise<TxResult> {
-    return TxResultPromise.from(this.#executeTx(sender, txParams));
+    return TxResultPromise.from(this.#executeTx(txParams));
   }
 
-  async #executeTx(
-    sender: Signer,
-    { gasPrice, ...txParams }: Omit<TxParams, "sender" | "nonce" | "chainId">,
-  ): Promise<TxResult> {
-    const nonce = await this.proxy.getAccountNonce(sender);
+  async #executeTx({
+    gasPrice,
+    ...txParams
+  }: Omit<TxParams, "sender" | "nonce" | "chainId">): Promise<TxResult> {
+    const nonce = await this.proxy.getAccountNonce(this);
     const tx = new Tx({
-      gasPrice: gasPrice ?? this.#gasPrice,
+      gasPrice: gasPrice ?? this.gasPrice,
       ...txParams,
-      sender,
+      sender: this,
       nonce,
-      chainId: this.#chainId,
+      chainId: this.chainId,
     });
-    await tx.sign(sender);
+    await tx.sign(this);
     const txHash = await this.proxy.sendTx(tx);
     const resTx = await this.proxy.getCompletedTx(txHash);
     if (resTx.status !== "success") {
@@ -121,19 +165,16 @@ export class World {
   }
 
   deployContract(
-    sender: Signer,
     txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">,
   ): TxResultPromise<DeployContractTxResult> {
-    return TxResultPromise.from(this.#deployContract(sender, txParams));
+    return TxResultPromise.from(this.#deployContract(txParams));
   }
 
   async #deployContract(
-    sender: Signer,
     txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">,
   ): Promise<DeployContractTxResult> {
     txParams.code = expandCode(txParams.code);
     const txResult = await this.#executeTx(
-      sender,
       Tx.getParamsToDeployContract(txParams),
     );
     const scDeployEvent = txResult.tx?.logs?.events.find(
@@ -143,165 +184,91 @@ export class World {
       throw new Error("No SCDeploy event.");
     }
     const address = scDeployEvent.address;
+    const contract = new Contract({ address, proxy: this.proxy });
     const returnData = getTxReturnData(txResult.tx);
-    return { ...txResult, address, returnData };
+    return { ...txResult, address, contract, returnData };
   }
 
   upgradeContract(
-    sender: Signer,
     txParams: Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">,
   ): TxResultPromise<CallContractTxResult> {
-    return TxResultPromise.from(this.#upgradeContract(sender, txParams));
+    return TxResultPromise.from(this.#upgradeContract(txParams));
   }
 
   async #upgradeContract(
-    sender: Signer,
     txParams: Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">,
   ): Promise<CallContractTxResult> {
     txParams.code = expandCode(txParams.code);
     const txResult = await this.#executeTx(
-      sender,
-      Tx.getParamsToUpgradeContract({ sender, ...txParams }),
+      Tx.getParamsToUpgradeContract({ sender: this, ...txParams }),
     );
     const returnData = getTxReturnData(txResult.tx);
     return { ...txResult, returnData };
   }
 
   transfer(
-    sender: Signer,
     txParams: Omit<TransferTxParams, "sender" | "nonce" | "chainId">,
   ): TxResultPromise<TxResult> {
-    return TxResultPromise.from(this.#transfer(sender, txParams));
+    return TxResultPromise.from(this.#transfer(txParams));
   }
 
   async #transfer(
-    sender: Signer,
     txParams: Omit<TransferTxParams, "sender" | "nonce" | "chainId">,
   ): Promise<TxResult> {
     return this.#executeTx(
-      sender,
-      Tx.getParamsToTransfer({ sender, ...txParams }),
+      Tx.getParamsToTransfer({ sender: this, ...txParams }),
     );
   }
 
   callContract(
-    sender: Signer,
     txParams: Omit<CallContractTxParams, "sender" | "nonce" | "chainId">,
   ): TxResultPromise<CallContractTxResult> {
-    return TxResultPromise.from(this.#callContract(sender, txParams));
+    return TxResultPromise.from(this.#callContract(txParams));
   }
 
   async #callContract(
-    sender: Signer,
     txParams: Omit<CallContractTxParams, "sender" | "nonce" | "chainId">,
   ): Promise<CallContractTxResult> {
     const txResult = await this.#executeTx(
-      sender,
-      Tx.getParamsToCallContract({ sender, ...txParams }),
+      Tx.getParamsToCallContract({ sender: this, ...txParams }),
     );
     const returnData = getTxReturnData(txResult.tx);
     return { ...txResult, returnData };
   }
-
-  query(query: Query) {
-    return this.proxy.query(query);
-  }
 }
 
-export class WorldWallet extends Signer {
-  world: World;
-  signer: Signer;
+export class Contract extends AddressEncodable {
+  proxy: Proxy;
 
-  constructor(world: World, signer: Signer) {
-    super(signer.toTopBytes());
-    this.world = world;
-    this.signer = signer;
-  }
-
-  sign(data: Buffer): Promise<Buffer> {
-    return this.signer.sign(data);
-  }
-
-  getAccountNonce() {
-    return this.world.getAccountNonce(this);
-  }
-
-  getAccountBalance() {
-    return this.world.getAccountBalance(this);
-  }
-
-  getAccount() {
-    return this.world.getAccount(this);
-  }
-
-  getAccountPairs() {
-    return this.world.getAccountPairs(this);
-  }
-
-  getAccountWithPairs() {
-    return this.world.getAccountWithPairs(this);
-  }
-
-  executeTx(
-    txParams: Omit<TxParams, "sender" | "nonce" | "chainId">,
-  ): TxResultPromise<TxResult> {
-    return this.world.executeTx(this, txParams);
-  }
-
-  deployContract(
-    txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">,
-  ) {
-    return this.world.deployContract(this, txParams).then((data) => ({
-      ...data,
-      contract: new WorldContract(this.world, data.address),
-    }));
-  }
-
-  upgradeContract(
-    txParams: Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">,
-  ): TxResultPromise<CallContractTxResult> {
-    return this.world.upgradeContract(this, txParams);
-  }
-
-  transfer(
-    txParams: Omit<TransferTxParams, "sender" | "nonce" | "chainId">,
-  ): TxResultPromise<TxResult> {
-    return this.world.transfer(this, txParams);
-  }
-
-  callContract(
-    txParams: Omit<CallContractTxParams, "sender" | "nonce" | "chainId">,
-  ) {
-    return this.world.callContract(this, txParams);
-  }
-}
-
-export class WorldContract extends AddressEncodable {
-  world: World;
-
-  constructor(world: World, address: string | Uint8Array) {
+  constructor({
+    address,
+    proxy,
+  }: {
+    address: string | Uint8Array;
+    proxy: Proxy;
+  }) {
     super(address);
-    this.world = world;
+    this.proxy = proxy;
   }
 
   getAccountNonce() {
-    return this.world.getAccountNonce(this);
+    return this.proxy.getAccountNonce(this);
   }
 
   getAccountBalance() {
-    return this.world.getAccountBalance(this);
+    return this.proxy.getAccountBalance(this);
   }
 
   getAccount() {
-    return this.world.getAccount(this);
+    return this.proxy.getAccount(this);
   }
 
-  getAccountPairs() {
-    return this.world.getAccountPairs(this);
+  getAccountKvs() {
+    return this.proxy.getAccountKvs(this);
   }
 
-  getAccountWithPairs() {
-    return this.world.getAccountWithPairs(this);
+  getAccountWithKvs() {
+    return this.proxy.getAccountWithKvs(this);
   }
 }
 
@@ -408,6 +375,7 @@ export type TxResult = {
 
 export type DeployContractTxResult = TxResult & {
   address: string;
+  contract: Contract;
   returnData: string[];
 };
 

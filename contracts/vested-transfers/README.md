@@ -5,14 +5,14 @@ A contract for vested transfers, i.e. a transfer spread over a period of time, w
 To create a copy of the 'vested-contracts' contract on your computer:
 
 ```
-xsuite new --contract vested-contracts --dir my-contract
+xsuite new --starter vested-contracts --dir my-contract
 cd my-contract
 ```
 
-Note that `xsuite-cli` and Rust must be installed on your computer. To install, run:
+Note that `xsuite` and Rust must be installed on your computer. To install, run:
 
 ```
-npm install -g xsuite-cli
+npm install -g xsuite
 xsuite install-rust
 ```
 

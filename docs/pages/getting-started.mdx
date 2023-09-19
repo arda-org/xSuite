@@ -1,0 +1,56 @@
+# Getting Started
+
+xSuite makes the initialization, building, testing and deployment of contracts extremely easy.
+
+## Your first contract deployed in seconds
+
+Let's build, test and deploy your first MultiversX contract in seconds, with no requirement except Node.js 18+ being already installed.
+
+First, install `xsuite`:
+
+```
+npm install -g xsuite
+```
+
+Install Rust with the newly available `xsuite` command:
+
+```
+xsuite install-rust
+```
+
+Create a new blank contract in the directory `first-contract` and open it:
+
+```
+xsuite new --dir first-contract
+cd first-contract
+```
+
+Create a new wallet, encrypted with the password of your choice:
+
+```
+xsuite new-wallet --wallet wallet.json
+```
+
+Fund this new wallet with 30 xEGLD, the fake EGLD of devnet:
+
+```
+xsuite request-xegld --wallet wallet.json
+```
+
+Build the contract:
+
+```
+npm run build
+```
+
+Test the contract:
+
+```
+npm run test
+```
+
+Deploy the contract to MultiversX devnet:
+
+```
+npm run interact:devnet deploy
+```

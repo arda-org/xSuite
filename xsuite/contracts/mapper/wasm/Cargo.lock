@@ -65,6 +65,21 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7ebdb29d2ea9ed0083cd8cece49bbd968021bd99b0849edb4a9a7ee0fdf6a4e0"
 
 [[package]]
+name = "mapper"
+version = "0.0.0"
+dependencies = [
+ "multiversx-sc",
+]
+
+[[package]]
+name = "mapper-wasm"
+version = "0.0.0"
+dependencies = [
+ "mapper",
+ "multiversx-sc-wasm-adapter",
+]
+
+[[package]]
 name = "multiversx-sc"
 version = "0.41.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -179,21 +194,6 @@ name = "smallvec"
 version = "1.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "a507befe795404456341dfab10cef66ead4c041f62b8b11bbb92bffe5d0953e0"
-
-[[package]]
-name = "storage"
-version = "0.0.0"
-dependencies = [
- "multiversx-sc",
-]
-
-[[package]]
-name = "storage-wasm"
-version = "0.0.0"
-dependencies = [
- "multiversx-sc-wasm-adapter",
- "storage",
-]
 
 [[package]]
 name = "syn"

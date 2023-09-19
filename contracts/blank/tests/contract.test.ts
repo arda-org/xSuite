@@ -1,13 +1,12 @@
 import { test, beforeEach, afterEach } from "vitest";
-import { assertAccount } from "xsuite/assert";
-import { FWorld, FWorldWallet, FWorldContract } from "xsuite/world";
+import { assertAccount, SWorld, SWallet, SContract } from "xsuite";
 
-let world: FWorld;
-let deployer: FWorldWallet;
-let contract: FWorldContract;
+let world: SWorld;
+let deployer: SWallet;
+let contract: SContract;
 
 beforeEach(async () => {
-  world = await FWorld.start();
+  world = await SWorld.start();
   deployer = await world.createWallet();
   ({ contract } = await deployer.deployContract({
     code: "file:output/contract.wasm",
@@ -21,8 +20,8 @@ afterEach(async () => {
 });
 
 test("Test", async () => {
-  assertAccount(await contract.getAccountWithPairs(), {
+  assertAccount(await contract.getAccountWithKvs(), {
     balance: 0n,
-    hasPairs: [],
+    allKvs: [],
   });
 });

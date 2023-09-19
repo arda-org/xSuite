@@ -22,61 +22,42 @@ jobs:
           node-version: 18
           pnpm-version: 8
 
-      - name: Cache Rust toolchain
+      - name: Cache Rust setup
         uses: actions/cache@v3
         with:
           path: |
             ~/.rustup/toolchains
-          key: ${{ runner.os }}-rustup
-          restore-keys: ${{ runner.os }}-rustup
+            ~/.cargo
+          key: ${{ runner.os }}-rust-${{ hashFiles('xsuite/src/cli/rustSettings.ts') }}-${{ hashFiles('contracts/**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-rust-
 
-      - name: Cache Rust dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.cargo
-          key: ${{ runner.os }}-cargo-${{ hashFiles('contracts/**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-cargo-
-
-      - name: Cache Rust target folder
+      - name: Cache Rust target directory
         uses: actions/cache@v3
         with:
           path: target
-          key: ${{ runner.os }}-target
-          restore-keys: ${{ runner.os }}-target
-
-      - name: Cache Next.js .next folder
-        uses: actions/cache@v3
-        with:
-          path: docs/.next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('docs/**') }}
-          restore-keys: ${{ runner.os }}-nextjs-${{ hashFiles('pnpm-lock.yaml') }}-
+          key: ${{ runner.os }}-target-${{ hashFiles('contracts/**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-target-
 
       - name: Use Golang
         uses: actions/setup-go@v4
         with:
           go-version: 1.19
-          cache-dependency-path: xsuite-fproxy/src/go.sum
+          cache-dependency-path: xsuite-simulnet/src/go.sum
 
       - name: Lint
         run: pnpm lint
 
-      - name: Build xsuite-fproxy
-        run: pnpm build-xsuite-fproxy
+      - name: Build xsuite-simulnet
+        run: pnpm build-xsuite-simulnet
 
       - name: Build xsuite
         run: pnpm build-xsuite
 
       - name: Test xsuite
-        run: pnpm test-xsuite
-
-      - name: Build xsuite-cli
-        run: pnpm build-xsuite-cli
-
-      - name: Test xsuite-cli
         run: |
           git config --global user.email "you@example.com"
           git config --global user.name "Your Name"
-          pnpm test-xsuite-cli
+          pnpm test-xsuite
 
       - name: Install Rust
         run: pnpm xsuite install-rust

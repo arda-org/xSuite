@@ -1,13 +1,9 @@
-import {
-  Encodable,
-  e,
-  b64ToHexString,
-  Hex,
-  hexToHexString,
-  Address,
-  addressToHexString,
-  RawPairs,
-} from "../data";
+import { e } from "../data";
+import { Encodable } from "../data/Encodable";
+import { Address, addressToHexString } from "../data/address";
+import { Hex, hexToHexString } from "../data/hex";
+import { RawKvs } from "../data/kvs";
+import { b64ToHexString } from "../data/utils";
 
 export class Proxy {
   baseUrl: string;
@@ -202,32 +198,32 @@ export class Proxy {
     return Proxy.getAccountBalance(this.baseUrl, address);
   }
 
-  static getAccountPairsRaw(baseUrl: string, address: Address) {
+  static getAccountKvsRaw(baseUrl: string, address: Address) {
     return Proxy.fetchRaw(`${baseUrl}/address/${address}/keys`);
   }
 
-  getAccountPairsRaw(address: Address) {
-    return Proxy.getAccountPairsRaw(this.baseUrl, address);
+  getAccountKvsRaw(address: Address) {
+    return Proxy.getAccountKvsRaw(this.baseUrl, address);
   }
 
-  static async getAccountPairs(baseUrl: string, address: Address) {
-    const res = unrawRes(await Proxy.getAccountPairsRaw(baseUrl, address));
-    return res.pairs as RawPairs;
+  static async getAccountKvs(baseUrl: string, address: Address) {
+    const res = unrawRes(await Proxy.getAccountKvsRaw(baseUrl, address));
+    return res.pairs as RawKvs;
   }
 
-  getAccountPairs(address: Address) {
-    return Proxy.getAccountPairs(this.baseUrl, address);
+  getAccountKvs(address: Address) {
+    return Proxy.getAccountKvs(this.baseUrl, address);
   }
 
-  static getAccountWithPairs(baseUrl: string, address: Address) {
+  static getAccountWithKvs(baseUrl: string, address: Address) {
     return Promise.all([
       Proxy.getAccount(baseUrl, address),
-      Proxy.getAccountPairs(baseUrl, address),
-    ]).then(([account, pairs]) => ({ ...account, pairs }));
+      Proxy.getAccountKvs(baseUrl, address),
+    ]).then(([account, data]) => ({ ...account, kvs: data }));
   }
 
-  getAccountWithPairs(address: Address) {
-    return Proxy.getAccountWithPairs(this.baseUrl, address);
+  getAccountWithKvs(address: Address) {
+    return Proxy.getAccountWithKvs(this.baseUrl, address);
   }
 }
 
