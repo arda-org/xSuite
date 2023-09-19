@@ -22,6 +22,6 @@ jobs:
         run: pnpm build-xsuite
 
       - name: Publish xsuite to NPM
-        run: git config core.fileMode false && cd xsuite && pnpm publish --publish-branch dev
+        run: git config core.fileMode false && cd xsuite && pnpm publish --publish-branch dev --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
