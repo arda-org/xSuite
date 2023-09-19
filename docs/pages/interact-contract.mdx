@@ -4,7 +4,7 @@ The 4th and last step is to deploy your contract and interact with it on the rea
 
 Instead of using a `SWorld` object like in tests, we will use a "real" `World` object, that interacts with the real blockchain.
 
-The package `xsuite/interact` also provides an `envChain` utility, to easily and quickly deploy contracts for the different networks.
+The package `xsuite` also provides an `envChain` utility, to easily and quickly deploy contracts for the different networks.
 
 ## Your first interaction
 
@@ -34,8 +34,7 @@ The `interact/index.ts` file contains the commands of our CLI:
 
 ```ts
 import { Command } from "commander";
-import { envChain } from "xsuite/interact";
-import { World } from "xsuite/world";
+import { envChain, World } from "xsuite";
 import data from "./data.json";
 
 const world = World.new({
@@ -87,10 +86,7 @@ You should have the following imports at the top of the `interact/index.ts` file
 
 ```ts
 import { Command } from "commander";
-import { envChain } from "xsuite/interact";
-import { World } from "xsuite/world";
-import { e, d } from "xsuite/data";
-// @ts-ignore
+import { envChain, World } from "xsuite";
 import data from "./data.json";
 ```
 
@@ -98,7 +94,7 @@ We use the `Command` class from `commander` to allow us to write nice NodeJs CLI
 
 `envChain` is the utility we talked about previously. `World` is for interacting with the real blockchain (devnet / testnet / mainnet), similar to `SWorld` from tests for interacting with the simulnet.
 
-We then import the `data.json` file and will use the `e` and `d` utilities from `xsuite/data` to encode/decode data respectively to a format that the MultiversX blockchain understands. More info on the [Data Encoding](/data-encoding) page
+We then import the `data.json` file and will use the `e` and `d` utilities from `xsuite` to encode/decode data respectively to a format that the MultiversX blockchain understands. More info on the [Data Encoding](/data-encoding) page
 
 ### World, wallet & program
 

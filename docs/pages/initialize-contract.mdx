@@ -74,8 +74,7 @@ Create the first test file under `tests/contract.test.ts`, with the following co
 
 ```ts
 import { test, beforeEach, afterEach } from "vitest";
-import { assertAccount } from "xsuite/assert";
-import { SWorld, SWallet, SContract } from "xsuite/world";
+import { assertAccount, SWorld, SWallet, SContract } from "xsuite";
 
 let world: SWorld;
 let deployer: SWallet;
@@ -138,8 +137,7 @@ Create the `interact/index.ts` file with the following content:
 
 ```ts
 import { Command } from "commander";
-import { envChain } from "xsuite/interact";
-import { World } from "xsuite/world";
+import { envChain, World } from "xsuite";
 import data from "./data.json";
 
 const world = World.new({

@@ -1,9 +1,9 @@
 # Data Encoding
 
-The `xSuite/data` package provides the `e` utility to easily convert data to the MultiversX format.
+`xsuite` package provides the `e` utility to easily convert data to the MultiversX format.
 
 ```ts
-import { e } from "xsuite/data";
+import { e } from "xsuite";
 ```
 
 ## Available data types
@@ -119,7 +119,7 @@ await deployer.callContract({
 
 ## Storage mappers
 
-Under `e.p.Mapper` there are utilities to easily encode storage mappers. This is used together with the `assertAccount` utility from `xSuite/assert` and the `hasPairs`/`allPairs` key, to check that an account has the appropriate storage data.
+Under `e.p.Mapper` there are utilities to easily encode storage mappers. This is used together with the `assertAccount` utility from `xsuite` and the `hasPairs`/`allPairs` key, to check that an account has the appropriate storage data.
 
 It accepts the name of the storage mapper as a first argument and optionally storage mapper arguments:
 

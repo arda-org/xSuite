@@ -25,9 +25,7 @@ Here is a basic test to check if a contract has been been successfully deployed:
 
 ```ts
 import { test, beforeEach, afterEach } from "vitest";
-import { assertAccount } from "xsuite/assert";
-import { SWorld, SWallet, SContract } from "xsuite/world";
-import { e } from "xsuite/data";
+import { assertAccount, SWorld, SWallet, SContract, e } from "xsuite";
 
 let world: SWorld;
 let deployer: SWallet;
@@ -64,16 +62,14 @@ The following imports are needed at the top of the file:
 
 ```ts
 import { test, beforeEach, afterEach } from "vitest";
-import { assertAccount } from "xsuite/assert";
-import { SWorld, SWallet, SContract } from "xsuite/world";
-import { e } from "xsuite/data";
+import { assertAccount, SWorld, SWallet, SContract, e } from "xsuite";
 ```
 
 We use the `test`, `beforeEach` and `afterEach` hooks from `vitest`. These are functions in which we will write our test's code as well as code that we want to run before/after each test respectively.
 
 `assertAccount` is used to assert that an address (account) on MultiversX contains the data we expect (token balances, storage, etc).
 
-The `xsuite/world` and `xsuite/data` imports will be detailed later.
+The impots `SWorld, SWallet, SContract` and `e` will be detailed later.
 
 ### "Simulated" world, wallet & contract
 
@@ -247,17 +243,17 @@ const { returnData, returnCode, returnMessage } = await world.query({
 });
 ```
 
-In order to decode the `returnData` you can use the `d` helper from the `xsuite/data` package. More info [here](/data-decoding).
+In order to decode the `returnData` you can use the `d` helper from the `xsuite` package. More info [here](/data-decoding).
 
 ```ts
-import { assert } from "vitest";
-import { d } from "xsuite/data";
+import { expect } from "vitest";
+import { d } from "xsuite";
 
 const tokenData = d.Tuple({
   token: d.Str(),
 }).topDecode(returnData[0]);
 
-assert(tokenData.token === "TOKEN-123456");
+expect(tokenData.token).toEqual("TOKEN-123456");
 ```
 
 ## Asserting account data

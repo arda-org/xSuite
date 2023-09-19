@@ -13,7 +13,7 @@ fn positions(&self, address: &ManagedAddress, token: &TokenIdentifier) -> VecMap
 and we would want to decode the data returned by the mapper, we could use:
 
 ```ts
-import { e, d } from "xsuite/data";
+import { e, d } from "xsuite";
 
 const { returnData } = await world.query({
   callee: contract,
