@@ -41,7 +41,7 @@ export default {
       titleTemplate: asPath === "/" ? "%s" : "%s | xSuite",
       description: "Init, build, test, deploy MultiversX contracts in seconds.",
       openGraph: {
-        images: [{ url: `${process.env.CF_PAGES_URL}${logoUrl.src}` }],
+        images: [{ url: `https://xsuite.dev${logoUrl.src}` }],
       },
     };
   },
