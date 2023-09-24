@@ -18,6 +18,9 @@
     "plugin:import/typescript",
     "prettier"
   ],
+  "globals": {
+    "process": true
+  },
   "rules": {
     "@typescript-eslint/no-explicit-any": "off",
     "import/no-duplicates": "error",

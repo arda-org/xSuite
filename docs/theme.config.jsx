@@ -37,10 +37,13 @@ export default {
   },
   useNextSeoProps() {
     const { asPath } = useRouter();
-    if (asPath !== "/") {
-      return {
-        titleTemplate: `%s | xSuite`,
-      };
-    }
+    return {
+      titleTemplate: asPath === "/" ? "%s" : "%s | xSuite",
+      description: "Init, build, test, deploy MultiversX contracts in seconds.",
+      openGraph: {
+        images: [{ url: `https://xsuite.dev${logoUrl.src}` }],
+      },
+    };
   },
+  head: null,
 };
