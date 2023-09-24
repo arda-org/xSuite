@@ -354,7 +354,7 @@ const getTxReturnData = (tx: any): string[] => {
     return atob(writeLogEvent.data).split("@").slice(2);
   }
   const scr = tx?.smartContractResults.find(
-    (r: any) => r.data === "@6f6b" || r.data.startsWith("@6f6b@"),
+    (r: any) => r.data === "@6f6b" || r.data?.startsWith("@6f6b@"),
   );
   if (scr) {
     return scr.data.split("@").slice(2);

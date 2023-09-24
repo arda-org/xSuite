@@ -17,7 +17,7 @@ program.command("deploy").action(async () => {
   const result = await wallet.deployContract({
     code: data.code,
     codeMetadata: ["upgradeable"],
-    gasLimit: 20_000_000,
+    gasLimit: 100_000_000,
   });
   console.log("Result:", result);
 });
@@ -28,7 +28,7 @@ program.command("upgrade").action(async () => {
     callee: envChain.select(data.address),
     code: data.code,
     codeMetadata: ["upgradeable"],
-    gasLimit: 20_000_000,
+    gasLimit: 100_000_000,
   });
   console.log("Result:", result);
 });
