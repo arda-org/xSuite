@@ -268,7 +268,7 @@ const convert = (
   if (inputType === "hex") {
     hex = inputValue;
   } else if (inputType === "base64") {
-    hex = e.Str(atob(inputValue)).toTopHex();
+    hex = Buffer.from(inputValue, "base64").toString("hex");
   } else if (inputType === "biguint") {
     hex = e.U(BigInt(inputValue)).toTopHex();
   } else if (inputType === "string") {
@@ -281,7 +281,7 @@ const convert = (
   if (outputType === "hex") {
     return hex;
   } else if (outputType === "base64") {
-    return btoa(d.Str().topDecode(hex));
+    return Buffer.from(hex, "hex").toString("base64");
   } else if (outputType === "biguint") {
     return d.U().topDecode(hex).toString();
   } else if (outputType === "string") {
