@@ -37,10 +37,11 @@ export default {
   },
   useNextSeoProps() {
     const { asPath } = useRouter();
-    let titleTemplate = asPath === "/" ? "%s" : "%s | xSuite";
-    let description =
-      "Init, build, test, deploy MultiversX contracts in seconds.";
-    return { titleTemplate, description };
+    return {
+      titleTemplate: asPath === "/" ? "%s" : "%s | xSuite",
+      description: "Init, build, test, deploy MultiversX contracts in seconds.",
+      openGraph: { images: [{ url: logoUrl.src }] },
+    };
   },
   head: null,
 };
