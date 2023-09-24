@@ -37,10 +37,10 @@ export default {
   },
   useNextSeoProps() {
     const { asPath } = useRouter();
-    if (asPath !== "/") {
-      return {
-        titleTemplate: `%s | xSuite`,
-      };
-    }
+    let titleTemplate = asPath === "/" ? "%s" : "%s | xSuite";
+    let description =
+      "Init, build, test, deploy MultiversX contracts in seconds.";
+    return { titleTemplate, description };
   },
+  head: null,
 };
