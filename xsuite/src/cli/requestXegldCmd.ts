@@ -1,10 +1,11 @@
 import { SignableMessage } from "@multiversx/sdk-core";
 import { NativeAuthClient } from "@multiversx/sdk-native-auth-client";
 import { Command } from "commander";
+import open from "open";
 import { log } from "../_stdio";
 import { Proxy } from "../proxy";
 import { KeystoreSigner } from "../world/signer";
-import { logError, logSuccess } from "./helpers";
+import { logSuccess } from "./helpers";
 
 export const registerRequestXegldCmd = (cmd: Command) => {
   cmd
@@ -45,19 +46,12 @@ const action = async ({
     .then((b) => b.toString("hex"));
   const accessToken = client.getToken(address, initToken, signature);
 
-  const faucetRes = await fetch(
-    "https://devnet-extras-api.multiversx.com/faucet",
-    {
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-      },
-      method: "POST",
-    },
-  ).then((r) => r.json());
-
-  if (faucetRes["status"] !== "success") {
-    logError(`Error: ${faucetRes["message"]}`);
-    return;
+  const faucetUrl = `https://devnet-wallet.multiversx.com/faucet?accessToken=${accessToken}`;
+  log();
+  log("Open this URL:");
+  log(faucetUrl);
+  if (!process.env.JEST_WORKER_ID) {
+    open(faucetUrl);
   }
 
   const initialBalance = await devnetProxy.getAccountBalance(address);
@@ -67,6 +61,7 @@ const action = async ({
     await new Promise((r) => setTimeout(r, 1000));
   }
 
+  log();
   logSuccess("Wallet well received 30 xEGLD.");
 };
 
