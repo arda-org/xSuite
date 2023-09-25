@@ -6,7 +6,7 @@
     "build": "run-script-os",
     "build:linux": "cd src && GOOS=linux GOARCH=amd64 go build -o ../bin/sproxy-linux-amd64 -ldflags \"-extldflags '-Wl,-rpath,\\$ORIGIN'\"",
     "build:darwin": "cd src && GOOS=darwin GOARCH=amd64 go build -o ../bin/sproxy-darwin-amd64",
-    "postinstall": "chmod -f +x ./bin/proxy-* || true"
+    "postinstall": "chmod -f +x ./bin/sproxy-* || true"
   },
   "files": [
     "bin",
