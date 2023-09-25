@@ -102,7 +102,6 @@ test("request-xegld --wallet wallet.json", async () => {
   const walletPath = path.resolve("wallet.json");
   const signer = Keystore.createFile_unsafe(walletPath, "1234").newSigner();
   const address = signer.toString();
-  let numFaucetReqs = 0;
   let numBalanceReqs = 0;
   const server = setupServer(
     rest.get(
@@ -124,19 +123,6 @@ test("request-xegld --wallet wallet.json", async () => {
         ]),
       );
     }),
-    rest.post(
-      "https://devnet-extras-api.multiversx.com/faucet",
-      (_req, res, ctx) => {
-        numFaucetReqs += 1;
-        if (numFaucetReqs === 1) {
-          return res(ctx.json({ status: "success" }));
-        } else {
-          return res(
-            ctx.json({ status: "error", message: "Already claimed today." }),
-          );
-        }
-      },
-    ),
     rest.get(
       `https://devnet-gateway.multiversx.com/address/${address}/balance`,
       (_req, res, ctx) => {
@@ -153,14 +139,23 @@ test("request-xegld --wallet wallet.json", async () => {
   await run(`request-xegld --wallet ${walletPath} --password 1234`);
   stdoutInt.stop();
   server.close();
-  expect(stdoutInt.data.split("\n")).toEqual([
+  const splittedStdoutData = stdoutInt.data.split("\n");
+  expect(splittedStdoutData).toEqual([
     `Loading keystore wallet at "${walletPath}"...`,
     "Enter password: ",
     "",
     `Claiming 30 xEGLD for address "${address}"...`,
+    "",
+    "Open this URL:",
+    splittedStdoutData.at(6),
+    "",
     chalk.green("Wallet well received 30 xEGLD."),
     `Claiming 30 xEGLD for address "${address}"...`,
-    chalk.red("Error: Already claimed today."),
+    "",
+    "Open this URL:",
+    splittedStdoutData.at(12),
+    "",
+    chalk.green("Wallet well received 30 xEGLD."),
     "",
   ]);
 });
