@@ -31,55 +31,55 @@ nvm install 18
 
 </details>
 
-First, install `xsuite`:
+1. Install `xsuite`:
 
-```
-npm install -g xsuite
-```
+   ```
+   npm install -g xsuite
+   ```
 
-Install Rust with the newly available `xsuite` command:
+2. Install Rust with the newly available `xsuite` command:
 
-```
-xsuite install-rust
-```
+   ```
+   xsuite install-rust
+   ```
 
-<Callout type="warning" emoji="⚠️">
-  You should then close and reopen your terminal.
-</Callout>
+   <Callout type="warning" emoji="⚠️">
+     You should then close and reopen your terminal.
+   </Callout>
 
-Create a new blank contract in the directory `first-contract` and open it:
+3. Create a new blank contract in the directory `first-contract` and open it:
 
-```
-xsuite new --dir first-contract
-cd first-contract
-```
+   ```
+   xsuite new --dir first-contract
+   cd first-contract
+   ```
 
-Create a new wallet, encrypted with the password of your choice:
+4. Create a new wallet, encrypted with the password of your choice:
 
-```
-xsuite new-wallet --wallet wallet.json
-```
+   ```
+   xsuite new-wallet --wallet wallet.json
+   ```
 
-Fund this new wallet with 30 xEGLD, the fake EGLD of devnet:
+5. Fund this new wallet with 30 xEGLD, the fake EGLD of devnet:
 
-```
-xsuite request-xegld --wallet wallet.json
-```
+   ```
+   xsuite request-xegld --wallet wallet.json
+   ```
 
-Build the contract:
+6. Build the contract:
 
-```
-npm run build
-```
+   ```
+   npm run build
+   ```
 
-Test the contract:
+7. Test the contract:
 
-```
-npm run test
-```
+   ```
+   npm run test
+   ```
 
-Deploy the contract to MultiversX devnet:
+8. Deploy the contract to MultiversX devnet:
 
-```
-npm run interact:devnet deploy
-```
+   ```
+   npm run interact:devnet deploy
+   ```
