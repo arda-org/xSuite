@@ -1,5 +1,6 @@
 import { SignableMessage } from "@multiversx/sdk-core";
 import { NativeAuthClient } from "@multiversx/sdk-native-auth-client";
+import chalk from "chalk";
 import { Command } from "commander";
 import open from "open";
 import { log } from "../_stdio";
@@ -48,8 +49,8 @@ const action = async ({
 
   const faucetUrl = `https://devnet-wallet.multiversx.com/faucet?accessToken=${accessToken}`;
   log();
-  log("Open this URL:");
-  log(faucetUrl);
+  log("Open the URL and request tokens:");
+  log(chalk.bold(faucetUrl));
   if (!process.env.JEST_WORKER_ID) {
     open(faucetUrl);
   }

@@ -1,3 +1,5 @@
+import { Callout } from "nextra/components";
+
 # Getting Started
 
 xSuite makes the initialization, building, testing and deployment of contracts extremely easy.
@@ -23,53 +25,65 @@ Then install Node.js 18:
 nvm install 18
 ```
 
+<Callout type="warning" emoji="⚠️">
+  You should then close and reopen your terminal.
+</Callout>
+
 </details>
 
-First, install `xsuite`:
+1. Install `xsuite`:
 
-```
-npm install -g xsuite
-```
+   ```
+   npm install -g xsuite
+   ```
 
-Install Rust with the newly available `xsuite` command:
+2. Install Rust with the newly available `xsuite` command:
 
-```
-xsuite install-rust
-```
+   ```
+   xsuite install-rust
+   ```
 
-Create a new blank contract in the directory `first-contract` and open it:
+   <Callout type="warning" emoji="⚠️">
+     You should then close and reopen your terminal.
+   </Callout>
 
-```
-xsuite new --dir first-contract
-cd first-contract
-```
+3. Create a new blank contract in the directory `first-contract` and open it:
 
-Create a new wallet, encrypted with the password of your choice:
+   ```
+   xsuite new --dir first-contract
+   cd first-contract
+   ```
 
-```
-xsuite new-wallet --wallet wallet.json
-```
+4. Create a new wallet, encrypted with the password of your choice:
 
-Fund this new wallet with 30 xEGLD, the fake EGLD of devnet:
+   ```
+   xsuite new-wallet --wallet wallet.json
+   ```
 
-```
-xsuite request-xegld --wallet wallet.json
-```
+5. Fund this new wallet with 30 xEGLD, the fake EGLD of devnet:
 
-Build the contract:
+   ```
+   xsuite request-xegld --wallet wallet.json
+   ```
 
-```
-npm run build
-```
+   A page opens in your browser. Fill the captcha and request the tokens.
 
-Test the contract:
+   ![Faucet](/faucet.png)
 
-```
-npm run test
-```
+6. Build the contract:
 
-Deploy the contract to MultiversX devnet:
+   ```
+   npm run build
+   ```
 
-```
-npm run interact:devnet deploy
-```
+7. Test the contract:
+
+   ```
+   npm run test
+   ```
+
+8. Deploy the contract to MultiversX devnet:
+
+   ```
+   npm run interact:devnet deploy
+   ```
