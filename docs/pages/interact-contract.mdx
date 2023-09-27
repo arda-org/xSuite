@@ -2,17 +2,33 @@
 
 The 4th and last step is to deploy your contract and interact with it on the real blockchain (devnet / testnet / mainnet). xSuite makes deploying and interacting super simple.
 
-Instead of using a `SWorld` object like in tests, we will use a "real" `World` object, that interacts with the real blockchain.
+The code for interacting with the real blockchain is nearly the same as the code for testing your contract and interacting with the simulnet. Instead of using a `SWorld` object, you will use a `World` object. That's the only difference.
 
-The package `xsuite` also provides an `envChain` utility, to easily and quickly deploy contracts for the different networks.
+xSuite also provides an `envChain` utility to easily interact with the different networks (devent / testnet / mainnet).
 
 ## Your first interaction
 
-Interactions are CLI commands written using the [commander.js](https://github.com/tj/commander.js) library. You should already have the `interact/data.json` and `interact/index.ts` files created after following the getting started guide. Below we will detail the contents of the files.
+Interactions can be written using any JavaScript CLI library. As we prefer [commander](https://github.com/tj/commander.js), we are going to teach using this one.
+
+First, install `commander` in your contract with `npm install commander`. You can then add the scripts:
+
+```json
+"interact:devnet": "CHAIN=devnet tsx interact/index.ts",
+"interact:testnet": "CHAIN=testnet tsx interact/index.ts",
+"interact:mainnet": "CHAIN=mainnet tsx interact/index.ts"
+```
+
+in the `package.json` of your contract. This allows you to interact with devnet / testnet / mainnet with the commands:
+
+```
+npm run interact:devnet <ACTION>
+npm run interact:testnet <ACTION>
+npm run interact:mainnet <ACTION>
+```
 
 ### interact/data.json
 
-The `data.json` file contains information regarding your contracts and can be used with the `envChain` utility. Take the following `data.json` file:
+Create the file `interact/data.json` that will contain all the data about your contract in the different networks. As a start, you can put:
 
 ```json
 {
@@ -25,12 +41,11 @@ The `data.json` file contains information regarding your contracts and can be us
 }
 ```
 
-In Typescript code we can import the file and use the data under the fields directly. The `code` field contains the path to the contract wasm code, but the `address` is an object with fields for `devnet`, `testnet` and `mainnet`. These keys will be used by the `envChain` utility depending on the `CHAIN` env variable (which is set in the `package.json` file in the appropriate interact scripts for each environment) to select the address of the contract on that chain.
+The `code` field would contain the path to the contract WASM code and the `address` field would contain the address of the contract on devnet, testnet and mainnet. The `envChain` utility will select the correct address to use depending on the value of the `CHAIN` env variable.
 
 ### interact/index.ts
 
-The `interact/index.ts` file contains the commands of our CLI:
-
+Create the file `interact/index.ts` that will contains the interactions. As a start, you can put:
 
 ```ts
 import { Command } from "commander";

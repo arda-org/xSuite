@@ -8,6 +8,8 @@ xSuite makes the initialization, building, testing and deployment of contracts e
 
 Let's initialize, build, test and deploy your first MultiversX contract in seconds.
 
+### 0. Install xSuite
+
 The only requirement is to have Node.js 18+ already installed.
 
 <details>
@@ -31,59 +33,69 @@ nvm install 18
 
 </details>
 
-1. Install `xsuite`:
+Install xSuite:
 
-   ```
-   npm install -g xsuite
-   ```
+```
+npm install -g xsuite
+```
 
-2. Install Rust with the newly available `xsuite` command:
+### 1. Initialize the Contract
 
-   ```
-   xsuite install-rust
-   ```
+Create a new blank contract in the directory `first-contract` and open it:
 
-   <Callout type="warning" emoji="⚠️">
-     You should then close and reopen your terminal.
-   </Callout>
+```
+xsuite new --dir first-contract
+cd first-contract
+```
 
-3. Create a new blank contract in the directory `first-contract` and open it:
+### 2. Build the Contract
 
-   ```
-   xsuite new --dir first-contract
-   cd first-contract
-   ```
+Install Rust, which is necessary to build the contract:
 
-4. Create a new wallet, encrypted with the password of your choice:
+```
+xsuite install-rust
+```
 
-   ```
-   xsuite new-wallet --wallet wallet.json
-   ```
+<Callout type="warning" emoji="⚠️">
+  You should then close and reopen your terminal.
+</Callout>
 
-5. Fund this new wallet with 30 xEGLD, the fake EGLD of devnet:
+Build the contract:
 
-   ```
-   xsuite request-xegld --wallet wallet.json
-   ```
+```
+npm run build
+```
 
-   A page opens in your browser. Fill the captcha and request the tokens.
+### 3. Test the Contract
 
-   ![Faucet](/faucet.png)
+Test the contract:
 
-6. Build the contract:
+```
+npm run test
+```
 
-   ```
-   npm run build
-   ```
+### 4. Deploy the Contract
 
-7. Test the contract:
+Create a new wallet, encrypted with the password of your choice:
 
-   ```
-   npm run test
-   ```
+```
+xsuite new-wallet --wallet wallet.json
+```
 
-8. Deploy the contract to MultiversX devnet:
+Fund this new wallet with 30 xEGLD, the fake EGLD of devnet:
 
-   ```
-   npm run interact:devnet deploy
-   ```
+```
+xsuite request-xegld --wallet wallet.json
+```
+
+A page opens in your browser. Fill the captcha and request the tokens.
+
+![Faucet](/faucet.png)
+
+Deploy the contract to MultiversX devnet:
+
+```
+npm run interact:devnet deploy
+```
+
+Bravo! You have just deployed your first MultiversX smart contract! 🎉

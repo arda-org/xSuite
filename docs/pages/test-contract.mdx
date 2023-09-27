@@ -2,9 +2,15 @@ import { Callout } from "nextra/components";
 
 # Test Contract
 
-The 3rd step is to test your contract. xSuite makes testing super simple. It provides a **simulated blockchain** called **simulnet** and a JavaScript library to test your contract against the simulnet.
+The 3rd step is to test your contract. xSuite makes testing super simple.
 
-Compared to the real blockchain (e.g. the devnet), the simulnet has the advantage to execute transactions instantly and to provide adminstrator operations (e.g. `setAccount`). This allows to run tests super quickly and to easily configure the blockchain in specific states.
+xSuite provides a **simulated blockchain**, called **simulnet**, that runs on your machine and simulates the real blockchain (devnet / testnet / mainnet) while having 2 main advantages:
+
+1. The simulnet executes transactions **instantly** whereas the real blockchain takes 6 seconds to execute each transaction. Therefore, a test with 10 transactions runs **instantly** against the simulnet whereas it would take 1 minute against the real blockchain.
+
+2. The simulnet authorizes **adminstrator operations** (e.g. `setAccount`) that the real blockchain doesn't authorize. Therefore, a test can easily configure a rare state of the blockchain using the simulnet whereas it would have required many transactions using the real blockchain.
+
+The simulnet implements **the same API as the real blockchain** with additional adminstrator endpoints. Therefore, if your code is able to interact with the simulnet, it will also be able to interact with the real blockchain and vice versa.
 
 <Callout type="warning" emoji="⚠️">
   At the moment, the simulnet doesn't reproduce the exact behavior of the real
@@ -13,15 +19,15 @@ Compared to the real blockchain (e.g. the devnet), the simulnet has the advantag
   executor](https://docs.multiversx.com/developers/scenario-reference/overview).
 </Callout>
 
-The simulnet implements the same API as the real blockchain (devnet / testnet / mainnet) with additional adminstrator endpoints. Therefore, if your code is able to interact with the simulnet, it will also be able to interact with the real blockchain with nearly no modification.
-
-In addition to the simulnet, xSuite provides a JavaScript library to make easy interacting with the simulnet.
+In addition to the simulnet, xSuite provides a JavaScript library to make super easy interacting with the simulnet.
 
 ## Your first test
 
-A test is just a `.test.ts` (or `.test.js`) file in the `tests` directory. Tests are run using [vitest](https://vitest.dev/guide/) and use `xsuite` to easily interacting with the simulnet.
+Tests can be written and run using the JavaScript testing library of your choice. As we prefer [vitest](https://vitest.dev/guide/), we are going to teach using this one.
 
-Here is a basic test to check if a contract has been been successfully deployed:
+First, install `vitest` in your contract with `npm install vitest`. You can then add the script `"test": "vitest run"` in the `package.json` of your contract. This allows you to run the tests with the command `npm run test`.
+
+A test is just a `.test.ts` (or `.test.js`) file in the `tests` directory. Here is a basic test that can be put in `tests/contract.test.ts` and that checks if a contract has been successfully deployed:
 
 ```ts
 import { test, beforeEach, afterEach } from "vitest";
@@ -54,7 +60,7 @@ test("Test", async () => {
 });
 ```
 
-This test can be put in `tests/contract.test.ts`. Let's break the file down and explain it.
+Let's break the file down and explain it.
 
 ### Imports
 
