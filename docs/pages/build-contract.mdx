@@ -1,6 +1,6 @@
 # Build Contract
 
-The 2nd step is to code and build your contract. xSuite CLI makes building super simple.
+The 2nd step is to code and build your contract. xSuite makes building super simple.
 
 For this, Rust needs to be properly installed. To install it:
 
@@ -8,13 +8,13 @@ For this, Rust needs to be properly installed. To install it:
 xsuite install-rust
 ```
 
-You can then build your contract with:
+You can now build your contract with:
 
 ```
 xsuite build
 ```
 
-If a `build` script is defined in the `package.json` of your contract, you can also run:
+You can also add the script `"build": "xsuite build"` to the `package.json` of your contract and then build using:
 
 ```
 npm run build
