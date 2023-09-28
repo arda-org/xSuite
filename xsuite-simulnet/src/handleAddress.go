@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/hex"
 	"net/http"
 
@@ -21,6 +22,8 @@ func (ae *Executor) HandleAddress(r *http.Request) (interface{}, error) {
 				"nonce":   			account.Nonce,
 				"balance": 			account.Balance.String(),
 				"code": 				hex.EncodeToString(account.Code),
+				"codeMetadata": base64.StdEncoding.EncodeToString(account.CodeMetadata),
+				"ownerAddress": addressConverter.Encode(account.OwnerAddress),
 			},
 		},
 		"code": "successful",

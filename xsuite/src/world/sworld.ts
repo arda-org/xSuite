@@ -11,10 +11,15 @@ let contractCounter = 0;
 
 export class SWorld extends World {
   proxy: SProxy;
+  sysAcc: SContract;
 
   constructor({ proxy, gasPrice }: { proxy: SProxy; gasPrice?: number }) {
     super({ proxy, chainId: "S", gasPrice });
     this.proxy = proxy;
+    this.sysAcc = new SContract({
+      address: "erd1lllllllllllllllllllllllllllllllllllllllllllllllllllsckry7t",
+      proxy,
+    });
   }
 
   static new({ proxyUrl, gasPrice }: { proxyUrl: string; gasPrice?: number }) {
@@ -54,23 +59,8 @@ export class SWorld extends World {
     return wallet;
   }
 
-  async createContract(account: Omit<Account, "address"> = {}) {
-    contractCounter += 1;
-    const address = numberToBytesAddress(contractCounter, true);
-    const contract = new SContract({ address, proxy: this.proxy });
-    await contract.setAccount(account);
-    return contract;
-  }
-
-  getSystemAccountKvs() {
-    return this.proxy.getAccountKvs(systemAccountAddress);
-  }
-
-  setSystemAccount(account: Omit<Account, "address">) {
-    return setAccount(this.proxy, {
-      address: systemAccountAddress,
-      ...account,
-    });
+  createContract(account: Omit<Account, "address"> = {}) {
+    return createContract(this.proxy, account);
   }
 
   setCurrentBlockInfo(block: Block) {
@@ -102,6 +92,10 @@ export class SWallet extends Wallet {
 
   setAccount(account: Omit<Account, "address">) {
     return setAccount(this.proxy, { address: this, ...account });
+  }
+
+  createContract(account: Omit<Account, "address" | "owner">) {
+    return createContract(this.proxy, { ...account, owner: this });
   }
 
   deployContract(
@@ -137,7 +131,7 @@ export class SContract extends Contract {
 }
 
 const setAccount = (proxy: SProxy, account: Account) => {
-  if (account.code === undefined) {
+  if (account.code == null) {
     if (isContractAddress(account.address)) {
       account.code = "00";
     }
@@ -147,5 +141,13 @@ const setAccount = (proxy: SProxy, account: Account) => {
   return proxy.setAccount(account);
 };
 
-const systemAccountAddress =
-  "erd1lllllllllllllllllllllllllllllllllllllllllllllllllllsckry7t";
+const createContract = async (
+  proxy: SProxy,
+  account: Omit<Account, "address"> = {},
+) => {
+  contractCounter += 1;
+  const address = numberToBytesAddress(contractCounter, true);
+  const contract = new SContract({ address, proxy });
+  await contract.setAccount(account);
+  return contract;
+};

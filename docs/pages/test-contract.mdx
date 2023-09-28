@@ -145,7 +145,7 @@ Here, using `assertAccount`, we will test that the contract we deployed has the 
 
 `contract.getAccountWithKvs()` will fetch the account of the contract with all its kvs from the simulnet.
 
-Using `hasKvs` we can test that the contract contains the kvs provided (use `allKvs` if you want to test that the contract contains exactly all the kvs provided).
+Using `hasKvs` we can test that the contract contains the kvs provided (use `kvs` if you want to test that the contract contains exactly all the kvs provided).
 
 The `e.p` is a helper that lets you easily encode storage mappers in the format that the MultiversX blockchain understands. Here, `e.kvs.Mapper()` represents a simple `SingleValueMapper` type from a Rust Smart Contract. Using `.Value()` we can assert that it contains the value we expect.
 
@@ -274,10 +274,10 @@ An account is an address that exists on the MultiversX blockchain. It can repres
 
 We can assert that an account has the kvs we want using `assertAccount` function. Here, we have two fields we can use:
 
+- `kvs` - will check if the account contains the kvs we want and not more, if it has extra kvs the assertion will fail (this is similar to how MultiversX Scenarios work)
 - `hasKvs` - will check if the account has the kvs we want, but the account can also have other kvs that we have not specified
-- `allKvs` - will check if the account has these EXACT kvs we want, if it has extra kvs the assertion will fail (this is similar to how MultiversX Scenarios work)
 
-You can use whichever works best for you. We recommend using `allKvs` to make sure your contract doesn't have any unwanted kvs, but sometimes it may be easier to use `hasKvs`, when there are a lot of storage or when debugging.
+You can use whichever works best for you. We recommend using `kvs` to make sure your contract doesn't have any unwanted kvs, but sometimes it may be easier to use `hasKvs`, when there are a lot of storage or when debugging.
 
 ### Checking balance & ESDTs
 
@@ -287,7 +287,7 @@ We can use the `assertAccount` function to test that an account has a specific E
 const account = await contract.getAccountWithKvs();
 assertAccount(account, {
   balance: 1_000,
-  allKvs: [
+  kvs: [
     e.kvs.Esdts([
       { id: "TOKEN-123456", amount: 2_000 },
       { id: "NFT-123456", nonce: 1, name: "Nft Name", uris: ["url"] },
@@ -306,7 +306,7 @@ The helper `e.p` can be used to check storage. More details about storage mapper
 const account = await contract.getAccountWithKvs();
 assertAccount(account, {
   balance: 0n,
-  allKvs: [
+  kvs: [
     e.kvs.Mapper("pause_module:paused").Value(e.Bool(false)),
     e.kvs.Mapper("fee_percent").Value(e.U64(100)),
   ],
@@ -387,7 +387,7 @@ test("Validate", async () => {
 
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 1_000, // Assert that balance changed
-    allKvs: [
+    kvs: [
       // Test that next_epoch was modified accordingly
       e.kvs.Mapper("next_epoch", e.Str("TOKEN-123456")).Value(e.U64(20)),
     ],

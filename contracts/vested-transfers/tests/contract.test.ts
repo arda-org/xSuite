@@ -69,7 +69,7 @@ test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Cl
   });
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 10_000,
-    allKvs: [
+    kvs: [
       e.kvs.Mapper("max_transfer_index").Value(e.U64(1)),
       e.kvs
         .Mapper("transfers")
@@ -109,7 +109,7 @@ test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Cl
   });
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 10_000,
-    allKvs: [
+    kvs: [
       e.kvs.Mapper("max_transfer_index").Value(e.U64(1)),
       e.kvs
         .Mapper("transfers")
@@ -149,7 +149,7 @@ test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Cl
   });
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 10_000,
-    allKvs: [
+    kvs: [
       e.kvs.Mapper("max_transfer_index").Value(e.U64(1)),
       e.kvs
         .Mapper("transfers")
@@ -191,7 +191,7 @@ test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Cl
   });
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 10_000,
-    allKvs: [
+    kvs: [
       e.kvs.Mapper("max_transfer_index").Value(e.U64(1)),
       e.kvs
         .Mapper("balances", receiver1)
@@ -214,7 +214,7 @@ test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Cl
   });
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 0,
-    allKvs: [e.kvs.Mapper("max_transfer_index").Value(e.U64(1))],
+    kvs: [e.kvs.Mapper("max_transfer_index").Value(e.U64(1))],
   });
 });
 
@@ -242,7 +242,7 @@ test("SFT transfer vested over epochs 5, 10, 15. Execute at epoch 20. Claim.", a
     hasKvs: [e.kvs.Esdts([{ id: sftId, nonce: 1, amount: 0 }])],
   });
   assertAccount(await contract.getAccountWithKvs(), {
-    allKvs: [
+    kvs: [
       e.kvs.Esdts([{ id: sftId, nonce: 1, amount: 10_000 }]),
       e.kvs.Mapper("max_transfer_index").Value(e.U64(1)),
       e.kvs
@@ -282,7 +282,7 @@ test("SFT transfer vested over epochs 5, 10, 15. Execute at epoch 20. Claim.", a
     hasKvs: [e.kvs.Esdts([{ id: sftId, nonce: 1, amount: 0 }])],
   });
   assertAccount(await contract.getAccountWithKvs(), {
-    allKvs: [
+    kvs: [
       e.kvs.Esdts([{ id: sftId, nonce: 1, amount: 10_000 }]),
       e.kvs.Mapper("max_transfer_index").Value(e.U64(1)),
       e.kvs
@@ -306,7 +306,7 @@ test("SFT transfer vested over epochs 5, 10, 15. Execute at epoch 20. Claim.", a
   });
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 0,
-    allKvs: [e.kvs.Mapper("max_transfer_index").Value(e.U64(1))],
+    kvs: [e.kvs.Mapper("max_transfer_index").Value(e.U64(1))],
   });
 });
 
@@ -330,7 +330,7 @@ test("EGLD transfer vested over epochs 5, 10. Cancelled at epoch 7. Claim.", asy
   });
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 10_000,
-    allKvs: [
+    kvs: [
       e.kvs.Mapper("max_transfer_index").Value(e.U64(1)),
       e.kvs
         .Mapper("transfers")
@@ -369,7 +369,7 @@ test("EGLD transfer vested over epochs 5, 10. Cancelled at epoch 7. Claim.", asy
   });
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 10_000,
-    allKvs: [
+    kvs: [
       e.kvs.Mapper("max_transfer_index").Value(e.U64(1)),
       e.kvs
         .Mapper("balances", sender1)
@@ -401,7 +401,7 @@ test("EGLD transfer vested over epochs 5, 10. Cancelled at epoch 7. Claim.", asy
   });
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 0,
-    allKvs: [e.kvs.Mapper("max_transfer_index").Value(e.U64(1))],
+    kvs: [e.kvs.Mapper("max_transfer_index").Value(e.U64(1))],
   });
 });
 
@@ -422,7 +422,7 @@ test("EGLD transfer to oneself over epochs 5, 10. Cancelled at epoch 7. Claim.",
   });
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 10_000,
-    allKvs: [
+    kvs: [
       e.kvs.Mapper("max_transfer_index").Value(e.U64(1)),
       e.kvs
         .Mapper("transfers")
@@ -458,7 +458,7 @@ test("EGLD transfer to oneself over epochs 5, 10. Cancelled at epoch 7. Claim.",
   });
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 10_000,
-    allKvs: [
+    kvs: [
       e.kvs.Mapper("max_transfer_index").Value(e.U64(1)),
       e.kvs
         .Mapper("balances", sender1)
@@ -478,7 +478,7 @@ test("EGLD transfer to oneself over epochs 5, 10. Cancelled at epoch 7. Claim.",
   });
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 0,
-    allKvs: [e.kvs.Mapper("max_transfer_index").Value(e.U64(1))],
+    kvs: [e.kvs.Mapper("max_transfer_index").Value(e.U64(1))],
   });
 });
 
@@ -590,23 +590,23 @@ test("Multiple transfers.", async () => {
   // Asserts
   assertAccount(await sender1.getAccountWithKvs(), {
     balance: 97_000,
-    allKvs: [e.kvs.Esdts([{ id: sftId, nonce: 1, amount: 85_000 }])],
+    kvs: [e.kvs.Esdts([{ id: sftId, nonce: 1, amount: 85_000 }])],
   });
   assertAccount(await sender2.getAccountWithKvs(), {
     balance: 85_000,
-    allKvs: [e.kvs.Esdts([{ id: sftId, nonce: 1, amount: 96_000 }])],
+    kvs: [e.kvs.Esdts([{ id: sftId, nonce: 1, amount: 96_000 }])],
   });
   assertAccount(await receiver1.getAccountWithKvs(), {
     balance: 3_000,
-    allKvs: [e.kvs.Esdts([{ id: sftId, nonce: 1, amount: 4_000 }])],
+    kvs: [e.kvs.Esdts([{ id: sftId, nonce: 1, amount: 4_000 }])],
   });
   assertAccount(await receiver2.getAccountWithKvs(), {
     balance: 15_000,
-    allKvs: [e.kvs.Esdts([{ id: sftId, nonce: 1, amount: 15_000 }])],
+    kvs: [e.kvs.Esdts([{ id: sftId, nonce: 1, amount: 15_000 }])],
   });
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 0,
-    allKvs: [e.kvs.Mapper("max_transfer_index").Value(e.U64(4))],
+    kvs: [e.kvs.Mapper("max_transfer_index").Value(e.U64(4))],
   });
 });
 

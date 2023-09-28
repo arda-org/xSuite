@@ -1,5 +1,5 @@
 import { test, expect } from "@jest/globals";
-import { assertAllKvs, assertHasKvs, assertAccount } from "./account";
+import { assertKvs, assertHasKvs, assertAccount } from "./account";
 import { assertHexList } from "./hexList";
 
 test("assertHexList - matching", () => {
@@ -8,6 +8,24 @@ test("assertHexList - matching", () => {
 
 test("assertHexList - not matching", () => {
   expect(() => assertHexList(["00"], ["01"])).toThrow();
+});
+
+test("assertKvs - matching", () => {
+  assertKvs({ "01": "01" }, { "01": "01", "02": "" });
+});
+
+test("assertKvs - value not maching", () => {
+  expect(() =>
+    assertKvs({ "01": "01", "02": "" }, { "01": "01", "02": "02" }),
+  ).toThrow();
+});
+
+test("assertKvs - value missing", () => {
+  expect(() => assertKvs({ "01": "01" }, { "01": "01", "03": "03" })).toThrow();
+});
+
+test("assertKvs - value in excess", () => {
+  expect(() => assertKvs({ "01": "01", "02": "02" }, { "01": "01" })).toThrow();
 });
 
 test("assertHasKvs - matching", () => {
@@ -26,41 +44,31 @@ test("assertHasKvs - value missing", () => {
   ).toThrow();
 });
 
-test("assertAllKvs - matching", () => {
-  assertAllKvs({ "01": "01" }, { "01": "01", "02": "" });
-});
-
-test("assertAllKvs - value not maching", () => {
-  expect(() =>
-    assertAllKvs({ "01": "01", "02": "" }, { "01": "01", "02": "02" }),
-  ).toThrow();
-});
-
-test("assertAllKvs - value missing", () => {
-  expect(() =>
-    assertAllKvs({ "01": "01" }, { "01": "01", "03": "03" }),
-  ).toThrow();
-});
-
-test("assertAllKvs - value in excess", () => {
-  expect(() =>
-    assertAllKvs({ "01": "01", "02": "02" }, { "01": "01" }),
-  ).toThrow();
-});
-
 test("assertAccount", () => {
   assertAccount(
     {
       balance: 10n,
+      code: "010203",
+      codeMetadata: "0400",
+      owner: "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu",
       kvs: {
         "01": "01",
+        "02": "02",
       },
     },
     {
       balance: 10n,
+      code: "010203",
+      codeMetadata: ["readable"],
+      owner: "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu",
+      kvs: [
+        ["01", "01"],
+        ["02", "02"],
+        ["03", ""],
+      ],
       hasKvs: [
         ["01", "01"],
-        ["02", ""],
+        ["03", ""],
       ],
     },
   );

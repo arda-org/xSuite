@@ -42,13 +42,13 @@ const accountToRawAccount = (account: Account): RawAccount => {
     address: account.address.toString(),
     nonce: account.nonce,
     balance: account.balance?.toString(),
-    kvs: account.kvs !== undefined ? kvsToRawKvs(account.kvs) : undefined,
+    kvs: account.kvs != null ? kvsToRawKvs(account.kvs) : undefined,
     code: account.code,
     codeMetadata:
-      account.codeMetadata !== undefined
+      account.codeMetadata != null
         ? codeMetadataToHexString(account.codeMetadata)
         : undefined,
-    owner: account.owner !== undefined ? account.owner.toString() : undefined,
+    owner: account.owner != null ? account.owner.toString() : undefined,
   };
 };
 
@@ -56,20 +56,20 @@ export type Account = {
   address: Address;
   nonce?: number;
   balance?: number | bigint;
+  code?: string | null;
+  codeMetadata?: CodeMetadata | null;
+  owner?: Address | null;
   kvs?: Kvs;
-  code?: string;
-  codeMetadata?: CodeMetadata;
-  owner?: Address;
 };
 
 type RawAccount = {
   address: string;
   nonce?: number;
   balance?: string;
+  code?: string | null;
+  codeMetadata?: string | null;
+  owner?: string | null;
   kvs?: RawKvs;
-  code?: string;
-  codeMetadata?: string;
-  owner?: string;
 };
 
 export type Block = {

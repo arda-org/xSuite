@@ -3,15 +3,14 @@ import { assertAccount, assertHexList } from "../assert";
 import { d, e } from "../data";
 import { kvsToRawKvs } from "../data/kvs";
 import { SWorld, SContract, SWallet } from "./sworld";
-import { isContractAddress, readFileHex } from "./utils";
+import { isContractAddress } from "./utils";
 
 let world: SWorld;
 let wallet: SWallet;
 let otherWallet: SWallet;
 let contract: SContract;
 const fftId = "FFT-abcdef";
-const worldPath = "contracts/world/output/world.wasm";
-const worldCode = readFileHex(worldPath);
+const worldCode = "file:contracts/world/output/world.wasm";
 
 beforeEach(async () => {
   world = await SWorld.start();
@@ -20,7 +19,7 @@ beforeEach(async () => {
     kvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
   });
   otherWallet = await world.createWallet();
-  contract = await world.createContract({
+  contract = await wallet.createContract({
     balance: 10n ** 18n,
     code: worldCode,
     codeMetadata: ["payable"],
@@ -56,7 +55,7 @@ test("SWorld.createContract - is contract address", async () => {
 });
 
 test("SWorld.createContract - file:", async () => {
-  const contract = await world.createContract({ code: `file:${worldPath}` });
+  const contract = await world.createContract({ code: worldCode });
   assertAccount(await contract.getAccountWithKvs(), { code: worldCode });
 });
 
@@ -93,8 +92,18 @@ test("SWallet.getAccountWithKvs", async () => {
   assertAccount(await wallet.getAccountWithKvs(), {
     nonce: 0,
     balance: 10n ** 18n,
+    code: null,
+    codeMetadata: ["readable"],
+    owner: null,
     hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
   });
+});
+
+test("SWallet.getAccountWithKvs + SWorld.createWallet", async () => {
+  const wallet1 = await world.createWallet();
+  const wallet1Data = await wallet1.getAccountWithKvs();
+  const wallet2 = await world.createWallet(wallet1Data);
+  assertAccount(await wallet2.getAccountWithKvs(), wallet1Data);
 });
 
 test("SContract.getAccountNonce", async () => {
@@ -125,8 +134,18 @@ test("SContract.getAccountWithKvs", async () => {
   assertAccount(await contract.getAccountWithKvs(), {
     nonce: 0,
     balance: 10n ** 18n,
+    code: worldCode,
+    codeMetadata: ["payable"],
+    owner: wallet,
     hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
   });
+});
+
+test("SContract.getAccountWithKvs + SContract.createContract", async () => {
+  const contract1 = await world.createContract();
+  const contract1Data = await contract1.getAccountWithKvs();
+  const contract2 = await world.createContract(contract1Data);
+  assertAccount(await contract2.getAccountWithKvs(), contract1Data);
 });
 
 test("SWallet.executeTx", async () => {
@@ -190,7 +209,7 @@ test("SWallet.deployContract & upgradeContract", async () => {
 
 test("SWallet.deployContract & upgradeContract - file:", async () => {
   const { contract } = await wallet.deployContract({
-    code: `file:${worldPath}`,
+    code: worldCode,
     codeMetadata: ["readable", "payable", "payableBySc", "upgradeable"],
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
@@ -201,7 +220,7 @@ test("SWallet.deployContract & upgradeContract - file:", async () => {
   });
   await wallet.upgradeContract({
     callee: contract,
-    code: `file:${worldPath}`,
+    code: worldCode,
     codeMetadata: "0000",
     codeArgs: [e.U64(2)],
     gasLimit: 10_000_000,
@@ -214,7 +233,7 @@ test("SWallet.deployContract & upgradeContract - file:", async () => {
 
 test("SWallet.deployContract - is contract address", async () => {
   const { contract } = await wallet.deployContract({
-    code: `file:${worldPath}`,
+    code: worldCode,
     codeMetadata: [],
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,

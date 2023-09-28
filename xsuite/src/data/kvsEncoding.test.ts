@@ -1,5 +1,5 @@
 import { test, expect, beforeEach, afterEach, describe } from "@jest/globals";
-import { assertAllKvs } from "../assert/account";
+import { assertKvs } from "../assert/account";
 import { SWorld, SContract, SWallet } from "../world";
 import { enc } from "./encoding";
 import { hexToHexString } from "./hex";
@@ -37,12 +37,12 @@ describe("Mapper", () => {
       funcArgs: [enc.Str("a"), enc.U64(1)],
       gasLimit: 10_000_000,
     });
-    assertAllKvs(
+    assertKvs(
       kvsEnc.Mapper("single", enc.Str("a")).Value(enc.U64(1)),
       await contract.getAccountKvs(),
     );
     expect(async () =>
-      assertAllKvs(
+      assertKvs(
         kvsEnc.Mapper("single", enc.Str("a")).Value(null),
         await contract.getAccountKvs(),
       ),
@@ -53,7 +53,7 @@ describe("Mapper", () => {
       funcArgs: [enc.Str("a")],
       gasLimit: 10_000_000,
     });
-    assertAllKvs(
+    assertKvs(
       kvsEnc.Mapper("single", enc.Str("a")).Value(null),
       await contract.getAccountKvs(),
     );
@@ -66,14 +66,14 @@ describe("Mapper", () => {
       funcArgs: [enc.U64(1), enc.U(10), enc.U(20)],
       gasLimit: 10_000_000,
     });
-    assertAllKvs(
+    assertKvs(
       kvsEnc
         .Mapper("unordered_set", enc.U64(1))
         .UnorderedSet([enc.U(10), enc.U(20)]),
       await contract.getAccountKvs(),
     );
     expect(async () =>
-      assertAllKvs(
+      assertKvs(
         kvsEnc.Mapper("unordered_set", enc.U64(1)).UnorderedSet(null),
         await contract.getAccountKvs(),
       ),
@@ -84,7 +84,7 @@ describe("Mapper", () => {
       funcArgs: [enc.U64(1), enc.U(10), enc.U(20)],
       gasLimit: 10_000_000,
     });
-    assertAllKvs(
+    assertKvs(
       kvsEnc.Mapper("unordered_set", enc.U64(1)).UnorderedSet(null),
       await contract.getAccountKvs(),
     );
@@ -103,7 +103,7 @@ describe("Mapper", () => {
       funcArgs: [enc.U64(1), enc.U(20)],
       gasLimit: 10_000_000,
     });
-    assertAllKvs(
+    assertKvs(
       kvsEnc.Mapper("set", enc.U64(1)).Set([
         [3, enc.U(30)],
         [1, enc.U(10)],
@@ -112,7 +112,7 @@ describe("Mapper", () => {
       await contract.getAccountKvs(),
     );
     expect(async () =>
-      assertAllKvs(
+      assertKvs(
         kvsEnc.Mapper("set", enc.U64(1)).Set(null),
         await contract.getAccountKvs(),
       ),
@@ -123,7 +123,7 @@ describe("Mapper", () => {
       funcArgs: [enc.U64(1), enc.U(10), enc.U(30), enc.U(40)],
       gasLimit: 10_000_000,
     });
-    assertAllKvs(
+    assertKvs(
       kvsEnc.Mapper("set", enc.U64(1)).Set(null),
       await contract.getAccountKvs(),
     );
@@ -153,7 +153,7 @@ describe("Mapper", () => {
       funcArgs: [enc.U(1), enc.Str("b")],
       gasLimit: 10_000_000,
     });
-    assertAllKvs(
+    assertKvs(
       kvsEnc.Mapper("map", enc.U(1)).Map([
         [3, enc.Str("c"), enc.U64(30)],
         [1, enc.Str("a"), enc.U64(10)],
@@ -161,7 +161,7 @@ describe("Mapper", () => {
       await contract.getAccountKvs(),
     );
     expect(async () =>
-      assertAllKvs(
+      assertKvs(
         kvsEnc.Mapper("map", enc.U(1)).Map(null),
         await contract.getAccountKvs(),
       ),
@@ -172,7 +172,7 @@ describe("Mapper", () => {
       funcArgs: [enc.U(1), enc.Str("a"), enc.Str("c")],
       gasLimit: 10_000_000,
     });
-    assertAllKvs(
+    assertKvs(
       kvsEnc.Mapper("map", enc.U(1)).Map(null),
       await contract.getAccountKvs(),
     );
@@ -185,12 +185,12 @@ describe("Mapper", () => {
       funcArgs: [enc.U64(1), enc.U(2), enc.U64(1), enc.U64(2)],
       gasLimit: 10_000_000,
     });
-    assertAllKvs(
+    assertKvs(
       kvsEnc.Mapper("vec", enc.U64(1), enc.U(2)).Vec([enc.U64(1), enc.U64(2)]),
       await contract.getAccountKvs(),
     );
     expect(async () =>
-      assertAllKvs(
+      assertKvs(
         kvsEnc.Mapper("vec", enc.U64(1), enc.U(2)).Vec(null),
         await contract.getAccountKvs(),
       ),
@@ -201,7 +201,7 @@ describe("Mapper", () => {
       funcArgs: [enc.U64(1), enc.U(2), enc.U32(2), enc.U32(1)],
       gasLimit: 10_000_000,
     });
-    assertAllKvs(
+    assertKvs(
       kvsEnc.Mapper("vec", enc.U64(1), enc.U(2)).Vec(null),
       await contract.getAccountKvs(),
     );
@@ -275,7 +275,7 @@ describe("Esdt", () => {
       ],
       gasLimit: 10_000_000,
     });
-    assertAllKvs(
+    assertKvs(
       kvsEnc.Esdts([
         { id: fftId, amount: fftAmount },
         { id: sftId, nonce: 1, amount: sftAmount1 },
@@ -283,7 +283,7 @@ describe("Esdt", () => {
       ]),
       await wallet.getAccountKvs(),
     );
-    assertAllKvs(
+    assertKvs(
       kvsEnc.Esdts([
         {
           id: fftId,
@@ -297,7 +297,7 @@ describe("Esdt", () => {
       ]),
       await contract.getAccountKvs(),
     );
-    assertAllKvs(
+    assertKvs(
       kvsEnc.Esdts([
         {
           id: sftId,
@@ -326,7 +326,7 @@ describe("Esdt", () => {
           attrs: sftAttrs2,
         },
       ]),
-      await world.getSystemAccountKvs(),
+      await world.sysAcc.getAccountKvs(),
     );
   });
 
