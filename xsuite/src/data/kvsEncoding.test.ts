@@ -326,7 +326,7 @@ describe("Esdt", () => {
           attrs: sftAttrs2,
         },
       ]),
-      await world.getSystemAccountKvs(),
+      await world.sysAcc.getAccountKvs(),
     );
   });
 

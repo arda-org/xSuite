@@ -11,10 +11,15 @@ let contractCounter = 0;
 
 export class SWorld extends World {
   proxy: SProxy;
+  sysAcc: SContract;
 
   constructor({ proxy, gasPrice }: { proxy: SProxy; gasPrice?: number }) {
     super({ proxy, chainId: "S", gasPrice });
     this.proxy = proxy;
+    this.sysAcc = new SContract({
+      address: "erd1lllllllllllllllllllllllllllllllllllllllllllllllllllsckry7t",
+      proxy,
+    });
   }
 
   static new({ proxyUrl, gasPrice }: { proxyUrl: string; gasPrice?: number }) {
@@ -56,17 +61,6 @@ export class SWorld extends World {
 
   createContract(account: Omit<Account, "address"> = {}) {
     return createContract(this.proxy, account);
-  }
-
-  getSystemAccountKvs() {
-    return this.proxy.getAccountKvs(systemAccountAddress);
-  }
-
-  setSystemAccount(account: Omit<Account, "address">) {
-    return setAccount(this.proxy, {
-      address: systemAccountAddress,
-      ...account,
-    });
   }
 
   setCurrentBlockInfo(block: Block) {
@@ -157,6 +151,3 @@ const createContract = async (
   await contract.setAccount(account);
   return contract;
 };
-
-const systemAccountAddress =
-  "erd1lllllllllllllllllllllllllllllllllllllllllllllllllllsckry7t";
