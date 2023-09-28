@@ -1,4 +1,4 @@
-import { SWorld } from "../src/world";
+import { SWorld } from "../src";
 
 const main = async () => {
   const world = await SWorld.start();
