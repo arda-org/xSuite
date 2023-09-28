@@ -44,16 +44,24 @@ export const assertAccount = (
     assert.strictEqual(actualAccount.balance, BigInt(balance));
   }
   if (code !== undefined) {
-    assert.strictEqual(actualAccount.code, expandCode(code));
+    assert.strictEqual(
+      actualAccount.code,
+      code == null ? code : expandCode(code),
+    );
   }
   if (codeMetadata !== undefined) {
     assert.strictEqual(
       actualAccount.codeMetadata,
-      codeMetadataToHexString(codeMetadata),
+      codeMetadata == null
+        ? codeMetadata
+        : codeMetadataToHexString(codeMetadata),
     );
   }
   if (owner !== undefined) {
-    assert.strictEqual(actualAccount.owner, owner.toString());
+    assert.strictEqual(
+      actualAccount.owner,
+      owner == null ? owner : owner.toString(),
+    );
   }
   if (hasKvs !== undefined) {
     assertHasKvs(actualAccount.kvs ?? {}, hasKvs);
@@ -70,9 +78,9 @@ type ActualAccount = Partial<
 type ExpectedAccount = {
   nonce?: number;
   balance?: number | bigint;
-  code?: string;
-  codeMetadata?: CodeMetadata;
-  owner?: Address;
+  code?: string | null;
+  codeMetadata?: CodeMetadata | null;
+  owner?: Address | null;
   hasKvs?: Kvs;
   allKvs?: Kvs;
 };

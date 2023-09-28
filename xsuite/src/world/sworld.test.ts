@@ -92,11 +92,18 @@ test("SWallet.getAccountWithKvs", async () => {
   assertAccount(await wallet.getAccountWithKvs(), {
     nonce: 0,
     balance: 10n ** 18n,
-    code: "",
+    code: null,
     codeMetadata: ["readable"],
-    owner: "",
+    owner: null,
     hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
   });
+});
+
+test("SWallet.getAccountWithKvs + SWorld.createWallet", async () => {
+  const wallet1 = await world.createWallet();
+  const wallet1Data = await wallet1.getAccountWithKvs();
+  const wallet2 = await world.createWallet(wallet1Data);
+  assertAccount(await wallet2.getAccountWithKvs(), wallet1Data);
 });
 
 test("SContract.getAccountNonce", async () => {
@@ -132,6 +139,13 @@ test("SContract.getAccountWithKvs", async () => {
     owner: wallet,
     hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
   });
+});
+
+test("SContract.getAccountWithKvs + SContract.createContract", async () => {
+  const contract1 = await world.createContract();
+  const contract1Data = await contract1.getAccountWithKvs();
+  const contract2 = await world.createContract(contract1Data);
+  assertAccount(await contract2.getAccountWithKvs(), contract1Data);
 });
 
 test("SWallet.executeTx", async () => {

@@ -131,7 +131,7 @@ export class SContract extends Contract {
 }
 
 const setAccount = (proxy: SProxy, account: Account) => {
-  if (account.code === undefined) {
+  if (account.code == null) {
     if (isContractAddress(account.address)) {
       account.code = "00";
     }

@@ -152,15 +152,17 @@ export class Proxy {
     return {
       nonce: res.account.nonce,
       balance: BigInt(res.account.balance),
-      code: res.account.code,
-      codeMetadata: b64ToHexString(res.account.codeMetadata),
-      owner: res.account.ownerAddress,
+      code: res.account.code ? res.account.code : null,
+      codeMetadata: res.account.codeMetadata
+        ? b64ToHexString(res.account.codeMetadata)
+        : null,
+      owner: res.account.ownerAddress ? res.account.ownerAddress : null,
     } as {
       nonce: number;
       balance: bigint;
-      code: string;
-      codeMetadata: string;
-      owner: string;
+      code: string | null;
+      codeMetadata: string | null;
+      owner: string | null;
     };
   }
 
