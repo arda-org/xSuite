@@ -153,10 +153,14 @@ export class Proxy {
       nonce: res.account.nonce,
       balance: BigInt(res.account.balance),
       code: res.account.code,
+      codeMetadata: b64ToHexString(res.account.codeMetadata),
+      owner: res.account.ownerAddress,
     } as {
       nonce: number;
       balance: bigint;
       code: string;
+      codeMetadata: string;
+      owner: string;
     };
   }
 
@@ -405,21 +409,25 @@ export const codeMetadataToHexString = (codeMetadata: CodeMetadata): string => {
     return codeMetadata;
   }
   if (Array.isArray(codeMetadata)) {
+    const bytes: number[] = [];
     let byteZero = 0;
-    let byteOne = 0;
     if (codeMetadata.includes("upgradeable")) {
       byteZero |= 1;
     }
     if (codeMetadata.includes("readable")) {
       byteZero |= 4;
     }
+    let byteOne = 0;
     if (codeMetadata.includes("payable")) {
       byteOne |= 2;
     }
     if (codeMetadata.includes("payableBySc")) {
       byteOne |= 4;
     }
-    codeMetadata = e.Bytes([byteZero, byteOne]);
+    if (byteZero > 0 || byteOne > 0) {
+      bytes.push(byteZero, byteOne);
+    }
+    codeMetadata = e.Bytes(bytes);
   }
   return codeMetadata.toTopHex();
 };

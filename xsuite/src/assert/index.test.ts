@@ -52,15 +52,27 @@ test("assertAccount", () => {
   assertAccount(
     {
       balance: 10n,
+      code: "010203",
+      codeMetadata: "0400",
+      owner: "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu",
       kvs: {
         "01": "01",
+        "02": "02",
       },
     },
     {
       balance: 10n,
+      code: "010203",
+      codeMetadata: ["readable"],
+      owner: "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu",
       hasKvs: [
         ["01", "01"],
-        ["02", ""],
+        ["03", ""],
+      ],
+      allKvs: [
+        ["01", "01"],
+        ["02", "02"],
+        ["03", ""],
       ],
     },
   );

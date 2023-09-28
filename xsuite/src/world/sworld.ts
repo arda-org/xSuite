@@ -54,12 +54,8 @@ export class SWorld extends World {
     return wallet;
   }
 
-  async createContract(account: Omit<Account, "address"> = {}) {
-    contractCounter += 1;
-    const address = numberToBytesAddress(contractCounter, true);
-    const contract = new SContract({ address, proxy: this.proxy });
-    await contract.setAccount(account);
-    return contract;
+  createContract(account: Omit<Account, "address"> = {}) {
+    return createContract(this.proxy, account);
   }
 
   getSystemAccountKvs() {
@@ -104,6 +100,10 @@ export class SWallet extends Wallet {
     return setAccount(this.proxy, { address: this, ...account });
   }
 
+  createContract(account: Omit<Account, "address" | "owner">) {
+    return createContract(this.proxy, { ...account, owner: this });
+  }
+
   deployContract(
     txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">,
   ) {
@@ -145,6 +145,17 @@ const setAccount = (proxy: SProxy, account: Account) => {
     account.code = expandCode(account.code);
   }
   return proxy.setAccount(account);
+};
+
+const createContract = async (
+  proxy: SProxy,
+  account: Omit<Account, "address"> = {},
+) => {
+  contractCounter += 1;
+  const address = numberToBytesAddress(contractCounter, true);
+  const contract = new SContract({ address, proxy });
+  await contract.setAccount(account);
+  return contract;
 };
 
 const systemAccountAddress =

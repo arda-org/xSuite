@@ -1,6 +1,9 @@
 import assert from "node:assert";
+import { Address } from "../data/address";
 import { Kvs, kvsToRawKvs } from "../data/kvs";
 import { Proxy } from "../proxy";
+import { CodeMetadata, codeMetadataToHexString } from "../proxy/proxy";
+import { expandCode } from "../world/world";
 
 export const assertHasKvs = (actualKvs: Kvs, hasKvs: Kvs) => {
   const rawActualKvs = kvsToRawKvs(actualKvs);
@@ -24,16 +27,33 @@ export const assertAllKvs = (actualKvs: Kvs, allKvs: Kvs) => {
 
 export const assertAccount = (
   actualAccount: ActualAccount,
-  { code, nonce, balance, hasKvs, allKvs }: ExpectedAccount,
+  {
+    nonce,
+    balance,
+    code,
+    codeMetadata,
+    owner,
+    hasKvs,
+    allKvs,
+  }: ExpectedAccount,
 ) => {
-  if (code !== undefined) {
-    assert.strictEqual(actualAccount.code, code);
-  }
   if (nonce !== undefined) {
     assert.strictEqual(actualAccount.nonce, nonce);
   }
   if (balance !== undefined) {
     assert.strictEqual(actualAccount.balance, BigInt(balance));
+  }
+  if (code !== undefined) {
+    assert.strictEqual(actualAccount.code, expandCode(code));
+  }
+  if (codeMetadata !== undefined) {
+    assert.strictEqual(
+      actualAccount.codeMetadata,
+      codeMetadataToHexString(codeMetadata),
+    );
+  }
+  if (owner !== undefined) {
+    assert.strictEqual(actualAccount.owner, owner.toString());
   }
   if (hasKvs !== undefined) {
     assertHasKvs(actualAccount.kvs ?? {}, hasKvs);
@@ -48,9 +68,11 @@ type ActualAccount = Partial<
 >;
 
 type ExpectedAccount = {
-  code?: string;
   nonce?: number;
   balance?: number | bigint;
+  code?: string;
+  codeMetadata?: CodeMetadata;
+  owner?: Address;
   hasKvs?: Kvs;
   allKvs?: Kvs;
 };
