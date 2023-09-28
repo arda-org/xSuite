@@ -93,7 +93,7 @@ test("SWallet.getAccountWithKvs", async () => {
     nonce: 0,
     balance: 10n ** 18n,
     code: "",
-    codeMetadata: [],
+    codeMetadata: ["readable"],
     owner: "",
     hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
   });
