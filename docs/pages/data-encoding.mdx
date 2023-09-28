@@ -119,7 +119,7 @@ await deployer.callContract({
 
 ## Storage mappers
 
-Under `e.kvs.Mapper` there are utilities to easily encode storage mappers. This is used together with the `assertAccount` utility from `xsuite` and the `hasKvs`/`allKvs` key, to check that an account has the appropriate storage data.
+Under `e.kvs.Mapper` there are utilities to easily encode storage mappers. This is used together with the `assertAccount` utility from `xsuite` and the `kvs`/`hasKvs` key, to check that an account has the appropriate storage data.
 
 It accepts the name of the storage mapper as a first argument and optionally storage mapper arguments:
 
@@ -156,7 +156,7 @@ Below you can find an example of how to assert complex storage values, with the 
 
 ```ts
 assertAccount(account, {
-  allKvs: [
+  kvs: [
     e.kvs.Mapper("fee").Value(e.U(1_000)),
 
     e.kvs.Mapper("active", e.Str("TOKEN-123456")).Value(e.Bool(true)),
@@ -209,7 +209,7 @@ Under `e.kvs.Esdts` there are utilities to easily encode ESDTs and assert that a
 ```ts
 assertAccount(account, {
   balance: 1_000,
-  allKvs: [
+  kvs: [
     e.kvs.Esdts([
       { id: "TOKEN-123456", amount: 2_000 },
       { id: "NFT-123456", nonce: 1, name: "Nft Name", uris: ["url"] },

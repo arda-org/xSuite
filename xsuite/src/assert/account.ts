@@ -1,27 +1,27 @@
 import assert from "node:assert";
-import { Address } from "../data/address";
 import { Kvs, kvsToRawKvs } from "../data/kvs";
 import { Proxy } from "../proxy";
-import { CodeMetadata, codeMetadataToHexString } from "../proxy/proxy";
+import { codeMetadataToHexString } from "../proxy/proxy";
+import { Account } from "../proxy/sproxy";
 import { expandCode } from "../world/world";
+
+export const assertKvs = (actualKvs: Kvs, expectedKvs: Kvs) => {
+  const rawActualKvs = kvsToRawKvs(actualKvs);
+  const rawExpectedKvs = kvsToRawKvs(expectedKvs);
+  const keys = new Set([
+    ...Object.keys(rawActualKvs),
+    ...Object.keys(rawExpectedKvs),
+  ]);
+  for (const k of keys) {
+    assert.strictEqual(rawActualKvs[k] ?? "", rawExpectedKvs[k] ?? "");
+  }
+};
 
 export const assertHasKvs = (actualKvs: Kvs, hasKvs: Kvs) => {
   const rawActualKvs = kvsToRawKvs(actualKvs);
   const rawHasKvs = kvsToRawKvs(hasKvs);
   for (const k in rawHasKvs) {
     assert.strictEqual(rawActualKvs[k] ?? "", rawHasKvs[k] ?? "");
-  }
-};
-
-export const assertAllKvs = (actualKvs: Kvs, allKvs: Kvs) => {
-  const rawActualKvs = kvsToRawKvs(actualKvs);
-  const rawAllKvs = kvsToRawKvs(allKvs);
-  const keys = new Set([
-    ...Object.keys(rawActualKvs),
-    ...Object.keys(rawAllKvs),
-  ]);
-  for (const k of keys) {
-    assert.strictEqual(rawActualKvs[k] ?? "", rawAllKvs[k] ?? "");
   }
 };
 
@@ -33,8 +33,9 @@ export const assertAccount = (
     code,
     codeMetadata,
     owner,
-    hasKvs,
+    kvs,
     allKvs,
+    hasKvs,
   }: ExpectedAccount,
 ) => {
   if (nonce !== undefined) {
@@ -63,11 +64,14 @@ export const assertAccount = (
       owner == null ? owner : owner.toString(),
     );
   }
-  if (hasKvs !== undefined) {
-    assertHasKvs(actualAccount.kvs ?? {}, hasKvs);
+  if (kvs !== undefined) {
+    assertKvs(actualAccount.kvs ?? {}, kvs);
   }
   if (allKvs !== undefined) {
-    assertAllKvs(actualAccount.kvs ?? {}, allKvs);
+    assertKvs(actualAccount.kvs ?? {}, allKvs);
+  }
+  if (hasKvs !== undefined) {
+    assertHasKvs(actualAccount.kvs ?? {}, hasKvs);
   }
 };
 
@@ -75,12 +79,7 @@ type ActualAccount = Partial<
   Awaited<ReturnType<typeof Proxy.getAccountWithKvs>>
 >;
 
-type ExpectedAccount = {
-  nonce?: number;
-  balance?: number | bigint;
-  code?: string | null;
-  codeMetadata?: CodeMetadata | null;
-  owner?: Address | null;
-  hasKvs?: Kvs;
+type ExpectedAccount = Omit<Account, "address"> & {
   allKvs?: Kvs;
+  hasKvs?: Kvs;
 };
