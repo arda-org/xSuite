@@ -321,7 +321,7 @@ Sometimes it is hard to arrive to a specific state of your smart contract, maybe
 await contract.setAccount({
   ...(await contract.getAccount()),
   owner: deployer,
-  codeMetadata: ["upgradable", "payable"],
+  codeMetadata: ["upgradeable", "payable"],
   kvs: [
     // Manually setting storage keys
     e.kvs.Mapper("mock_address").Value(e.Addr(mockAddress)),
