@@ -168,7 +168,7 @@ Here we declare two CLI commands, `deploy` and `upgrade` to easily manage our co
 
 1. In the `deploy` command, we first call `loadWallet` to get a new instance of `Wallet`, which represents a wallet on the MultiversX blockchain. When calling this function, we will be prompted for the keystore file's password.
 
-   Then we will deploy the contract code that comes from the `data.json` file's `code` key calling `wallet.deployContract()` function. Here we also pass the `codeMetadata` and make the contract `upgradable`, specify the `gasLimit` and any `codeArgs` which will be encoded using the `e` utility.
+   Then we will deploy the contract code that comes from the `data.json` file's `code` key calling `wallet.deployContract()` function. Here we also pass the `codeMetadata` and make the contract `upgradeable`, specify the `gasLimit` and any `codeArgs` which will be encoded using the `e` utility.
 
 2. The `upgrade` is very similar to the `deploy` command. Here we use the `envChain.select()` function to get the correct address of our contract from the `data.json` file depending on the environment (devnet, testnet, mainnet) the command runs on (which comes from the `CHAIN` environmental variable).
 
