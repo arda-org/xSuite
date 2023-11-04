@@ -15,7 +15,7 @@ export const registerTestScenCmd = (cmd: Command) => {
 };
 
 const repoUrl = "https://github.com/arda-org/xSuite";
-const TAG = "v1.4.77";
+const TAG = "v1.4.81";
 const BINARY_NAME = "scenexec";
 
 const action = async () => {
