@@ -35,4 +35,19 @@ pub trait Storage {
         );
         self.send().direct_esdt(&self.blockchain().get_caller(), &token_identifier, nonce, &amount);
     }
+
+    #[endpoint]
+    fn esdt_nft_create_compact(
+        &self,
+        token_identifier: TokenIdentifier,
+        amount: BigUint,
+        attributes: ManagedBuffer,
+    ) {
+        let nonce = self.send().esdt_nft_create_compact(
+            &token_identifier,
+            &amount,
+            &attributes,
+        );
+        self.send().direct_esdt(&self.blockchain().get_caller(), &token_identifier, nonce, &amount);
+    }
 }

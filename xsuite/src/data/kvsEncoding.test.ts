@@ -256,23 +256,11 @@ describe("Esdt", () => {
       gasLimit: 10_000_000,
     });
     const sftAmount2 = 50n;
-    const sftName2 = "Test 2";
-    const sftRoyalties2 = 50;
-    const sftHash2 = "0002";
-    const sftUris2 = ["https://facebook.com"];
     const sftAttrs2 = enc.Tuple(enc.U8(255), enc.U8(255), enc.U8(255));
     await wallet.callContract({
       callee: contract,
-      funcName: "nft_create_and_send",
-      funcArgs: [
-        enc.Str(sftId),
-        enc.U(sftAmount2),
-        enc.Str(sftName2),
-        enc.U(sftRoyalties2),
-        enc.Buffer(sftHash2),
-        sftAttrs2,
-        enc.List(...sftUris2.map((u) => enc.Str(u))),
-      ],
+      funcName: "esdt_nft_create_compact",
+      funcArgs: [enc.Str(sftId), enc.U(sftAmount2), sftAttrs2],
       gasLimit: 10_000_000,
     });
     assertKvs(
@@ -318,11 +306,8 @@ describe("Esdt", () => {
           amount: 0n,
           metadataNonce: true,
           properties: "01",
-          name: sftName2,
           creator: contract,
-          royalties: sftRoyalties2,
-          hash: sftHash2,
-          uris: sftUris2,
+          uris: [""],
           attrs: sftAttrs2,
         },
       ]),
