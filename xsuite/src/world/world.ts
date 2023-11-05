@@ -129,8 +129,8 @@ export class Wallet extends Signer {
 
   executeTx(
     txParams: Omit<TxParams, "sender" | "nonce" | "chainId">,
-  ): TxResultPromise<TxResult> {
-    return TxResultPromise.from(this.#executeTx(txParams));
+  ): TxPromise<TxResult> {
+    return TxPromise.from(this.#executeTx(txParams));
   }
 
   async #executeTx({
@@ -166,8 +166,8 @@ export class Wallet extends Signer {
 
   deployContract(
     txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">,
-  ): TxResultPromise<DeployContractTxResult> {
-    return TxResultPromise.from(this.#deployContract(txParams));
+  ): TxPromise<DeployContractTxResult> {
+    return TxPromise.from(this.#deployContract(txParams));
   }
 
   async #deployContract(
@@ -191,8 +191,8 @@ export class Wallet extends Signer {
 
   upgradeContract(
     txParams: Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">,
-  ): TxResultPromise<CallContractTxResult> {
-    return TxResultPromise.from(this.#upgradeContract(txParams));
+  ): TxPromise<CallContractTxResult> {
+    return TxPromise.from(this.#upgradeContract(txParams));
   }
 
   async #upgradeContract(
@@ -208,8 +208,8 @@ export class Wallet extends Signer {
 
   transfer(
     txParams: Omit<TransferTxParams, "sender" | "nonce" | "chainId">,
-  ): TxResultPromise<TxResult> {
-    return TxResultPromise.from(this.#transfer(txParams));
+  ): TxPromise<TxResult> {
+    return TxPromise.from(this.#transfer(txParams));
   }
 
   async #transfer(
@@ -222,8 +222,8 @@ export class Wallet extends Signer {
 
   callContract(
     txParams: Omit<CallContractTxParams, "sender" | "nonce" | "chainId">,
-  ): TxResultPromise<CallContractTxResult> {
-    return TxResultPromise.from(this.#callContract(txParams));
+  ): TxPromise<CallContractTxResult> {
+    return TxPromise.from(this.#callContract(txParams));
   }
 
   async #callContract(
@@ -272,9 +272,20 @@ export class Contract extends AddressEncodable {
   }
 }
 
-export class TxResultPromise<T> extends Promise<T> {
-  static from<T>(promise: Promise<T>): TxResultPromise<T> {
-    return new TxResultPromise<T>(promise.then.bind(promise));
+export class TxPromise<T> implements PromiseLike<T> {
+  #promise: Promise<T>;
+
+  constructor(
+    executor: (
+      resolve: (value: T | PromiseLike<T>) => void,
+      reject: (reason?: any) => void,
+    ) => void,
+  ) {
+    this.#promise = new Promise<T>(executor);
+  }
+
+  static from<T>(promise: Promise<T>): TxPromise<T> {
+    return new TxPromise<T>(promise.then.bind(promise));
   }
 
   then<TResult1 = T, TResult2 = never>(
@@ -287,32 +298,7 @@ export class TxResultPromise<T> extends Promise<T> {
       | undefined
       | null,
   ) {
-    return new TxResultPromise<TResult1 | TResult2>((resolve, reject) => {
-      super.then(
-        (value) => {
-          if (onfulfilled) {
-            try {
-              resolve(onfulfilled(value));
-            } catch (error) {
-              reject(error);
-            }
-          } else {
-            resolve(value as any);
-          }
-        },
-        (error) => {
-          if (onrejected) {
-            try {
-              resolve(onrejected(error));
-            } catch (error) {
-              reject(error);
-            }
-          } else {
-            reject(error);
-          }
-        },
-      );
-    });
+    return TxPromise.from(this.#promise.then(onfulfilled, onrejected));
   }
 
   catch<TResult = never>(
