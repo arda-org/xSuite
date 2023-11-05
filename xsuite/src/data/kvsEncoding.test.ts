@@ -231,7 +231,13 @@ describe("Esdt", () => {
     const fftAmount = 10n;
     await wallet.callContract({
       callee: contract,
-      funcName: "esdt_local_mint_and_send",
+      funcName: "esdt_local_mint",
+      funcArgs: [enc.Str(fftId), enc.U64(0), enc.U(fftAmount)],
+      gasLimit: 10_000_000,
+    });
+    await wallet.callContract({
+      callee: contract,
+      funcName: "direct_send",
       funcArgs: [enc.Str(fftId), enc.U64(0), enc.U(fftAmount)],
       gasLimit: 10_000_000,
     });
@@ -243,7 +249,7 @@ describe("Esdt", () => {
     const sftAttrs1 = enc.Tuple(enc.U8(0), enc.U8(0), enc.U8(0));
     await wallet.callContract({
       callee: contract,
-      funcName: "esdt_nft_create_and_send",
+      funcName: "esdt_nft_create",
       funcArgs: [
         enc.Str(sftId),
         enc.U(sftAmount1),
@@ -255,12 +261,24 @@ describe("Esdt", () => {
       ],
       gasLimit: 10_000_000,
     });
+    await wallet.callContract({
+      callee: contract,
+      funcName: "direct_send",
+      funcArgs: [enc.Str(sftId), enc.U64(1), enc.U(sftAmount1)],
+      gasLimit: 10_000_000,
+    });
     const sftAmount2 = 50n;
     const sftAttrs2 = enc.Tuple(enc.U8(255), enc.U8(255), enc.U8(255));
     await wallet.callContract({
       callee: contract,
-      funcName: "esdt_nft_create_compact_and_send",
+      funcName: "esdt_nft_create_compact",
       funcArgs: [enc.Str(sftId), enc.U(sftAmount2), sftAttrs2],
+      gasLimit: 10_000_000,
+    });
+    await wallet.callContract({
+      callee: contract,
+      funcName: "direct_send",
+      funcArgs: [enc.Str(sftId), enc.U64(2), enc.U(sftAmount2)],
       gasLimit: 10_000_000,
     });
     assertKvs(
