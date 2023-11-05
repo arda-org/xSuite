@@ -232,7 +232,7 @@ describe("Esdt", () => {
     await wallet.callContract({
       callee: contract,
       funcName: "esdt_local_mint_and_send",
-      funcArgs: [enc.Str(fftId), enc.U(fftAmount)],
+      funcArgs: [enc.Str(fftId), enc.U64(0), enc.U(fftAmount)],
       gasLimit: 10_000_000,
     });
     const sftAmount1 = 20n;

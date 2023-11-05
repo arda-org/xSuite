@@ -11,10 +11,11 @@ pub trait Storage {
     fn esdt_local_mint_and_send(
         &self,
         token_identifier: TokenIdentifier,
+        nonce: u64,
         amount: BigUint
     ) {
-        self.send().esdt_local_mint(&token_identifier, 0, &amount.clone());
-        self.send().direct_esdt(&self.blockchain().get_caller(), &token_identifier, 0, &amount);
+        self.send().esdt_local_mint(&token_identifier, nonce, &amount.clone());
+        self.send().direct_esdt(&self.blockchain().get_caller(), &token_identifier, nonce, &amount);
     }
 
     #[endpoint]
