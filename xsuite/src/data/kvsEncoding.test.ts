@@ -228,7 +228,7 @@ describe("Esdt", () => {
   });
 
   test("p.Esdts", async () => {
-    const fftAmount = 10n;
+    const fftAmount = 10;
     await wallet.callContract({
       callee: contract,
       funcName: "esdt_local_mint",
@@ -241,7 +241,7 @@ describe("Esdt", () => {
       funcArgs: [enc.Str(fftId), enc.U64(0), enc.U(fftAmount)],
       gasLimit: 10_000_000,
     });
-    const sftAmount1 = 20n;
+    const sftAmount1 = 20;
     const sftName1 = "Test 1";
     const sftRoyalties1 = 20;
     const sftHash1 = "0001";
@@ -264,10 +264,10 @@ describe("Esdt", () => {
     await wallet.callContract({
       callee: contract,
       funcName: "direct_send",
-      funcArgs: [enc.Str(sftId), enc.U64(1), enc.U(sftAmount1)],
+      funcArgs: [enc.Str(sftId), enc.U64(1), enc.U(sftAmount1 / 2)],
       gasLimit: 10_000_000,
     });
-    const sftAmount2 = 50n;
+    const sftAmount2 = 50;
     const sftAttrs2 = enc.Tuple(enc.U8(255), enc.U8(255), enc.U8(255));
     await wallet.callContract({
       callee: contract,
@@ -278,14 +278,14 @@ describe("Esdt", () => {
     await wallet.callContract({
       callee: contract,
       funcName: "direct_send",
-      funcArgs: [enc.Str(sftId), enc.U64(2), enc.U(sftAmount2)],
+      funcArgs: [enc.Str(sftId), enc.U64(2), enc.U(sftAmount2 / 2)],
       gasLimit: 10_000_000,
     });
     assertKvs(
       kvsEnc.Esdts([
         { id: fftId, amount: fftAmount },
-        { id: sftId, nonce: 1, amount: sftAmount1 },
-        { id: sftId, nonce: 2, amount: sftAmount2 },
+        { id: sftId, nonce: 1, amount: sftAmount1 / 2 },
+        { id: sftId, nonce: 2, amount: sftAmount2 / 2 },
       ]),
       await wallet.getAccountKvs(),
     );
@@ -300,6 +300,8 @@ describe("Esdt", () => {
           roles: ["ESDTRoleNFTCreate", "ESDTRoleNFTAddQuantity"],
           lastNonce: 2,
         },
+        { id: sftId, nonce: 1, amount: sftAmount1 / 2 },
+        { id: sftId, nonce: 2, amount: sftAmount2 / 2 },
       ]),
       await contract.getAccountKvs(),
     );
@@ -308,7 +310,7 @@ describe("Esdt", () => {
         {
           id: sftId,
           nonce: 1,
-          amount: 0n,
+          amount: 0,
           metadataNonce: true,
           properties: "01",
           name: sftName1,
@@ -321,7 +323,7 @@ describe("Esdt", () => {
         {
           id: sftId,
           nonce: 2,
-          amount: 0n,
+          amount: 0,
           metadataNonce: true,
           properties: "01",
           creator: contract,
