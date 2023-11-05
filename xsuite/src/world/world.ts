@@ -274,14 +274,18 @@ export class Contract extends AddressEncodable {
 
 export class TxResultPromise<T> extends Promise<T> {
   static from<T>(promise: Promise<T>): TxResultPromise<T> {
-    return new TxResultPromise<T>((resolve, reject) => {
-      promise.then(resolve, reject);
-    });
+    return new TxResultPromise<T>(promise.then.bind(promise));
   }
 
   then<TResult1 = T, TResult2 = never>(
-    onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | null,
-    onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
+    onfulfilled?:
+      | ((value: T) => TResult1 | PromiseLike<TResult1>)
+      | undefined
+      | null,
+    onrejected?:
+      | ((reason: any) => TResult2 | PromiseLike<TResult2>)
+      | undefined
+      | null,
   ) {
     return new TxResultPromise<TResult1 | TResult2>((resolve, reject) => {
       super.then(
@@ -312,7 +316,10 @@ export class TxResultPromise<T> extends Promise<T> {
   }
 
   catch<TResult = never>(
-    onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null,
+    onrejected?:
+      | ((reason: any) => TResult | PromiseLike<TResult>)
+      | undefined
+      | null,
   ) {
     return this.then(null, onrejected);
   }
@@ -321,26 +328,24 @@ export class TxResultPromise<T> extends Promise<T> {
     return this.then(() => {
       throw new Error("Transaction has not failed.");
     }).catch((error) => {
-      if (error instanceof Error) {
-        const matches = error.message.match(/Tx failed: (\d+) - (.+)/);
-        if (matches) {
-          const errorCode = parseInt(matches[1]);
-          const errorMessage = matches[2];
-          if (code !== undefined && code !== errorCode) {
-            throw new Error(
-              `Failed with unexpected error code.\nExpected code: ${code}\nReceived code: ${errorCode}`,
-            );
-          }
-          if (message !== undefined && message !== errorMessage) {
-            throw new Error(
-              `Failed with unexpected error message.\nExpected message: ${message}\nReceived message: ${errorMessage}`,
-            );
-          }
-        } else {
-          throw error;
-        }
-      } else {
+      if (!(error instanceof Error)) {
         throw error;
+      }
+      const matches = error.message.match(/Tx failed: (\d+) - (.+)/);
+      if (!matches) {
+        throw error;
+      }
+      const errorCode = parseInt(matches[1]);
+      const errorMessage = matches[2];
+      if (code !== undefined && code !== errorCode) {
+        throw new Error(
+          `Failed with unexpected error code.\nExpected code: ${code}\nReceived code: ${errorCode}`,
+        );
+      }
+      if (message !== undefined && message !== errorMessage) {
+        throw new Error(
+          `Failed with unexpected error message.\nExpected message: ${message}\nReceived message: ${errorMessage}`,
+        );
       }
     });
   }
