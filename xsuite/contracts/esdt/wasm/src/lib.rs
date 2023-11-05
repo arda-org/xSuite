@@ -5,11 +5,14 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                            2
+// Endpoints:                            4
 // Async Callback (empty):               1
-// Total number of exported functions:   4
+// Total number of exported functions:   6
 
 #![no_std]
+
+// Configuration that works with rustc < 1.73.0.
+// TODO: Recommended rustc version: 1.73.0 or newer.
 #![feature(lang_items)]
 
 multiversx_sc_wasm_adapter::allocator!();
@@ -18,9 +21,12 @@ multiversx_sc_wasm_adapter::panic_handler!();
 multiversx_sc_wasm_adapter::endpoints! {
     esdt
     (
-        mint_and_send
-        nft_create_and_send
+        init => init
+        esdt_local_mint => esdt_local_mint
+        esdt_nft_create => esdt_nft_create
+        esdt_nft_create_compact => esdt_nft_create_compact
+        direct_send => direct_send
     )
 }
 
-multiversx_sc_wasm_adapter::empty_callback! {}
+multiversx_sc_wasm_adapter::async_callback_empty! {}

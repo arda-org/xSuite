@@ -10,6 +10,9 @@
 // Total number of exported functions:  12
 
 #![no_std]
+
+// Configuration that works with rustc < 1.73.0.
+// TODO: Recommended rustc version: 1.73.0 or newer.
 #![feature(lang_items)]
 
 multiversx_sc_wasm_adapter::allocator!();
@@ -18,17 +21,18 @@ multiversx_sc_wasm_adapter::panic_handler!();
 multiversx_sc_wasm_adapter::endpoints! {
     mapper
     (
-        single_add
-        single_remove
-        unordered_set_add
-        unordered_set_remove
-        set_add
-        set_remove
-        map_add
-        map_remove
-        vec_add
-        vec_remove
+        init => init
+        single_add => single_add
+        single_remove => single_remove
+        unordered_set_add => unordered_set_add
+        unordered_set_remove => unordered_set_remove
+        set_add => set_add
+        set_remove => set_remove
+        map_add => map_add
+        map_remove => map_remove
+        vec_add => vec_add
+        vec_remove => vec_remove
     )
 }
 
-multiversx_sc_wasm_adapter::empty_callback! {}
+multiversx_sc_wasm_adapter::async_callback_empty! {}
