@@ -10,6 +10,9 @@
 // Total number of exported functions:   8
 
 #![no_std]
+
+// Configuration that works with rustc < 1.73.0.
+// TODO: Recommended rustc version: 1.73.0 or newer.
 #![feature(lang_items)]
 
 multiversx_sc_wasm_adapter::allocator!();
@@ -18,13 +21,14 @@ multiversx_sc_wasm_adapter::panic_handler!();
 multiversx_sc_wasm_adapter::endpoints! {
     contract
     (
-        create_transfer
-        execute_transfer
-        cancel_transfer
-        claim_balances
-        get_transfers
-        get_address_balances
+        init => init
+        create_transfer => create_transfer
+        execute_transfer => execute_transfer
+        cancel_transfer => cancel_transfer
+        claim_balances => claim_balances
+        get_transfers => get_transfers
+        get_address_balances => get_address_balances
     )
 }
 
-multiversx_sc_wasm_adapter::empty_callback! {}
+multiversx_sc_wasm_adapter::async_callback_empty! {}
