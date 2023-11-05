@@ -310,9 +310,6 @@ describe("Esdt", () => {
         {
           id: sftId,
           nonce: 1,
-          amount: 0,
-          metadataNonce: true,
-          properties: "01",
           name: sftName1,
           creator: contract,
           royalties: sftRoyalties1,
@@ -323,9 +320,6 @@ describe("Esdt", () => {
         {
           id: sftId,
           nonce: 2,
-          amount: 0,
-          metadataNonce: true,
-          properties: "01",
           creator: contract,
           uris: [""],
           attrs: sftAttrs2,
