@@ -11,7 +11,8 @@
     "test-contracts": "pnpm --filter \"./contracts/**\" test",
     "ci-main": "pnpm lint && pnpm build-xsuite-simulnet && pnpm build-xsuite && pnpm test-xsuite && pnpm verify-xsuite-wasms && pnpm build-contracts && pnpm typecheck-contracts && pnpm test-contracts",
     "dev-docs": "cd docs && pnpm dev",
-    "build-docs": "cd docs && pnpm build"
+    "build-docs": "cd docs && pnpm build",
+    "release-versions": "./release_versions.sh"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.9.1",

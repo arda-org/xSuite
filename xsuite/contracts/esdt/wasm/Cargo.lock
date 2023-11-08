@@ -81,9 +81,9 @@ checksum = "7ebdb29d2ea9ed0083cd8cece49bbd968021bd99b0849edb4a9a7ee0fdf6a4e0"
 
 [[package]]
 name = "multiversx-sc"
-version = "0.41.3"
+version = "0.44.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bfbe80ec68fedf299dd65469f8999cf3c0f884ffa497122428f08303bcb8b884"
+checksum = "db6c3347b9ebfa2886c866b7740dbeac14d087accd52ec0e71961d54508e819b"
 dependencies = [
  "bitflags",
  "hashbrown",
@@ -95,9 +95,9 @@ dependencies = [
 
 [[package]]
 name = "multiversx-sc-codec"
-version = "0.17.2"
+version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71d70ea458247d263b7e9fdfb207530b6a530546247139c162450e515c013a18"
+checksum = "0f1e15b46c17b87c0c7cdd79b041a4abd7f3a2b45f3c993f6ce38c0f233e82b6"
 dependencies = [
  "arrayvec",
  "multiversx-sc-codec-derive",
@@ -105,9 +105,9 @@ dependencies = [
 
 [[package]]
 name = "multiversx-sc-codec-derive"
-version = "0.17.2"
+version = "0.18.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ad6920f80fda67fc60fd51aaa9f83ec7e069470f60a068c81205f9da5d05a30"
+checksum = "9a7bc0762cd6d88f8bc54805bc652b042a61cd7fbc2d0a325010f088b78fb2ac"
 dependencies = [
  "hex",
  "proc-macro2",
@@ -117,9 +117,9 @@ dependencies = [
 
 [[package]]
 name = "multiversx-sc-derive"
-version = "0.41.3"
+version = "0.44.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1c2b87d817f2176bf1830bef938884f24267516c334a377e71a96bc18ebb09c1"
+checksum = "cb7624ccef17a2378fb5d5d741497d224ee1650b90504d57988c1fa648f374a5"
 dependencies = [
  "hex",
  "proc-macro2",
@@ -130,9 +130,9 @@ dependencies = [
 
 [[package]]
 name = "multiversx-sc-wasm-adapter"
-version = "0.41.3"
+version = "0.44.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "932327626de71eeb1dbe86b863cc70cc532f8ceba8e73a059410f6aa56b22a77"
+checksum = "25a23b0a10bf77174c11178d510555cc875e1f557d4256cbbe4d9c2dbf60d00d"
 dependencies = [
  "multiversx-sc",
 ]
@@ -163,18 +163,18 @@ checksum = "dd8b5dd2ae5ed71462c540258bedcb51965123ad7e7ccf4b9a8cafaa4a63576d"
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.62"
+version = "1.0.69"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fe8df9bd9fe9d1742a9e17f8129712801b428f6d4c6059d79bacea58f0b0142d"
+checksum = "134c189feb4956b20f6f547d2cf727d4c0fe06722b20a0eec87ed445a97f92da"
 dependencies = [
  "unicode-ident",
 ]
 
 [[package]]
 name = "quote"
-version = "1.0.28"
+version = "1.0.33"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b9ab9c7eadfd8df19006f1cf1a4aed13540ed5cbc047010ece5826e10825488"
+checksum = "5267fca4496028628a95160fc423a33e8b2e6af8a5302579e322e4b520293cae"
 dependencies = [
  "proc-macro2",
 ]

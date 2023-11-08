@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { test, beforeEach, afterEach, expect } from "@jest/globals";
 import chalk from "chalk";
-import { rest } from "msw";
+import { http } from "msw";
 import { setupServer } from "msw/node";
 import { stdoutInt, input } from "../_stdio";
 import { Keystore } from "../world/signer";
@@ -104,31 +104,24 @@ test("request-xegld --wallet wallet.json", async () => {
   const address = signer.toString();
   let numBalanceReqs = 0;
   const server = setupServer(
-    rest.get(
-      "https://devnet-api.multiversx.com/blocks/latest",
-      (_req, res, ctx) => {
-        return res(
-          ctx.json({
-            hash: "103b656af4fa9625962c5978e8cf69aca6918eb146a495bcf474f1c6a922be93",
-          }),
-        );
-      },
-    ),
-    rest.get("https://devnet-api.multiversx.com/blocks", (_req, res, ctx) => {
-      return res(
-        ctx.json([
-          {
-            hash: "103b656af4fa9625962c5978e8cf69aca6918eb146a495bcf474f1c6a922be93",
-          },
-        ]),
-      );
+    http.get("https://devnet-api.multiversx.com/blocks/latest", () => {
+      return Response.json({
+        hash: "103b656af4fa9625962c5978e8cf69aca6918eb146a495bcf474f1c6a922be93",
+      });
     }),
-    rest.get(
+    http.get("https://devnet-api.multiversx.com/blocks", () => {
+      return Response.json([
+        {
+          hash: "103b656af4fa9625962c5978e8cf69aca6918eb146a495bcf474f1c6a922be93",
+        },
+      ]);
+    }),
+    http.get(
       `https://devnet-gateway.multiversx.com/address/${address}/balance`,
-      (_req, res, ctx) => {
+      () => {
         numBalanceReqs += 1;
         const balance = `${30n * 10n ** 18n * BigInt(numBalanceReqs)}`;
-        return res(ctx.json({ code: "successful", data: { balance } }));
+        return Response.json({ code: "successful", data: { balance } });
       },
     ),
   );

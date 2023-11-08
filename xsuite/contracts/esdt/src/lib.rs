@@ -8,13 +8,17 @@ pub trait Storage {
     fn init(&self) {}
 
     #[endpoint]
-    fn mint_and_send(&self, token_identifier: TokenIdentifier, amount: BigUint) {
-        self.send().esdt_local_mint(&token_identifier, 0, &amount.clone());
-        self.send().direct_esdt(&self.blockchain().get_caller(), &token_identifier, 0, &amount);
+    fn esdt_local_mint(
+        &self,
+        token_identifier: TokenIdentifier,
+        nonce: u64,
+        amount: BigUint,
+    ) {
+        self.send().esdt_local_mint(&token_identifier, nonce, &amount);
     }
 
     #[endpoint]
-    fn nft_create_and_send(
+    fn esdt_nft_create(
         &self,
         token_identifier: TokenIdentifier,
         amount: BigUint,
@@ -23,16 +27,27 @@ pub trait Storage {
         hash: ManagedBuffer,
         attributes: ManagedBuffer,
         uris: ManagedVec<ManagedBuffer>,
+    ) -> u64 {
+        self.send().esdt_nft_create(&token_identifier, &amount, &name, &royalties, &hash, &attributes, &uris)
+    }
+
+    #[endpoint]
+    fn esdt_nft_create_compact(
+        &self,
+        token_identifier: TokenIdentifier,
+        amount: BigUint,
+        attributes: ManagedBuffer,
+    ) -> u64 {
+        self.send().esdt_nft_create_compact(&token_identifier, &amount, &attributes)
+    }
+
+    #[endpoint]
+    fn direct_send(
+        &self,
+        token_identifier: TokenIdentifier,
+        nonce: u64,
+        amount: BigUint,
     ) {
-        let nonce = self.send().esdt_nft_create(
-            &token_identifier,
-            &amount,
-            &name,
-            &royalties,
-            &hash,
-            &attributes,
-            &uris,
-        );
         self.send().direct_esdt(&self.blockchain().get_caller(), &token_identifier, nonce, &amount);
     }
 }

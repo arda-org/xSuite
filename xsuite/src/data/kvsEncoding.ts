@@ -134,8 +134,6 @@ const getEsdtKvs = ({
   amount,
   roles,
   lastNonce,
-  properties,
-  metadataNonce,
   name,
   creator,
   royalties,
@@ -146,8 +144,6 @@ const getEsdtKvs = ({
   const kvs: Kv[] = [];
   if (
     amount !== undefined ||
-    properties !== undefined ||
-    metadataNonce !== undefined ||
     name !== undefined ||
     creator !== undefined ||
     royalties !== undefined ||
@@ -161,9 +157,6 @@ const getEsdtKvs = ({
       esdtKey += enc.U64(nonce).toTopHex();
     }
     const metadata: [string, any][] = [];
-    if (metadataNonce && nonce !== undefined) {
-      metadata.push(["Nonce", nonce.toString()]);
-    }
     if (name !== undefined) {
       metadata.push(["Name", enc.Str(name).toTopBytes()]);
     }
@@ -182,13 +175,17 @@ const getEsdtKvs = ({
     if (attrs !== undefined) {
       metadata.push(["Attributes", hexToBytes(attrs)]);
     }
-    if (amount !== undefined && (amount != 0 || metadata.length > 0)) {
-      if (nonce !== undefined && nonce !== 0) {
-        message["Type"] = "1";
-      }
-      if (properties !== undefined) {
-        message["Properties"] = hexToBytes(properties);
-      }
+    if (metadata.length > 0 && nonce) {
+      metadata.push(["Nonce", nonce.toString()]);
+    }
+    if (nonce && (amount || metadata.length > 0)) {
+      message["Type"] = "1";
+    }
+    if (metadata.length > 0) {
+      message["Properties"] = new Uint8Array([1]);
+    }
+    if (metadata.length > 0 || amount) {
+      amount ??= 0;
       const bytes = amount > 0 ? enc.U(amount).toTopBytes() : [0];
       message["Value"] = new Uint8Array([0, ...bytes]);
     }
@@ -235,8 +232,6 @@ type Esdt = {
   amount?: number | bigint;
   roles?: Role[];
   lastNonce?: number;
-  metadataNonce?: boolean;
-  properties?: Hex;
   name?: string;
   creator?: Address;
   royalties?: number;
