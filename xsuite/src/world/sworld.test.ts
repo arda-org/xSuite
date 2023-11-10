@@ -301,9 +301,11 @@ test("SWallet.callContract.assertFail - Wrong code", async () => {
         gasLimit: 10_000_000,
       })
       .assertFail({ code: 5 }),
-  ).rejects.toThrow(
-    "Failed with unexpected error code.\nExpected code: 5\nReceived code: 4",
-  );
+  ).rejects.toMatchObject({
+    message:
+      "Failed with unexpected error code.\nExpected code: 5\nReceived code: 4",
+    stack: expect.stringContaining("src/world/sworld.test.ts:295:3)"),
+  });
 });
 
 test("SWallet.callContract.assertFail - Wrong message", async () => {
