@@ -164,10 +164,11 @@ test("new --dir contract && build --locked && build -r && test-rust && test-scen
   await run("new --dir contract");
   stdoutInt.stop();
   expect(fs.readdirSync(process.cwd()).length).toEqual(1);
-  const dirPath = path.resolve("contract");
+  const dir = "contract";
+  const absDir = path.resolve(dir);
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue(
-      `Downloading contract ${chalk.magenta("blank")} in "${dirPath}"...`,
+      `Downloading contract ${chalk.magenta("blank")} in "${absDir}"...`,
     ),
     "",
     chalk.blue("Installing packages..."),
@@ -176,7 +177,7 @@ test("new --dir contract && build --locked && build -r && test-rust && test-scen
     chalk.blue("Initialized a git repository."),
     "",
     chalk.green(
-      `Successfully created ${chalk.magenta("blank")} in "${dirPath}".`,
+      `Successfully created ${chalk.magenta("blank")} in "${absDir}".`,
     ),
     "",
     "Inside that directory, you can run several commands:",
@@ -192,20 +193,20 @@ test("new --dir contract && build --locked && build -r && test-rust && test-scen
     "",
     "We suggest that you begin by typing:",
     "",
-    chalk.cyan(`  cd ${dirPath}`),
+    chalk.cyan(`  cd ${dir}`),
     chalk.cyan("  npm run build"),
     "",
   ]);
 
   const targetDir = path.join(__dirname, "..", "..", "..", "target");
-  process.chdir(dirPath);
+  process.chdir(absDir);
 
   stdoutInt.start();
   await run(`build --locked --target-dir ${targetDir}`);
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Building contract..."),
-    `(1/1) Building "${dirPath}"...`,
+    `(1/1) Building "${absDir}"...`,
     chalk.cyan(
       `$ cargo run --target-dir ${targetDir} build --locked --target-dir ${targetDir}`,
     ),
@@ -217,7 +218,7 @@ test("new --dir contract && build --locked && build -r && test-rust && test-scen
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Building contract..."),
-    `(1/1) Building "${dirPath}"...`,
+    `(1/1) Building "${absDir}"...`,
     chalk.cyan(
       `$ cargo run --target-dir ${targetDir} build --target-dir ${targetDir}`,
     ),
@@ -254,11 +255,12 @@ test(`new --starter vested-transfers --dir contract --no-git --no-install`, asyn
   stdoutInt.stop();
   expect(fs.readdirSync(process.cwd()).length).toEqual(1);
   const contractChalk = chalk.magenta(contract);
-  const dirPath = path.resolve("contract");
+  const dir = "contract";
+  const absDir = path.resolve(dir);
   expect(stdoutInt.data.split("\n")).toEqual([
-    chalk.blue(`Downloading contract ${contractChalk} in "${dirPath}"...`),
+    chalk.blue(`Downloading contract ${contractChalk} in "${absDir}"...`),
     "",
-    chalk.green(`Successfully created ${contractChalk} in "${dirPath}".`),
+    chalk.green(`Successfully created ${contractChalk} in "${absDir}".`),
     "",
     "Inside that directory, you can run several commands:",
     "",
@@ -273,7 +275,7 @@ test(`new --starter vested-transfers --dir contract --no-git --no-install`, asyn
     "",
     "We suggest that you begin by typing:",
     "",
-    chalk.cyan(`  cd ${dirPath}`),
+    chalk.cyan(`  cd ${dir}`),
     chalk.cyan("  npm run build"),
     "",
   ]);
