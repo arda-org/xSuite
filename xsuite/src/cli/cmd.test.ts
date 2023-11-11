@@ -42,9 +42,7 @@ test("new-wallet --wallet wallet.json", async () => {
     chalk.bold.blue("Private key:"),
     ...keystore.mnemonicWords.map((w, i) => `  ${i + 1}. ${w}`),
     "",
-    chalk.bold.yellow(
-      "Don't forget to backup the private key in a secure place.",
-    ),
+    chalk.bold.yellow("Please backup the private key in a secure place."),
     "",
   ]);
 });
@@ -79,9 +77,7 @@ test("new-wallet --wallet wallet.json --password 1234", async () => {
     chalk.bold.blue("Private key:"),
     ...keystore.mnemonicWords.map((w, i) => `  ${i + 1}. ${w}`),
     "",
-    chalk.bold.yellow(
-      "Don't forget to backup the private key in a secure place.",
-    ),
+    chalk.bold.yellow("Please backup the private key in a secure place."),
     "",
   ]);
 });
