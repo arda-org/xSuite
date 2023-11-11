@@ -1,6 +1,6 @@
 import { e } from "../data";
 import { Encodable } from "../data/Encodable";
-import { Address, addressToHexString } from "../data/address";
+import { Address, addressToAddressEncodable } from "../data/address";
 import { Hex, hexToHexString } from "../data/hex";
 import { RawKvs } from "../data/kvs";
 import { b64ToHexString } from "../data/utils";
@@ -294,7 +294,7 @@ export class Tx {
       receiver = sender;
       const dataParts: string[] = [];
       dataParts.push("MultiESDTNFTTransfer");
-      dataParts.push(addressToHexString(_receiver));
+      dataParts.push(addressToAddressEncodable(_receiver).toTopHex());
       dataParts.push(e.U(esdts.length).toTopHex());
       for (const esdt of esdts) {
         dataParts.push(e.Str(esdt.id).toTopHex());
@@ -330,7 +330,7 @@ export class Tx {
     if (esdts?.length) {
       receiver = sender;
       dataParts.push("MultiESDTNFTTransfer");
-      dataParts.push(addressToHexString(callee));
+      dataParts.push(addressToAddressEncodable(callee).toTopHex());
       dataParts.push(e.U(esdts.length).toTopHex());
       for (const esdt of esdts) {
         dataParts.push(e.Str(esdt.id).toTopHex());
