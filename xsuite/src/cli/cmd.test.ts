@@ -102,25 +102,18 @@ test("request-xegld --wallet wallet.json", async () => {
   const walletPath = path.resolve("wallet.json");
   const signer = Keystore.createFile_unsafe(walletPath, "1234").newSigner();
   const address = signer.toString();
-  let numBalanceReqs = 0;
+  let balances: number[] = [];
   const server = setupServer(
-    http.get("https://devnet-api.multiversx.com/blocks/latest", () => {
-      return Response.json({
-        hash: "103b656af4fa9625962c5978e8cf69aca6918eb146a495bcf474f1c6a922be93",
-      });
-    }),
-    http.get("https://devnet-api.multiversx.com/blocks", () => {
-      return Response.json([
-        {
-          hash: "103b656af4fa9625962c5978e8cf69aca6918eb146a495bcf474f1c6a922be93",
-        },
-      ]);
-    }),
+    http.get("https://devnet-api.multiversx.com/blocks/latest", () =>
+      Response.json({ hash: "" }),
+    ),
+    http.get("https://devnet-api.multiversx.com/blocks", () =>
+      Response.json([{ hash: "" }]),
+    ),
     http.get(
       `https://devnet-gateway.multiversx.com/address/${address}/balance`,
       () => {
-        numBalanceReqs += 1;
-        const balance = `${30n * 10n ** 18n * BigInt(numBalanceReqs)}`;
+        const balance = `${BigInt(balances.shift() ?? 0) * 10n ** 18n}`;
         return Response.json({ code: "successful", data: { balance } });
       },
     ),
@@ -128,7 +121,9 @@ test("request-xegld --wallet wallet.json", async () => {
   server.listen();
   stdoutInt.start();
   input.injected.push("1234", "1234");
+  balances = [0, 1];
   await run(`request-xegld --wallet ${walletPath}`);
+  balances = [0, 10];
   await run(`request-xegld --wallet ${walletPath} --password 1234`);
   stdoutInt.stop();
   server.close();
@@ -137,18 +132,18 @@ test("request-xegld --wallet wallet.json", async () => {
     `Loading keystore wallet at "${walletPath}"...`,
     "Enter password: ",
     "",
-    `Claiming 30 xEGLD for address "${address}"...`,
+    `Claiming xEGLD for address "${address}"...`,
     "",
     "Open the URL and request tokens:",
     splittedStdoutData.at(6),
     "",
-    chalk.green("Wallet well received 30 xEGLD."),
-    `Claiming 30 xEGLD for address "${address}"...`,
+    chalk.green("Wallet well received 1 xEGLD."),
+    `Claiming xEGLD for address "${address}"...`,
     "",
     "Open the URL and request tokens:",
     splittedStdoutData.at(12),
     "",
-    chalk.green("Wallet well received 30 xEGLD."),
+    chalk.green("Wallet well received 10 xEGLD."),
     "",
   ]);
 });
