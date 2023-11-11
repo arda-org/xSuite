@@ -121,18 +121,8 @@ export class Proxy {
   }
 
   static async query(baseUrl: string, query: BroadQuery) {
-    const {
-      returnData,
-      ...data
-    }: {
-      returnData: string[];
-      returnCode: string;
-      returnMessage: string;
-    } = unrawRes(await Proxy.queryRaw(baseUrl, query)).data;
-    return {
-      returnData: returnData.map(b64ToHexString),
-      ...data,
-    };
+    const res = unrawRes(await Proxy.queryRaw(baseUrl, query));
+    return res.data as Record<string, any>;
   }
 
   query(query: BroadQuery) {

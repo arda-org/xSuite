@@ -1,4 +1,5 @@
 import { AddressEncodable } from "../data/AddressEncodable";
+import { b64ToHexString } from "../data/utils";
 import {
   CallContractTxParams,
   DeployContractTxParams,
@@ -75,7 +76,18 @@ export class World {
   }
 
   query(query: Query) {
-    return this.proxy.query(query);
+    return InteractionPromise.from(this.#query(query));
+  }
+
+  async #query(query: Query): Promise<QueryResult> {
+    const resQuery = await this.proxy.query(query);
+    if (![0, "ok"].includes(resQuery.returnCode)) {
+      throw new QueryError(resQuery.returnCode, resQuery.returnMessage);
+    }
+    return {
+      query: resQuery,
+      returnData: resQuery.returnData.map(b64ToHexString),
+    };
   }
 }
 
@@ -103,7 +115,7 @@ export class Wallet extends Signer {
     this.gasPrice = gasPrice;
   }
 
-  sign(data: Buffer): Promise<Buffer> {
+  sign(data: Buffer) {
     return this.signer.sign(data);
   }
 
@@ -127,10 +139,8 @@ export class Wallet extends Signer {
     return this.proxy.getAccountWithKvs(this);
   }
 
-  executeTx(
-    txParams: Omit<TxParams, "sender" | "nonce" | "chainId">,
-  ): TxPromise<TxResult> {
-    return TxPromise.from(this.#executeTx(txParams));
+  executeTx(txParams: Omit<TxParams, "sender" | "nonce" | "chainId">) {
+    return InteractionPromise.from(this.#executeTx(txParams));
   }
 
   async #executeTx({
@@ -149,25 +159,26 @@ export class Wallet extends Signer {
     const txHash = await this.proxy.sendTx(tx);
     const resTx = await this.proxy.getCompletedTx(txHash);
     if (resTx.status !== "success") {
-      throw new Error(`Tx failed: 100 - Failure with status ${resTx.status}.`);
+      throw new TxError("errorStatus", resTx.status);
     }
     if (resTx.executionReceipt?.returnCode) {
       const { returnCode, returnMessage } = resTx.executionReceipt;
-      throw new Error(`Tx failed: ${returnCode} - ${returnMessage}`);
+      throw new TxError(returnCode, returnMessage);
     }
     const signalErrorEvent = resTx?.logs?.events.find(
       (e: any) => e.identifier === "signalError",
     );
     if (signalErrorEvent) {
-      throw new Error("Tx failed: 100 - signalError event.");
+      const error = atob(signalErrorEvent.topics[1]);
+      throw new TxError("signalError", error);
     }
     return { tx: resTx };
   }
 
   deployContract(
     txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">,
-  ): TxPromise<DeployContractTxResult> {
-    return TxPromise.from(this.#deployContract(txParams));
+  ) {
+    return InteractionPromise.from(this.#deployContract(txParams));
   }
 
   async #deployContract(
@@ -191,8 +202,8 @@ export class Wallet extends Signer {
 
   upgradeContract(
     txParams: Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">,
-  ): TxPromise<CallContractTxResult> {
-    return TxPromise.from(this.#upgradeContract(txParams));
+  ) {
+    return InteractionPromise.from(this.#upgradeContract(txParams));
   }
 
   async #upgradeContract(
@@ -206,10 +217,8 @@ export class Wallet extends Signer {
     return { ...txResult, returnData };
   }
 
-  transfer(
-    txParams: Omit<TransferTxParams, "sender" | "nonce" | "chainId">,
-  ): TxPromise<TxResult> {
-    return TxPromise.from(this.#transfer(txParams));
+  transfer(txParams: Omit<TransferTxParams, "sender" | "nonce" | "chainId">) {
+    return InteractionPromise.from(this.#transfer(txParams));
   }
 
   async #transfer(
@@ -222,8 +231,8 @@ export class Wallet extends Signer {
 
   callContract(
     txParams: Omit<CallContractTxParams, "sender" | "nonce" | "chainId">,
-  ): TxPromise<CallContractTxResult> {
-    return TxPromise.from(this.#callContract(txParams));
+  ) {
+    return InteractionPromise.from(this.#callContract(txParams));
   }
 
   async #callContract(
@@ -272,7 +281,32 @@ export class Contract extends AddressEncodable {
   }
 }
 
-export class TxPromise<T> implements PromiseLike<T> {
+class InteractionError extends Error {
+  interaction: string;
+  code: number | string;
+  msg: string;
+
+  constructor(interaction: string, code: number | string, msg: string) {
+    super(`${interaction} failed: ${code} - ${msg}`);
+    this.interaction = interaction;
+    this.code = code;
+    this.msg = msg;
+  }
+}
+
+class TxError extends InteractionError {
+  constructor(code: number | string, message: string) {
+    super("Transaction", code, message);
+  }
+}
+
+class QueryError extends InteractionError {
+  constructor(code: number | string, message: string) {
+    super("Query", code, message);
+  }
+}
+
+export class InteractionPromise<T> implements PromiseLike<T> {
   #promise: Promise<T>;
 
   constructor(
@@ -284,8 +318,8 @@ export class TxPromise<T> implements PromiseLike<T> {
     this.#promise = new Promise<T>(executor);
   }
 
-  static from<T>(promise: Promise<T>): TxPromise<T> {
-    return new TxPromise<T>(promise.then.bind(promise));
+  static from<T>(promise: Promise<T>): InteractionPromise<T> {
+    return new InteractionPromise<T>(promise.then.bind(promise));
   }
 
   then<TResult1 = T, TResult2 = never>(
@@ -298,7 +332,7 @@ export class TxPromise<T> implements PromiseLike<T> {
       | undefined
       | null,
   ) {
-    return TxPromise.from(this.#promise.then(onfulfilled, onrejected));
+    return InteractionPromise.from(this.#promise.then(onfulfilled, onrejected));
   }
 
   catch<TResult = never>(
@@ -310,27 +344,24 @@ export class TxPromise<T> implements PromiseLike<T> {
     return this.then(null, onrejected);
   }
 
-  assertFail({ code, message }: { code?: number; message?: string } = {}) {
+  assertFail({
+    code,
+    message,
+  }: { code?: number | string; message?: string } = {}) {
     return this.then(() => {
-      throw new Error("Transaction has not failed.");
+      throw new Error("No failure.");
     }).catch((error) => {
-      if (!(error instanceof Error)) {
+      if (!(error instanceof InteractionError)) {
         throw error;
       }
-      const matches = error.message.match(/Tx failed: (\d+) - (.+)/);
-      if (!matches) {
-        throw error;
-      }
-      const errorCode = parseInt(matches[1]);
-      const errorMessage = matches[2];
-      if (code !== undefined && code !== errorCode) {
+      if (code !== undefined && code !== error.code) {
         throw new Error(
-          `Failed with unexpected error code.\nExpected code: ${code}\nReceived code: ${errorCode}`,
+          `Failed with unexpected error code.\nExpected code: ${code}\nReceived code: ${error.code}`,
         );
       }
-      if (message !== undefined && message !== errorMessage) {
+      if (message !== undefined && message !== error.msg) {
         throw new Error(
-          `Failed with unexpected error message.\nExpected message: ${message}\nReceived message: ${errorMessage}`,
+          `Failed with unexpected error message.\nExpected message: ${message}\nReceived message: ${error.msg}`,
         );
       }
     });
@@ -358,6 +389,11 @@ export const expandCode = (code: string) => {
     code = readFileHex(code.slice(5));
   }
   return code;
+};
+
+type QueryResult = {
+  query: any;
+  returnData: string[];
 };
 
 export type TxResult = {

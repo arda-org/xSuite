@@ -280,6 +280,28 @@ test("SWallet.callContract with return", async () => {
   assertHexList(txResult.returnData, ["01"]);
 });
 
+test("SWallet.callContract - Stack trace", async () => {
+  await expect(
+    wallet.callContract({
+      callee: contract,
+      funcName: "non_existent_function",
+      gasLimit: 10_000_000,
+    }),
+  ).rejects.toMatchObject({
+    stack: expect.stringContaining("src/world/sworld.test.ts:284:3)"),
+  });
+});
+
+test("SWallet.query.assertFail - Correct parameters", async () => {
+  await world
+    .query({
+      callee: contract,
+      funcName: "require_positive",
+      funcArgs: [e.U64(0)],
+    })
+    .assertFail({ code: 4, message: "Amount is not positive." });
+});
+
 test("SWallet.callContract.assertFail - Correct parameters", async () => {
   await wallet
     .callContract({
@@ -301,11 +323,9 @@ test("SWallet.callContract.assertFail - Wrong code", async () => {
         gasLimit: 10_000_000,
       })
       .assertFail({ code: 5 }),
-  ).rejects.toMatchObject({
-    message:
-      "Failed with unexpected error code.\nExpected code: 5\nReceived code: 4",
-    stack: expect.stringContaining("src/world/sworld.test.ts:295:3)"),
-  });
+  ).rejects.toThrow(
+    "Failed with unexpected error code.\nExpected code: 5\nReceived code: 4",
+  );
 });
 
 test("SWallet.callContract.assertFail - Wrong message", async () => {
@@ -333,5 +353,5 @@ test("SWallet.callContract.assertFail - Transaction not failing", async () => {
         gasLimit: 10_000_000,
       })
       .assertFail(),
-  ).rejects.toThrow("Transaction has not failed.");
+  ).rejects.toThrow("No failure.");
 });
