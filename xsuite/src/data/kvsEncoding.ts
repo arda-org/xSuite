@@ -1,6 +1,6 @@
 import { Field, Type } from "protobufjs";
 import { Encodable } from "./Encodable";
-import { Address, addressToBytes } from "./address";
+import { Address, addressToAddressEncodable } from "./address";
 import { enc } from "./encoding";
 import { hexToEncodable, Hex, hexToBytes } from "./hex";
 import { Kv } from "./kvs";
@@ -161,7 +161,10 @@ const getEsdtKvs = ({
       metadata.push(["Name", enc.Str(name).toTopBytes()]);
     }
     if (creator !== undefined) {
-      metadata.push(["Creator", addressToBytes(creator)]);
+      metadata.push([
+        "Creator",
+        addressToAddressEncodable(creator).toTopBytes(),
+      ]);
     }
     if (royalties !== undefined) {
       metadata.push(["Royalties", royalties.toString()]);

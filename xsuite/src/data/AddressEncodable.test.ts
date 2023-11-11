@@ -2,17 +2,24 @@ import { describe, it, test, expect } from "@jest/globals";
 import {
   AddressEncodable,
   addressByteLength,
-  bytesToBech32,
+  bytesToBechAddress,
 } from "./AddressEncodable";
 
 describe("AddressEncodable", () => {
-  test("top encoding from address", () => {
+  test("top encoding from bech address", () => {
     const bechAddress =
       "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
     const bytesAddress = new Uint8Array(32);
     expect(new AddressEncodable(bechAddress).toTopBytes()).toEqual(
       bytesAddress,
     );
+  });
+
+  test("top encoding from hex address", () => {
+    const hexAddress =
+      "0000000000000000000000000000000000000000000000000000000000000000";
+    const bytesAddress = new Uint8Array(32);
+    expect(new AddressEncodable(hexAddress).toTopBytes()).toEqual(bytesAddress);
   });
 
   test("top encoding from bytes", () => {
@@ -28,7 +35,7 @@ describe("AddressEncodable", () => {
   test("bytesToBech32", () => {
     const bechAddress =
       "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
-    expect(bytesToBech32(new Uint8Array(32))).toEqual(bechAddress);
+    expect(bytesToBechAddress(new Uint8Array(32))).toEqual(bechAddress);
   });
 
   test("correct address length", () => {
@@ -38,9 +45,7 @@ describe("AddressEncodable", () => {
   it("should throw error if address HRP invalid", () => {
     const address =
       "btc1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq5mhdvz";
-    expect(() => new AddressEncodable(address)).toThrow(
-      'Address HRP is not "erd".',
-    );
+    expect(() => new AddressEncodable(address)).toThrow("Invalid address HRP.");
   });
 
   it("should throw error if address length too short", () => {
