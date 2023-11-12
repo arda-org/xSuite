@@ -55,7 +55,7 @@ test("SWorld.proxy.getAccountNonce on empty hex address", async () => {
   expect(await world.proxy.getAccountNonce(zeroHexAddress)).toEqual(0);
 });
 
-test("SWorld.proxy.getAccountNonce on empty array address", async () => {
+test("SWorld.proxy.getAccountNonce on empty bytes address", async () => {
   expect(await world.proxy.getAccountNonce(zeroBytesAddress)).toEqual(0);
 });
 
@@ -67,7 +67,7 @@ test("SWorld.proxy.getAccountBalance on empty hex address", async () => {
   expect(await world.proxy.getAccountBalance(zeroHexAddress)).toEqual(0n);
 });
 
-test("SWorld.proxy.getAccountBalance on empty array address", async () => {
+test("SWorld.proxy.getAccountBalance on empty bytes address", async () => {
   expect(await world.proxy.getAccountBalance(zeroBytesAddress)).toEqual(0n);
 });
 
@@ -85,7 +85,7 @@ test("SWorld.proxy.getAccountWithKvs on empty hex address", async () => {
   );
 });
 
-test("SWorld.proxy.getAccountWithKvs on empty array address", async () => {
+test("SWorld.proxy.getAccountWithKvs on empty bytes address", async () => {
   assertAccount(
     await world.proxy.getAccountWithKvs(zeroBytesAddress),
     emptyAccount,
