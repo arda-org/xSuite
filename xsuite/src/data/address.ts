@@ -1,11 +1,11 @@
 import { AddressEncodable } from "./AddressEncodable";
 import { enc } from "./encoding";
 
-export type Address = string | AddressEncodable;
+export type Address = string | Uint8Array | AddressEncodable;
 
 export const addressToAddressEncodable = (address: Address) => {
-  if (typeof address === "string") {
-    address = enc.Addr(address);
+  if (address instanceof AddressEncodable) {
+    return address;
   }
-  return address;
+  return enc.Addr(address);
 };
