@@ -338,7 +338,7 @@ test("SWallet.callContract with return", async () => {
   assertHexList(txResult.returnData, ["01"]);
 });
 
-test("SWallet.callContract - Stack trace", async () => {
+test("SWallet.callContract failure", async () => {
   await expect(
     wallet.callContract({
       callee: contract,
@@ -346,7 +346,10 @@ test("SWallet.callContract - Stack trace", async () => {
       gasLimit: 10_000_000,
     }),
   ).rejects.toMatchObject({
-    stack: expect.stringContaining("src/world/sworld.test.ts:"),
+    message: expect.stringMatching(
+      /^Transaction failed: 1 - invalid function \(not found\) - Response:\n{/,
+    ),
+    stack: expect.stringMatching(/src\/world\/sworld\.test\.ts:[0-9]+:3\)$/),
   });
 });
 

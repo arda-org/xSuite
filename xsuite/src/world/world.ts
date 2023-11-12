@@ -82,7 +82,11 @@ export class World {
   async #query(query: Query): Promise<QueryResult> {
     const resQuery = await this.proxy.query(query);
     if (![0, "ok"].includes(resQuery.returnCode)) {
-      throw new QueryError(resQuery.returnCode, resQuery.returnMessage);
+      throw new QueryError(
+        resQuery.returnCode,
+        resQuery.returnMessage,
+        resQuery,
+      );
     }
     return {
       query: resQuery,
@@ -159,18 +163,18 @@ export class Wallet extends Signer {
     const txHash = await this.proxy.sendTx(tx);
     const resTx = await this.proxy.getCompletedTx(txHash);
     if (resTx.status !== "success") {
-      throw new TxError("errorStatus", resTx.status);
+      throw new TxError("errorStatus", resTx.status, resTx);
     }
     if (resTx.executionReceipt?.returnCode) {
       const { returnCode, returnMessage } = resTx.executionReceipt;
-      throw new TxError(returnCode, returnMessage);
+      throw new TxError(returnCode, returnMessage, resTx);
     }
     const signalErrorEvent = resTx?.logs?.events.find(
       (e: any) => e.identifier === "signalError",
     );
     if (signalErrorEvent) {
       const error = atob(signalErrorEvent.topics[1]);
-      throw new TxError("signalError", error);
+      throw new TxError("signalError", error, resTx);
     }
     return { tx: resTx };
   }
@@ -188,13 +192,9 @@ export class Wallet extends Signer {
     const txResult = await this.#executeTx(
       Tx.getParamsToDeployContract(txParams),
     );
-    const scDeployEvent = txResult.tx?.logs?.events.find(
+    const address = txResult.tx.logs.events.find(
       (e: any) => e.identifier === "SCDeploy",
-    );
-    if (!scDeployEvent) {
-      throw new Error("No SCDeploy event.");
-    }
-    const address = scDeployEvent.address;
+    )!.address;
     const contract = new Contract({ address, proxy: this.proxy });
     const returnData = getTxReturnData(txResult.tx);
     return { ...txResult, address, contract, returnData };
@@ -285,24 +285,34 @@ class InteractionError extends Error {
   interaction: string;
   code: number | string;
   msg: string;
+  response: any;
 
-  constructor(interaction: string, code: number | string, msg: string) {
-    super(`${interaction} failed: ${code} - ${msg}`);
+  constructor(
+    interaction: string,
+    code: number | string,
+    message: string,
+    response: any,
+  ) {
+    super(
+      `${interaction} failed: ${code} - ${message} - Response:\n` +
+        JSON.stringify(response, null, 2),
+    );
     this.interaction = interaction;
     this.code = code;
-    this.msg = msg;
+    this.msg = message;
+    this.response = response;
   }
 }
 
 class TxError extends InteractionError {
-  constructor(code: number | string, message: string) {
-    super("Transaction", code, message);
+  constructor(code: number | string, message: string, response: any) {
+    super("Transaction", code, message, response);
   }
 }
 
 class QueryError extends InteractionError {
-  constructor(code: number | string, message: string) {
-    super("Query", code, message);
+  constructor(code: number | string, message: string, response: any) {
+    super("Query", code, message, response);
   }
 }
 
