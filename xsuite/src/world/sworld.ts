@@ -17,7 +17,7 @@ export class SWorld extends World {
     super({ proxy, chainId: "S", gasPrice });
     this.proxy = proxy;
     this.sysAcc = new SContract({
-      address: "erd1lllllllllllllllllllllllllllllllllllllllllllllllllllsckry7t",
+      address: new Uint8Array(32).fill(255),
       proxy,
     });
   }

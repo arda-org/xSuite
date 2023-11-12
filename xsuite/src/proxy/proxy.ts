@@ -130,7 +130,9 @@ export class Proxy {
   }
 
   static getAccountRaw(baseUrl: string, address: Address) {
-    return Proxy.fetchRaw(`${baseUrl}/address/${address}`);
+    return Proxy.fetchRaw(
+      `${baseUrl}/address/${addressToAddressEncodable(address)}`,
+    );
   }
 
   getAccountRaw(address: Address) {
@@ -161,7 +163,9 @@ export class Proxy {
   }
 
   static getAccountNonceRaw(baseUrl: string, address: Address) {
-    return Proxy.fetchRaw(`${baseUrl}/address/${address}/nonce`);
+    return Proxy.fetchRaw(
+      `${baseUrl}/address/${addressToAddressEncodable(address)}/nonce`,
+    );
   }
 
   getAccountNonceRaw(address: Address) {
@@ -178,7 +182,9 @@ export class Proxy {
   }
 
   static getAccountBalanceRaw(baseUrl: string, address: Address) {
-    return Proxy.fetchRaw(`${baseUrl}/address/${address}/balance`);
+    return Proxy.fetchRaw(
+      `${baseUrl}/address/${addressToAddressEncodable(address)}/balance`,
+    );
   }
 
   getAccountBalanceRaw(address: Address) {
@@ -195,7 +201,9 @@ export class Proxy {
   }
 
   static getAccountKvsRaw(baseUrl: string, address: Address) {
-    return Proxy.fetchRaw(`${baseUrl}/address/${address}/keys`);
+    return Proxy.fetchRaw(
+      `${baseUrl}/address/${addressToAddressEncodable(address)}/keys`,
+    );
   }
 
   getAccountKvsRaw(address: Address) {

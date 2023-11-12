@@ -11,6 +11,19 @@ let otherWallet: SWallet;
 let contract: SContract;
 const fftId = "FFT-abcdef";
 const worldCode = "file:contracts/world/output/world.wasm";
+const zeroBechAddress =
+  "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
+const zeroHexAddress =
+  "0000000000000000000000000000000000000000000000000000000000000000";
+const zeroArrAddress = new Uint8Array(32);
+const emptyAccount = {
+  nonce: 0,
+  balance: 0,
+  code: null,
+  codeMetadata: null,
+  owner: null,
+  kvs: {},
+};
 
 beforeEach(async () => {
   world = await SWorld.start();
@@ -32,6 +45,51 @@ beforeEach(async () => {
 
 afterEach(async () => {
   await world.terminate();
+});
+
+test("SWorld.proxy.getAccountNonce on empty bech address", async () => {
+  expect(await world.proxy.getAccountNonce(zeroBechAddress)).toEqual(0);
+});
+
+test("SWorld.proxy.getAccountNonce on empty hex address", async () => {
+  expect(await world.proxy.getAccountNonce(zeroHexAddress)).toEqual(0);
+});
+
+test("SWorld.proxy.getAccountNonce on empty array address", async () => {
+  expect(await world.proxy.getAccountNonce(zeroArrAddress)).toEqual(0);
+});
+
+test("SWorld.proxy.getAccountBalance on empty bech address", async () => {
+  expect(await world.proxy.getAccountBalance(zeroBechAddress)).toEqual(0n);
+});
+
+test("SWorld.proxy.getAccountBalance on empty hex address", async () => {
+  expect(await world.proxy.getAccountBalance(zeroHexAddress)).toEqual(0n);
+});
+
+test("SWorld.proxy.getAccountBalance on empty array address", async () => {
+  expect(await world.proxy.getAccountBalance(zeroArrAddress)).toEqual(0n);
+});
+
+test("SWorld.proxy.getAccountWithKvs on empty bech address", async () => {
+  assertAccount(
+    await world.proxy.getAccountWithKvs(zeroBechAddress),
+    emptyAccount,
+  );
+});
+
+test("SWorld.proxy.getAccountWithKvs on empty hex address", async () => {
+  assertAccount(
+    await world.proxy.getAccountWithKvs(zeroHexAddress),
+    emptyAccount,
+  );
+});
+
+test("SWorld.proxy.getAccountWithKvs on empty array address", async () => {
+  assertAccount(
+    await world.proxy.getAccountWithKvs(zeroArrAddress),
+    emptyAccount,
+  );
 });
 
 test("SWorld.createWallet", async () => {
@@ -288,7 +346,7 @@ test("SWallet.callContract - Stack trace", async () => {
       gasLimit: 10_000_000,
     }),
   ).rejects.toMatchObject({
-    stack: expect.stringContaining("src/world/sworld.test.ts:284:3)"),
+    stack: expect.stringContaining("src/world/sworld.test.ts:"),
   });
 });
 

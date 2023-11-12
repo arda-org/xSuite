@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
+	worldmock "github.com/multiversx/mx-chain-vm-v1_4-go/mock/world"
 )
 
 func (ae *Executor) HandleAddress(r *http.Request) (interface{}, error) {
@@ -14,7 +15,7 @@ func (ae *Executor) HandleAddress(r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	account := ae.vmTestExecutor.World.AcctMap.GetAccount(address)
+	account := ae.getAccount(address)
 	jData := map[string]interface{}{
 		"data": map[string]interface{}{
 			"account": map[string]interface{}{
@@ -37,7 +38,7 @@ func (ae *Executor) HandleAddressNonce(r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	account := ae.vmTestExecutor.World.AcctMap.GetAccount(address)
+	account := ae.getAccount(address)
 	jData := map[string]interface{}{
 		"data": map[string]interface{}{
 			"nonce": account.Nonce,
@@ -53,7 +54,7 @@ func (ae *Executor) HandleAddressBalance(r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	account := ae.vmTestExecutor.World.AcctMap.GetAccount(address)
+	account := ae.getAccount(address)
 	jData := map[string]interface{}{
 		"data": map[string]interface{}{
 			"balance": account.Balance.String(),
@@ -69,7 +70,7 @@ func (ae *Executor) HandleAddressKeys(r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	account := ae.vmTestExecutor.World.AcctMap.GetAccount(address)
+	account := ae.getAccount(address)
 	jPairs := map[string]string{}
 	for k, v := range account.Storage {
 		if len(v) > 0 {
@@ -83,4 +84,12 @@ func (ae *Executor) HandleAddressKeys(r *http.Request) (interface{}, error) {
 		"code": "successful",
 	}
 	return jData, nil
+}
+
+func (ae *Executor) getAccount(address []byte) *worldmock.Account {
+	account, ok := ae.vmTestExecutor.World.AcctMap[string(address)]
+	if ok {
+		return account
+	}
+	return ae.vmTestExecutor.World.AcctMap.CreateAccount(address, ae.vmTestExecutor.World)
 }
