@@ -15,7 +15,7 @@ const zeroBechAddress =
   "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
 const zeroHexAddress =
   "0000000000000000000000000000000000000000000000000000000000000000";
-const zeroArrAddress = new Uint8Array(32);
+const zeroBytesAddress = new Uint8Array(32);
 const emptyAccount = {
   nonce: 0,
   balance: 0,
@@ -56,7 +56,7 @@ test("SWorld.proxy.getAccountNonce on empty hex address", async () => {
 });
 
 test("SWorld.proxy.getAccountNonce on empty array address", async () => {
-  expect(await world.proxy.getAccountNonce(zeroArrAddress)).toEqual(0);
+  expect(await world.proxy.getAccountNonce(zeroBytesAddress)).toEqual(0);
 });
 
 test("SWorld.proxy.getAccountBalance on empty bech address", async () => {
@@ -68,7 +68,7 @@ test("SWorld.proxy.getAccountBalance on empty hex address", async () => {
 });
 
 test("SWorld.proxy.getAccountBalance on empty array address", async () => {
-  expect(await world.proxy.getAccountBalance(zeroArrAddress)).toEqual(0n);
+  expect(await world.proxy.getAccountBalance(zeroBytesAddress)).toEqual(0n);
 });
 
 test("SWorld.proxy.getAccountWithKvs on empty bech address", async () => {
@@ -87,7 +87,7 @@ test("SWorld.proxy.getAccountWithKvs on empty hex address", async () => {
 
 test("SWorld.proxy.getAccountWithKvs on empty array address", async () => {
   assertAccount(
-    await world.proxy.getAccountWithKvs(zeroArrAddress),
+    await world.proxy.getAccountWithKvs(zeroBytesAddress),
     emptyAccount,
   );
 });

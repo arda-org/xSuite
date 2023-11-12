@@ -5,26 +5,29 @@ import {
   bytesToBechAddress,
 } from "./AddressEncodable";
 
+const zeroBechAddress =
+  "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
+const zeroHexAddress =
+  "0000000000000000000000000000000000000000000000000000000000000000";
+const zeroBytesAddress = new Uint8Array(32);
+
 describe("AddressEncodable", () => {
   test("top encoding from bech address", () => {
-    const bechAddress =
-      "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
-    const bytesAddress = new Uint8Array(32);
-    expect(new AddressEncodable(bechAddress).toTopBytes()).toEqual(
-      bytesAddress,
+    expect(new AddressEncodable(zeroBechAddress).toTopBytes()).toEqual(
+      zeroBytesAddress,
     );
   });
 
   test("top encoding from hex address", () => {
-    const hexAddress =
-      "0000000000000000000000000000000000000000000000000000000000000000";
-    const bytesAddress = new Uint8Array(32);
-    expect(new AddressEncodable(hexAddress).toTopBytes()).toEqual(bytesAddress);
+    expect(new AddressEncodable(zeroHexAddress).toTopBytes()).toEqual(
+      zeroBytesAddress,
+    );
   });
 
-  test("top encoding from bytes", () => {
-    const address = new Uint8Array(32);
-    expect(new AddressEncodable(address).toTopBytes()).toEqual(address);
+  test("top encoding from bytes address", () => {
+    expect(new AddressEncodable(zeroBytesAddress).toTopBytes()).toEqual(
+      zeroBytesAddress,
+    );
   });
 
   test("nest encoding from bytes", () => {
@@ -32,10 +35,8 @@ describe("AddressEncodable", () => {
     expect(new AddressEncodable(address).toNestBytes()).toEqual(address);
   });
 
-  test("bytesToBech32", () => {
-    const bechAddress =
-      "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
-    expect(bytesToBechAddress(new Uint8Array(32))).toEqual(bechAddress);
+  test("bytesToBechAddress", () => {
+    expect(bytesToBechAddress(new Uint8Array(32))).toEqual(zeroBechAddress);
   });
 
   test("correct address length", () => {
