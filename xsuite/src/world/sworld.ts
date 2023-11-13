@@ -1,10 +1,16 @@
+import { Prettify } from "../helpers";
 import { SProxy } from "../proxy";
-import { DeployContractTxParams } from "../proxy/proxy";
 import { Account, Block } from "../proxy/sproxy";
 import { DummySigner, Signer } from "./signer";
 import { startSimulnet } from "./simulnet";
 import { isContractAddress, numberToBytesAddress } from "./utils";
-import { World, Contract, Wallet, expandCode } from "./world";
+import {
+  World,
+  Contract,
+  Wallet,
+  expandCode,
+  WorldDeployContractParams,
+} from "./world";
 
 let walletCounter = 0;
 let contractCounter = 0;
@@ -13,7 +19,7 @@ export class SWorld extends World {
   proxy: SProxy;
   sysAcc: SContract;
 
-  constructor({ proxy, gasPrice }: { proxy: SProxy; gasPrice?: number }) {
+  constructor({ proxy, gasPrice }: { proxy: SProxy; gasPrice: number }) {
     super({ proxy, chainId: "S", gasPrice });
     this.proxy = proxy;
     this.sysAcc = new SContract({
@@ -23,7 +29,7 @@ export class SWorld extends World {
   }
 
   static new({ proxyUrl, gasPrice }: { proxyUrl: string; gasPrice?: number }) {
-    return new SWorld({ proxy: new SProxy(proxyUrl), gasPrice });
+    return new SWorld({ proxy: new SProxy(proxyUrl), gasPrice: gasPrice ?? 0 });
   }
 
   static async start({
@@ -46,7 +52,7 @@ export class SWorld extends World {
     return new SContract({ address, proxy: this.proxy });
   }
 
-  async createWallet(account: Omit<Account, "address"> = {}) {
+  async createWallet(account: SWorldCreateWalletAccount = {}) {
     walletCounter += 1;
     const address = numberToBytesAddress(walletCounter, false);
     const wallet = new SWallet({
@@ -59,7 +65,7 @@ export class SWorld extends World {
     return wallet;
   }
 
-  createContract(account: Omit<Account, "address"> = {}) {
+  createContract(account: SWorldCreateContractAccount = {}) {
     return createContract(this.proxy, account);
   }
 
@@ -84,24 +90,22 @@ export class SWallet extends Wallet {
     signer: Signer;
     proxy: SProxy;
     chainId: string;
-    gasPrice?: number;
+    gasPrice: number;
   }) {
     super({ signer, proxy, chainId, gasPrice });
     this.proxy = proxy;
   }
 
-  setAccount(account: Omit<Account, "address">) {
+  setAccount(account: SWalletSetAccountAccount) {
     return setAccount(this.proxy, { address: this, ...account });
   }
 
-  createContract(account: Omit<Account, "address" | "owner">) {
+  createContract(account: SWalletCreateContractAccount = {}) {
     return createContract(this.proxy, { ...account, owner: this });
   }
 
-  deployContract(
-    txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">,
-  ) {
-    return super.deployContract(txParams).then((data) => ({
+  deployContract(params: WorldDeployContractParams) {
+    return super.deployContract(params).then((data) => ({
       ...data,
       contract: new SContract({
         address: data.address,
@@ -125,7 +129,7 @@ export class SContract extends Contract {
     this.proxy = proxy;
   }
 
-  setAccount(account: Omit<Account, "address">) {
+  setAccount(account: SContractSetAccountAccount) {
     return setAccount(this.proxy, { address: this, ...account });
   }
 }
@@ -151,3 +155,15 @@ const createContract = async (
   await contract.setAccount(account);
   return contract;
 };
+
+type SWorldCreateWalletAccount = Prettify<Omit<Account, "address">>;
+
+type SWorldCreateContractAccount = Prettify<Omit<Account, "address">>;
+
+type SWalletSetAccountAccount = Prettify<Omit<Account, "address">>;
+
+type SWalletCreateContractAccount = Prettify<
+  Omit<Account, "address" | "owner">
+>;
+
+type SContractSetAccountAccount = Omit<Account, "address">;

@@ -241,7 +241,7 @@ export class Tx {
       value: (params.value ?? 0n).toString(),
       receiver: params.receiver.toString(),
       sender: params.sender.toString(),
-      gasPrice: params.gasPrice ?? 0,
+      gasPrice: params.gasPrice,
       gasLimit: params.gasLimit,
       data: params.data === undefined ? undefined : btoa(params.data),
       chainID: params.chainId,
@@ -469,7 +469,7 @@ export type TxParams = {
   value?: number | bigint;
   receiver: Address;
   sender: Address;
-  gasPrice?: number;
+  gasPrice: number;
   gasLimit: number;
   data?: string;
   chainId: string;
@@ -480,7 +480,7 @@ export type DeployContractTxParams = {
   nonce: number;
   value?: number | bigint;
   sender: Address;
-  gasPrice?: number;
+  gasPrice: number;
   gasLimit: number;
   code: string;
   codeMetadata: CodeMetadata;
@@ -498,7 +498,7 @@ export type UpgradeContractTxParams = {
   value?: number | bigint;
   callee: Address;
   sender: Address;
-  gasPrice?: number;
+  gasPrice: number;
   gasLimit: number;
   code: string;
   codeMetadata: CodeMetadata;
@@ -512,7 +512,7 @@ export type TransferTxParams = {
   value?: number | bigint;
   receiver: Address;
   sender: Address;
-  gasPrice?: number;
+  gasPrice: number;
   gasLimit: number;
   esdts?: { id: string; nonce?: number; amount: number | bigint }[];
   chainId: string;
@@ -524,7 +524,7 @@ export type CallContractTxParams = {
   value?: number | bigint;
   callee: Address;
   sender: Address;
-  gasPrice?: number;
+  gasPrice: number;
   gasLimit: number;
   funcName: string;
   funcArgs?: Hex[];

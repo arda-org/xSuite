@@ -1,5 +1,6 @@
 import { AddressEncodable } from "../data/AddressEncodable";
 import { b64ToHexString } from "../data/utils";
+import { Optional, Prettify } from "../helpers";
 import {
   CallContractTxParams,
   DeployContractTxParams,
@@ -16,7 +17,7 @@ import { readFileHex } from "./utils";
 export class World {
   proxy: Proxy;
   chainId: string;
-  gasPrice?: number;
+  gasPrice: number;
 
   constructor({
     proxy,
@@ -25,7 +26,7 @@ export class World {
   }: {
     proxy: Proxy;
     chainId: string;
-    gasPrice?: number;
+    gasPrice: number;
   }) {
     this.proxy = proxy;
     this.chainId = chainId;
@@ -39,15 +40,15 @@ export class World {
   }: {
     proxyUrl: string;
     chainId: string;
-    gasPrice?: number;
+    gasPrice: number;
   }) {
     return new World({ proxy: new Proxy(proxyUrl), chainId, gasPrice });
   }
 
   newWallet(signer: Signer) {
     return new Wallet({
-      proxy: this.proxy,
       signer,
+      proxy: this.proxy,
       chainId: this.chainId,
       gasPrice: this.gasPrice,
     });
@@ -55,8 +56,8 @@ export class World {
 
   async newWalletFromFile(filePath: string) {
     return new Wallet({
-      proxy: this.proxy,
       signer: await KeystoreSigner.fromFile(filePath),
+      proxy: this.proxy,
       chainId: this.chainId,
       gasPrice: this.gasPrice,
     });
@@ -64,8 +65,8 @@ export class World {
 
   newWalletFromFile_unsafe(filePath: string, password: string) {
     return new Wallet({
-      proxy: this.proxy,
       signer: KeystoreSigner.fromFile_unsafe(filePath, password),
+      proxy: this.proxy,
       chainId: this.chainId,
       gasPrice: this.gasPrice,
     });
@@ -99,7 +100,7 @@ export class Wallet extends Signer {
   signer: Signer;
   proxy: Proxy;
   chainId: string;
-  gasPrice?: number;
+  gasPrice: number;
 
   constructor({
     signer,
@@ -110,11 +111,11 @@ export class Wallet extends Signer {
     signer: Signer;
     proxy: Proxy;
     chainId: string;
-    gasPrice?: number;
+    gasPrice: number;
   }) {
     super(signer.toTopBytes());
-    this.proxy = proxy;
     this.signer = signer;
+    this.proxy = proxy;
     this.chainId = chainId;
     this.gasPrice = gasPrice;
   }
@@ -143,18 +144,18 @@ export class Wallet extends Signer {
     return this.proxy.getAccountWithKvs(this);
   }
 
-  executeTx(txParams: Omit<TxParams, "sender" | "nonce" | "chainId">) {
-    return InteractionPromise.from(this.#executeTx(txParams));
+  executeTx(params: WorldExecuteTxParams) {
+    return InteractionPromise.from(this.#executeTx(params));
   }
 
   async #executeTx({
     gasPrice,
-    ...txParams
-  }: Omit<TxParams, "sender" | "nonce" | "chainId">): Promise<TxResult> {
+    ...params
+  }: WorldExecuteTxParams): Promise<TxResult> {
     const nonce = await this.proxy.getAccountNonce(this);
     const tx = new Tx({
       gasPrice: gasPrice ?? this.gasPrice,
-      ...txParams,
+      ...params,
       sender: this,
       nonce,
       chainId: this.chainId,
@@ -179,18 +180,16 @@ export class Wallet extends Signer {
     return { tx: resTx };
   }
 
-  deployContract(
-    txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">,
-  ) {
-    return InteractionPromise.from(this.#deployContract(txParams));
+  deployContract(params: WorldDeployContractParams) {
+    return InteractionPromise.from(this.#deployContract(params));
   }
 
   async #deployContract(
-    txParams: Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">,
+    params: WorldDeployContractParams,
   ): Promise<DeployContractTxResult> {
-    txParams.code = expandCode(txParams.code);
+    params.code = expandCode(params.code);
     const txResult = await this.#executeTx(
-      Tx.getParamsToDeployContract(txParams),
+      Tx.getParamsToDeployContract(params),
     );
     const address = txResult.tx.logs.events.find(
       (e: any) => e.identifier === "SCDeploy",
@@ -200,46 +199,38 @@ export class Wallet extends Signer {
     return { ...txResult, address, contract, returnData };
   }
 
-  upgradeContract(
-    txParams: Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">,
-  ) {
-    return InteractionPromise.from(this.#upgradeContract(txParams));
+  upgradeContract(params: WorldUpgradeContractParams) {
+    return InteractionPromise.from(this.#upgradeContract(params));
   }
 
   async #upgradeContract(
-    txParams: Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">,
+    params: WorldUpgradeContractParams,
   ): Promise<CallContractTxResult> {
-    txParams.code = expandCode(txParams.code);
+    params.code = expandCode(params.code);
     const txResult = await this.#executeTx(
-      Tx.getParamsToUpgradeContract({ sender: this, ...txParams }),
+      Tx.getParamsToUpgradeContract({ sender: this, ...params }),
     );
     const returnData = getTxReturnData(txResult.tx);
     return { ...txResult, returnData };
   }
 
-  transfer(txParams: Omit<TransferTxParams, "sender" | "nonce" | "chainId">) {
-    return InteractionPromise.from(this.#transfer(txParams));
+  transfer(params: WorldTransferParams) {
+    return InteractionPromise.from(this.#transfer(params));
   }
 
-  async #transfer(
-    txParams: Omit<TransferTxParams, "sender" | "nonce" | "chainId">,
-  ): Promise<TxResult> {
-    return this.#executeTx(
-      Tx.getParamsToTransfer({ sender: this, ...txParams }),
-    );
+  #transfer(params: WorldTransferParams): Promise<TxResult> {
+    return this.#executeTx(Tx.getParamsToTransfer({ sender: this, ...params }));
   }
 
-  callContract(
-    txParams: Omit<CallContractTxParams, "sender" | "nonce" | "chainId">,
-  ) {
-    return InteractionPromise.from(this.#callContract(txParams));
+  callContract(params: WorldCallContractParams) {
+    return InteractionPromise.from(this.#callContract(params));
   }
 
   async #callContract(
-    txParams: Omit<CallContractTxParams, "sender" | "nonce" | "chainId">,
+    params: WorldCallContractParams,
   ): Promise<CallContractTxResult> {
     const txResult = await this.#executeTx(
-      Tx.getParamsToCallContract({ sender: this, ...txParams }),
+      Tx.getParamsToCallContract({ sender: this, ...params }),
     );
     const returnData = getTxReturnData(txResult.tx);
     return { ...txResult, returnData };
@@ -400,6 +391,35 @@ export const expandCode = (code: string) => {
   }
   return code;
 };
+
+type WorldExecuteTxParams = Prettify<
+  Optional<Omit<TxParams, "sender" | "nonce" | "chainId">, "gasPrice">
+>;
+
+export type WorldDeployContractParams = Prettify<
+  Optional<
+    Omit<DeployContractTxParams, "sender" | "nonce" | "chainId">,
+    "gasPrice"
+  >
+>;
+
+type WorldUpgradeContractParams = Prettify<
+  Optional<
+    Omit<UpgradeContractTxParams, "sender" | "nonce" | "chainId">,
+    "gasPrice"
+  >
+>;
+
+type WorldTransferParams = Prettify<
+  Optional<Omit<TransferTxParams, "sender" | "nonce" | "chainId">, "gasPrice">
+>;
+
+type WorldCallContractParams = Prettify<
+  Optional<
+    Omit<CallContractTxParams, "sender" | "nonce" | "chainId">,
+    "gasPrice"
+  >
+>;
 
 type QueryResult = {
   query: any;
