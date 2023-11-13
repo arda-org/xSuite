@@ -1,3 +1,4 @@
+import { Prettify } from "../helpers";
 import { ByteReader } from "./ByteReader";
 import { AbstractDecoder, Decoder } from "./Decoder";
 
@@ -25,8 +26,6 @@ export class TupleDecoder<T extends DecoderMap<any>> extends AbstractDecoder<
 
 export type DecoderMap<T> = Record<string, Decoder<T>>;
 
-type DecoderMapToValueMap<T> = {
+type DecoderMapToValueMap<T> = Prettify<{
   [K in keyof T]: T[K] extends Decoder<infer U> ? U : never;
-} & {
-  // Pretiffy type: https://twitter.com/mattpocockuk/status/1622730173446557697
-};
+}>;
