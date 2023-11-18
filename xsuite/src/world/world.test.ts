@@ -6,7 +6,7 @@ import { World } from "./world";
 
 test("World.new, World.newWallet, World.newContract", async () => {
   const proxyUrl = await startSimulnet();
-  const world = World.new({ proxyUrl, chainId: "S", gasPrice: 0 });
+  const world = World.new({ chainId: "S", proxyUrl, gasPrice: 0 });
   const wallet = world.newWallet(new DummySigner(new Uint8Array(32)));
   const contract = world.newContract(new Uint8Array(32));
   expect(wallet.toTopBytes()).toEqual(new Uint8Array(32));

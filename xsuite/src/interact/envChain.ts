@@ -1,3 +1,15 @@
+export const devnetId = "D";
+export const testnetId = "T";
+export const mainnetId = "1";
+
+export const devnetPublicProxyUrl = "https://devnet-gateway.multiversx.com";
+export const testnetPublicProxyUrl = "https://testnet-gateway.multiversx.com";
+export const mainnetPublicProxyUrl = "https://gateway.multiversx.com";
+
+export const devnetExplorerUrl = "https://devnet-explorer.multiversx.com";
+export const testnetExplorerUrl = "https://testnet-explorer.multiversx.com";
+export const mainnetExplorerUrl = "https://mainnet-explorer.multiversx.com";
+
 export const envChain = {
   name: (): ChainName => {
     const chain = process.env.CHAIN;
@@ -16,12 +28,23 @@ export const envChain = {
     }
     return value;
   },
-  id: () => envChain.select({ devnet: "D", testnet: "T", mainnet: "1" }),
+  id: () =>
+    envChain.select({
+      devnet: devnetId,
+      testnet: testnetId,
+      mainnet: mainnetId,
+    }),
   publicProxyUrl: () =>
     envChain.select({
-      devnet: "https://devnet-gateway.multiversx.com",
-      testnet: "https://testnet-gateway.multiversx.com",
-      mainnet: "https://gateway.multiversx.com",
+      devnet: devnetPublicProxyUrl,
+      testnet: testnetPublicProxyUrl,
+      mainnet: mainnetPublicProxyUrl,
+    }),
+  explorerUrl: () =>
+    envChain.select({
+      devnet: devnetExplorerUrl,
+      testnet: testnetExplorerUrl,
+      mainnet: mainnetExplorerUrl,
     }),
 };
 

@@ -24,9 +24,10 @@ const emptyAccount = {
   owner: null,
   kvs: {},
 };
+const explorerUrl = "http://explorer.local";
 
 beforeEach(async () => {
-  world = await SWorld.start();
+  world = await SWorld.start({ explorerUrl });
   wallet = await world.createWallet({
     balance: 10n ** 18n,
     kvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
@@ -94,6 +95,7 @@ test("SWorld.proxy.getAccountWithKvs on empty bytes address", async () => {
 
 test("SWorld.createWallet", async () => {
   const wallet = await world.createWallet();
+  expect(wallet.explorerUrl).toEqual(`${explorerUrl}/accounts/${wallet}`);
   assertAccount(await wallet.getAccountWithKvs(), {});
 });
 
@@ -104,6 +106,7 @@ test("SWorld.createWallet - is wallet address", async () => {
 
 test("SWorld.createContract", async () => {
   const contract = await world.createContract();
+  expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
   assertAccount(await contract.getAccountWithKvs(), { code: "00" });
 });
 
@@ -207,11 +210,13 @@ test("SContract.getAccountWithKvs + SContract.createContract", async () => {
 });
 
 test("SWallet.executeTx", async () => {
-  await wallet.executeTx({
+  const { tx } = await wallet.executeTx({
     receiver: otherWallet,
     value: 10n ** 17n,
     gasLimit: 10_000_000,
   });
+  expect(tx.hash).toBeTruthy();
+  expect(tx.explorerUrl).toEqual(`${explorerUrl}/transactions/${tx.hash}`);
   assertAccount(await wallet.getAccountWithKvs(), {
     balance: 9n * 10n ** 17n,
   });
@@ -347,7 +352,7 @@ test("SWallet.callContract failure", async () => {
     }),
   ).rejects.toMatchObject({
     message: expect.stringMatching(
-      /^Transaction failed: 1 - invalid function \(not found\) - Response:\n{/,
+      /^Transaction failed: 1 - invalid function \(not found\) - Result:\n{/,
     ),
     stack: expect.stringMatching(/src\/world\/sworld\.test\.ts:[0-9]+:3\)$/),
   });

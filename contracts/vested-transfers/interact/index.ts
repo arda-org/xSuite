@@ -3,9 +3,9 @@ import { envChain, World } from "xsuite";
 import data from "./data.json";
 
 const world = World.new({
-  proxyUrl: envChain.publicProxyUrl(),
   chainId: envChain.id(),
-  gasPrice: 1000000000,
+  proxyUrl: envChain.publicProxyUrl(),
+  gasPrice: 1_000_000_000,
 });
 
 const loadWallet = () => world.newWalletFromFile("wallet.json");

@@ -15,34 +15,45 @@ import { KeystoreSigner, Signer } from "./signer";
 import { readFileHex } from "./utils";
 
 export class World {
-  proxy: Proxy;
   chainId: string;
+  proxy: Proxy;
   gasPrice: number;
+  explorerUrl: string;
 
   constructor({
-    proxy,
     chainId,
+    proxy,
     gasPrice,
+    explorerUrl = "",
   }: {
-    proxy: Proxy;
     chainId: string;
+    proxy: Proxy;
     gasPrice: number;
+    explorerUrl?: string;
   }) {
     this.proxy = proxy;
     this.chainId = chainId;
     this.gasPrice = gasPrice;
+    this.explorerUrl = explorerUrl;
   }
 
   static new({
-    proxyUrl,
     chainId,
+    proxyUrl,
     gasPrice,
+    explorerUrl,
   }: {
-    proxyUrl: string;
     chainId: string;
+    proxyUrl: string;
     gasPrice: number;
+    explorerUrl?: string;
   }) {
-    return new World({ proxy: new Proxy(proxyUrl), chainId, gasPrice });
+    return new World({
+      chainId,
+      proxy: new Proxy(proxyUrl),
+      gasPrice,
+      explorerUrl,
+    });
   }
 
   newWallet(signer: Signer) {
@@ -51,29 +62,24 @@ export class World {
       proxy: this.proxy,
       chainId: this.chainId,
       gasPrice: this.gasPrice,
+      baseExplorerUrl: this.explorerUrl,
     });
   }
 
   async newWalletFromFile(filePath: string) {
-    return new Wallet({
-      signer: await KeystoreSigner.fromFile(filePath),
-      proxy: this.proxy,
-      chainId: this.chainId,
-      gasPrice: this.gasPrice,
-    });
+    return this.newWallet(await KeystoreSigner.fromFile(filePath));
   }
 
   newWalletFromFile_unsafe(filePath: string, password: string) {
-    return new Wallet({
-      signer: KeystoreSigner.fromFile_unsafe(filePath, password),
-      proxy: this.proxy,
-      chainId: this.chainId,
-      gasPrice: this.gasPrice,
-    });
+    return this.newWallet(KeystoreSigner.fromFile_unsafe(filePath, password));
   }
 
   newContract(address: string | Uint8Array) {
-    return new Contract({ address, proxy: this.proxy });
+    return new Contract({
+      address,
+      proxy: this.proxy,
+      baseExplorerUrl: this.explorerUrl,
+    });
   }
 
   query(query: Query) {
@@ -101,23 +107,32 @@ export class Wallet extends Signer {
   proxy: Proxy;
   chainId: string;
   gasPrice: number;
+  explorerUrl: string;
+  baseExplorerUrl: string;
 
   constructor({
     signer,
     proxy,
     chainId,
     gasPrice,
+    baseExplorerUrl = "",
   }: {
     signer: Signer;
     proxy: Proxy;
     chainId: string;
     gasPrice: number;
+    baseExplorerUrl?: string;
   }) {
     super(signer.toTopBytes());
     this.signer = signer;
     this.proxy = proxy;
     this.chainId = chainId;
     this.gasPrice = gasPrice;
+    this.baseExplorerUrl = baseExplorerUrl;
+    this.explorerUrl = getAccountExplorerUrl(
+      this.baseExplorerUrl,
+      this.toString(),
+    );
   }
 
   sign(data: Buffer) {
@@ -162,7 +177,12 @@ export class Wallet extends Signer {
     });
     await tx.sign(this);
     const txHash = await this.proxy.sendTx(tx);
-    const resTx = await this.proxy.getCompletedTx(txHash);
+    const { hash, ..._resTx } = await this.proxy.getCompletedTx(txHash);
+    // Destructuring gives an invalid type: https://github.com/microsoft/TypeScript/issues/56456
+    const resTx = Object.assign(Object.assign({}, _resTx), {
+      explorerUrl: getTxExplorerUrl(this.baseExplorerUrl, hash),
+      hash,
+    });
     if (resTx.status !== "success") {
       throw new TxError("errorStatus", resTx.status, resTx);
     }
@@ -194,7 +214,11 @@ export class Wallet extends Signer {
     const address = txResult.tx.logs.events.find(
       (e: any) => e.identifier === "SCDeploy",
     )!.address;
-    const contract = new Contract({ address, proxy: this.proxy });
+    const contract = new Contract({
+      address,
+      proxy: this.proxy,
+      baseExplorerUrl: this.explorerUrl,
+    });
     const returnData = getTxReturnData(txResult.tx);
     return { ...txResult, address, contract, returnData };
   }
@@ -239,16 +263,25 @@ export class Wallet extends Signer {
 
 export class Contract extends AddressEncodable {
   proxy: Proxy;
+  explorerUrl: string;
+  baseExplorerUrl: string;
 
   constructor({
     address,
     proxy,
+    baseExplorerUrl = "",
   }: {
     address: string | Uint8Array;
     proxy: Proxy;
+    baseExplorerUrl?: string;
   }) {
     super(address);
     this.proxy = proxy;
+    this.baseExplorerUrl = baseExplorerUrl;
+    this.explorerUrl = getAccountExplorerUrl(
+      this.baseExplorerUrl,
+      this.toString(),
+    );
   }
 
   getAccountNonce() {
@@ -276,34 +309,34 @@ class InteractionError extends Error {
   interaction: string;
   code: number | string;
   msg: string;
-  response: any;
+  result: any;
 
   constructor(
     interaction: string,
     code: number | string,
     message: string,
-    response: any,
+    result: any,
   ) {
     super(
-      `${interaction} failed: ${code} - ${message} - Response:\n` +
-        JSON.stringify(response, null, 2),
+      `${interaction} failed: ${code} - ${message} - Result:\n` +
+        JSON.stringify(result, null, 2),
     );
     this.interaction = interaction;
     this.code = code;
     this.msg = message;
-    this.response = response;
+    this.result = result;
   }
 }
 
 class TxError extends InteractionError {
-  constructor(code: number | string, message: string, response: any) {
-    super("Transaction", code, message, response);
+  constructor(code: number | string, message: string, result: any) {
+    super("Transaction", code, message, result);
   }
 }
 
 class QueryError extends InteractionError {
-  constructor(code: number | string, message: string, response: any) {
-    super("Query", code, message, response);
+  constructor(code: number | string, message: string, result: any) {
+    super("Query", code, message, result);
   }
 }
 
@@ -369,6 +402,12 @@ export class InteractionPromise<T> implements PromiseLike<T> {
   }
 }
 
+const getAccountExplorerUrl = (baseExplorerUrl: string, address: string) =>
+  `${baseExplorerUrl}/accounts/${address}`;
+
+const getTxExplorerUrl = (baseExplorerUrl: string, txHash: string) =>
+  `${baseExplorerUrl}/transactions/${txHash}`;
+
 const getTxReturnData = (tx: any): string[] => {
   const writeLogEvent = tx?.logs?.events.find(
     (e: any) => e.identifier === "writeLog",
@@ -427,15 +466,13 @@ type QueryResult = {
 };
 
 export type TxResult = {
-  tx: any;
+  tx: Prettify<{ hash: string; explorerUrl: string } & Record<string, any>>;
 };
 
-export type DeployContractTxResult = TxResult & {
-  address: string;
-  contract: Contract;
-  returnData: string[];
-};
+export type DeployContractTxResult = Prettify<
+  TxResult & { address: string; contract: Contract; returnData: string[] }
+>;
 
-export type CallContractTxResult = TxResult & {
-  returnData: string[];
-};
+export type CallContractTxResult = Prettify<
+  TxResult & { returnData: string[] }
+>;
