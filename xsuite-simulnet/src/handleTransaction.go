@@ -233,6 +233,7 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 	ae.txResps[txHash] = map[string]interface{}{
 		"data": map[string]interface{}{
 			"transaction": map[string]interface{}{
+				"hash": txHash,
 				"status": "success",
 				"logs": logs,
 				"smartContractResults": smartContractResults,

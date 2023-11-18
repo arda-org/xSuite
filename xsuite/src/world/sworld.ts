@@ -19,24 +19,42 @@ export class SWorld extends World {
   proxy: SProxy;
   sysAcc: SContract;
 
-  constructor({ proxy, gasPrice }: { proxy: SProxy; gasPrice: number }) {
-    super({ proxy, chainId: "S", gasPrice });
+  constructor({
+    proxy,
+    gasPrice,
+    explorerUrl,
+  }: {
+    proxy: SProxy;
+    gasPrice: number;
+    explorerUrl?: string;
+  }) {
+    super({ proxy, chainId: "S", gasPrice, explorerUrl });
     this.proxy = proxy;
-    this.sysAcc = new SContract({
-      address: new Uint8Array(32).fill(255),
-      proxy,
-    });
+    this.sysAcc = this.newContract(new Uint8Array(32).fill(255));
   }
 
-  static new({ proxyUrl, gasPrice }: { proxyUrl: string; gasPrice?: number }) {
-    return new SWorld({ proxy: new SProxy(proxyUrl), gasPrice: gasPrice ?? 0 });
+  static new({
+    proxyUrl,
+    gasPrice,
+    explorerUrl,
+  }: {
+    proxyUrl: string;
+    gasPrice?: number;
+    explorerUrl?: string;
+  }) {
+    return new SWorld({
+      proxy: new SProxy(proxyUrl),
+      gasPrice: gasPrice ?? 0,
+      explorerUrl,
+    });
   }
 
   static async start({
     gasPrice,
-  }: { gasPrice?: number } = {}): Promise<SWorld> {
-    const url = await startSimulnet();
-    return SWorld.new({ proxyUrl: url, gasPrice });
+    explorerUrl,
+  }: { gasPrice?: number; explorerUrl?: string } = {}): Promise<SWorld> {
+    const proxyUrl = await startSimulnet();
+    return SWorld.new({ proxyUrl, gasPrice, explorerUrl });
   }
 
   newWallet(signer: Signer): SWallet {
@@ -45,28 +63,28 @@ export class SWorld extends World {
       proxy: this.proxy,
       chainId: this.chainId,
       gasPrice: this.gasPrice,
+      baseExplorerUrl: this.explorerUrl,
     });
   }
 
   newContract(address: string | Uint8Array): SContract {
-    return new SContract({ address, proxy: this.proxy });
+    return new SContract({
+      address,
+      proxy: this.proxy,
+      baseExplorerUrl: this.explorerUrl,
+    });
   }
 
   async createWallet(account: SWorldCreateWalletAccount = {}) {
     walletCounter += 1;
     const address = numberToBytesAddress(walletCounter, false);
-    const wallet = new SWallet({
-      signer: new DummySigner(address),
-      proxy: this.proxy,
-      chainId: this.chainId,
-      gasPrice: this.gasPrice,
-    });
+    const wallet = this.newWallet(new DummySigner(address));
     await wallet.setAccount(account);
     return wallet;
   }
 
   createContract(account: SWorldCreateContractAccount = {}) {
-    return createContract(this.proxy, account);
+    return createContract(this.proxy, account, this.explorerUrl);
   }
 
   setCurrentBlockInfo(block: Block) {
@@ -86,13 +104,15 @@ export class SWallet extends Wallet {
     proxy,
     chainId,
     gasPrice,
+    baseExplorerUrl,
   }: {
     signer: Signer;
     proxy: SProxy;
     chainId: string;
     gasPrice: number;
+    baseExplorerUrl?: string;
   }) {
-    super({ signer, proxy, chainId, gasPrice });
+    super({ signer, proxy, chainId, gasPrice, baseExplorerUrl });
     this.proxy = proxy;
   }
 
@@ -101,7 +121,11 @@ export class SWallet extends Wallet {
   }
 
   createContract(account: SWalletCreateContractAccount = {}) {
-    return createContract(this.proxy, { ...account, owner: this });
+    return createContract(
+      this.proxy,
+      { ...account, owner: this },
+      this.baseExplorerUrl,
+    );
   }
 
   deployContract(params: WorldDeployContractParams) {
@@ -110,6 +134,7 @@ export class SWallet extends Wallet {
       contract: new SContract({
         address: data.address,
         proxy: this.proxy,
+        baseExplorerUrl: this.baseExplorerUrl,
       }),
     }));
   }
@@ -121,11 +146,13 @@ export class SContract extends Contract {
   constructor({
     address,
     proxy,
+    baseExplorerUrl,
   }: {
     address: string | Uint8Array;
     proxy: SProxy;
+    baseExplorerUrl?: string;
   }) {
-    super({ address, proxy });
+    super({ address, proxy, baseExplorerUrl });
     this.proxy = proxy;
   }
 
@@ -148,10 +175,11 @@ const setAccount = (proxy: SProxy, account: Account) => {
 const createContract = async (
   proxy: SProxy,
   account: Omit<Account, "address"> = {},
+  baseExplorerUrl?: string,
 ) => {
   contractCounter += 1;
   const address = numberToBytesAddress(contractCounter, true);
-  const contract = new SContract({ address, proxy });
+  const contract = new SContract({ address, proxy, baseExplorerUrl });
   await contract.setAccount(account);
   return contract;
 };
