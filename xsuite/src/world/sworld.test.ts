@@ -271,30 +271,7 @@ test("SWallet.deployContract & upgradeContract", async () => {
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
-    code: worldCode,
-    hasKvs: [[e.Str("n"), e.U64(1)]],
-  });
-  await wallet.upgradeContract({
-    callee: contract,
-    code: worldCode,
-    codeMetadata: "0000",
-    codeArgs: [e.U64(2)],
-    gasLimit: 10_000_000,
-  });
-  assertAccount(await contract.getAccountWithKvs(), {
-    code: worldCode,
-    hasKvs: [[e.Str("n"), e.U64(2)]],
-  });
-});
-
-test("SWallet.deployContract & upgradeContract - file:", async () => {
-  const { contract } = await wallet.deployContract({
-    code: worldCode,
-    codeMetadata: ["readable", "payable", "payableBySc", "upgradeable"],
-    codeArgs: [e.U64(1)],
-    gasLimit: 10_000_000,
-  });
+  expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
   assertAccount(await contract.getAccountWithKvs(), {
     code: worldCode,
     hasKvs: [[e.Str("n"), e.U64(1)]],

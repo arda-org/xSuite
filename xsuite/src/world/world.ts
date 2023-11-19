@@ -252,7 +252,7 @@ export class Wallet extends Signer {
     const contract = new Contract({
       address,
       proxy: this.proxy,
-      baseExplorerUrl: this.explorerUrl,
+      baseExplorerUrl: this.baseExplorerUrl,
     });
     const returnData = getTxReturnData(txResult.tx);
     return { ...txResult, address, contract, returnData };
