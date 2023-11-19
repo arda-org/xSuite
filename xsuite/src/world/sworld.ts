@@ -10,6 +10,7 @@ import {
   Wallet,
   expandCode,
   WorldDeployContractParams,
+  WorldNewOptions,
 } from "./world";
 
 let walletCounter = 0;
@@ -28,25 +29,32 @@ export class SWorld extends World {
     gasPrice: number;
     explorerUrl?: string;
   }) {
-    super({ proxy, chainId: "S", gasPrice, explorerUrl });
+    super({ chainId: "S", proxy, gasPrice, explorerUrl });
     this.proxy = proxy;
     this.sysAcc = this.newContract(new Uint8Array(32).fill(255));
   }
 
-  static new({
-    proxyUrl,
-    gasPrice,
-    explorerUrl,
-  }: {
-    proxyUrl: string;
-    gasPrice?: number;
-    explorerUrl?: string;
-  }) {
+  static new(options: SWorldNewOptions) {
+    if (options.chainId !== undefined) {
+      throw new Error("chainId is not undefined.");
+    }
     return new SWorld({
-      proxy: new SProxy(proxyUrl),
-      gasPrice: gasPrice ?? 0,
-      explorerUrl,
+      proxy: new SProxy(options.proxyUrl),
+      gasPrice: options.gasPrice ?? 0,
+      explorerUrl: options.explorerUrl,
     });
+  }
+
+  static newDevnet(): World {
+    throw new Error("newDevnet is not implemented.");
+  }
+
+  static newTestnet(): World {
+    throw new Error("newTestnet is not implemented.");
+  }
+
+  static newMainnet(): World {
+    throw new Error("newMainnet is not implemented.");
   }
 
   static async start({
@@ -183,6 +191,15 @@ const createContract = async (
   await contract.setAccount(account);
   return contract;
 };
+
+type SWorldNewOptions =
+  | {
+      chainId?: undefined;
+      proxyUrl: string;
+      gasPrice?: number;
+      explorerUrl?: string;
+    }
+  | WorldNewOptions;
 
 type SWorldCreateWalletAccount = Prettify<Omit<Account, "address">>;
 

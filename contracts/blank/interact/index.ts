@@ -4,9 +4,6 @@ import data from "./data.json";
 
 const world = World.new({
   chainId: envChain.id(),
-  proxyUrl: envChain.publicProxyUrl(),
-  gasPrice: 1_000_000_000,
-  explorerUrl: envChain.explorerUrl(),
 });
 
 const loadWallet = () => world.newWalletFromFile("wallet.json");

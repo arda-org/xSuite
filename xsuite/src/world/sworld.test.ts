@@ -93,6 +93,24 @@ test("SWorld.proxy.getAccountWithKvs on empty bytes address", async () => {
   );
 });
 
+test("SWorld.new with defined chainId", () => {
+  expect(() => SWorld.new({ chainId: "D" })).toThrow(
+    "chainId is not undefined.",
+  );
+});
+
+test("SWorld.newDevnet", () => {
+  expect(() => SWorld.newDevnet()).toThrow("newDevnet is not implemented.");
+});
+
+test("SWorld.newTestnet", () => {
+  expect(() => SWorld.newTestnet()).toThrow("newTestnet is not implemented.");
+});
+
+test("SWorld.newMainnet", () => {
+  expect(() => SWorld.newMainnet()).toThrow("newMainnet is not implemented.");
+});
+
 test("SWorld.createWallet", async () => {
   const wallet = await world.createWallet();
   expect(wallet.explorerUrl).toEqual(`${explorerUrl}/accounts/${wallet}`);
