@@ -347,7 +347,7 @@ test("SWallet.callContract failure", async () => {
     }),
   ).rejects.toMatchObject({
     message: expect.stringMatching(
-      /^Transaction failed: 1 - invalid function \(not found\) - Result:\n{/,
+      /^Transaction failed: 1 - invalid function \(not found\) - Result:\n\{\n {2}"explorerUrl": "(.*)",\n {2}"hash": "(.*)",/,
     ),
     stack: expect.stringMatching(/src\/world\/sworld\.test\.ts:[0-9]+:3\)$/),
   });

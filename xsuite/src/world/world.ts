@@ -213,11 +213,9 @@ export class Wallet extends Signer {
     await tx.sign(this);
     const txHash = await this.proxy.sendTx(tx);
     const { hash, ..._resTx } = await this.proxy.getCompletedTx(txHash);
+    const explorerUrl = getTxExplorerUrl(this.baseExplorerUrl, hash);
     // Destructuring gives an invalid type: https://github.com/microsoft/TypeScript/issues/56456
-    const resTx = Object.assign(Object.assign({}, _resTx), {
-      explorerUrl: getTxExplorerUrl(this.baseExplorerUrl, hash),
-      hash,
-    });
+    const resTx = Object.assign({ explorerUrl, hash }, _resTx);
     if (resTx.status !== "success") {
       throw new TxError("errorStatus", resTx.status, resTx);
     }
