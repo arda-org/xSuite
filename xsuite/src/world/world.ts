@@ -2,6 +2,20 @@ import { AddressEncodable } from "../data/AddressEncodable";
 import { b64ToHexString } from "../data/utils";
 import { Optional, Prettify } from "../helpers";
 import {
+  devnetMinGasPrice,
+  devnetExplorerUrl,
+  devnetPublicProxyUrl,
+  mainnetMinGasPrice,
+  mainnetChainId,
+  mainnetExplorerUrl,
+  mainnetPublicProxyUrl,
+  testnetMinGasPrice,
+  testnetExplorerUrl,
+  testnetPublicProxyUrl,
+  devnetChainId,
+  testnetChainId,
+} from "../interact/envChain";
+import {
   CallContractTxParams,
   DeployContractTxParams,
   Query,
@@ -37,23 +51,44 @@ export class World {
     this.explorerUrl = explorerUrl;
   }
 
-  static new({
-    chainId,
-    proxyUrl,
-    gasPrice,
-    explorerUrl,
-  }: {
-    chainId: string;
-    proxyUrl: string;
-    gasPrice: number;
-    explorerUrl?: string;
-  }) {
+  static new({ chainId, proxyUrl, gasPrice, explorerUrl }: WorldNewOptions) {
+    if (chainId === "D") {
+      proxyUrl ??= devnetPublicProxyUrl;
+      gasPrice ??= devnetMinGasPrice;
+      explorerUrl ??= devnetExplorerUrl;
+    } else if (chainId === "T") {
+      proxyUrl ??= testnetPublicProxyUrl;
+      gasPrice ??= testnetMinGasPrice;
+      explorerUrl ??= testnetExplorerUrl;
+    } else if (chainId === "1") {
+      proxyUrl ??= mainnetPublicProxyUrl;
+      gasPrice ??= mainnetMinGasPrice;
+      explorerUrl ??= mainnetExplorerUrl;
+    }
+    if (proxyUrl === undefined) {
+      throw new Error("proxyUrl is not defined.");
+    }
+    if (gasPrice === undefined) {
+      throw new Error("gasPrice is not defined.");
+    }
     return new World({
       chainId,
       proxy: new Proxy(proxyUrl),
       gasPrice,
       explorerUrl,
     });
+  }
+
+  static newDevnet(options: WorldNewRealnetOptions = {}) {
+    return World.new({ chainId: devnetChainId, ...options });
+  }
+
+  static newTestnet(options: WorldNewRealnetOptions = {}) {
+    return World.new({ chainId: testnetChainId, ...options });
+  }
+
+  static newMainnet(options: WorldNewRealnetOptions = {}) {
+    return World.new({ chainId: mainnetChainId, ...options });
   }
 
   newWallet(signer: Signer) {
@@ -429,6 +464,24 @@ export const expandCode = (code: string) => {
     code = readFileHex(code.slice(5));
   }
   return code;
+};
+
+export type WorldNewOptions = Prettify<
+  | ({
+      chainId: "D" | "T" | "1";
+    } & WorldNewRealnetOptions)
+  | {
+      chainId: string;
+      proxyUrl: string;
+      gasPrice: number;
+      explorerUrl?: string;
+    }
+>;
+
+type WorldNewRealnetOptions = {
+  proxyUrl?: string;
+  gasPrice?: number;
+  explorerUrl?: string;
 };
 
 type WorldExecuteTxParams = Prettify<

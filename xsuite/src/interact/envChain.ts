@@ -1,10 +1,14 @@
-export const devnetId = "D";
-export const testnetId = "T";
-export const mainnetId = "1";
+export const devnetChainId = "D";
+export const testnetChainId = "T";
+export const mainnetChainId = "1";
 
 export const devnetPublicProxyUrl = "https://devnet-gateway.multiversx.com";
 export const testnetPublicProxyUrl = "https://testnet-gateway.multiversx.com";
 export const mainnetPublicProxyUrl = "https://gateway.multiversx.com";
+
+export const devnetMinGasPrice = 1_000_000_000;
+export const testnetMinGasPrice = 1_000_000_000;
+export const mainnetMinGasPrice = 1_000_000_000;
 
 export const devnetExplorerUrl = "https://devnet-explorer.multiversx.com";
 export const testnetExplorerUrl = "https://testnet-explorer.multiversx.com";
@@ -30,22 +34,28 @@ export const envChain = {
   },
   id: () =>
     envChain.select({
-      devnet: devnetId,
-      testnet: testnetId,
-      mainnet: mainnetId,
-    }),
+      devnet: devnetChainId,
+      testnet: testnetChainId,
+      mainnet: mainnetChainId,
+    } as const),
   publicProxyUrl: () =>
     envChain.select({
       devnet: devnetPublicProxyUrl,
       testnet: testnetPublicProxyUrl,
       mainnet: mainnetPublicProxyUrl,
-    }),
+    } as const),
+  minGasPrice: () =>
+    envChain.select({
+      devnet: devnetMinGasPrice,
+      testnet: testnetMinGasPrice,
+      mainnet: mainnetMinGasPrice,
+    } as const),
   explorerUrl: () =>
     envChain.select({
       devnet: devnetExplorerUrl,
       testnet: testnetExplorerUrl,
       mainnet: mainnetExplorerUrl,
-    }),
+    } as const),
 };
 
 const isChainName = (chain: any): chain is ChainName => {
