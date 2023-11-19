@@ -1,6 +1,6 @@
 import { e } from "../data";
 import { Encodable } from "../data/Encodable";
-import { Address, addressToHexString } from "../data/address";
+import { Address, addressToAddressEncodable } from "../data/address";
 import { Hex, hexToHexString } from "../data/hex";
 import { RawKvs } from "../data/kvs";
 import { b64ToHexString } from "../data/utils";
@@ -121,18 +121,8 @@ export class Proxy {
   }
 
   static async query(baseUrl: string, query: BroadQuery) {
-    const {
-      returnData,
-      ...data
-    }: {
-      returnData: string[];
-      returnCode: string;
-      returnMessage: string;
-    } = unrawRes(await Proxy.queryRaw(baseUrl, query)).data;
-    return {
-      returnData: returnData.map(b64ToHexString),
-      ...data,
-    };
+    const res = unrawRes(await Proxy.queryRaw(baseUrl, query));
+    return res.data as Record<string, any>;
   }
 
   query(query: BroadQuery) {
@@ -140,7 +130,9 @@ export class Proxy {
   }
 
   static getAccountRaw(baseUrl: string, address: Address) {
-    return Proxy.fetchRaw(`${baseUrl}/address/${address}`);
+    return Proxy.fetchRaw(
+      `${baseUrl}/address/${addressToAddressEncodable(address)}`,
+    );
   }
 
   getAccountRaw(address: Address) {
@@ -171,7 +163,9 @@ export class Proxy {
   }
 
   static getAccountNonceRaw(baseUrl: string, address: Address) {
-    return Proxy.fetchRaw(`${baseUrl}/address/${address}/nonce`);
+    return Proxy.fetchRaw(
+      `${baseUrl}/address/${addressToAddressEncodable(address)}/nonce`,
+    );
   }
 
   getAccountNonceRaw(address: Address) {
@@ -188,7 +182,9 @@ export class Proxy {
   }
 
   static getAccountBalanceRaw(baseUrl: string, address: Address) {
-    return Proxy.fetchRaw(`${baseUrl}/address/${address}/balance`);
+    return Proxy.fetchRaw(
+      `${baseUrl}/address/${addressToAddressEncodable(address)}/balance`,
+    );
   }
 
   getAccountBalanceRaw(address: Address) {
@@ -205,7 +201,9 @@ export class Proxy {
   }
 
   static getAccountKvsRaw(baseUrl: string, address: Address) {
-    return Proxy.fetchRaw(`${baseUrl}/address/${address}/keys`);
+    return Proxy.fetchRaw(
+      `${baseUrl}/address/${addressToAddressEncodable(address)}/keys`,
+    );
   }
 
   getAccountKvsRaw(address: Address) {
@@ -243,7 +241,7 @@ export class Tx {
       value: (params.value ?? 0n).toString(),
       receiver: params.receiver.toString(),
       sender: params.sender.toString(),
-      gasPrice: params.gasPrice ?? 0,
+      gasPrice: params.gasPrice,
       gasLimit: params.gasLimit,
       data: params.data === undefined ? undefined : btoa(params.data),
       chainID: params.chainId,
@@ -304,7 +302,7 @@ export class Tx {
       receiver = sender;
       const dataParts: string[] = [];
       dataParts.push("MultiESDTNFTTransfer");
-      dataParts.push(addressToHexString(_receiver));
+      dataParts.push(addressToAddressEncodable(_receiver).toTopHex());
       dataParts.push(e.U(esdts.length).toTopHex());
       for (const esdt of esdts) {
         dataParts.push(e.Str(esdt.id).toTopHex());
@@ -340,7 +338,7 @@ export class Tx {
     if (esdts?.length) {
       receiver = sender;
       dataParts.push("MultiESDTNFTTransfer");
-      dataParts.push(addressToHexString(callee));
+      dataParts.push(addressToAddressEncodable(callee).toTopHex());
       dataParts.push(e.U(esdts.length).toTopHex());
       for (const esdt of esdts) {
         dataParts.push(e.Str(esdt.id).toTopHex());
@@ -471,7 +469,7 @@ export type TxParams = {
   value?: number | bigint;
   receiver: Address;
   sender: Address;
-  gasPrice?: number;
+  gasPrice: number;
   gasLimit: number;
   data?: string;
   chainId: string;
@@ -482,7 +480,7 @@ export type DeployContractTxParams = {
   nonce: number;
   value?: number | bigint;
   sender: Address;
-  gasPrice?: number;
+  gasPrice: number;
   gasLimit: number;
   code: string;
   codeMetadata: CodeMetadata;
@@ -500,7 +498,7 @@ export type UpgradeContractTxParams = {
   value?: number | bigint;
   callee: Address;
   sender: Address;
-  gasPrice?: number;
+  gasPrice: number;
   gasLimit: number;
   code: string;
   codeMetadata: CodeMetadata;
@@ -514,7 +512,7 @@ export type TransferTxParams = {
   value?: number | bigint;
   receiver: Address;
   sender: Address;
-  gasPrice?: number;
+  gasPrice: number;
   gasLimit: number;
   esdts?: { id: string; nonce?: number; amount: number | bigint }[];
   chainId: string;
@@ -526,7 +524,7 @@ export type CallContractTxParams = {
   value?: number | bigint;
   callee: Address;
   sender: Address;
-  gasPrice?: number;
+  gasPrice: number;
   gasLimit: number;
   funcName: string;
   funcArgs?: Hex[];

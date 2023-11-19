@@ -33,14 +33,14 @@ const action = async ({
   install?: boolean;
   git?: boolean;
 }) => {
-  dir = path.resolve(dir);
+  const absDir = path.resolve(dir);
   if (fs.existsSync(dir)) {
-    logError(`Directory already exists at "${dir}".`);
+    logError(`Directory already exists at "${absDir}".`);
     return;
   } else {
     fs.mkdirSync(dir, { recursive: true });
   }
-  logTitle(`Downloading contract ${chalk.magenta(starter)} in "${dir}"...`);
+  logTitle(`Downloading contract ${chalk.magenta(starter)} in "${absDir}"...`);
   await downloadAndExtractContract(starter, dir);
   if (install) {
     log();
@@ -53,7 +53,9 @@ const action = async ({
   }
   log();
   log(
-    chalk.green(`Successfully created ${chalk.magenta(starter)} in "${dir}".`),
+    chalk.green(
+      `Successfully created ${chalk.magenta(starter)} in "${absDir}".`,
+    ),
   );
   log();
   log("Inside that directory, you can run several commands:");

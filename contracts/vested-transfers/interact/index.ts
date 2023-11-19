@@ -3,9 +3,7 @@ import { envChain, World } from "xsuite";
 import data from "./data.json";
 
 const world = World.new({
-  proxyUrl: envChain.publicProxyUrl(),
   chainId: envChain.id(),
-  gasPrice: 1000000000,
 });
 
 const loadWallet = () => world.newWalletFromFile("wallet.json");
@@ -19,7 +17,8 @@ program.command("deploy").action(async () => {
     codeMetadata: ["upgradeable"],
     gasLimit: 100_000_000,
   });
-  console.log("Result:", result);
+  console.log("Transaction:", result.tx.explorerUrl);
+  console.log("Contract:", result.contract.explorerUrl);
 });
 
 program.command("upgrade").action(async () => {
@@ -30,7 +29,7 @@ program.command("upgrade").action(async () => {
     codeMetadata: ["upgradeable"],
     gasLimit: 100_000_000,
   });
-  console.log("Result:", result);
+  console.log("Transaction:", result.tx.explorerUrl);
 });
 
 program.command("ClaimDeveloperRewards").action(async () => {
@@ -40,7 +39,7 @@ program.command("ClaimDeveloperRewards").action(async () => {
     funcName: "ClaimDeveloperRewards",
     gasLimit: 10_000_000,
   });
-  console.log("Result:", result);
+  console.log("Transaction:", result.tx.explorerUrl);
 });
 
 program.parse(process.argv);

@@ -46,9 +46,5 @@ const action = async ({
   log(chalk.bold.blue("Private key:"));
   log(keystore.mnemonicWords.map((w, i) => `  ${i + 1}. ${w}`).join("\n"));
   log();
-  log(
-    chalk.bold.yellow(
-      `Don't forget to backup the private key in a secure place.`,
-    ),
-  );
+  log(chalk.bold.yellow(`Please backup the private key in a secure place.`));
 };

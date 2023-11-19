@@ -11,7 +11,7 @@ import { logSuccess } from "./helpers";
 export const registerRequestXegldCmd = (cmd: Command) => {
   cmd
     .command("request-xegld")
-    .description("Request 30 xEGLD (once per day).")
+    .description("Request xEGLD (once per day).")
     .requiredOption("--wallet <WALLET>", "Wallet path")
     .option("--password <PASSWORD>", "Wallet password")
     .action(action);
@@ -32,7 +32,7 @@ const action = async ({
     signer = KeystoreSigner.fromFile_unsafe(walletPath, password);
   }
   const address = signer.toString();
-  log(`Claiming 30 xEGLD for address "${address}"...`);
+  log(`Claiming xEGLD for address "${address}"...`);
 
   const client = new NativeAuthClient({
     origin: "https://devnet-wallet.multiversx.com",
@@ -57,13 +57,15 @@ const action = async ({
 
   const initialBalance = await devnetProxy.getAccountBalance(address);
   let balance = initialBalance;
-  while (balance - initialBalance < 30n * 10n ** 18n) {
+  while (balance <= initialBalance) {
     balance = await devnetProxy.getAccountBalance(address);
     await new Promise((r) => setTimeout(r, 1000));
   }
 
   log();
-  logSuccess("Wallet well received 30 xEGLD.");
+  logSuccess(
+    `Wallet well received ${(balance - initialBalance) / 10n ** 18n} xEGLD.`,
+  );
 };
 
 const devnetProxy = new Proxy("https://devnet-gateway.multiversx.com");

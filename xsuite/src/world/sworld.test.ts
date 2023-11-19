@@ -11,9 +11,23 @@ let otherWallet: SWallet;
 let contract: SContract;
 const fftId = "FFT-abcdef";
 const worldCode = "file:contracts/world/output/world.wasm";
+const zeroBechAddress =
+  "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
+const zeroHexAddress =
+  "0000000000000000000000000000000000000000000000000000000000000000";
+const zeroBytesAddress = new Uint8Array(32);
+const emptyAccount = {
+  nonce: 0,
+  balance: 0,
+  code: null,
+  codeMetadata: null,
+  owner: null,
+  kvs: {},
+};
+const explorerUrl = "http://explorer.local";
 
 beforeEach(async () => {
-  world = await SWorld.start();
+  world = await SWorld.start({ explorerUrl });
   wallet = await world.createWallet({
     balance: 10n ** 18n,
     kvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
@@ -34,8 +48,72 @@ afterEach(async () => {
   await world.terminate();
 });
 
+test("SWorld.proxy.getAccountNonce on empty bech address", async () => {
+  expect(await world.proxy.getAccountNonce(zeroBechAddress)).toEqual(0);
+});
+
+test("SWorld.proxy.getAccountNonce on empty hex address", async () => {
+  expect(await world.proxy.getAccountNonce(zeroHexAddress)).toEqual(0);
+});
+
+test("SWorld.proxy.getAccountNonce on empty bytes address", async () => {
+  expect(await world.proxy.getAccountNonce(zeroBytesAddress)).toEqual(0);
+});
+
+test("SWorld.proxy.getAccountBalance on empty bech address", async () => {
+  expect(await world.proxy.getAccountBalance(zeroBechAddress)).toEqual(0n);
+});
+
+test("SWorld.proxy.getAccountBalance on empty hex address", async () => {
+  expect(await world.proxy.getAccountBalance(zeroHexAddress)).toEqual(0n);
+});
+
+test("SWorld.proxy.getAccountBalance on empty bytes address", async () => {
+  expect(await world.proxy.getAccountBalance(zeroBytesAddress)).toEqual(0n);
+});
+
+test("SWorld.proxy.getAccountWithKvs on empty bech address", async () => {
+  assertAccount(
+    await world.proxy.getAccountWithKvs(zeroBechAddress),
+    emptyAccount,
+  );
+});
+
+test("SWorld.proxy.getAccountWithKvs on empty hex address", async () => {
+  assertAccount(
+    await world.proxy.getAccountWithKvs(zeroHexAddress),
+    emptyAccount,
+  );
+});
+
+test("SWorld.proxy.getAccountWithKvs on empty bytes address", async () => {
+  assertAccount(
+    await world.proxy.getAccountWithKvs(zeroBytesAddress),
+    emptyAccount,
+  );
+});
+
+test("SWorld.new with defined chainId", () => {
+  expect(() => SWorld.new({ chainId: "D" })).toThrow(
+    "chainId is not undefined.",
+  );
+});
+
+test("SWorld.newDevnet", () => {
+  expect(() => SWorld.newDevnet()).toThrow("newDevnet is not implemented.");
+});
+
+test("SWorld.newTestnet", () => {
+  expect(() => SWorld.newTestnet()).toThrow("newTestnet is not implemented.");
+});
+
+test("SWorld.newMainnet", () => {
+  expect(() => SWorld.newMainnet()).toThrow("newMainnet is not implemented.");
+});
+
 test("SWorld.createWallet", async () => {
   const wallet = await world.createWallet();
+  expect(wallet.explorerUrl).toEqual(`${explorerUrl}/accounts/${wallet}`);
   assertAccount(await wallet.getAccountWithKvs(), {});
 });
 
@@ -46,6 +124,7 @@ test("SWorld.createWallet - is wallet address", async () => {
 
 test("SWorld.createContract", async () => {
   const contract = await world.createContract();
+  expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
   assertAccount(await contract.getAccountWithKvs(), { code: "00" });
 });
 
@@ -149,11 +228,13 @@ test("SContract.getAccountWithKvs + SContract.createContract", async () => {
 });
 
 test("SWallet.executeTx", async () => {
-  await wallet.executeTx({
+  const { tx } = await wallet.executeTx({
     receiver: otherWallet,
     value: 10n ** 17n,
     gasLimit: 10_000_000,
   });
+  expect(tx.hash).toBeTruthy();
+  expect(tx.explorerUrl).toEqual(`${explorerUrl}/transactions/${tx.hash}`);
   assertAccount(await wallet.getAccountWithKvs(), {
     balance: 9n * 10n ** 17n,
   });
@@ -280,6 +361,31 @@ test("SWallet.callContract with return", async () => {
   assertHexList(txResult.returnData, ["01"]);
 });
 
+test("SWallet.callContract failure", async () => {
+  await expect(
+    wallet.callContract({
+      callee: contract,
+      funcName: "non_existent_function",
+      gasLimit: 10_000_000,
+    }),
+  ).rejects.toMatchObject({
+    message: expect.stringMatching(
+      /^Transaction failed: 1 - invalid function \(not found\) - Result:\n{/,
+    ),
+    stack: expect.stringMatching(/src\/world\/sworld\.test\.ts:[0-9]+:3\)$/),
+  });
+});
+
+test("SWallet.query.assertFail - Correct parameters", async () => {
+  await world
+    .query({
+      callee: contract,
+      funcName: "require_positive",
+      funcArgs: [e.U64(0)],
+    })
+    .assertFail({ code: 4, message: "Amount is not positive." });
+});
+
 test("SWallet.callContract.assertFail - Correct parameters", async () => {
   await wallet
     .callContract({
@@ -331,5 +437,5 @@ test("SWallet.callContract.assertFail - Transaction not failing", async () => {
         gasLimit: 10_000_000,
       })
       .assertFail(),
-  ).rejects.toThrow("Transaction has not failed.");
+  ).rejects.toThrow("No failure.");
 });

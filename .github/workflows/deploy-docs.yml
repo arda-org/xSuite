@@ -35,7 +35,7 @@ jobs:
           node-version: 18
           pnpm-version: 8
 
-      - name: Buid xsuite
+      - name: Build xsuite
         run: pnpm build-xsuite
 
       - name: Build docs

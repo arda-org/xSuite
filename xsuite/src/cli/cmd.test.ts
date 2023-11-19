@@ -42,9 +42,7 @@ test("new-wallet --wallet wallet.json", async () => {
     chalk.bold.blue("Private key:"),
     ...keystore.mnemonicWords.map((w, i) => `  ${i + 1}. ${w}`),
     "",
-    chalk.bold.yellow(
-      "Don't forget to backup the private key in a secure place.",
-    ),
+    chalk.bold.yellow("Please backup the private key in a secure place."),
     "",
   ]);
 });
@@ -79,9 +77,7 @@ test("new-wallet --wallet wallet.json --password 1234", async () => {
     chalk.bold.blue("Private key:"),
     ...keystore.mnemonicWords.map((w, i) => `  ${i + 1}. ${w}`),
     "",
-    chalk.bold.yellow(
-      "Don't forget to backup the private key in a secure place.",
-    ),
+    chalk.bold.yellow("Please backup the private key in a secure place."),
     "",
   ]);
 });
@@ -102,25 +98,18 @@ test("request-xegld --wallet wallet.json", async () => {
   const walletPath = path.resolve("wallet.json");
   const signer = Keystore.createFile_unsafe(walletPath, "1234").newSigner();
   const address = signer.toString();
-  let numBalanceReqs = 0;
+  let balances: number[] = [];
   const server = setupServer(
-    http.get("https://devnet-api.multiversx.com/blocks/latest", () => {
-      return Response.json({
-        hash: "103b656af4fa9625962c5978e8cf69aca6918eb146a495bcf474f1c6a922be93",
-      });
-    }),
-    http.get("https://devnet-api.multiversx.com/blocks", () => {
-      return Response.json([
-        {
-          hash: "103b656af4fa9625962c5978e8cf69aca6918eb146a495bcf474f1c6a922be93",
-        },
-      ]);
-    }),
+    http.get("https://devnet-api.multiversx.com/blocks/latest", () =>
+      Response.json({ hash: "" }),
+    ),
+    http.get("https://devnet-api.multiversx.com/blocks", () =>
+      Response.json([{ hash: "" }]),
+    ),
     http.get(
       `https://devnet-gateway.multiversx.com/address/${address}/balance`,
       () => {
-        numBalanceReqs += 1;
-        const balance = `${30n * 10n ** 18n * BigInt(numBalanceReqs)}`;
+        const balance = `${BigInt(balances.shift() ?? 0) * 10n ** 18n}`;
         return Response.json({ code: "successful", data: { balance } });
       },
     ),
@@ -128,7 +117,9 @@ test("request-xegld --wallet wallet.json", async () => {
   server.listen();
   stdoutInt.start();
   input.injected.push("1234", "1234");
+  balances = [0, 1];
   await run(`request-xegld --wallet ${walletPath}`);
+  balances = [0, 10];
   await run(`request-xegld --wallet ${walletPath} --password 1234`);
   stdoutInt.stop();
   server.close();
@@ -137,18 +128,18 @@ test("request-xegld --wallet wallet.json", async () => {
     `Loading keystore wallet at "${walletPath}"...`,
     "Enter password: ",
     "",
-    `Claiming 30 xEGLD for address "${address}"...`,
+    `Claiming xEGLD for address "${address}"...`,
     "",
     "Open the URL and request tokens:",
     splittedStdoutData.at(6),
     "",
-    chalk.green("Wallet well received 30 xEGLD."),
-    `Claiming 30 xEGLD for address "${address}"...`,
+    chalk.green("Wallet well received 1 xEGLD."),
+    `Claiming xEGLD for address "${address}"...`,
     "",
     "Open the URL and request tokens:",
     splittedStdoutData.at(12),
     "",
-    chalk.green("Wallet well received 30 xEGLD."),
+    chalk.green("Wallet well received 10 xEGLD."),
     "",
   ]);
 });
@@ -173,10 +164,11 @@ test("new --dir contract && build --locked && build -r && test-rust && test-scen
   await run("new --dir contract");
   stdoutInt.stop();
   expect(fs.readdirSync(process.cwd()).length).toEqual(1);
-  const dirPath = path.resolve("contract");
+  const dir = "contract";
+  const absDir = path.resolve(dir);
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue(
-      `Downloading contract ${chalk.magenta("blank")} in "${dirPath}"...`,
+      `Downloading contract ${chalk.magenta("blank")} in "${absDir}"...`,
     ),
     "",
     chalk.blue("Installing packages..."),
@@ -185,7 +177,7 @@ test("new --dir contract && build --locked && build -r && test-rust && test-scen
     chalk.blue("Initialized a git repository."),
     "",
     chalk.green(
-      `Successfully created ${chalk.magenta("blank")} in "${dirPath}".`,
+      `Successfully created ${chalk.magenta("blank")} in "${absDir}".`,
     ),
     "",
     "Inside that directory, you can run several commands:",
@@ -201,20 +193,20 @@ test("new --dir contract && build --locked && build -r && test-rust && test-scen
     "",
     "We suggest that you begin by typing:",
     "",
-    chalk.cyan(`  cd ${dirPath}`),
+    chalk.cyan(`  cd ${dir}`),
     chalk.cyan("  npm run build"),
     "",
   ]);
 
   const targetDir = path.join(__dirname, "..", "..", "..", "target");
-  process.chdir(dirPath);
+  process.chdir(absDir);
 
   stdoutInt.start();
   await run(`build --locked --target-dir ${targetDir}`);
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Building contract..."),
-    `(1/1) Building "${dirPath}"...`,
+    `(1/1) Building "${absDir}"...`,
     chalk.cyan(
       `$ cargo run --target-dir ${targetDir} build --locked --target-dir ${targetDir}`,
     ),
@@ -226,7 +218,7 @@ test("new --dir contract && build --locked && build -r && test-rust && test-scen
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Building contract..."),
-    `(1/1) Building "${dirPath}"...`,
+    `(1/1) Building "${absDir}"...`,
     chalk.cyan(
       `$ cargo run --target-dir ${targetDir} build --target-dir ${targetDir}`,
     ),
@@ -263,11 +255,12 @@ test(`new --starter vested-transfers --dir contract --no-git --no-install`, asyn
   stdoutInt.stop();
   expect(fs.readdirSync(process.cwd()).length).toEqual(1);
   const contractChalk = chalk.magenta(contract);
-  const dirPath = path.resolve("contract");
+  const dir = "contract";
+  const absDir = path.resolve(dir);
   expect(stdoutInt.data.split("\n")).toEqual([
-    chalk.blue(`Downloading contract ${contractChalk} in "${dirPath}"...`),
+    chalk.blue(`Downloading contract ${contractChalk} in "${absDir}"...`),
     "",
-    chalk.green(`Successfully created ${contractChalk} in "${dirPath}".`),
+    chalk.green(`Successfully created ${contractChalk} in "${absDir}".`),
     "",
     "Inside that directory, you can run several commands:",
     "",
@@ -282,7 +275,7 @@ test(`new --starter vested-transfers --dir contract --no-git --no-install`, asyn
     "",
     "We suggest that you begin by typing:",
     "",
-    chalk.cyan(`  cd ${dirPath}`),
+    chalk.cyan(`  cd ${dir}`),
     chalk.cyan("  npm run build"),
     "",
   ]);
