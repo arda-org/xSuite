@@ -85,8 +85,9 @@ export class Keystore {
   static async fromFile(filePath: string) {
     filePath = path.resolve(filePath);
     log(`Loading keystore wallet at "${filePath}"...`);
+    const keystore = JSON.parse(fs.readFileSync(filePath, "utf8"));
     const password = await input.hidden("Enter password: ");
-    return this.fromFile_unsafe(filePath, password);
+    return new Keystore(keystore, password);
   }
 
   static fromFile_unsafe(filePath: string, password: string) {

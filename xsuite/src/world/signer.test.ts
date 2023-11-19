@@ -34,6 +34,12 @@ test("KeystoreSigner safe", async () => {
   expect(signature.byteLength).toBeGreaterThan(0);
 });
 
+test("KeystoreSigner safe - ENOENT", async () => {
+  expect(KeystoreSigner.fromFile(walletPath)).rejects.toThrow(
+    `ENOENT: no such file or directory, open '${walletPath}'`,
+  );
+});
+
 test("KeystoreSigner unsafe", async () => {
   Keystore.createFile_unsafe(walletPath, "1234");
   const signer = KeystoreSigner.fromFile_unsafe(walletPath, "1234");
