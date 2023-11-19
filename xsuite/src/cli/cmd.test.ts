@@ -25,7 +25,7 @@ afterEach(() => {
 test("new-wallet --wallet wallet.json", async () => {
   const walletPath = path.resolve("wallet.json");
   stdoutInt.start();
-  input.injected.push("1234", "1234");
+  input.inject("1234", "1234");
   await run(`new-wallet --wallet ${walletPath}`);
   const keystore = Keystore.fromFile_unsafe(walletPath, "1234");
   stdoutInt.stop();
@@ -50,7 +50,7 @@ test("new-wallet --wallet wallet.json", async () => {
 test("new-wallet --wallet wallet.json | error: passwords don't match", async () => {
   const walletPath = path.resolve("wallet.json");
   stdoutInt.start();
-  input.injected.push("1234", "1235");
+  input.inject("1234", "1235");
   await run(`new-wallet --wallet ${walletPath}`);
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
@@ -116,7 +116,7 @@ test("request-xegld --wallet wallet.json", async () => {
   );
   server.listen();
   stdoutInt.start();
-  input.injected.push("1234", "1234");
+  input.inject("1234", "1234");
   balances = [0, 1];
   await run(`request-xegld --wallet ${walletPath}`);
   balances = [0, 10];

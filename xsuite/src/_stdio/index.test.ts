@@ -1,9 +1,9 @@
 import { expect, test } from "@jest/globals";
 import { input, stdoutInt } from "./index";
 
-test("inputHidden", async () => {
+test("input.hidden", async () => {
   stdoutInt.start();
-  input.injected.push("test");
+  input.inject("test");
   const result = await input.hidden("Query: ");
   stdoutInt.stop();
   expect(stdoutInt.data).toEqual("Query: \n");
