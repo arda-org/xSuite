@@ -10,10 +10,13 @@ import { UintDecoder } from "./UintDecoder";
 
 export const d = {
   Bytes: (byteLength?: number) => {
-    return new BytesDecoder(byteLength);
+    return d.CstBuffer(byteLength);
   },
   Buffer: () => {
     return new BufferDecoder();
+  },
+  CstBuffer: (byteLength?: number) => {
+    return new BytesDecoder(byteLength);
   },
   Str: () => {
     return postDecode(new BufferDecoder(), (b) => new TextDecoder().decode(b));

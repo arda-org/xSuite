@@ -11,16 +11,19 @@ import { stringToBytes } from "./utils";
 
 export const enc = {
   Bytes: (bytes: string | number[] | Uint8Array) => {
-    return new BytesEncodable(bytes);
-  },
-  CstStr: (string: string) => {
-    return new BytesEncodable(stringToBytes(string));
+    return enc.CstBuffer(bytes);
   },
   Buffer: (bytes: string | number[] | Uint8Array) => {
     return new BufferEncodable(bytes);
   },
+  CstBuffer: (bytes: string | number[] | Uint8Array) => {
+    return new BytesEncodable(bytes);
+  },
   Str: (string: string) => {
     return new BufferEncodable(stringToBytes(string));
+  },
+  CstStr: (string: string) => {
+    return new BytesEncodable(enc.Str(string).toTopBytes());
   },
   Addr: (address: string | Uint8Array) => {
     return new AddressEncodable(address);
@@ -46,6 +49,9 @@ export const enc = {
   U: (uint: number | bigint) => {
     return new UintEncodable(uint);
   },
+  CstU: (uint: number | bigint) => {
+    return new BytesEncodable(enc.U(uint).toTopBytes());
+  },
   I8: (int: number | bigint) => {
     return new IntEncodable(int, 1);
   },
@@ -63,6 +69,9 @@ export const enc = {
   },
   I: (int: number | bigint) => {
     return new IntEncodable(int);
+  },
+  CstI: (int: number | bigint) => {
+    return new BytesEncodable(enc.I(int).toTopBytes());
   },
   Tuple: (...values: Encodable[]) => {
     return new TupleEncodable(values);
