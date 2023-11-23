@@ -80,6 +80,9 @@ type ActualAccount = Partial<
 >;
 
 type ExpectedAccount = Omit<Account, "address"> & {
+  /**
+   * @deprecated `.kvs` should be used instead.
+   */
   allKvs?: Kvs;
   hasKvs?: Kvs;
 };

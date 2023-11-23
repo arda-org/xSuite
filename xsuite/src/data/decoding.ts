@@ -9,6 +9,9 @@ import { DecoderMap, TupleDecoder } from "./TupleDecoder";
 import { UintDecoder } from "./UintDecoder";
 
 export const d = {
+  /**
+   * @deprecated `.CstBuffer` should be used instead.
+   */
   Bytes: (byteLength?: number) => {
     return d.CstBuffer(byteLength);
   },
