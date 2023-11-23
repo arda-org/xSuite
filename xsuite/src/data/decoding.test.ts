@@ -12,6 +12,11 @@ describe("Encoding Decoding Suite", () => {
     expect(decoded).toEqual(new Uint8Array([1, 2, 3]));
   });
 
+  test("d.CstBuffer", () => {
+    const decoded = d.CstBuffer(3).topDecode("414243");
+    expect(decoded).toEqual(new Uint8Array([65, 66, 67]));
+  });
+
   test("d.Str", () => {
     const decoded = d.Str().topDecode("6869");
     expect(decoded).toEqual("hi");

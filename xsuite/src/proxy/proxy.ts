@@ -427,7 +427,7 @@ export const codeMetadataToHexString = (codeMetadata: CodeMetadata): string => {
     if (byteZero > 0 || byteOne > 0) {
       bytes.push(byteZero, byteOne);
     }
-    codeMetadata = e.Bytes(bytes);
+    codeMetadata = e.Buffer(bytes);
   }
   return codeMetadata.toTopHex();
 };

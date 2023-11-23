@@ -12,8 +12,18 @@ describe("Encoding Decoding Suite", () => {
     expect(encoded).toEqual("010203");
   });
 
+  test("e.CstBuffer", () => {
+    const encoded = enc.CstBuffer([65, 66, 67]).toNestHex();
+    expect(encoded).toEqual("414243");
+  });
+
   test("e.Str", () => {
     const encoded = enc.Str("hi").toTopHex();
+    expect(encoded).toEqual("6869");
+  });
+
+  test("e.CstStr", () => {
+    const encoded = enc.CstStr("hi").toNestHex();
     expect(encoded).toEqual("6869");
   });
 
@@ -59,6 +69,11 @@ describe("Encoding Decoding Suite", () => {
     expect(encoded).toEqual("04d2");
   });
 
+  test("e.CstU", () => {
+    const encoded = enc.CstU(1234).toNestHex();
+    expect(encoded).toEqual("04d2");
+  });
+
   test("e.I8", () => {
     const encoded = enc.I8(12).toTopHex();
     expect(encoded).toEqual("0c");
@@ -86,6 +101,11 @@ describe("Encoding Decoding Suite", () => {
 
   test("e.I", () => {
     const encoded = enc.I(1234).toTopHex();
+    expect(encoded).toEqual("04d2");
+  });
+
+  test("e.CstI", () => {
+    const encoded = enc.CstI(1234).toNestHex();
     expect(encoded).toEqual("04d2");
   });
 

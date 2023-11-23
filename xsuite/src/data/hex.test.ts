@@ -1,6 +1,6 @@
 import { test, expect } from "@jest/globals";
 import { enc } from "./encoding";
-import { hexToBytes, hexToHexString, hexToEncodable } from "./hex";
+import { hexToBytes, hexToHexString } from "./hex";
 
 test("hexToBytes", () => {
   expect(hexToBytes("12")).toEqual(new Uint8Array([18]));
@@ -9,8 +9,4 @@ test("hexToBytes", () => {
 
 test("hexToHexString", () => {
   expect(hexToHexString("12")).toEqual("12");
-});
-
-test("hexToEncodable", () => {
-  expect(hexToEncodable("12")).toEqual(enc.Bytes("12"));
 });
