@@ -1,11 +1,11 @@
 import { Encodable } from "./Encodable";
-import { enc } from "./encoding";
+import { e } from "./encoding";
 
 export type Hex = string | Encodable;
 
 export const hexToBytes = (hex: Hex) => {
   if (typeof hex === "string") {
-    hex = enc.Buffer(hex);
+    hex = e.Buffer(hex);
   }
   return hex.toTopBytes();
 };
