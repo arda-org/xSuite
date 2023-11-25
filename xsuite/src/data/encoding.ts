@@ -11,7 +11,31 @@ import { UintEncodable } from "./UintEncodable";
 import { Address, addressToAddressEncodable } from "./address";
 import { Hex, hexToBytes } from "./hex";
 import { Kv } from "./kvs";
-import { stringToBytes } from "./utils";
+import { narrowBytes } from "./utils";
+
+function Buffer(
+  bytes: string | number[] | Uint8Array,
+  encoding?: "hex",
+): BufferEncodable;
+function Buffer(bytes: string, encoding: "b64"): BufferEncodable;
+function Buffer(
+  bytes: string | number[] | Uint8Array,
+  encoding?: "hex" | "b64",
+): BufferEncodable {
+  return new BufferEncodable(narrowBytes(bytes, encoding));
+}
+
+function CstBuffer(
+  bytes: string | number[] | Uint8Array,
+  encoding?: "hex",
+): BytesEncodable;
+function CstBuffer(bytes: string, encoding: "b64"): BytesEncodable;
+function CstBuffer(
+  bytes: string | number[] | Uint8Array,
+  encoding?: "hex" | "b64",
+): BytesEncodable {
+  return new BytesEncodable(narrowBytes(bytes, encoding));
+}
 
 export const e = {
   /**
@@ -20,14 +44,10 @@ export const e = {
   Bytes: (bytes: string | number[] | Uint8Array) => {
     return e.CstBuffer(bytes);
   },
-  Buffer: (bytes: string | number[] | Uint8Array) => {
-    return new BufferEncodable(bytes);
-  },
-  CstBuffer: (bytes: string | number[] | Uint8Array) => {
-    return new BytesEncodable(bytes);
-  },
+  Buffer,
+  CstBuffer,
   Str: (string: string) => {
-    return new BufferEncodable(stringToBytes(string));
+    return e.Buffer(new TextEncoder().encode(string));
   },
   CstStr: (string: string) => {
     return new BytesEncodable(e.Str(string).toTopBytes());
@@ -36,7 +56,7 @@ export const e = {
     return new AddressEncodable(address);
   },
   Bool: (boolean: boolean) => {
-    return new UintEncodable(Number(boolean), 1);
+    return e.U8(Number(boolean));
   },
   U8: (uint: number | bigint) => {
     return new UintEncodable(uint, 1);
@@ -57,7 +77,7 @@ export const e = {
     return new UintEncodable(uint);
   },
   CstU: (uint: number | bigint) => {
-    return new BytesEncodable(e.U(uint).toTopBytes());
+    return e.CstBuffer(e.U(uint).toTopBytes());
   },
   I8: (int: number | bigint) => {
     return new IntEncodable(int, 1);
@@ -78,7 +98,7 @@ export const e = {
     return new IntEncodable(int);
   },
   CstI: (int: number | bigint) => {
-    return new BytesEncodable(e.I(int).toTopBytes());
+    return e.CstBuffer(e.I(int).toTopBytes());
   },
   Tuple: (...values: Encodable[]) => {
     return new TupleEncodable(values);

@@ -3,12 +3,12 @@ import { ByteReader } from "./ByteReader";
 import { AbstractDecoder } from "./Decoder";
 
 export class AddressDecoder extends AbstractDecoder<string> {
-  _topDecode(r: ByteReader) {
+  _fromTop(r: ByteReader) {
     const bytes = r.readExact(addressByteLength);
     return bytesToBechAddress(bytes);
   }
 
-  _nestDecode(r: ByteReader) {
-    return this._topDecode(r);
+  _fromNest(r: ByteReader) {
+    return this._fromTop(r);
   }
 }

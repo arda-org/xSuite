@@ -20,5 +20,33 @@ export const b64ToHexString = (b64: string) => {
   }).join("");
 };
 
-export const stringToBytes = (string: string) =>
-  new TextEncoder().encode(string);
+export const bytesToB64 = (bytes: Uint8Array) => {
+  const binaryString = bytes.reduce(
+    (acc, byte) => acc + String.fromCharCode(byte),
+    "",
+  );
+  return btoa(binaryString);
+};
+
+export const safeBigintToNumber = (n: bigint) => {
+  if (n > BigInt(Number.MAX_SAFE_INTEGER)) {
+    throw new Error("Bigint above threshold to be safely casted to Number.");
+  }
+  if (n < BigInt(Number.MIN_SAFE_INTEGER)) {
+    throw new Error("Bigint below threshold to be safely casted to Number.");
+  }
+  return Number(n);
+};
+
+export function narrowBytes<T>(
+  bytes: string | T,
+  encoding: "hex" | "b64" | undefined,
+): string | T {
+  if (encoding === "b64") {
+    if (typeof bytes !== "string") {
+      throw new Error("bytes is not a base64 string.");
+    }
+    bytes = b64ToHexString(bytes);
+  }
+  return bytes;
+}

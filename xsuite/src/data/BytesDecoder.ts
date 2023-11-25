@@ -9,13 +9,13 @@ export class BytesDecoder extends AbstractDecoder<Uint8Array> {
     this.#byteLength = byteLength;
   }
 
-  _topDecode(r: ByteReader) {
+  _fromTop(r: ByteReader) {
     return this.#byteLength === undefined
       ? r.readAll()
       : r.readExact(this.#byteLength);
   }
 
-  _nestDecode(r: ByteReader) {
-    return this._topDecode(r);
+  _fromNest(r: ByteReader) {
+    return this._fromTop(r);
   }
 }

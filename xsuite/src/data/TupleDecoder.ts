@@ -12,15 +12,16 @@ export class TupleDecoder<T extends DecoderMap<any>> extends AbstractDecoder<
     this.#decoders = decoders;
   }
 
-  _topDecode(r: ByteReader) {
+  _fromTop(r: ByteReader) {
     const result: { [key: string]: any } = {};
-    for (const key in this.#decoders)
-      result[key] = this.#decoders[key].nestDecode(r);
+    for (const key in this.#decoders) {
+      result[key] = this.#decoders[key].fromNest(r);
+    }
     return result as any;
   }
 
-  _nestDecode(r: ByteReader) {
-    return this._topDecode(r);
+  _fromNest(r: ByteReader) {
+    return this._fromTop(r);
   }
 }
 
