@@ -30,7 +30,7 @@ const positions = d.List(
     timestamp: d.U32(),
     price: d.U(),
   })
-).topDecode(returnData[0]);
+).fromTop(returnData[0]);
 ```
 
 The supported types are identical to the ones from the [Data Encoding](/data-encoding) page.

@@ -1,5 +1,6 @@
 import { ByteReader } from "./ByteReader";
 import { AbstractDecoder } from "./Decoder";
+import { safeBigintToNumber } from "./utils";
 
 export class UintDecoder extends AbstractDecoder<bigint> {
   #byteLength?: number;
@@ -9,7 +10,7 @@ export class UintDecoder extends AbstractDecoder<bigint> {
     this.#byteLength = byteLength;
   }
 
-  _topDecode(r: ByteReader) {
+  _fromTop(r: ByteReader) {
     const bytes =
       this.#byteLength === undefined
         ? r.readAll()
@@ -17,12 +18,20 @@ export class UintDecoder extends AbstractDecoder<bigint> {
     return decode(bytes);
   }
 
-  _nestDecode(r: ByteReader): bigint {
+  _fromNest(r: ByteReader): bigint {
     const length =
       this.#byteLength === undefined
-        ? Number(new U32Decoder()._nestDecode(r))
+        ? Number(new U32Decoder()._fromNest(r))
         : this.#byteLength;
     return decode(r.readExact(length));
+  }
+
+  toNum() {
+    return this.then(safeBigintToNumber);
+  }
+
+  toStr() {
+    return this.then(String);
   }
 }
 

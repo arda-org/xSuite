@@ -1,23 +1,78 @@
 import { ByteReader } from "./ByteReader";
-import { hexStringToBytes } from "./utils";
+import { hexStringToBytes, narrowBytes } from "./utils";
 
 export type Decoder<T> = {
+  fromTop(
+    bytes: string | number[] | Uint8Array | ByteReader,
+    encoding?: "hex",
+  ): T;
+  fromTop(bytes: string, encoding: "b64"): T;
+  fromTop(
+    bytes: string | number[] | Uint8Array | ByteReader,
+    encoding?: "hex" | "b64",
+  ): T;
+  fromNest(
+    bytes: string | number[] | Uint8Array | ByteReader,
+    encoding?: "hex",
+  ): T;
+  fromNest(bytes: string, encoding: "b64"): T;
+  fromNest(
+    bytes: string | number[] | Uint8Array | ByteReader,
+    encoding?: "hex" | "b64",
+  ): T;
+  /**
+   * @deprecated `.fromTop` should be used instead.
+   */
   topDecode(bytes: string | number[] | Uint8Array | ByteReader): T;
+  /**
+   * @deprecated `.fromNest` should be used instead.
+   */
   nestDecode(bytes: string | number[] | Uint8Array | ByteReader): T;
 };
 
 export abstract class AbstractDecoder<T> implements Decoder<T> {
+  fromTop(
+    bytes: string | number[] | Uint8Array | ByteReader,
+    encoding?: "hex" | "b64",
+  ): T {
+    return this._fromTop(toByteReader(narrowBytes(bytes, encoding)));
+  }
+
+  fromNest(
+    bytes: string | number[] | Uint8Array | ByteReader,
+    encoding?: "hex" | "b64",
+  ): T {
+    return this._fromNest(toByteReader(narrowBytes(bytes, encoding)));
+  }
+
   topDecode(bytes: string | number[] | Uint8Array | ByteReader): T {
-    return this._topDecode(toByteReader(bytes));
+    return this._fromTop(toByteReader(bytes));
   }
 
   nestDecode(bytes: string | number[] | Uint8Array | ByteReader): T {
-    return this._nestDecode(toByteReader(bytes));
+    return this._fromNest(toByteReader(bytes));
   }
 
-  abstract _topDecode(r: ByteReader): T;
+  abstract _fromTop(r: ByteReader): T;
 
-  abstract _nestDecode(r: ByteReader): T;
+  abstract _fromNest(r: ByteReader): T;
+
+  then<U>(f: (x: T) => U): Decoder<U> {
+    return {
+      fromTop: (
+        bytes: string | number[] | Uint8Array,
+        encoding?: "hex" | "b64",
+      ) => f(this.fromTop(bytes, encoding)),
+      fromNest: (
+        bytes: string | number[] | Uint8Array,
+        encoding?: "hex" | "b64",
+      ) => f(this.fromNest(bytes, encoding)),
+      topDecode: (bytes: string | number[] | Uint8Array | ByteReader) =>
+        f(this.topDecode(bytes)),
+      nestDecode: (bytes: string | number[] | Uint8Array | ByteReader) =>
+        f(this.nestDecode(bytes)),
+    };
+  }
 }
 
 const toByteReader = (bytes: string | number[] | Uint8Array | ByteReader) => {
@@ -31,13 +86,3 @@ const toByteReader = (bytes: string | number[] | Uint8Array | ByteReader) => {
     return bytes;
   }
 };
-
-export const postDecode = <T, U>(
-  decoder: Decoder<T>,
-  f: (x: T) => U,
-): Decoder<U> => ({
-  topDecode: (bytes: string | number[] | Uint8Array | ByteReader) =>
-    f(decoder.topDecode(bytes)),
-  nestDecode: (bytes: string | number[] | Uint8Array | ByteReader) =>
-    f(decoder.nestDecode(bytes)),
-});

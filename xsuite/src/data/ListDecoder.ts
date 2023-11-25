@@ -10,19 +10,19 @@ export class ListDecoder<T> extends AbstractDecoder<T[]> {
     this.#decoder = decoder;
   }
 
-  _topDecode(r: ByteReader) {
+  _fromTop(r: ByteReader) {
     const result = [];
     while (!r.isConsumed()) {
-      result.push(this.#decoder.nestDecode(r));
+      result.push(this.#decoder.fromNest(r));
     }
     return result;
   }
 
-  _nestDecode(r: ByteReader) {
-    const length = Number(new U32Decoder()._nestDecode(r));
+  _fromNest(r: ByteReader) {
+    const length = Number(new U32Decoder()._fromNest(r));
     const result = [];
     for (let i = 0; i < length; i++) {
-      result.push(this.#decoder.nestDecode(r));
+      result.push(this.#decoder.fromNest(r));
     }
     return result;
   }

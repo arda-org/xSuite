@@ -143,7 +143,7 @@ test("SWorld.query", async () => {
     callee: contract,
     funcName: "get_n",
   });
-  expect(d.U64().topDecode(returnData[0])).toEqual(1n);
+  expect(d.U64().fromTop(returnData[0])).toEqual(1n);
 });
 
 test("SWallet.getAccountNonce", async () => {
