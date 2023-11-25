@@ -1,7 +1,7 @@
 import { AddressDecoder } from "./AddressDecoder";
 import { BufferDecoder } from "./BufferDecoder";
 import { BytesDecoder } from "./BytesDecoder";
-import { Decoder, postDecode } from "./Decoder";
+import { Decoder } from "./Decoder";
 import { IntDecoder } from "./IntDecoder";
 import { ListDecoder } from "./ListDecoder";
 import { OptionDecoder } from "./OptionDecoder";
@@ -9,20 +9,26 @@ import { DecoderMap, TupleDecoder } from "./TupleDecoder";
 import { UintDecoder } from "./UintDecoder";
 
 export const d = {
+  /**
+   * @deprecated `.CstBuffer` should be used instead.
+   */
   Bytes: (byteLength?: number) => {
-    return new BytesDecoder(byteLength);
+    return d.CstBuffer(byteLength);
   },
   Buffer: () => {
     return new BufferDecoder();
   },
+  CstBuffer: (byteLength?: number) => {
+    return new BytesDecoder(byteLength);
+  },
   Str: () => {
-    return postDecode(new BufferDecoder(), (b) => new TextDecoder().decode(b));
+    return d.Buffer().then((b) => new TextDecoder().decode(b));
   },
   Addr: () => {
     return new AddressDecoder();
   },
   Bool: () => {
-    return postDecode(new UintDecoder(1), (n) => Boolean(n));
+    return d.U8().then(Boolean);
   },
   U8: () => {
     return new UintDecoder(1);
@@ -32,6 +38,9 @@ export const d = {
   },
   U32: () => {
     return new UintDecoder(4);
+  },
+  Usize: () => {
+    return d.U32();
   },
   U64: () => {
     return new UintDecoder(8);
@@ -47,6 +56,9 @@ export const d = {
   },
   I32: () => {
     return new IntDecoder(4);
+  },
+  Isize: () => {
+    return d.I32();
   },
   I64: () => {
     return new IntDecoder(8);

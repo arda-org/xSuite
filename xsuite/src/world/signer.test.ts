@@ -17,9 +17,9 @@ afterEach(() => {
 
 test("KeystoreSigner safe", async () => {
   stdoutInt.start();
-  input.injected.push("1234", "1234");
+  input.inject("1234", "1234");
   await Keystore.createFile(walletPath);
-  input.injected.push("1234");
+  input.inject("1234");
   const signer = await KeystoreSigner.fromFile(walletPath);
   const signature = await signer.sign(Buffer.from(""));
   stdoutInt.stop();
@@ -32,6 +32,12 @@ test("KeystoreSigner safe", async () => {
     "",
   ]);
   expect(signature.byteLength).toBeGreaterThan(0);
+});
+
+test("KeystoreSigner safe - ENOENT", async () => {
+  expect(KeystoreSigner.fromFile(walletPath)).rejects.toThrow(
+    `ENOENT: no such file or directory, open '${walletPath}'`,
+  );
 });
 
 test("KeystoreSigner unsafe", async () => {

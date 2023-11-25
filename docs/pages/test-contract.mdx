@@ -259,7 +259,7 @@ import { d } from "xsuite";
 
 const tokenData = d.Tuple({
   token: d.Str(),
-}).topDecode(returnData[0]);
+}).fromTop(returnData[0]);
 
 expect(tokenData.token).toEqual("TOKEN-123456");
 ```

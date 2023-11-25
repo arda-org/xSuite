@@ -2,40 +2,46 @@ import readline from "node:readline";
 import { Writable } from "node:stream";
 
 export const input = {
-  injected: [] as string[],
-  async hidden(query: string): Promise<string> {
-    const shifted = this.injected.shift();
+  injections: [] as string[],
+  inject(...items: string[]) {
+    this.injections.push(...items);
+  },
+  async hidden(p: string): Promise<string> {
+    const shifted = this.injections.shift();
     if (shifted !== undefined) {
-      process.stdout.write(query + "\n");
+      log(p);
       return Promise.resolve(shifted);
     }
-
-    const muted = { v: false };
-
-    const mutableStdout = new Writable({
-      write(chunk, encoding, callback) {
-        if (!muted.v) {
-          process.stdout.write(chunk, encoding);
-        }
-        callback();
-      },
-    });
-
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: mutableStdout,
-      terminal: true,
-    });
-
-    return new Promise<string>((resolve) => {
-      rl.question(query, function (password) {
-        rl.close();
-        process.stdout.write("\n");
-        resolve(password);
-      });
-      muted.v = true;
-    });
+    return inputHidden(p);
   },
+};
+
+const inputHidden = (p: string) => {
+  const muted = { v: false };
+
+  const mutableStdout = new Writable({
+    write(chunk, encoding, callback) {
+      if (!muted.v) {
+        process.stdout.write(chunk, encoding);
+      }
+      callback();
+    },
+  });
+
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: mutableStdout,
+    terminal: true,
+  });
+
+  return new Promise<string>((resolve) => {
+    rl.question(p, function (password) {
+      rl.close();
+      process.stdout.write("\n");
+      resolve(password);
+    });
+    muted.v = true;
+  });
 };
 
 export function log(...msgs: string[]) {

@@ -12,7 +12,7 @@ export const mainnetMinGasPrice = 1_000_000_000;
 
 export const devnetExplorerUrl = "https://devnet-explorer.multiversx.com";
 export const testnetExplorerUrl = "https://testnet-explorer.multiversx.com";
-export const mainnetExplorerUrl = "https://mainnet-explorer.multiversx.com";
+export const mainnetExplorerUrl = "https://explorer.multiversx.com";
 
 export const envChain = {
   name: (): ChainName => {

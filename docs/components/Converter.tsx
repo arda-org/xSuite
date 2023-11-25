@@ -268,7 +268,7 @@ const convert = (
   if (inputType === "hex") {
     hex = inputValue;
   } else if (inputType === "base64") {
-    hex = Buffer.from(inputValue, "base64").toString("hex");
+    hex = e.Buffer(inputValue, "b64").toTopHex();
   } else if (inputType === "biguint") {
     hex = e.U(BigInt(inputValue)).toTopHex();
   } else if (inputType === "string") {
@@ -279,15 +279,15 @@ const convert = (
     throw "Invalid input type.";
   }
   if (outputType === "hex") {
-    return hex;
+    return d.Buffer().toHex().fromTop(hex);
   } else if (outputType === "base64") {
-    return Buffer.from(hex, "hex").toString("base64");
+    return d.Buffer().toB64().fromTop(hex);
   } else if (outputType === "biguint") {
-    return d.U().topDecode(hex).toString();
+    return d.U().toStr().fromTop(hex);
   } else if (outputType === "string") {
-    return d.Str().topDecode(hex);
+    return d.Str().fromTop(hex);
   } else if (outputType === "address") {
-    return d.Addr().topDecode(hex);
+    return d.Addr().fromTop(hex);
   } else {
     throw "Invalid output type.";
   }
