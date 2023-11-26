@@ -1,6 +1,6 @@
 import { bech32 } from "bech32";
 import { Encodable } from "./Encodable";
-import { hexStringToBytes } from "./utils";
+import { hexToBytes } from "./utils";
 
 export class AddressEncodable extends Encodable {
   #bytes: Uint8Array;
@@ -44,7 +44,7 @@ export const bechAddressToBytes = (bechAddress: string): Uint8Array => {
 
 const strAddressToBytes = (strAddress: string): Uint8Array => {
   if (strAddress.length === 2 * addressByteLength) {
-    return hexStringToBytes(strAddress);
+    return hexToBytes(strAddress);
   }
   return bechAddressToBytes(strAddress);
 };

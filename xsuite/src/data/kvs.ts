@@ -1,4 +1,4 @@
-import { Hex, hexToHexString } from "./hex";
+import { Hex, broadHexToHex } from "./broadHex";
 
 export type RawKvs = Record<string, string>;
 
@@ -12,7 +12,7 @@ export const kvsToRawKvs = (kvs: Kvs): RawKvs => {
   }
   const rawKvs: RawKvs = {};
   for (const [k, v] of flattenKvs(kvs)) {
-    rawKvs[hexToHexString(k)] = hexToHexString(v);
+    rawKvs[broadHexToHex(k)] = broadHexToHex(v);
   }
   return rawKvs;
 };

@@ -9,12 +9,12 @@ test("e.Buffer - bytes with base64", () => {
   );
 });
 
-test("e.Buffer - invalid hex length", () => {
-  expect(() => e.Buffer("48656c6c6")).toThrow("Odd hex string length.");
+test("e.Buffer - odd hex length", () => {
+  expect(() => e.Buffer("48656c6c6")).toThrow("Odd hex length.");
 });
 
-test("e.Buffer - invalid hex string", () => {
-  expect(() => e.Buffer("48656c6c6g")).toThrow("Invalid hex string.");
+test("e.Buffer - invalid hex", () => {
+  expect(() => e.Buffer("48656c6c6g")).toThrow("Invalid hex.");
 });
 
 test("e.Buffer.toTopHex - empty hex", () => {

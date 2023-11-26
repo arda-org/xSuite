@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import { Kvs, kvsToRawKvs } from "../data/kvs";
 import { Proxy } from "../proxy";
-import { codeMetadataToHexString } from "../proxy/proxy";
+import { codeMetadataToHex } from "../proxy/proxy";
 import { Account } from "../proxy/sproxy";
 import { expandCode } from "../world/world";
 
@@ -53,9 +53,7 @@ export const assertAccount = (
   if (codeMetadata !== undefined) {
     assert.strictEqual(
       actualAccount.codeMetadata,
-      codeMetadata == null
-        ? codeMetadata
-        : codeMetadataToHexString(codeMetadata),
+      codeMetadata == null ? codeMetadata : codeMetadataToHex(codeMetadata),
     );
   }
   if (owner !== undefined) {

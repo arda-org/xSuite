@@ -98,7 +98,7 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 				}
 				tx.Tx.To = mj.JSONBytesFromString{Value: realReceiver}
 				i += 1
-				l, err := hexStringToUint64(dataParts[i])
+				l, err := hexToUint64(dataParts[i])
 				if err != nil {
 					return nil, err
 				}
@@ -110,12 +110,12 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 						return nil, err
 					}
 					i += 1
-					nonce, err := hexStringToUint64(dataParts[i])
+					nonce, err := hexToUint64(dataParts[i])
 					if err != nil {
 						return nil, err
 					}
 					i += 1
-					amount, err := hexStringToBigint(dataParts[i])
+					amount, err := hexToBigint(dataParts[i])
 					if err != nil {
 						return nil, err
 					}

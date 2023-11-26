@@ -9,7 +9,7 @@ import { OptionEncodable } from "./OptionEncodable";
 import { TupleEncodable } from "./TupleEncodable";
 import { UintEncodable } from "./UintEncodable";
 import { Address, addressToAddressEncodable } from "./address";
-import { Hex, hexToBytes } from "./hex";
+import { Hex, broadHexToBytes } from "./broadHex";
 import { Kv } from "./kvs";
 import { narrowBytes } from "./utils";
 
@@ -277,13 +277,13 @@ const getEsdtKvs = ({
       metadata.push(["Royalties", royalties.toString()]);
     }
     if (hash !== undefined) {
-      metadata.push(["Hash", hexToBytes(hash)]);
+      metadata.push(["Hash", broadHexToBytes(hash)]);
     }
     if (uris !== undefined) {
       metadata.push(["URIs", uris]);
     }
     if (attrs !== undefined) {
-      metadata.push(["Attributes", hexToBytes(attrs)]);
+      metadata.push(["Attributes", broadHexToBytes(attrs)]);
     }
     if (metadata.length > 0 && nonce) {
       metadata.push(["Nonce", nonce.toString()]);

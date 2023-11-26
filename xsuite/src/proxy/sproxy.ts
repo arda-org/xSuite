@@ -1,6 +1,6 @@
 import { Address } from "../data/address";
 import { Kvs, RawKvs, kvsToRawKvs } from "../data/kvs";
-import { CodeMetadata, codeMetadataToHexString, Proxy } from "./proxy";
+import { CodeMetadata, codeMetadataToHex, Proxy } from "./proxy";
 
 export class SProxy extends Proxy {
   static setAccount(baseUrl: string, account: Account) {
@@ -46,7 +46,7 @@ const accountToRawAccount = (account: Account): RawAccount => {
     code: account.code,
     codeMetadata:
       account.codeMetadata != null
-        ? codeMetadataToHexString(account.codeMetadata)
+        ? codeMetadataToHex(account.codeMetadata)
         : undefined,
     owner: account.owner != null ? account.owner.toString() : undefined,
   };
