@@ -1,9 +1,9 @@
 import { e } from "../data";
 import { Encodable } from "../data/Encodable";
 import { Address, addressToAddressEncodable } from "../data/address";
-import { Hex, hexToHexString } from "../data/hex";
+import { Hex, broadHexToHex } from "../data/broadHex";
 import { RawKvs } from "../data/kvs";
-import { b64ToHexString } from "../data/utils";
+import { b64ToHex } from "../data/utils";
 
 export class Proxy {
   baseUrl: string;
@@ -146,7 +146,7 @@ export class Proxy {
       balance: BigInt(res.account.balance),
       code: res.account.code ? res.account.code : null,
       codeMetadata: res.account.codeMetadata
-        ? b64ToHexString(res.account.codeMetadata)
+        ? b64ToHex(res.account.codeMetadata)
         : null,
       owner: res.account.ownerAddress ? res.account.ownerAddress : null,
     } as {
@@ -260,8 +260,8 @@ export class Tx {
       data: [
         code,
         "0500",
-        codeMetadataToHexString(codeMetadata),
-        ...(codeArgs ?? []).map(hexToHexString),
+        codeMetadataToHex(codeMetadata),
+        ...(codeArgs ?? []).map(broadHexToHex),
       ].join("@"),
       ...txParams,
     };
@@ -283,8 +283,8 @@ export class Tx {
       data: [
         "upgradeContract",
         code,
-        codeMetadataToHexString(codeMetadata),
-        ...(codeArgs ?? []).map(hexToHexString),
+        codeMetadataToHex(codeMetadata),
+        ...(codeArgs ?? []).map(broadHexToHex),
       ].join("@"),
       ...txParams,
     };
@@ -350,7 +350,7 @@ export class Tx {
       receiver = callee;
       dataParts.push(funcName);
     }
-    dataParts.push(...(funcArgs ?? []).map(hexToHexString));
+    dataParts.push(...(funcArgs ?? []).map(broadHexToHex));
     return {
       receiver,
       sender,
@@ -398,13 +398,13 @@ const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
     query = {
       scAddress: query.callee.toString(),
       funcName: query.funcName,
-      args: (query.funcArgs ?? []).map(hexToHexString),
+      args: (query.funcArgs ?? []).map(broadHexToHex),
     };
   }
   return query;
 };
 
-export const codeMetadataToHexString = (codeMetadata: CodeMetadata): string => {
+export const codeMetadataToHex = (codeMetadata: CodeMetadata): string => {
   if (typeof codeMetadata === "string") {
     return codeMetadata;
   }

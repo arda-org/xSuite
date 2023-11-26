@@ -1,20 +1,20 @@
-export const bytesToHexString = (bytes: Uint8Array) =>
+export const bytesToHex = (bytes: Uint8Array) =>
   Array.from(bytes)
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
 
-export const hexStringToBytes = (hexString: string) => {
-  if (hexString.length % 2 !== 0) {
-    throw new Error("Odd hex string length.");
+export const hexToBytes = (hex: string) => {
+  if (hex.length % 2 !== 0) {
+    throw new Error("Odd hex length.");
   }
-  if (!/^[0-9a-fA-F]*$/.test(hexString)) {
-    throw new Error("Invalid hex string.");
+  if (!/^[0-9a-fA-F]*$/.test(hex)) {
+    throw new Error("Invalid hex.");
   }
-  const hs = hexString.match(/.{2}/g) ?? [];
+  const hs = hex.match(/.{2}/g) ?? [];
   return Uint8Array.from(hs.map((h) => parseInt(h, 16)));
 };
 
-export const b64ToHexString = (b64: string) => {
+export const b64ToHex = (b64: string) => {
   return Array.from(atob(b64), function (char) {
     return char.charCodeAt(0).toString(16).padStart(2, "0");
   }).join("");
@@ -46,7 +46,7 @@ export function narrowBytes<T>(
     if (typeof bytes !== "string") {
       throw new Error("bytes is not a base64 string.");
     }
-    bytes = b64ToHexString(bytes);
+    bytes = b64ToHex(bytes);
   }
   return bytes;
 }

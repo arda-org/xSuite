@@ -1,5 +1,5 @@
 import { Encodable } from "./Encodable";
-import { hexStringToBytes } from "./utils";
+import { hexToBytes } from "./utils";
 
 export class BytesEncodable extends Encodable {
   #bytes: Uint8Array;
@@ -7,7 +7,7 @@ export class BytesEncodable extends Encodable {
   constructor(bytes: string | number[] | Uint8Array) {
     super();
     if (typeof bytes === "string") {
-      bytes = hexStringToBytes(bytes);
+      bytes = hexToBytes(bytes);
     } else if (Array.isArray(bytes)) {
       bytes = new Uint8Array(bytes);
     }

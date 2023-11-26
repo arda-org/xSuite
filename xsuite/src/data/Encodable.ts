@@ -1,4 +1,4 @@
-import { bytesToB64, bytesToHexString } from "./utils";
+import { bytesToB64, bytesToHex } from "./utils";
 
 export abstract class Encodable {
   abstract toTopBytes(): Uint8Array;
@@ -6,11 +6,11 @@ export abstract class Encodable {
   abstract toNestBytes(): Uint8Array;
 
   toTopHex(): string {
-    return bytesToHexString(this.toTopBytes());
+    return bytesToHex(this.toTopBytes());
   }
 
   toNestHex(): string {
-    return bytesToHexString(this.toNestBytes());
+    return bytesToHex(this.toNestBytes());
   }
 
   toTopB64(): string {

@@ -1,5 +1,5 @@
 import { AddressEncodable } from "../data/AddressEncodable";
-import { b64ToHexString } from "../data/utils";
+import { b64ToHex } from "../data/utils";
 import { Optional, Prettify } from "../helpers";
 import {
   devnetMinGasPrice,
@@ -132,7 +132,7 @@ export class World {
     }
     return {
       query: resQuery,
-      returnData: resQuery.returnData.map(b64ToHexString),
+      returnData: resQuery.returnData.map(b64ToHex),
     };
   }
 }

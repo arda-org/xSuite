@@ -21,7 +21,7 @@ func stringToBigint(value string) (*big.Int, error) {
 	return n, nil
 }
 
-func hexStringToBigint(value string) (*big.Int, error) {
+func hexToBigint(value string) (*big.Int, error) {
 	if value == "" {
 		return big.NewInt(0), nil
 	}
@@ -32,7 +32,7 @@ func hexStringToBigint(value string) (*big.Int, error) {
 	return n, nil
 }
 
-func hexStringToUint64(value string) (uint64, error) {
+func hexToUint64(value string) (uint64, error) {
 	if value == "" {
 		return 0, nil
 	}
