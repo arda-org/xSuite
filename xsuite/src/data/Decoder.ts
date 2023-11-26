@@ -21,11 +21,11 @@ export type Decoder<T> = {
     encoding?: "hex" | "b64",
   ): T;
   /**
-   * @deprecated `.fromTop` should be used instead.
+   * @deprecated Use `.fromTop` instead.
    */
   topDecode(bytes: string | number[] | Uint8Array | ByteReader): T;
   /**
-   * @deprecated `.fromNest` should be used instead.
+   * @deprecated Use `.fromNest` instead.
    */
   nestDecode(bytes: string | number[] | Uint8Array | ByteReader): T;
 };

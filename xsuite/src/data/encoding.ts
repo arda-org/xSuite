@@ -39,7 +39,7 @@ function CstBuffer(
 
 export const e = {
   /**
-   * @deprecated `.CstBuffer` should be used instead.
+   * @deprecated Use `.CstBuffer` instead.
    */
   Bytes: (bytes: string | number[] | Uint8Array) => {
     return e.CstBuffer(bytes);

@@ -81,7 +81,7 @@ type ActualAccount = Partial<
 
 type ExpectedAccount = Omit<Account, "address"> & {
   /**
-   * @deprecated `.kvs` should be used instead.
+   * @deprecated Use `.kvs` instead.
    */
   allKvs?: Kvs;
   hasKvs?: Kvs;
