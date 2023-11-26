@@ -194,7 +194,7 @@ test("d.U.toNum.fromTop - in-range number", () => {
 });
 
 test("d.U.toNum.fromTop - out-of-range number", () => {
-  expect(async () => d.U().toNum().fromTop("0100000000000000")).rejects.toThrow(
+  expect(() => d.U().toNum().fromTop("0100000000000000")).toThrow(
     "Bigint above threshold to be safely casted to Number.",
   );
 });
@@ -296,7 +296,7 @@ test("d.I.toNum.fromTop", () => {
 });
 
 test("d.I.toNum.fromTop - out-of-range number", () => {
-  expect(async () => d.I().toNum().fromTop("8000000000000000")).rejects.toThrow(
+  expect(() => d.I().toNum().fromTop("8000000000000000")).toThrow(
     "Bigint below threshold to be safely casted to Number.",
   );
 });

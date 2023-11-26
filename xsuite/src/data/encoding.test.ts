@@ -20,7 +20,7 @@ test("e.Buffer.toTopHex - non-empty base64", () => {
 });
 
 test("e.Buffer.toTopHex - bytes with base64", () => {
-  expect(async () => e.Buffer([1] as any, "b64").toTopHex()).rejects.toThrow(
+  expect(() => e.Buffer([1] as any, "b64").toTopHex()).toThrow(
     "bytes is not a base64 string.",
   );
 });
@@ -509,7 +509,7 @@ describe("e.kvs", () => {
         e.kvs.Mapper("single", e.Str("a")).Value(e.U64(1)),
         await contract.getAccountKvs(),
       );
-      expect(async () =>
+      await expect(async () =>
         assertKvs(
           e.kvs.Mapper("single", e.Str("a")).Value(null),
           await contract.getAccountKvs(),
@@ -540,7 +540,7 @@ describe("e.kvs", () => {
           .UnorderedSet([e.U(10), e.U(20)]),
         await contract.getAccountKvs(),
       );
-      expect(async () =>
+      await expect(async () =>
         assertKvs(
           e.kvs.Mapper("unordered_set", e.U64(1)).UnorderedSet(null),
           await contract.getAccountKvs(),
@@ -579,7 +579,7 @@ describe("e.kvs", () => {
         ]),
         await contract.getAccountKvs(),
       );
-      expect(async () =>
+      await expect(async () =>
         assertKvs(
           e.kvs.Mapper("set", e.U64(1)).Set(null),
           await contract.getAccountKvs(),
@@ -628,7 +628,7 @@ describe("e.kvs", () => {
         ]),
         await contract.getAccountKvs(),
       );
-      expect(async () =>
+      await expect(async () =>
         assertKvs(
           e.kvs.Mapper("map", e.U(1)).Map(null),
           await contract.getAccountKvs(),
@@ -657,7 +657,7 @@ describe("e.kvs", () => {
         e.kvs.Mapper("vec", e.U64(1), e.U(2)).Vec([e.U64(1), e.U64(2)]),
         await contract.getAccountKvs(),
       );
-      expect(async () =>
+      await expect(async () =>
         assertKvs(
           e.kvs.Mapper("vec", e.U64(1), e.U(2)).Vec(null),
           await contract.getAccountKvs(),
