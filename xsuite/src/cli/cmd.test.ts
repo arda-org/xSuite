@@ -7,7 +7,7 @@ import { setupServer } from "msw/node";
 import { stdoutInt, input } from "../_stdio";
 import { Keystore } from "../world/signer";
 import { getCommand } from "./cmd";
-import { rustToolchain, rustTarget } from "./rustSettings";
+import { rustToolchain, rustTarget, rustKey } from "./helpers";
 
 const cwd = process.cwd();
 const tmpDir = "/tmp/xsuite-tests";
@@ -142,6 +142,13 @@ test("request-xegld --wallet wallet.json", async () => {
     chalk.green("Wallet well received 10 xEGLD."),
     "",
   ]);
+});
+
+test("install-rust-key", async () => {
+  stdoutInt.start();
+  await run("install-rust-key");
+  stdoutInt.stop();
+  expect(stdoutInt.data.split("\n")).toEqual([rustKey, ""]);
 });
 
 test("install-rust", async () => {
