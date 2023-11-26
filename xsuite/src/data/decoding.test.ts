@@ -80,6 +80,10 @@ test("d.Addr.fromTop", () => {
   expect(d.Addr().fromTop(zeroHexAddress)).toEqual(zeroBechAddress);
 });
 
+test("d.Addr.toHex.fromTop", () => {
+  expect(d.Addr().toHex().fromTop(zeroHexAddress)).toEqual(zeroHexAddress);
+});
+
 test("d.Addr.fromNest", () => {
   expect(d.Addr().fromNest(zeroHexAddress)).toEqual(zeroBechAddress);
 });

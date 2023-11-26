@@ -34,15 +34,19 @@ export const bytesToBechAddress = (bytes: Uint8Array): string => {
   return bech32.encode(HRP, words);
 };
 
-const strAddressToBytes = (strAddress: string): Uint8Array => {
-  if (strAddress.length === 2 * addressByteLength) {
-    return hexStringToBytes(strAddress);
-  }
-  const { prefix, words } = bech32.decode(strAddress);
+export const bechAddressToBytes = (bechAddress: string): Uint8Array => {
+  const { prefix, words } = bech32.decode(bechAddress);
   if (prefix !== HRP) {
     throw new Error(`Invalid address HRP.`);
   }
   return Uint8Array.from(bech32.fromWords(words));
+};
+
+const strAddressToBytes = (strAddress: string): Uint8Array => {
+  if (strAddress.length === 2 * addressByteLength) {
+    return hexStringToBytes(strAddress);
+  }
+  return bechAddressToBytes(strAddress);
 };
 
 export const addressByteLength = 32;

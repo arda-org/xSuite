@@ -1,6 +1,11 @@
-import { addressByteLength, bytesToBechAddress } from "./AddressEncodable";
+import {
+  addressByteLength,
+  bechAddressToBytes,
+  bytesToBechAddress,
+} from "./AddressEncodable";
 import { ByteReader } from "./ByteReader";
 import { AbstractDecoder } from "./Decoder";
+import { bytesToHexString } from "./utils";
 
 export class AddressDecoder extends AbstractDecoder<string> {
   _fromTop(r: ByteReader) {
@@ -10,5 +15,9 @@ export class AddressDecoder extends AbstractDecoder<string> {
 
   _fromNest(r: ByteReader) {
     return this._fromTop(r);
+  }
+
+  toHex() {
+    return this.then((a) => bytesToHexString(bechAddressToBytes(a)));
   }
 }
