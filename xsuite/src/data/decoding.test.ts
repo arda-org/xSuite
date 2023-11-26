@@ -47,28 +47,24 @@ test("d.Buffer.fromTop - b64", () => {
   );
 });
 
-test("d.CstBuffer.fromTop - no byteLength set", () => {
-  expect(d.CstBuffer().fromTop("00010203")).toEqual(
+test("d.TopBuffer.fromTop", () => {
+  expect(d.TopBuffer().fromTop("00010203")).toEqual(
     new Uint8Array([0, 1, 2, 3]),
   );
 });
 
-test("d.CstBuffer.fromTop - byteLength set", () => {
-  expect(d.CstBuffer(2).fromTop("00010203")).toEqual(new Uint8Array([0, 1]));
-});
-
-test("d.CstBuffer.fromNest - no byteLength set", () => {
-  expect(d.CstBuffer().fromNest("00010203")).toEqual(
+test("d.TopBuffer.fromNest", () => {
+  expect(d.TopBuffer().fromNest("00010203")).toEqual(
     new Uint8Array([0, 1, 2, 3]),
   );
 });
 
-test("d.CstBuffer.fromNest - byteLength set", () => {
-  expect(d.CstBuffer(2).fromNest("00010203")).toEqual(new Uint8Array([0, 1]));
-});
-
-test("d.Str", () => {
+test("d.Str.fromTop", () => {
   expect(d.Str().fromTop("6869")).toEqual("hi");
+});
+
+test("d.TopStr.fromNest", () => {
+  expect(d.TopStr().fromNest("6869")).toEqual("hi");
 });
 
 const zeroBechAddress =
@@ -203,6 +199,10 @@ test("d.U.toStr.fromTop", () => {
   expect(d.U().toStr().fromTop("01")).toEqual("1");
 });
 
+test("d.TopU.fromNest", () => {
+  expect(d.TopU().fromNest("0100")).toEqual(256n);
+});
+
 const IXTestCases = {
   I8Success: [
     [0n, "", "00"],
@@ -305,6 +305,10 @@ test("d.I.toStr.fromTop", () => {
   expect(d.I().toStr().fromTop("01")).toEqual("1");
 });
 
+test("d.TopI.fromNest", () => {
+  expect(d.TopI().fromNest("ff7f")).toEqual(-129n);
+});
+
 test("d.Tuple.fromTop - empty map", () => {
   expect(d.Tuple({}).fromTop("")).toEqual({});
 });
@@ -388,7 +392,13 @@ test("d.Option.fromNest - first byte >= 2", () => {
 });
 
 test("d.Bytes", () => {
-  expect(d.Bytes(3).fromTop("414243")).toEqual(new Uint8Array([65, 66, 67]));
+  expect(d.Bytes().fromTop("414243")).toEqual(new Uint8Array([65, 66, 67]));
+});
+
+test("d.CstBuffer.fromNest", () => {
+  expect(d.CstBuffer().fromNest("00010203")).toEqual(
+    new Uint8Array([0, 1, 2, 3]),
+  );
 });
 
 test("d.Buffer.topDecode", () => {

@@ -63,50 +63,50 @@ test("e.Buffer.toNestB64 - non-empty hex", () => {
   expect(e.Buffer("48656c6c").toNestB64()).toEqual("AAAABEhlbGw=");
 });
 
-test("e.CstBuffer.toTopHex - empty hex", () => {
-  expect(e.CstBuffer("").toTopHex()).toEqual("");
+test("e.TopBuffer.toTopHex - empty hex", () => {
+  expect(e.TopBuffer("").toTopHex()).toEqual("");
 });
 
-test("e.CstBuffer.toTopHex - non-empty hex", () => {
-  expect(e.CstBuffer("48656c6c").toTopHex()).toEqual("48656c6c");
+test("e.TopBuffer.toTopHex - non-empty hex", () => {
+  expect(e.TopBuffer("48656c6c").toTopHex()).toEqual("48656c6c");
 });
 
-test("e.CstBuffer.toTopHex - non-empty b64", () => {
-  expect(e.CstBuffer("ASM=", "b64").toTopHex()).toEqual("0123");
+test("e.TopBuffer.toTopHex - non-empty b64", () => {
+  expect(e.TopBuffer("ASM=", "b64").toTopHex()).toEqual("0123");
 });
 
-test("e.CstBuffer.toTopHex - empty number[]", () => {
-  expect(e.CstBuffer([]).toTopHex()).toEqual("");
+test("e.TopBuffer.toTopHex - empty number[]", () => {
+  expect(e.TopBuffer([]).toTopHex()).toEqual("");
 });
 
-test("e.CstBuffer.toTopHex - non-empty number[]", () => {
-  expect(e.CstBuffer([72, 101, 108, 108]).toTopHex()).toEqual("48656c6c");
+test("e.TopBuffer.toTopHex - non-empty number[]", () => {
+  expect(e.TopBuffer([72, 101, 108, 108]).toTopHex()).toEqual("48656c6c");
 });
 
-test("e.CstBuffer.toTopHex - empty Uint8Array", () => {
-  expect(e.CstBuffer(new Uint8Array([])).toTopHex()).toEqual("");
+test("e.TopBuffer.toTopHex - empty Uint8Array", () => {
+  expect(e.TopBuffer(new Uint8Array([])).toTopHex()).toEqual("");
 });
 
-test("e.CstBuffer.toTopHex - non-empty Uint8Array", () => {
-  expect(e.CstBuffer(new Uint8Array([72, 101, 108, 108])).toTopHex()).toEqual(
+test("e.TopBuffer.toTopHex - non-empty Uint8Array", () => {
+  expect(e.TopBuffer(new Uint8Array([72, 101, 108, 108])).toTopHex()).toEqual(
     "48656c6c",
   );
 });
 
-test("e.CstBuffer.toNestHex - empty hex", () => {
-  expect(e.CstBuffer("").toNestHex()).toEqual("");
+test("e.TopBuffer.toNestHex - empty hex", () => {
+  expect(e.TopBuffer("").toNestHex()).toEqual("");
 });
 
-test("e.CstBuffer.toNestHex - non-empty hex", () => {
-  expect(e.CstBuffer("48656c6c").toNestHex()).toEqual("48656c6c");
+test("e.TopBuffer.toNestHex - non-empty hex", () => {
+  expect(e.TopBuffer("48656c6c").toNestHex()).toEqual("48656c6c");
 });
 
-test("e.Str", () => {
+test("e.Str.toTopHex", () => {
   expect(e.Str("hi").toTopHex()).toEqual("6869");
 });
 
-test("e.CstStr", () => {
-  expect(e.CstStr("hi").toNestHex()).toEqual("6869");
+test("e.TopStr.toNestHex", () => {
+  expect(e.TopStr("hi").toNestHex()).toEqual("6869");
 });
 
 const zeroBechAddress =
@@ -280,12 +280,12 @@ UXTestCases.USuccess.forEach(([value, topEncoding, nestedEncoding]) => {
   });
 });
 
-test("e.Usize", () => {
+test("e.Usize.toTopHex", () => {
   expect(e.Usize(1234).toTopHex()).toEqual("04d2");
 });
 
-test("e.CstU", () => {
-  expect(e.CstU(1234).toNestHex()).toEqual("04d2");
+test("e.TopU.toNestHex", () => {
+  expect(e.TopU(1234).toNestHex()).toEqual("04d2");
 });
 
 const IXTestCases = {
@@ -408,12 +408,12 @@ IXTestCases.ISuccess.forEach(([value, topEncoding, nestEncoding]) => {
   });
 });
 
-test("e.Isize", () => {
+test("e.Isize.toTopHex", () => {
   expect(e.Isize(1234).toTopHex()).toEqual("04d2");
 });
 
-test("e.CstI", () => {
-  expect(e.CstI(1234).toNestHex()).toEqual("04d2");
+test("e.TopI.toNestHex", () => {
+  expect(e.TopI(1234).toNestHex()).toEqual("04d2");
 });
 
 test("e.Tuple.toTopHex - e.U8 + e.U8", () => {
@@ -478,6 +478,18 @@ test("e.Option.toTopHex - e.U(256)", () => {
 
 test("e.Option.toNestHex - e.U(256)", () => {
   expect(e.Option(e.U(256)).toNestHex()).toEqual("01000000020100");
+});
+
+test("e.Bytes.toNestHex", () => {
+  expect(e.Bytes([65, 66, 67]).toNestHex()).toEqual("414243");
+});
+
+test("e.CstStr.toNestHex", () => {
+  expect(e.CstStr("hi").toNestHex()).toEqual("6869");
+});
+
+test("e.CstBuffer.toNestHex", () => {
+  expect(e.CstBuffer("48656c6c").toNestHex()).toEqual("48656c6c");
 });
 
 describe("e.kvs", () => {
@@ -815,8 +827,4 @@ describe("e.kvs", () => {
       );
     });
   });
-});
-
-test("e.Bytes", () => {
-  expect(e.Bytes([65, 66, 67]).toTopHex()).toEqual("414243");
 });
