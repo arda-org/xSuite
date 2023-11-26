@@ -3,6 +3,20 @@ import { assertKvs } from "../assert/account";
 import { SWorld, SContract, SWallet } from "../world";
 import { e } from "./encoding";
 
+test("e.Buffer - bytes with base64", () => {
+  expect(() => e.Buffer([1] as any, "b64")).toThrow(
+    "bytes is not a base64 string.",
+  );
+});
+
+test("e.Buffer - invalid hex length", () => {
+  expect(() => e.Buffer("48656c6c6")).toThrow("Odd hex string length.");
+});
+
+test("e.Buffer - invalid hex string", () => {
+  expect(() => e.Buffer("48656c6c6g")).toThrow("Invalid hex string.");
+});
+
 test("e.Buffer.toTopHex - empty hex", () => {
   expect(e.Buffer("").toTopHex()).toEqual("");
 });
@@ -17,12 +31,6 @@ test("e.Buffer.toTopB64 - non-empty hex", () => {
 
 test("e.Buffer.toTopHex - non-empty base64", () => {
   expect(e.Buffer("ASM=", "b64").toTopHex()).toEqual("0123");
-});
-
-test("e.Buffer.toTopHex - bytes with base64", () => {
-  expect(() => e.Buffer([1] as any, "b64").toTopHex()).toThrow(
-    "bytes is not a base64 string.",
-  );
 });
 
 test("e.Buffer.toTopHex - empty number[]", () => {
