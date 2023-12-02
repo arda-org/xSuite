@@ -165,6 +165,20 @@ test("SWorld.query - value", async () => {
   assertHexList(returnData, [e.U(10)]);
 });
 
+test("SWorld.query - try to change the state", async () => {
+  await world.query({
+    callee: contract,
+    funcName: "set_n",
+    funcArgs: [e.U64(100)],
+  });
+  assertAccount(await contract.getAccountWithKvs(), {
+    kvs: [
+      e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }]),
+      e.kvs.Mapper("n").Value(e.U64(2)),
+    ],
+  });
+});
+
 test("SWallet.callContract failure", async () => {
   await expect(
     world.query({
@@ -380,6 +394,21 @@ test("SWallet.callContract with return", async () => {
     gasLimit: 10_000_000,
   });
   assertHexList(returnData, [e.U64(20)]);
+});
+
+test("SWorld.callContract - change the state", async () => {
+  await wallet.callContract({
+    callee: contract,
+    funcName: "set_n",
+    funcArgs: [e.U64(100)],
+    gasLimit: 10_000_000,
+  });
+  assertAccount(await contract.getAccountWithKvs(), {
+    kvs: [
+      e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }]),
+      e.kvs.Mapper("n").Value(e.U64(100)),
+    ],
+  });
 });
 
 test("SWallet.callContract failure", async () => {
