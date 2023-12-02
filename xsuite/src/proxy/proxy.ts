@@ -223,7 +223,7 @@ export class Proxy {
     return Promise.all([
       Proxy.getAccount(baseUrl, address),
       Proxy.getAccountKvs(baseUrl, address),
-    ]).then(([account, data]) => ({ ...account, kvs: data }));
+    ]).then(([account, kvs]) => ({ ...account, kvs }));
   }
 
   getAccountWithKvs(address: Address) {
