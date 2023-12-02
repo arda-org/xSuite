@@ -12,26 +12,15 @@ import (
 )
 
 func (ae *Executor) HandleVmQuery(r *http.Request) (interface{}, error) {
-	ae.vmTestExecutor.World.CreateStateBackup()
-	var err error
+	snapshot := ae.vmTestExecutor.World.AcctMap.Clone()
 	defer func() {
-		if err != nil {
-			errRollback := ae.vmTestExecutor.World.RollbackChanges()
-			if errRollback != nil {
-				err = errRollback
-			}
-		} else {
-			errCommit := ae.vmTestExecutor.World.CommitChanges()
-			if errCommit != nil {
-				err = errCommit
-			}
-		}
+		ae.vmTestExecutor.World.AcctMap = snapshot
 	}()
 
 	logger := NewLoggerStarted()
 	reqBody, _ := io.ReadAll(r.Body)
 	var rawQuery RawQuery
-	err = json.Unmarshal(reqBody, &rawQuery)
+	err := json.Unmarshal(reqBody, &rawQuery)
 	if err != nil {
 		return nil, err
 	}

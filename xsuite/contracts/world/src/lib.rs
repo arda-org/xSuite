@@ -34,6 +34,11 @@ pub trait World {
         x * self.n().get()
     }
 
+    #[endpoint]
+    fn set_n(&self, n: u64) {
+        self.n().set(n);
+    }
+
     #[storage_mapper("n")]
     fn n(&self) -> SingleValueMapper<u64>;
 }

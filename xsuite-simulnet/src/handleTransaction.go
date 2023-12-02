@@ -16,26 +16,10 @@ import (
 )
 
 func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
-	ae.vmTestExecutor.World.CreateStateBackup()
-	var err error
-	defer func() {
-		if err != nil {
-			errRollback := ae.vmTestExecutor.World.RollbackChanges()
-			if errRollback != nil {
-				err = errRollback
-			}
-		} else {
-			errCommit := ae.vmTestExecutor.World.CommitChanges()
-			if errCommit != nil {
-				err = errCommit
-			}
-		}
-	}()
-
 	logger := NewLoggerStarted()
 	reqBody, _ := io.ReadAll(r.Body)
 	var rawTx RawTx
-	err = json.Unmarshal(reqBody, &rawTx)
+	err := json.Unmarshal(reqBody, &rawTx)
 	if err != nil {
 		return nil, err
 	}
