@@ -270,7 +270,7 @@ const getEsdtKvs = ({
     uris !== undefined ||
     attrs !== undefined
   ) {
-    const keyEncs: Encodable[] = [e.TopStr(`ELRONDesdt${id}`)];
+    const keyEncs: Encodable[] = [e.TopStr("ELRONDesdt"), e.TopStr(id)];
     const message: Record<string, any> = {};
     if (nonce !== undefined && nonce !== 0) {
       keyEncs.push(e.TopU(nonce));
