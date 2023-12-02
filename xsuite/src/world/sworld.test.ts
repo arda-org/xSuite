@@ -165,6 +165,30 @@ test("SWorld.query - value", async () => {
   assertHexList(returnData, [e.U(10)]);
 });
 
+test("SWallet.callContract failure", async () => {
+  await expect(
+    world.query({
+      callee: contract,
+      funcName: "non_existent_function",
+    }),
+  ).rejects.toMatchObject({
+    message: expect.stringMatching(
+      /^Query failed: 1 - invalid function \(not found\) - Result:\n\{\n {2}"executionLogs": "(.*)",/,
+    ),
+    stack: expect.stringMatching(/src\/world\/sworld\.test\.ts:[0-9]+:3\)$/),
+  });
+});
+
+test("SWorld.query.assertFail - Correct parameters", async () => {
+  await world
+    .query({
+      callee: contract,
+      funcName: "require_positive",
+      funcArgs: [e.U64(0)],
+    })
+    .assertFail({ code: 4, message: "Amount is not positive." });
+});
+
 test("SWallet.getAccountNonce", async () => {
   expect(await wallet.getAccountNonce()).toEqual(0);
 });
@@ -367,20 +391,10 @@ test("SWallet.callContract failure", async () => {
     }),
   ).rejects.toMatchObject({
     message: expect.stringMatching(
-      /^Transaction failed: 1 - invalid function \(not found\) - Result:\n\{\n {2}"explorerUrl": "(.*)",\n {2}"hash": "(.*)",/,
+      /^Transaction failed: 1 - invalid function \(not found\) - Result:\n\{\n {2}"explorerUrl": "(.*)",\n {2}"hash": "(.*)",\n {2}"executionLogs": "(.*)",/,
     ),
     stack: expect.stringMatching(/src\/world\/sworld\.test\.ts:[0-9]+:3\)$/),
   });
-});
-
-test("SWallet.query.assertFail - Correct parameters", async () => {
-  await world
-    .query({
-      callee: contract,
-      funcName: "require_positive",
-      funcArgs: [e.U64(0)],
-    })
-    .assertFail({ code: 4, message: "Amount is not positive." });
 });
 
 test("SWallet.callContract.assertFail - Correct parameters", async () => {
