@@ -399,6 +399,8 @@ const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
       scAddress: query.callee.toString(),
       funcName: query.funcName,
       args: (query.funcArgs ?? []).map(broadHexToHex),
+      caller: query.sender !== undefined ? query.sender.toString() : undefined,
+      value: query.value !== undefined ? query.value.toString() : undefined,
     };
   }
   return query;
@@ -456,12 +458,16 @@ export type Query = {
   callee: Address;
   funcName: string;
   funcArgs?: Hex[];
+  sender?: Address;
+  value?: number | bigint;
 };
 
 type RawQuery = {
   scAddress: string;
   funcName: string;
   args: string[];
+  caller?: string;
+  value?: string;
 };
 
 export type TxParams = {
