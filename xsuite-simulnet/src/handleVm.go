@@ -28,6 +28,7 @@ func (ae *Executor) HandleVmQuery(r *http.Request) (interface{}, error) {
 		}
 	}()
 
+	logger := NewLoggerStarted()
 	reqBody, _ := io.ReadAll(r.Body)
 	var rawQuery RawQuery
 	err = json.Unmarshal(reqBody, &rawQuery)
@@ -85,6 +86,7 @@ func (ae *Executor) HandleVmQuery(r *http.Request) (interface{}, error) {
 				"returnData": b64ReturnData,
 				"returnCode": vmOutput.ReturnCode,
 				"returnMessage": vmOutput.ReturnMessage,
+				"executionLogs": logger.StopAndCollect(),
 			},
 		},
 		"code": "successful",
