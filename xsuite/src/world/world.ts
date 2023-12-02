@@ -132,7 +132,7 @@ export class World {
     }
     return {
       query: resQuery,
-      returnData: resQuery.returnData.map(b64ToHex),
+      returnData: [...resQuery.returnData].map(b64ToHex),
     };
   }
 }

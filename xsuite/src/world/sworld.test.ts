@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, expect, test } from "@jest/globals";
 import { assertAccount, assertHexList } from "../assert";
-import { d, e } from "../data";
+import { e } from "../data";
 import { kvsToRawKvs } from "../data/kvs";
 import { SWorld, SContract, SWallet } from "./sworld";
 import { isContractAddress } from "./utils";
@@ -39,7 +39,7 @@ beforeEach(async () => {
     codeMetadata: ["payable"],
     kvs: [
       e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }]),
-      [e.Str("n"), e.U64(1)],
+      [e.Str("n"), e.U64(2)],
     ],
   });
 });
@@ -138,12 +138,31 @@ test("SWorld.createContract - file:", async () => {
   assertAccount(await contract.getAccountWithKvs(), { code: worldCode });
 });
 
-test("SWorld.query", async () => {
+test("SWorld.query - basic", async () => {
   const { returnData } = await world.query({
     callee: contract,
-    funcName: "get_n",
+    funcName: "multiply_by_n",
+    funcArgs: [e.U64(10)],
   });
-  expect(d.U64().fromTop(returnData[0])).toEqual(1n);
+  assertHexList(returnData, [e.U64(20n)]);
+});
+
+test("SWorld.query - sender", async () => {
+  const { returnData } = await world.query({
+    callee: contract,
+    funcName: "get_caller",
+    sender: wallet,
+  });
+  assertHexList(returnData, [wallet]);
+});
+
+test("SWorld.query - value", async () => {
+  const { returnData } = await world.query({
+    callee: contract,
+    funcName: "get_value",
+    value: 10,
+  });
+  assertHexList(returnData, [e.U(10)]);
 });
 
 test("SWallet.getAccountNonce", async () => {
@@ -197,7 +216,7 @@ test("SContract.getAccountKvs", async () => {
   expect(await contract.getAccountKvs()).toEqual(
     kvsToRawKvs([
       e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }]),
-      [e.Str("n"), e.U64(1)],
+      [e.Str("n"), e.U64(2)],
     ]),
   );
 });
@@ -330,12 +349,13 @@ test("SWallet.callContract with ESDT", async () => {
 });
 
 test("SWallet.callContract with return", async () => {
-  const txResult = await wallet.callContract({
+  const { returnData } = await wallet.callContract({
     callee: contract,
-    funcName: "get_n",
+    funcName: "multiply_by_n",
+    funcArgs: [e.U64(10)],
     gasLimit: 10_000_000,
   });
-  assertHexList(txResult.returnData, ["01"]);
+  assertHexList(returnData, [e.U64(20)]);
 });
 
 test("SWallet.callContract failure", async () => {

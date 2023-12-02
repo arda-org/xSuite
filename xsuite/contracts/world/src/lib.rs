@@ -18,9 +18,20 @@ pub trait World {
         require!(amount > 0, "Amount is not positive.");
     }
 
-    #[view]
-    fn get_n(&self) -> u64 {
-        self.n().get()
+    #[payable("EGLD")]
+    #[endpoint]
+    fn get_value(&self) -> BigUint {
+        self.call_value().egld_value().clone_value()
+    }
+
+    #[endpoint]
+    fn get_caller(&self) -> ManagedAddress {
+        self.blockchain().get_caller()
+    }
+
+    #[endpoint]
+    fn multiply_by_n(&self, x: u64) -> u64 {
+        x * self.n().get()
     }
 
     #[storage_mapper("n")]
