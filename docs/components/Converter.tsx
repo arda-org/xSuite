@@ -269,6 +269,8 @@ const convert = (
     hex = inputValue;
   } else if (inputType === "base64") {
     hex = e.Buffer(inputValue, "b64").toTopHex();
+  } else if (inputType === "bytes") {
+    hex = e.Buffer(JSON.parse(inputValue)).toTopHex();
   } else if (inputType === "biguint") {
     hex = e.U(BigInt(inputValue)).toTopHex();
   } else if (inputType === "string") {
@@ -282,6 +284,9 @@ const convert = (
     return d.Buffer().toHex().fromTop(hex);
   } else if (outputType === "base64") {
     return d.Buffer().toB64().fromTop(hex);
+  } else if (outputType === "bytes") {
+    const bytes = d.Buffer().fromTop(hex);
+    return "[" + Array.from(bytes).join(", ") + "]";
   } else if (outputType === "biguint") {
     return d.U().toStr().fromTop(hex);
   } else if (outputType === "string") {
@@ -298,6 +303,7 @@ let newConverterId = 1;
 const dataTypes = {
   hex: "Hex",
   base64: "Base64",
+  bytes: "Bytes",
   string: "String",
   biguint: "BigUint",
   address: "Address",
