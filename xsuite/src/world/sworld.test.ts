@@ -11,6 +11,7 @@ let wallet: SWallet;
 let otherWallet: SWallet;
 let contract: SContract;
 const fftId = "FFT-abcdef";
+const sftId = "SFT-abcdef";
 const worldCode = "file:contracts/world/output/world.wasm";
 const zeroBechAddress =
   "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
@@ -202,6 +203,20 @@ test("SWorld.setAccount", async () => {
   });
 });
 
+test.failing("SWorld.setCurrentBlockInfo", async () => {
+  await world.setCurrentBlockInfo({
+    epoch: 100,
+    nonce: 200,
+    round: 300,
+    timestamp: 400,
+  });
+  const { returnData } = await world.query({
+    callee: contract,
+    funcName: "get_current_block_info",
+  });
+  assertHexList(returnData, [e.U64(100), e.U64(200), e.U64(300), e.U64(400)]);
+});
+
 test("SWorld.query - basic", async () => {
   const { returnData } = await world.query({
     callee: contract,
@@ -332,6 +347,22 @@ test("SWallet.query", async () => {
     funcName: "get_caller",
   });
   assertHexList(returnData, [wallet]);
+});
+
+test.failing("SWallet.query - esdts", async () => {
+  const { returnData } = await wallet.query({
+    callee: contract,
+    funcName: "get_esdts",
+    esdts: [
+      { id: fftId, amount: 10 },
+      { id: sftId, nonce: 1, amount: 20 },
+    ],
+  } as any);
+  // remove the "as any"
+  assertHexList(returnData, [
+    e.Tuple(e.Str(fftId), e.U64(0), e.U(10)),
+    e.Tuple(e.Str(sftId), e.U64(1), e.U(20)),
+  ]);
 });
 
 test("SWallet.callContract failure", async () => {
