@@ -290,12 +290,12 @@ export class Tx {
     };
   }
 
-  static getParamsToTransfer<T>({
+  static getParamsToTransfer<T, U extends Address>({
     receiver: _receiver,
     sender,
     esdts,
     ...txParams
-  }: Pick<TransferTxParams, "sender" | "receiver" | "esdts"> & T) {
+  }: Pick<TransferTxParams, "receiver" | "esdts"> & { sender: U } & T) {
     let receiver: Address;
     let data: string | undefined;
     if (esdts?.length) {
@@ -321,7 +321,7 @@ export class Tx {
     };
   }
 
-  static getParamsToCallContract<T>({
+  static getParamsToCallContract<T, U extends Address>({
     callee,
     sender,
     funcName,
@@ -330,9 +330,8 @@ export class Tx {
     ...txParams
   }: Pick<
     CallContractTxParams,
-    "sender" | "callee" | "funcName" | "funcArgs" | "esdts"
-  > &
-    T) {
+    "callee" | "funcName" | "funcArgs" | "esdts"
+  > & { sender: U } & T) {
     const dataParts: string[] = [];
     let receiver: Address;
     if (esdts?.length) {
