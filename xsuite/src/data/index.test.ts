@@ -666,6 +666,23 @@ describe("e.kvs", () => {
       );
     });
 
+    test("e.kvs.Mapper.User", async () => {
+      assertKvs(
+        e.kvs.Mapper("user", e.Str("test")).User(null),
+        await contract.getAccountKvs(),
+      );
+      await wallet.callContract({
+        callee: contract,
+        funcName: "user_add",
+        funcArgs: [e.Str("test"), wallet, contract],
+        gasLimit: 10_000_000,
+      });
+      assertKvs(
+        e.kvs.Mapper("user", e.Str("test")).User([wallet, contract]),
+        await contract.getAccountKvs(),
+      );
+    });
+
     test("e.kvs.Mapper.Vec", async () => {
       await wallet.callContract({
         callee: contract,
