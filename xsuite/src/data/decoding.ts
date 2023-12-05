@@ -9,20 +9,17 @@ import { DecoderMap, TupleDecoder } from "./TupleDecoder";
 import { UintDecoder } from "./UintDecoder";
 
 export const d = {
-  /**
-   * @deprecated `.CstBuffer` should be used instead.
-   */
-  Bytes: (byteLength?: number) => {
-    return d.CstBuffer(byteLength);
-  },
   Buffer: () => {
     return new BufferDecoder();
   },
-  CstBuffer: (byteLength?: number) => {
-    return new BytesDecoder(byteLength);
+  TopBuffer: () => {
+    return new BytesDecoder();
   },
   Str: () => {
     return d.Buffer().then((b) => new TextDecoder().decode(b));
+  },
+  TopStr: () => {
+    return d.TopBuffer().then((b) => d.Str().fromTop(b));
   },
   Addr: () => {
     return new AddressDecoder();
@@ -48,6 +45,9 @@ export const d = {
   U: () => {
     return new UintDecoder();
   },
+  TopU: () => {
+    return d.TopBuffer().then((b) => d.U().fromTop(b));
+  },
   I8: () => {
     return new IntDecoder(1);
   },
@@ -66,6 +66,9 @@ export const d = {
   I: () => {
     return new IntDecoder();
   },
+  TopI: () => {
+    return d.TopBuffer().then((b) => d.I().fromTop(b));
+  },
   Tuple: <T extends DecoderMap<any>>(decoders: T) => {
     return new TupleDecoder(decoders);
   },
@@ -74,5 +77,17 @@ export const d = {
   },
   Option: <T>(decoder: Decoder<T>) => {
     return new OptionDecoder(decoder);
+  },
+  /**
+   * @deprecated Use `.TopBuffer` instead.
+   */
+  Bytes: () => {
+    return d.TopBuffer();
+  },
+  /**
+   * @deprecated Use `.TopBuffer` instead.
+   */
+  CstBuffer: () => {
+    return d.TopBuffer();
   },
 };

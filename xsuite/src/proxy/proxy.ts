@@ -1,9 +1,9 @@
 import { e } from "../data";
 import { Encodable } from "../data/Encodable";
 import { Address, addressToAddressEncodable } from "../data/address";
-import { Hex, hexToHexString } from "../data/hex";
+import { Hex, broadHexToHex } from "../data/broadHex";
 import { RawKvs } from "../data/kvs";
-import { b64ToHexString } from "../data/utils";
+import { b64ToHex } from "../data/utils";
 
 export class Proxy {
   baseUrl: string;
@@ -146,7 +146,7 @@ export class Proxy {
       balance: BigInt(res.account.balance),
       code: res.account.code ? res.account.code : null,
       codeMetadata: res.account.codeMetadata
-        ? b64ToHexString(res.account.codeMetadata)
+        ? b64ToHex(res.account.codeMetadata)
         : null,
       owner: res.account.ownerAddress ? res.account.ownerAddress : null,
     } as {
@@ -223,7 +223,7 @@ export class Proxy {
     return Promise.all([
       Proxy.getAccount(baseUrl, address),
       Proxy.getAccountKvs(baseUrl, address),
-    ]).then(([account, data]) => ({ ...account, kvs: data }));
+    ]).then(([account, kvs]) => ({ ...account, kvs }));
   }
 
   getAccountWithKvs(address: Address) {
@@ -260,8 +260,8 @@ export class Tx {
       data: [
         code,
         "0500",
-        codeMetadataToHexString(codeMetadata),
-        ...(codeArgs ?? []).map(hexToHexString),
+        codeMetadataToHex(codeMetadata),
+        ...(codeArgs ?? []).map(broadHexToHex),
       ].join("@"),
       ...txParams,
     };
@@ -283,19 +283,19 @@ export class Tx {
       data: [
         "upgradeContract",
         code,
-        codeMetadataToHexString(codeMetadata),
-        ...(codeArgs ?? []).map(hexToHexString),
+        codeMetadataToHex(codeMetadata),
+        ...(codeArgs ?? []).map(broadHexToHex),
       ].join("@"),
       ...txParams,
     };
   }
 
-  static getParamsToTransfer<T>({
+  static getParamsToTransfer<T, U extends Address>({
     receiver: _receiver,
     sender,
     esdts,
     ...txParams
-  }: Pick<TransferTxParams, "sender" | "receiver" | "esdts"> & T) {
+  }: Pick<TransferTxParams, "receiver" | "esdts"> & { sender: U } & T) {
     let receiver: Address;
     let data: string | undefined;
     if (esdts?.length) {
@@ -321,7 +321,7 @@ export class Tx {
     };
   }
 
-  static getParamsToCallContract<T>({
+  static getParamsToCallContract<T, U extends Address>({
     callee,
     sender,
     funcName,
@@ -330,9 +330,8 @@ export class Tx {
     ...txParams
   }: Pick<
     CallContractTxParams,
-    "sender" | "callee" | "funcName" | "funcArgs" | "esdts"
-  > &
-    T) {
+    "callee" | "funcName" | "funcArgs" | "esdts"
+  > & { sender: U } & T) {
     const dataParts: string[] = [];
     let receiver: Address;
     if (esdts?.length) {
@@ -350,7 +349,7 @@ export class Tx {
       receiver = callee;
       dataParts.push(funcName);
     }
-    dataParts.push(...(funcArgs ?? []).map(hexToHexString));
+    dataParts.push(...(funcArgs ?? []).map(broadHexToHex));
     return {
       receiver,
       sender,
@@ -398,13 +397,15 @@ const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
     query = {
       scAddress: query.callee.toString(),
       funcName: query.funcName,
-      args: (query.funcArgs ?? []).map(hexToHexString),
+      args: (query.funcArgs ?? []).map(broadHexToHex),
+      caller: query.sender !== undefined ? query.sender.toString() : undefined,
+      value: query.value !== undefined ? query.value.toString() : undefined,
     };
   }
   return query;
 };
 
-export const codeMetadataToHexString = (codeMetadata: CodeMetadata): string => {
+export const codeMetadataToHex = (codeMetadata: CodeMetadata): string => {
   if (typeof codeMetadata === "string") {
     return codeMetadata;
   }
@@ -456,12 +457,16 @@ export type Query = {
   callee: Address;
   funcName: string;
   funcArgs?: Hex[];
+  sender?: Address;
+  value?: number | bigint;
 };
 
 type RawQuery = {
   scAddress: string;
   funcName: string;
   args: string[];
+  caller?: string;
+  value?: string;
 };
 
 export type TxParams = {

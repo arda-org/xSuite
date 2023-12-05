@@ -18,12 +18,12 @@ export const registerBuildCmd = (cmd: Command) => {
     )
     .option(
       "--dir <DIR>",
-      "Directory in which the command is executed (default: current directory)",
+      "Directory in which the command is executed (default: $(PWD))",
     )
     .option("-r, --recursive", "Build all contracts under the directory")
     .option(
       "--target-dir <TARGET_DIR>",
-      "Target directory used by Rust compiler",
+      "Target directory used by Rust compiler (default: $(PWD)/target)",
     )
     .action(action);
 };
@@ -41,31 +41,26 @@ const action = ({
   recursive?: boolean;
   targetDir?: string;
 }) => {
-  const startDir = dir ?? process.cwd();
+  dir = dir ?? process.cwd();
+  targetDir = targetDir ?? path.join(process.cwd(), "target");
   const dirs: string[] = [];
   if (recursive) {
     const ignoreRegex = new RegExp(ignore ?? defaultIgnore);
-    dirs.push(...findBuildableDirs(startDir, ignoreRegex));
+    dirs.push(...findBuildableDirs(dir, ignoreRegex));
   } else {
-    if (isDirBuildable(startDir)) {
-      dirs.push(startDir);
+    if (isDirBuildable(dir)) {
+      dirs.push(dir);
     }
   }
   if (dirs.length === 0) {
     logError("No valid contract found.");
     return;
   }
-  const args = ["run"];
-  if (targetDir !== undefined) {
-    args.push("--target-dir", targetDir);
-  }
-  args.push("build");
+  const args = ["run", "--target-dir", targetDir, "build"];
   if (locked) {
     args.push("--locked");
   }
-  if (targetDir !== undefined) {
-    args.push("--target-dir", targetDir);
-  }
+  args.push("--target-dir", targetDir);
   const numDirs = dirs.length;
   logTitle(`Building contract${numDirs > 1 ? "s" : ""}...`);
   for (const [i, dir] of dirs.entries()) {

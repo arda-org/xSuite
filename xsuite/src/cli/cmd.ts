@@ -2,6 +2,7 @@ import { Command } from "commander";
 import { pkgVersion } from "../_pkg";
 import { registerBuildCmd } from "./buildAction";
 import { registerInstallRustCmd } from "./installRustCmd";
+import { registerInstallRustKeyCmd } from "./installRustKeyCmd";
 import { registerNewCmd } from "./newCmd";
 import { registerNewWalletCmd } from "./newWalletCmd";
 import { registerRequestXegldCmd } from "./requestXegldCmd";
@@ -13,6 +14,7 @@ export const getCommand = () => {
   const cmd = new Command();
   cmd.version(pkgVersion);
   registerInstallRustCmd(cmd);
+  registerInstallRustKeyCmd(cmd);
   registerUninstallRustCmd(cmd);
   registerNewCmd(cmd);
   registerBuildCmd(cmd);

@@ -1,7 +1,7 @@
 import { ByteReader } from "./ByteReader";
 import { AbstractDecoder } from "./Decoder";
 import { U32Decoder } from "./UintDecoder";
-import { bytesToB64, bytesToHexString } from "./utils";
+import { bytesToB64, bytesToHex } from "./utils";
 
 export class BufferDecoder extends AbstractDecoder<Uint8Array> {
   _fromTop(r: ByteReader) {
@@ -14,7 +14,7 @@ export class BufferDecoder extends AbstractDecoder<Uint8Array> {
   }
 
   toHex() {
-    return this.then(bytesToHexString);
+    return this.then(bytesToHex);
   }
 
   toB64() {

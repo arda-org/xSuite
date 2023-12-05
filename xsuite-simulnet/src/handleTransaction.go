@@ -11,31 +11,15 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi"
-	logger "github.com/multiversx/mx-chain-logger-go"
 	worldmock "github.com/multiversx/mx-chain-vm-v1_4-go/mock/world"
 	mj "github.com/multiversx/mx-chain-vm-v1_4-go/scenarios/model"
 )
 
 func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
-	ae.vmTestExecutor.World.CreateStateBackup()
-	var err error
-	defer func() {
-		if err != nil {
-			errRollback := ae.vmTestExecutor.World.RollbackChanges()
-			if errRollback != nil {
-				err = errRollback
-			}
-		} else {
-			errCommit := ae.vmTestExecutor.World.CommitChanges()
-			if errCommit != nil {
-				err = errCommit
-			}
-		}
-	}()
-
+	logger := NewLoggerStarted()
 	reqBody, _ := io.ReadAll(r.Body)
 	var rawTx RawTx
-	err = json.Unmarshal(reqBody, &rawTx)
+	err := json.Unmarshal(reqBody, &rawTx)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +82,7 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 				}
 				tx.Tx.To = mj.JSONBytesFromString{Value: realReceiver}
 				i += 1
-				l, err := hexStringToUint64(dataParts[i])
+				l, err := hexToUint64(dataParts[i])
 				if err != nil {
 					return nil, err
 				}
@@ -110,12 +94,12 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 						return nil, err
 					}
 					i += 1
-					nonce, err := hexStringToUint64(dataParts[i])
+					nonce, err := hexToUint64(dataParts[i])
 					if err != nil {
 						return nil, err
 					}
 					i += 1
-					amount, err := hexStringToBigint(dataParts[i])
+					amount, err := hexToBigint(dataParts[i])
 					if err != nil {
 						return nil, err
 					}
@@ -170,15 +154,7 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 			},
 		)
 	}
-	var executionLogsBuf bytes.Buffer
-	_ = logger.SetLogLevel("*:TRACE")
-	logger.ToggleCorrelation(false)
-	logger.ToggleLoggerName(true)
-	logger.ClearLogObservers()
-	logger.AddLogObserver(&executionLogsBuf, &logger.PlainFormatter{})
 	vmOutput, err := ae.vmTestExecutor.ExecuteTxStep(tx)
-	_ = logger.SetLogLevel("*:NONE")
-	executionLogs := executionLogsBuf.String()
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +217,7 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 					"returnCode": vmOutput.ReturnCode,
 					"returnMessage": vmOutput.ReturnMessage,
 				},
-				"executionLogs": executionLogs,
+				"executionLogs": logger.StopAndCollect(),
 			},
 		},
 		"code": "successful",

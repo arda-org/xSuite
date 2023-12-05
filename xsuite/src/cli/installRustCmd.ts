@@ -1,6 +1,10 @@
 import { Command } from "commander";
-import { logTitle, logAndRunCommand } from "./helpers";
-import { rustTarget, rustToolchain } from "./rustSettings";
+import {
+  logTitle,
+  logAndRunCommand,
+  rustToolchain,
+  rustTarget,
+} from "./helpers";
 
 export const registerInstallRustCmd = (cmd: Command) => {
   cmd

@@ -1,5 +1,5 @@
 import { ByteReader } from "./ByteReader";
-import { hexStringToBytes, narrowBytes } from "./utils";
+import { hexToBytes, narrowBytes } from "./utils";
 
 export type Decoder<T> = {
   fromTop(
@@ -21,11 +21,11 @@ export type Decoder<T> = {
     encoding?: "hex" | "b64",
   ): T;
   /**
-   * @deprecated `.fromTop` should be used instead.
+   * @deprecated Use `.fromTop` instead.
    */
   topDecode(bytes: string | number[] | Uint8Array | ByteReader): T;
   /**
-   * @deprecated `.fromNest` should be used instead.
+   * @deprecated Use `.fromNest` instead.
    */
   nestDecode(bytes: string | number[] | Uint8Array | ByteReader): T;
 };
@@ -77,7 +77,7 @@ export abstract class AbstractDecoder<T> implements Decoder<T> {
 
 const toByteReader = (bytes: string | number[] | Uint8Array | ByteReader) => {
   if (typeof bytes === "string") {
-    return new ByteReader(hexStringToBytes(bytes));
+    return new ByteReader(hexToBytes(bytes));
   } else if (Array.isArray(bytes)) {
     return new ByteReader(new Uint8Array(bytes));
   } else if (ArrayBuffer.isView(bytes)) {

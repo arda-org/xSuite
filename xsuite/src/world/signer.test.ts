@@ -35,9 +35,15 @@ test("KeystoreSigner safe", async () => {
 });
 
 test("KeystoreSigner safe - ENOENT", async () => {
-  expect(KeystoreSigner.fromFile(walletPath)).rejects.toThrow(
+  stdoutInt.start();
+  await expect(KeystoreSigner.fromFile(walletPath)).rejects.toThrow(
     `ENOENT: no such file or directory, open '${walletPath}'`,
   );
+  stdoutInt.stop();
+  expect(stdoutInt.data.split("\n")).toEqual([
+    `Loading keystore wallet at "${walletPath}"...`,
+    "",
+  ]);
 });
 
 test("KeystoreSigner unsafe", async () => {

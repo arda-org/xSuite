@@ -12,25 +12,15 @@ import (
 )
 
 func (ae *Executor) HandleVmQuery(r *http.Request) (interface{}, error) {
-	ae.vmTestExecutor.World.CreateStateBackup()
-	var err error
+	snapshot := ae.vmTestExecutor.World.AcctMap.Clone()
 	defer func() {
-		if err != nil {
-			errRollback := ae.vmTestExecutor.World.RollbackChanges()
-			if errRollback != nil {
-				err = errRollback
-			}
-		} else {
-			errCommit := ae.vmTestExecutor.World.CommitChanges()
-			if errCommit != nil {
-				err = errCommit
-			}
-		}
+		ae.vmTestExecutor.World.AcctMap = snapshot
 	}()
 
+	logger := NewLoggerStarted()
 	reqBody, _ := io.ReadAll(r.Body)
 	var rawQuery RawQuery
-	err = json.Unmarshal(reqBody, &rawQuery)
+	err := json.Unmarshal(reqBody, &rawQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -45,8 +35,23 @@ func (ae *Executor) HandleVmQuery(r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	if rawQuery.Caller != nil {
+		caller, err := addressConverter.Decode(*rawQuery.Caller)
+		if err != nil {
+			return nil, err
+		}
+		tx.Tx.From = mj.JSONBytesFromString{Value: caller}
+	} else {
+		tx.Tx.From = mj.JSONBytesFromString{Value: scAddress}
+	}
 	tx.Tx.To = mj.JSONBytesFromString{Value: scAddress}
-	tx.Tx.From = tx.Tx.To
+	if rawQuery.Value != nil {
+		egldValue, err := stringToBigint(*rawQuery.Value)
+		if err != nil {
+			return nil, err
+		}
+		tx.Tx.EGLDValue = mj.JSONBigInt{Value: egldValue}
+	}
 	tx.Tx.Function = rawQuery.FuncName
 	tx.Tx.Arguments = []mj.JSONBytesFromTree{}
 	for _, rawArgument := range rawQuery.Args {
@@ -70,6 +75,7 @@ func (ae *Executor) HandleVmQuery(r *http.Request) (interface{}, error) {
 				"returnData": b64ReturnData,
 				"returnCode": vmOutput.ReturnCode,
 				"returnMessage": vmOutput.ReturnMessage,
+				"executionLogs": logger.StopAndCollect(),
 			},
 		},
 		"code": "successful",
@@ -81,4 +87,6 @@ type RawQuery struct {
 	ScAddress		string
 	FuncName		string
 	Args				[]string
+	Caller			*string
+	Value 			*string
 }

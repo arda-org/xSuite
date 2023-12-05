@@ -1,7 +1,27 @@
 import { describe, expect, test, beforeEach, afterEach } from "@jest/globals";
 import { assertKvs } from "../assert/account";
 import { SWorld, SContract, SWallet } from "../world";
-import { e } from "./encoding";
+import { d, e } from "./index";
+
+const zeroBechAddress =
+  "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
+const zeroHexAddress =
+  "0000000000000000000000000000000000000000000000000000000000000000";
+const zeroBytesAddress = new Uint8Array(32);
+
+test("e.Buffer - bytes with base64", () => {
+  expect(() => e.Buffer([1] as any, "b64")).toThrow(
+    "bytes is not a base64 string.",
+  );
+});
+
+test("e.Buffer - odd hex length", () => {
+  expect(() => e.Buffer("48656c6c6")).toThrow("Odd hex length.");
+});
+
+test("e.Buffer - invalid hex", () => {
+  expect(() => e.Buffer("48656c6c6g")).toThrow("Invalid hex.");
+});
 
 test("e.Buffer.toTopHex - empty hex", () => {
   expect(e.Buffer("").toTopHex()).toEqual("");
@@ -17,12 +37,6 @@ test("e.Buffer.toTopB64 - non-empty hex", () => {
 
 test("e.Buffer.toTopHex - non-empty base64", () => {
   expect(e.Buffer("ASM=", "b64").toTopHex()).toEqual("0123");
-});
-
-test("e.Buffer.toTopHex - bytes with base64", () => {
-  expect(async () => e.Buffer([1] as any, "b64").toTopHex()).rejects.toThrow(
-    "bytes is not a base64 string.",
-  );
 });
 
 test("e.Buffer.toTopHex - empty number[]", () => {
@@ -55,57 +69,51 @@ test("e.Buffer.toNestB64 - non-empty hex", () => {
   expect(e.Buffer("48656c6c").toNestB64()).toEqual("AAAABEhlbGw=");
 });
 
-test("e.CstBuffer.toTopHex - empty hex", () => {
-  expect(e.CstBuffer("").toTopHex()).toEqual("");
+test("e.TopBuffer.toTopHex - empty hex", () => {
+  expect(e.TopBuffer("").toTopHex()).toEqual("");
 });
 
-test("e.CstBuffer.toTopHex - non-empty hex", () => {
-  expect(e.CstBuffer("48656c6c").toTopHex()).toEqual("48656c6c");
+test("e.TopBuffer.toTopHex - non-empty hex", () => {
+  expect(e.TopBuffer("48656c6c").toTopHex()).toEqual("48656c6c");
 });
 
-test("e.CstBuffer.toTopHex - non-empty b64", () => {
-  expect(e.CstBuffer("ASM=", "b64").toTopHex()).toEqual("0123");
+test("e.TopBuffer.toTopHex - non-empty b64", () => {
+  expect(e.TopBuffer("ASM=", "b64").toTopHex()).toEqual("0123");
 });
 
-test("e.CstBuffer.toTopHex - empty number[]", () => {
-  expect(e.CstBuffer([]).toTopHex()).toEqual("");
+test("e.TopBuffer.toTopHex - empty number[]", () => {
+  expect(e.TopBuffer([]).toTopHex()).toEqual("");
 });
 
-test("e.CstBuffer.toTopHex - non-empty number[]", () => {
-  expect(e.CstBuffer([72, 101, 108, 108]).toTopHex()).toEqual("48656c6c");
+test("e.TopBuffer.toTopHex - non-empty number[]", () => {
+  expect(e.TopBuffer([72, 101, 108, 108]).toTopHex()).toEqual("48656c6c");
 });
 
-test("e.CstBuffer.toTopHex - empty Uint8Array", () => {
-  expect(e.CstBuffer(new Uint8Array([])).toTopHex()).toEqual("");
+test("e.TopBuffer.toTopHex - empty Uint8Array", () => {
+  expect(e.TopBuffer(new Uint8Array([])).toTopHex()).toEqual("");
 });
 
-test("e.CstBuffer.toTopHex - non-empty Uint8Array", () => {
-  expect(e.CstBuffer(new Uint8Array([72, 101, 108, 108])).toTopHex()).toEqual(
+test("e.TopBuffer.toTopHex - non-empty Uint8Array", () => {
+  expect(e.TopBuffer(new Uint8Array([72, 101, 108, 108])).toTopHex()).toEqual(
     "48656c6c",
   );
 });
 
-test("e.CstBuffer.toNestHex - empty hex", () => {
-  expect(e.CstBuffer("").toNestHex()).toEqual("");
+test("e.TopBuffer.toNestHex - empty hex", () => {
+  expect(e.TopBuffer("").toNestHex()).toEqual("");
 });
 
-test("e.CstBuffer.toNestHex - non-empty hex", () => {
-  expect(e.CstBuffer("48656c6c").toNestHex()).toEqual("48656c6c");
+test("e.TopBuffer.toNestHex - non-empty hex", () => {
+  expect(e.TopBuffer("48656c6c").toNestHex()).toEqual("48656c6c");
 });
 
-test("e.Str", () => {
+test("e.Str.toTopHex", () => {
   expect(e.Str("hi").toTopHex()).toEqual("6869");
 });
 
-test("e.CstStr", () => {
-  expect(e.CstStr("hi").toNestHex()).toEqual("6869");
+test("e.TopStr.toNestHex", () => {
+  expect(e.TopStr("hi").toNestHex()).toEqual("6869");
 });
-
-const zeroBechAddress =
-  "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
-const zeroHexAddress =
-  "0000000000000000000000000000000000000000000000000000000000000000";
-const zeroBytesAddress = new Uint8Array(32);
 
 test("e.Addr.toTopHex - bech address", () => {
   expect(e.Addr(zeroBechAddress).toTopHex()).toEqual(zeroHexAddress);
@@ -272,19 +280,19 @@ UXTestCases.USuccess.forEach(([value, topEncoding, nestedEncoding]) => {
   });
 });
 
-test("e.Usize", () => {
+test("e.Usize.toTopHex", () => {
   expect(e.Usize(1234).toTopHex()).toEqual("04d2");
 });
 
-test("e.CstU", () => {
-  expect(e.CstU(1234).toNestHex()).toEqual("04d2");
+test("e.TopU.toNestHex", () => {
+  expect(e.TopU(1234).toNestHex()).toEqual("04d2");
 });
 
 const IXTestCases = {
   I8Success: [
-    [0, "", "00"],
+    [0n, "", "00"],
     [2n ** 7n - 1n, "7f", "7f"],
-    [-1, "ff", "ff"],
+    [-1n, "ff", "ff"],
     [-(2n ** 7n), "80", "80"],
   ],
   I8Error: [
@@ -292,11 +300,11 @@ const IXTestCases = {
     [-(2n ** 7n) - 1n, "Number below minimal value allowed."],
   ],
   I16Success: [
-    [0, "", "0000"],
+    [0n, "", "0000"],
     [2n ** 7n - 1n, "7f", "007f"],
     [2n ** 7n, "0080", "0080"],
     [2n ** 15n - 1n, "7fff", "7fff"],
-    [-1, "ff", "ffff"],
+    [-1n, "ff", "ffff"],
     [-(2n ** 7n), "80", "ff80"],
     [-(2n ** 7n) - 1n, "ff7f", "ff7f"],
     [-(2n ** 15n), "8000", "8000"],
@@ -306,9 +314,9 @@ const IXTestCases = {
     [-(2n ** 15n) - 1n, "Number below minimal value allowed."],
   ],
   I32Success: [
-    [0, "", "00000000"],
+    [0n, "", "00000000"],
     [2n ** 31n - 1n, "7fffffff", "7fffffff"],
-    [-1, "ff", "ffffffff"],
+    [-1n, "ff", "ffffffff"],
     [-(2n ** 31n), "80000000", "80000000"],
   ],
   I32Error: [
@@ -316,9 +324,9 @@ const IXTestCases = {
     [-(2n ** 31n) - 1n, "Number below minimal value allowed."],
   ],
   I64Success: [
-    [0, "", "0000000000000000"],
+    [0n, "", "0000000000000000"],
     [2n ** 63n - 1n, "7fffffffffffffff", "7fffffffffffffff"],
-    [-1, "ff", "ffffffffffffffff"],
+    [-1n, "ff", "ffffffffffffffff"],
     [-(2n ** 63n), "8000000000000000", "8000000000000000"],
   ],
   I64Error: [
@@ -400,12 +408,12 @@ IXTestCases.ISuccess.forEach(([value, topEncoding, nestEncoding]) => {
   });
 });
 
-test("e.Isize", () => {
+test("e.Isize.toTopHex", () => {
   expect(e.Isize(1234).toTopHex()).toEqual("04d2");
 });
 
-test("e.CstI", () => {
-  expect(e.CstI(1234).toNestHex()).toEqual("04d2");
+test("e.TopI.toNestHex", () => {
+  expect(e.TopI(1234).toNestHex()).toEqual("04d2");
 });
 
 test("e.Tuple.toTopHex - e.U8 + e.U8", () => {
@@ -472,6 +480,18 @@ test("e.Option.toNestHex - e.U(256)", () => {
   expect(e.Option(e.U(256)).toNestHex()).toEqual("01000000020100");
 });
 
+test("e.Bytes.toNestHex", () => {
+  expect(e.Bytes([65, 66, 67]).toNestHex()).toEqual("414243");
+});
+
+test("e.CstStr.toNestHex", () => {
+  expect(e.CstStr("hi").toNestHex()).toEqual("6869");
+});
+
+test("e.CstBuffer.toNestHex", () => {
+  expect(e.CstBuffer("48656c6c").toNestHex()).toEqual("48656c6c");
+});
+
 describe("e.kvs", () => {
   let world: SWorld;
   let wallet: SWallet;
@@ -509,7 +529,7 @@ describe("e.kvs", () => {
         e.kvs.Mapper("single", e.Str("a")).Value(e.U64(1)),
         await contract.getAccountKvs(),
       );
-      expect(async () =>
+      await expect(async () =>
         assertKvs(
           e.kvs.Mapper("single", e.Str("a")).Value(null),
           await contract.getAccountKvs(),
@@ -540,7 +560,7 @@ describe("e.kvs", () => {
           .UnorderedSet([e.U(10), e.U(20)]),
         await contract.getAccountKvs(),
       );
-      expect(async () =>
+      await expect(async () =>
         assertKvs(
           e.kvs.Mapper("unordered_set", e.U64(1)).UnorderedSet(null),
           await contract.getAccountKvs(),
@@ -579,7 +599,7 @@ describe("e.kvs", () => {
         ]),
         await contract.getAccountKvs(),
       );
-      expect(async () =>
+      await expect(async () =>
         assertKvs(
           e.kvs.Mapper("set", e.U64(1)).Set(null),
           await contract.getAccountKvs(),
@@ -628,7 +648,7 @@ describe("e.kvs", () => {
         ]),
         await contract.getAccountKvs(),
       );
-      expect(async () =>
+      await expect(async () =>
         assertKvs(
           e.kvs.Mapper("map", e.U(1)).Map(null),
           await contract.getAccountKvs(),
@@ -646,6 +666,23 @@ describe("e.kvs", () => {
       );
     });
 
+    test("e.kvs.Mapper.User", async () => {
+      assertKvs(
+        e.kvs.Mapper("user", e.Str("test")).User(null),
+        await contract.getAccountKvs(),
+      );
+      await wallet.callContract({
+        callee: contract,
+        funcName: "user_add",
+        funcArgs: [e.Str("test"), wallet, contract],
+        gasLimit: 10_000_000,
+      });
+      assertKvs(
+        e.kvs.Mapper("user", e.Str("test")).User([wallet, contract]),
+        await contract.getAccountKvs(),
+      );
+    });
+
     test("e.kvs.Mapper.Vec", async () => {
       await wallet.callContract({
         callee: contract,
@@ -657,7 +694,7 @@ describe("e.kvs", () => {
         e.kvs.Mapper("vec", e.U64(1), e.U(2)).Vec([e.U64(1), e.U64(2)]),
         await contract.getAccountKvs(),
       );
-      expect(async () =>
+      await expect(async () =>
         assertKvs(
           e.kvs.Mapper("vec", e.U64(1), e.U(2)).Vec(null),
           await contract.getAccountKvs(),
@@ -809,6 +846,318 @@ describe("e.kvs", () => {
   });
 });
 
-test("e.Bytes", () => {
-  expect(e.Bytes([65, 66, 67]).toTopHex()).toEqual("414243");
+test("d.Buffer.fromTop - hex", () => {
+  expect(d.Buffer().fromTop("01020304")).toEqual(new Uint8Array([1, 2, 3, 4]));
+});
+
+test("d.Buffer.fromTop - number[]", () => {
+  expect(d.Buffer().fromTop("01020304")).toEqual(new Uint8Array([1, 2, 3, 4]));
+});
+
+test("d.Buffer.fromTop - bytes", () => {
+  expect(d.Buffer().fromTop([1, 2, 3, 4])).toEqual(
+    new Uint8Array([1, 2, 3, 4]),
+  );
+});
+
+test("d.Buffer.fromTop - bytes", () => {
+  expect(d.Buffer().fromTop(new Uint8Array([1, 2, 3, 4]))).toEqual(
+    new Uint8Array([1, 2, 3, 4]),
+  );
+});
+
+test("d.Buffer.fromTop - b64", () => {
+  expect(d.Buffer().fromTop("AQIDBA==", "b64")).toEqual(
+    new Uint8Array([1, 2, 3, 4]),
+  );
+});
+
+test("d.Buffer.toHex.fromTop", () => {
+  expect(d.Buffer().toHex().fromTop("01020304")).toEqual("01020304");
+});
+
+test("d.Buffer.toB64.fromTop", () => {
+  expect(d.Buffer().toB64().fromTop("01020304")).toEqual("AQIDBA==");
+});
+
+test("d.Buffer.fromNest - hex", () => {
+  expect(d.Buffer().fromNest("0000000401020304")).toEqual(
+    new Uint8Array([1, 2, 3, 4]),
+  );
+});
+
+test("d.Buffer.fromTop - b64", () => {
+  expect(d.Buffer().fromNest("AAAABAECAwQ=", "b64")).toEqual(
+    new Uint8Array([1, 2, 3, 4]),
+  );
+});
+
+test("d.TopBuffer.fromTop", () => {
+  expect(d.TopBuffer().fromTop("00010203")).toEqual(
+    new Uint8Array([0, 1, 2, 3]),
+  );
+});
+
+test("d.TopBuffer.fromNest", () => {
+  expect(d.TopBuffer().fromNest("00010203")).toEqual(
+    new Uint8Array([0, 1, 2, 3]),
+  );
+});
+
+test("d.Str.fromTop", () => {
+  expect(d.Str().fromTop("6869")).toEqual("hi");
+});
+
+test("d.TopStr.fromNest", () => {
+  expect(d.TopStr().fromNest("6869")).toEqual("hi");
+});
+
+test("d.Addr.fromTop", () => {
+  expect(d.Addr().fromTop(zeroHexAddress)).toEqual(zeroBechAddress);
+});
+
+test("d.Addr.toHex.fromTop", () => {
+  expect(d.Addr().toHex().fromTop(zeroHexAddress)).toEqual(zeroHexAddress);
+});
+
+test("d.Addr.fromNest", () => {
+  expect(d.Addr().fromNest(zeroHexAddress)).toEqual(zeroBechAddress);
+});
+
+test("d.Bool", () => {
+  expect(d.Bool().fromNest("01")).toEqual(true);
+});
+
+UXTestCases.U8Success.forEach(([value, topEncoding, nestEncoding]) => {
+  test(`d.U8.fromTop - In: ${value}`, () => {
+    expect(d.U8().fromTop(topEncoding)).toEqual(value);
+  });
+  test(`d.U8.fromNest - In: ${value}`, () => {
+    expect(d.U8().fromNest(nestEncoding)).toEqual(value);
+  });
+});
+UXTestCases.U16Success.forEach(([value, topEncoding, nestEncoding]) => {
+  test(`d.U16.fromTop - In: ${value}`, () => {
+    expect(d.U16().fromTop(topEncoding)).toEqual(value);
+  });
+  test(`d.U16.fromNest - In: ${value}`, () => {
+    expect(d.U16().fromNest(nestEncoding)).toEqual(value);
+  });
+});
+UXTestCases.U32Success.forEach(([value, topEncoding, nestEncoding]) => {
+  test(`d.U32.fromTop - In: ${value}`, () => {
+    expect(d.U32().fromTop(topEncoding)).toEqual(value);
+  });
+  test(`d.U32.fromNest - In: ${value}`, () => {
+    expect(d.U32().fromNest(nestEncoding)).toEqual(value);
+  });
+});
+UXTestCases.U64Success.forEach(([value, topEncoding, nestEncoding]) => {
+  test(`d.U64.fromTop - In: ${value}`, () => {
+    expect(d.U64().fromTop(topEncoding)).toEqual(value);
+  });
+  test(`d.U64.fromNest - In: ${value}`, () => {
+    expect(d.U64().fromNest(nestEncoding)).toEqual(value);
+  });
+});
+UXTestCases.USuccess.forEach(([value, topEncoding, nestEncoding]) => {
+  test(`d.U.fromTop - In: ${value}`, () => {
+    expect(d.U().fromTop(topEncoding)).toEqual(value);
+  });
+  test(`d.U.fromNest - In: ${value}`, () => {
+    expect(d.U().fromNest(nestEncoding)).toEqual(value);
+  });
+});
+
+test("d.Usize.fromTop", () => {
+  expect(d.Usize().fromTop("01")).toEqual(1n);
+});
+
+test("d.U.toNum.fromTop - in-range number", () => {
+  expect(d.U().toNum().fromTop("01")).toEqual(1);
+});
+
+test("d.U.toNum.fromTop - out-of-range number", () => {
+  expect(() => d.U().toNum().fromTop("0100000000000000")).toThrow(
+    "Bigint above threshold to be safely casted to Number.",
+  );
+});
+
+test("d.U.toStr.fromTop", () => {
+  expect(d.U().toStr().fromTop("01")).toEqual("1");
+});
+
+test("d.TopU.fromNest", () => {
+  expect(d.TopU().fromNest("0100")).toEqual(256n);
+});
+
+IXTestCases.I8Success.forEach(([value, topEncoding, nestEncoding]) => {
+  test(`d.I8.fromTop - In: ${value}`, () => {
+    expect(d.I8().fromTop(topEncoding)).toEqual(value);
+  });
+  test(`d.I8.fromNest - In: ${value}`, () => {
+    expect(d.I8().fromNest(nestEncoding)).toEqual(value);
+  });
+});
+IXTestCases.I16Success.forEach(([value, topEncoding, nestEncoding]) => {
+  test(`d.I16.fromTop - In: ${value}`, () => {
+    expect(d.I16().fromTop(topEncoding)).toEqual(value);
+  });
+  test(`d.I16.fromNest - In: ${value}`, () => {
+    expect(d.I16().fromNest(nestEncoding)).toEqual(value);
+  });
+});
+IXTestCases.I32Success.forEach(([value, topEncoding, nestEncoding]) => {
+  test(`d.I32.fromTop - In: ${value}`, () => {
+    expect(d.I32().fromTop(topEncoding)).toEqual(value);
+  });
+  test(`d.I32.fromNest - In: ${value}`, () => {
+    expect(d.I32().fromNest(nestEncoding)).toEqual(value);
+  });
+});
+IXTestCases.I64Success.forEach(([value, topEncoding, nestEncoding]) => {
+  test(`d.I64.fromTop - In: ${value}`, () => {
+    expect(d.I64().fromTop(topEncoding)).toEqual(value);
+  });
+  test(`d.I64.fromNest - In: ${value}`, () => {
+    expect(d.I64().fromNest(nestEncoding)).toEqual(value);
+  });
+});
+IXTestCases.ISuccess.forEach(([value, topEncoding, nestEncoding]) => {
+  test(`d.I.fromTop - In: ${value}`, () => {
+    expect(d.I().fromTop(topEncoding)).toEqual(value);
+  });
+  test(`d.I.fromNest - In: ${value}`, () => {
+    expect(d.I().fromNest(nestEncoding)).toEqual(value);
+  });
+});
+
+test("d.Isize.fromTop", () => {
+  expect(d.Isize().fromTop("01")).toEqual(1n);
+});
+
+test("d.I.toNum.fromTop", () => {
+  expect(d.I().toNum().fromTop("01")).toEqual(1);
+});
+
+test("d.I.toNum.fromTop - out-of-range number", () => {
+  expect(() => d.I().toNum().fromTop("8000000000000000")).toThrow(
+    "Bigint below threshold to be safely casted to Number.",
+  );
+});
+
+test("d.I.toStr.fromTop", () => {
+  expect(d.I().toStr().fromTop("01")).toEqual("1");
+});
+
+test("d.TopI.fromNest", () => {
+  expect(d.TopI().fromNest("ff7f")).toEqual(-129n);
+});
+
+test("d.Tuple.fromTop - empty map", () => {
+  expect(d.Tuple({}).fromTop("")).toEqual({});
+});
+
+test("d.Tuple.fromTop - non-empty map", () => {
+  expect(d.Tuple({ a: d.U8(), b: d.U8() }).fromTop("0102")).toEqual({
+    a: 1n,
+    b: 2n,
+  });
+});
+
+test("d.Tuple.fromNest - empty map", () => {
+  expect(d.Tuple({}).fromNest("")).toEqual({});
+});
+
+test("d.Tuple.fromNest - non-empty map", () => {
+  expect(d.Tuple({ a: d.U8(), b: d.U8() }).fromNest("0102")).toEqual({
+    a: 1n,
+    b: 2n,
+  });
+});
+
+test("d.List.fromTop - empty array", () => {
+  expect(d.List(d.U8()).fromTop("")).toEqual([]);
+});
+
+test("d.List.fromTop - non-empty array", () => {
+  expect(d.List(d.U8()).fromTop("0102")).toEqual([1n, 2n]);
+});
+
+test("d.List.fromNest - empty array", () => {
+  expect(d.List(d.U8()).fromNest("00000000")).toEqual([]);
+});
+
+test("d.List.fromNest - non-empty array", () => {
+  expect(d.List(d.U8()).fromNest("000000020102")).toEqual([1n, 2n]);
+});
+
+test("d.Option.fromTop - null of BigUint", () => {
+  expect(d.Option(d.U()).fromTop("")).toBeNull();
+});
+
+test("d.Option.fromTop - BigUint", () => {
+  expect(d.Option(d.U()).fromTop("010000000101")).toEqual(1n);
+});
+
+test("d.Option.fromTop - null of u8", () => {
+  expect(d.Option(d.U8()).fromTop("")).toBeNull();
+});
+
+test("d.Option.fromTop - u8", () => {
+  expect(d.Option(d.U8()).fromTop("0101")).toEqual(1n);
+});
+
+test("d.Option.fromTop - first byte >= 2", () => {
+  expect(() => d.Option(d.U8()).fromTop("0200")).toThrow(
+    "Invalid Option top-encoding.",
+  );
+});
+
+test("d.Option.fromNest - null of BigUint", () => {
+  expect(d.Option(d.U()).fromNest("00")).toBeNull();
+});
+
+test("d.Option.fromNest - BigUint", () => {
+  expect(d.Option(d.U()).fromNest("010000000101")).toEqual(1n);
+});
+
+test("d.Option.fromNest - null of u8", () => {
+  expect(d.Option(d.U()).fromNest("00")).toBeNull();
+});
+
+test("d.Option.fromNest - u8", () => {
+  expect(d.Option(d.U8()).fromNest("0101")).toEqual(1n);
+});
+
+test("d.Option.fromNest - first byte >= 2", () => {
+  expect(() => d.Option(d.U8()).fromNest("0200")).toThrow(
+    "Invalid Option nest-encoding.",
+  );
+});
+
+test("d.Bytes", () => {
+  expect(d.Bytes().fromTop("414243")).toEqual(new Uint8Array([65, 66, 67]));
+});
+
+test("d.CstBuffer.fromNest", () => {
+  expect(d.CstBuffer().fromNest("00010203")).toEqual(
+    new Uint8Array([0, 1, 2, 3]),
+  );
+});
+
+test("d.Buffer.topDecode", () => {
+  expect(d.Buffer().topDecode("01")).toEqual(new Uint8Array([1]));
+});
+
+test("d.Buffer.nestDecode", () => {
+  expect(d.Buffer().nestDecode("0000000101")).toEqual(new Uint8Array([1]));
+});
+
+test("d.Buffer.topDecode", () => {
+  expect(d.Buffer().toHex().topDecode("01")).toEqual("01");
+});
+
+test("d.Buffer.nestDecode", () => {
+  expect(d.Buffer().toHex().nestDecode("0000000101")).toEqual("01");
 });

@@ -9,7 +9,7 @@ import {
   Contract,
   Wallet,
   expandCode,
-  WorldDeployContractParams,
+  WalletDeployContractParams,
   WorldNewOptions,
 } from "./world";
 
@@ -83,16 +83,20 @@ export class SWorld extends World {
     });
   }
 
-  async createWallet(account: SWorldCreateWalletAccount = {}) {
+  async createWallet(params: SWorldCreateWalletParams = {}) {
     walletCounter += 1;
     const address = numberToBytesAddress(walletCounter, false);
     const wallet = this.newWallet(new DummySigner(address));
-    await wallet.setAccount(account);
+    await wallet.setAccount(params);
     return wallet;
   }
 
-  createContract(account: SWorldCreateContractAccount = {}) {
-    return createContract(this.proxy, account, this.explorerUrl);
+  setAccount(params: SWorldSetAccountParams) {
+    return setAccount(this.proxy, params);
+  }
+
+  createContract(params?: SWorldCreateContractParams) {
+    return createContract(this.proxy, this.explorerUrl, params);
   }
 
   setCurrentBlockInfo(block: Block) {
@@ -124,19 +128,18 @@ export class SWallet extends Wallet {
     this.proxy = proxy;
   }
 
-  setAccount(account: SWalletSetAccountAccount) {
-    return setAccount(this.proxy, { address: this, ...account });
+  setAccount(params: SWalletSetAccountParams) {
+    return setAccount(this.proxy, { ...params, address: this });
   }
 
-  createContract(account: SWalletCreateContractAccount = {}) {
-    return createContract(
-      this.proxy,
-      { ...account, owner: this },
-      this.baseExplorerUrl,
-    );
+  createContract(params?: SWalletCreateContractParams) {
+    return createContract(this.proxy, this.baseExplorerUrl, {
+      ...params,
+      owner: this,
+    });
   }
 
-  deployContract(params: WorldDeployContractParams) {
+  deployContract(params: WalletDeployContractParams) {
     return super.deployContract(params).then((data) => ({
       ...data,
       contract: new SContract({
@@ -164,31 +167,31 @@ export class SContract extends Contract {
     this.proxy = proxy;
   }
 
-  setAccount(account: SContractSetAccountAccount) {
-    return setAccount(this.proxy, { address: this, ...account });
+  setAccount(params: SContractSetAccountParams) {
+    return setAccount(this.proxy, { ...params, address: this });
   }
 }
 
-const setAccount = (proxy: SProxy, account: Account) => {
-  if (account.code == null) {
-    if (isContractAddress(account.address)) {
-      account.code = "00";
+const setAccount = (proxy: SProxy, params: Account) => {
+  if (params.code == null) {
+    if (isContractAddress(params.address)) {
+      params.code = "00";
     }
   } else {
-    account.code = expandCode(account.code);
+    params.code = expandCode(params.code);
   }
-  return proxy.setAccount(account);
+  return proxy.setAccount(params);
 };
 
 const createContract = async (
   proxy: SProxy,
-  account: Omit<Account, "address"> = {},
   baseExplorerUrl?: string,
+  params: CreateContractParams = {},
 ) => {
   contractCounter += 1;
   const address = numberToBytesAddress(contractCounter, true);
   const contract = new SContract({ address, proxy, baseExplorerUrl });
-  await contract.setAccount(account);
+  await contract.setAccount(params);
   return contract;
 };
 
@@ -201,14 +204,22 @@ type SWorldNewOptions =
     }
   | WorldNewOptions;
 
-type SWorldCreateWalletAccount = Prettify<Omit<Account, "address">>;
+type SWorldCreateWalletParams = Prettify<Omit<Account, "address">>;
 
-type SWorldCreateContractAccount = Prettify<Omit<Account, "address">>;
+type SetAccountParams = Account;
 
-type SWalletSetAccountAccount = Prettify<Omit<Account, "address">>;
+type CreateContractParams = Prettify<Omit<Account, "address">>;
 
-type SWalletCreateContractAccount = Prettify<
-  Omit<Account, "address" | "owner">
+type SWorldSetAccountParams = SetAccountParams;
+
+type SWorldCreateContractParams = CreateContractParams;
+
+type SWalletSetAccountParams = Prettify<
+  Omit<SWorldSetAccountParams, "address">
 >;
 
-type SContractSetAccountAccount = Omit<Account, "address">;
+type SWalletCreateContractParams = Prettify<
+  Omit<CreateContractParams, "owner">
+>;
+
+type SContractSetAccountParams = SWalletSetAccountParams;

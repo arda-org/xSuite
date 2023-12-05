@@ -16,11 +16,11 @@ export const startSimulnet = (): Promise<string> => {
     });
 
     server.stderr.on("data", (data: Buffer) => {
-      reject(new Error(data.toString()));
+      throw new Error(data.toString());
     });
 
     server.on("error", (error) => {
-      reject(error);
+      throw error;
     });
   });
 };

@@ -24,21 +24,8 @@ jobs:
           node-version: 18
           pnpm-version: 8
 
-      - name: Cache Rust setup
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.rustup/toolchains
-            ~/.cargo
-          key: ${{ runner.os }}-rust-${{ hashFiles('xsuite/src/cli/rustSettings.ts') }}-${{ hashFiles('contracts/**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-rust-
-
-      - name: Cache Rust target directory
-        uses: actions/cache@v3
-        with:
-          path: target
-          key: ${{ runner.os }}-target-${{ hashFiles('contracts/**/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-target-
+      - name: Lint
+        run: pnpm lint
 
       - name: Use Golang
         uses: actions/setup-go@v4
@@ -46,23 +33,33 @@ jobs:
           go-version: 1.19
           cache-dependency-path: xsuite-simulnet/src/go.sum
 
-      - name: Lint
-        run: pnpm lint
-
       - name: Build xsuite-simulnet
         run: pnpm build-xsuite-simulnet
 
       - name: Build xsuite
         run: pnpm build-xsuite
 
+      - name: Add xSuite Rust key in env
+        run: echo "XSUITE_RUST=$(pnpm xsuite install-rust-key)" >> $GITHUB_ENV
+
+      - name: Cache Rust
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.rustup/toolchains
+            ~/.cargo
+            target
+          key: ${{ runner.os }}-rust-${{ env.XSUITE_RUST }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-rust-
+
+      - name: Install Rust
+        run: pnpm xsuite install-rust
+
       - name: Test xsuite
         run: |
           git config --global user.email "you@example.com"
           git config --global user.name "Your Name"
           pnpm test-xsuite
-
-      - name: Install Rust
-        run: pnpm xsuite install-rust
 
       - name: Verify xsuite wasms
         run: pnpm verify-xsuite-wasms

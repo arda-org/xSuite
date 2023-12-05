@@ -9,7 +9,7 @@ import { OptionEncodable } from "./OptionEncodable";
 import { TupleEncodable } from "./TupleEncodable";
 import { UintEncodable } from "./UintEncodable";
 import { Address, addressToAddressEncodable } from "./address";
-import { Hex, hexToBytes } from "./hex";
+import { Hex, broadHexToBytes } from "./broadHex";
 import { Kv } from "./kvs";
 import { narrowBytes } from "./utils";
 
@@ -25,12 +25,12 @@ function Buffer(
   return new BufferEncodable(narrowBytes(bytes, encoding));
 }
 
-function CstBuffer(
+function TopBuffer(
   bytes: string | number[] | Uint8Array,
   encoding?: "hex",
 ): BytesEncodable;
-function CstBuffer(bytes: string, encoding: "b64"): BytesEncodable;
-function CstBuffer(
+function TopBuffer(bytes: string, encoding: "b64"): BytesEncodable;
+function TopBuffer(
   bytes: string | number[] | Uint8Array,
   encoding?: "hex" | "b64",
 ): BytesEncodable {
@@ -38,18 +38,12 @@ function CstBuffer(
 }
 
 export const e = {
-  /**
-   * @deprecated `.CstBuffer` should be used instead.
-   */
-  Bytes: (bytes: string | number[] | Uint8Array) => {
-    return e.CstBuffer(bytes);
-  },
   Buffer,
-  CstBuffer,
+  TopBuffer,
   Str: (string: string) => {
     return e.Buffer(new TextEncoder().encode(string));
   },
-  CstStr: (string: string) => {
+  TopStr: (string: string) => {
     return new BytesEncodable(e.Str(string).toTopBytes());
   },
   Addr: (address: string | Uint8Array) => {
@@ -76,8 +70,8 @@ export const e = {
   U: (uint: number | bigint) => {
     return new UintEncodable(uint);
   },
-  CstU: (uint: number | bigint) => {
-    return e.CstBuffer(e.U(uint).toTopBytes());
+  TopU: (uint: number | bigint) => {
+    return e.TopBuffer(e.U(uint).toTopBytes());
   },
   I8: (int: number | bigint) => {
     return new IntEncodable(int, 1);
@@ -97,8 +91,8 @@ export const e = {
   I: (int: number | bigint) => {
     return new IntEncodable(int);
   },
-  CstI: (int: number | bigint) => {
-    return e.CstBuffer(e.I(int).toTopBytes());
+  TopI: (int: number | bigint) => {
+    return e.TopBuffer(e.I(int).toTopBytes());
   },
   Tuple: (...values: Encodable[]) => {
     return new TupleEncodable(values);
@@ -109,9 +103,27 @@ export const e = {
   Option: (optValue: Encodable | null) => {
     return new OptionEncodable(optValue);
   },
+  /**
+   * @deprecated Use `.TopBuffer` instead.
+   */
+  Bytes: (bytes: string | number[] | Uint8Array) => {
+    return e.TopBuffer(bytes);
+  },
+  /**
+   * @deprecated Use `.TopBuffer` instead.
+   */
+  CstBuffer: (bytes: string | number[] | Uint8Array) => {
+    return e.TopBuffer(bytes);
+  },
+  /**
+   * @deprecated Use `.TopStr` instead.
+   */
+  CstStr: (string: string) => {
+    return e.TopStr(string);
+  },
   kvs: {
     Mapper: (name: string, ...keys: Encodable[]) => {
-      const baseKey = e.Tuple(e.CstStr(name), ...keys);
+      const baseKey = e.Tuple(e.TopStr(name), ...keys);
       return {
         Value: (data: Encodable | null) => {
           return getValueMapperKvs(baseKey, data);
@@ -131,6 +143,9 @@ export const e = {
         },
         Vec: (data: Encodable[] | null) => {
           return getVecMapperKvs(baseKey, data);
+        },
+        User: (data: Encodable[] | null) => {
+          return getUserMapperKvs(baseKey, data);
         },
       };
     },
@@ -155,7 +170,7 @@ const getUnorderedSetMapperKvs = (
   return [
     ...getVecMapperKvs(baseKey, data),
     ...data.map(
-      (v, i): Kv => [e.Tuple(baseKey, e.CstStr(".index"), v), e.U32(i + 1)],
+      (v, i): Kv => [e.Tuple(baseKey, e.TopStr(".index"), v), e.U32(i + 1)],
     ),
   ];
 };
@@ -173,12 +188,12 @@ const getSetMapperKvs = (
     if (index <= 0) {
       throw new Error("Negative id not allowed.");
     }
-    kvs.push([e.Tuple(baseKey, e.CstStr(".node_id"), v), e.U32(index)]);
-    kvs.push([e.Tuple(baseKey, e.CstStr(".value"), e.U32(index)), v]);
+    kvs.push([e.Tuple(baseKey, e.TopStr(".node_id"), v), e.U32(index)]);
+    kvs.push([e.Tuple(baseKey, e.TopStr(".value"), e.U32(index)), v]);
     const prevI = i === 0 ? 0n : data[i - 1][0];
     const nextI = i === data.length - 1 ? 0n : data[i + 1][0];
     kvs.push([
-      e.Tuple(baseKey, e.CstStr(".node_links"), e.U32(index)),
+      e.Tuple(baseKey, e.TopStr(".node_links"), e.U32(index)),
       e.Tuple(e.U32(prevI), e.U32(nextI)),
     ]);
     if (index >= maxIndex) {
@@ -186,7 +201,7 @@ const getSetMapperKvs = (
     }
   }
   kvs.push([
-    e.Tuple(baseKey, e.CstStr(".info")),
+    e.Tuple(baseKey, e.TopStr(".info")),
     data.length > 0
       ? e.Tuple(
           e.U32(data.length),
@@ -210,7 +225,7 @@ const getMapMapperKvs = (
       data.map(([i, k]) => [i, k]),
     ),
     ...data.map(
-      ([, k, v]): Kv => [e.Tuple(baseKey, e.CstStr(".mapped"), k), v],
+      ([, k, v]): Kv => [e.Tuple(baseKey, e.TopStr(".mapped"), k), v],
     ),
   ];
 };
@@ -222,12 +237,23 @@ const getVecMapperKvs = (
   data ??= [];
   return [
     ...data.map(
-      (v, i): Kv => [e.Tuple(baseKey, e.CstStr(".item"), e.U32(i + 1)), v],
+      (v, i): Kv => [e.Tuple(baseKey, e.TopStr(".item"), e.U32(i + 1)), v],
     ),
-    [
-      e.Tuple(baseKey, e.CstStr(".len")),
-      data.length > 0 ? e.U32(BigInt(data.length)) : "",
-    ],
+    [e.Tuple(baseKey, e.TopStr(".len")), e.U32(data.length)],
+  ];
+};
+
+const getUserMapperKvs = (
+  baseKey: Encodable,
+  data: Encodable[] | null,
+): Kv[] => {
+  data ??= [];
+  return [
+    ...data.flatMap((v, i): Kv[] => [
+      [e.Tuple(baseKey, e.TopStr("_id_to_address"), e.U32(i + 1)), v],
+      [e.Tuple(baseKey, e.TopStr("_address_to_id"), v), e.U32(i + 1)],
+    ]),
+    [e.Tuple(baseKey, e.TopStr("_count")), e.U32(data.length)],
   ];
 };
 
@@ -258,10 +284,10 @@ const getEsdtKvs = ({
     uris !== undefined ||
     attrs !== undefined
   ) {
-    const keyEncs: Encodable[] = [e.CstStr(`ELRONDesdt${id}`)];
+    const keyEncs: Encodable[] = [e.TopStr("ELRONDesdt"), e.TopStr(id)];
     const message: Record<string, any> = {};
     if (nonce !== undefined && nonce !== 0) {
-      keyEncs.push(e.CstU(nonce));
+      keyEncs.push(e.TopU(nonce));
     }
     const metadata: [string, any][] = [];
     if (name !== undefined) {
@@ -277,13 +303,13 @@ const getEsdtKvs = ({
       metadata.push(["Royalties", royalties.toString()]);
     }
     if (hash !== undefined) {
-      metadata.push(["Hash", hexToBytes(hash)]);
+      metadata.push(["Hash", broadHexToBytes(hash)]);
     }
     if (uris !== undefined) {
       metadata.push(["URIs", uris]);
     }
     if (attrs !== undefined) {
-      metadata.push(["Attributes", hexToBytes(attrs)]);
+      metadata.push(["Attributes", broadHexToBytes(attrs)]);
     }
     if (metadata.length > 0 && nonce) {
       metadata.push(["Nonce", nonce.toString()]);
