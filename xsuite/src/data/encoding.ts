@@ -144,6 +144,9 @@ export const e = {
         Vec: (data: Encodable[] | null) => {
           return getVecMapperKvs(baseKey, data);
         },
+        User: (data: Encodable[] | null) => {
+          return getUserMapperKvs(baseKey, data);
+        },
       };
     },
     Esdts: (esdts: Esdt[]) => {
@@ -236,10 +239,21 @@ const getVecMapperKvs = (
     ...data.map(
       (v, i): Kv => [e.Tuple(baseKey, e.TopStr(".item"), e.U32(i + 1)), v],
     ),
-    [
-      e.Tuple(baseKey, e.TopStr(".len")),
-      data.length > 0 ? e.U32(BigInt(data.length)) : "",
-    ],
+    [e.Tuple(baseKey, e.TopStr(".len")), e.U32(data.length)],
+  ];
+};
+
+const getUserMapperKvs = (
+  baseKey: Encodable,
+  data: Encodable[] | null,
+): Kv[] => {
+  data ??= [];
+  return [
+    ...data.flatMap((v, i): Kv[] => [
+      [e.Tuple(baseKey, e.TopStr("_id_to_address"), e.U32(i + 1)), v],
+      [e.Tuple(baseKey, e.TopStr("_address_to_id"), v), e.U32(i + 1)],
+    ]),
+    [e.Tuple(baseKey, e.TopStr("_count")), e.U32(data.length)],
   ];
 };
 

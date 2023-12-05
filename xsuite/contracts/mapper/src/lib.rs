@@ -73,6 +73,13 @@ pub trait Mapper {
         }
     }
 
+    #[endpoint]
+    fn user_add(&self, key: ManagedBuffer, addresses: MultiValueEncoded<ManagedAddress>) {
+        for address in addresses {
+            self.user(key.clone()).get_or_create_user(&address);
+        }
+    }
+
     #[storage_mapper("single")]
     fn single(&self, key: ManagedBuffer) -> SingleValueMapper<u64>;
 
@@ -87,4 +94,7 @@ pub trait Mapper {
 
     #[storage_mapper("vec")]
     fn vec(&self, key1: u64, key2: BigUint) -> VecMapper<u64>;
+
+    #[storage_mapper("user")]
+    fn user(&self, key: ManagedBuffer) -> UserMapper;
 }
