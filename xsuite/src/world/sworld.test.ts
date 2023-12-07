@@ -407,6 +407,9 @@ test("SWallet.getAccount", async () => {
   assertAccount(await wallet.getAccount(), {
     nonce: 0,
     balance: 10n ** 18n,
+    code: null,
+    codeMetadata: ["readable"],
+    owner: null,
   });
 });
 
@@ -421,11 +424,9 @@ test("SWallet.getAccountWithKvs", async () => {
   });
 });
 
-test("SWallet.getAccountWithKvs + SWorld.createWallet", async () => {
-  const wallet1 = await world.createWallet();
-  const wallet1Data = await wallet1.getAccountWithKvs();
-  const wallet2 = await world.createWallet(wallet1Data);
-  assertAccount(await wallet2.getAccountWithKvs(), wallet1Data);
+test("SWorld.createWallet", async () => {
+  const wallet = await world.createWallet({ balance: 10n });
+  assertAccount(await wallet.getAccountWithKvs(), { balance: 10n });
 });
 
 test("SContract.getAccountNonce", async () => {
@@ -463,11 +464,9 @@ test("SContract.getAccountWithKvs", async () => {
   });
 });
 
-test("SContract.getAccountWithKvs + SContract.createContract", async () => {
-  const contract1 = await world.createContract();
-  const contract1Data = await contract1.getAccountWithKvs();
-  const contract2 = await world.createContract(contract1Data);
-  assertAccount(await contract2.getAccountWithKvs(), contract1Data);
+test("SContract.createContract", async () => {
+  const contract = await world.createContract({ balance: 10n });
+  assertAccount(await contract.getAccountWithKvs(), { balance: 10n });
 });
 
 test("SWallet.executeTx", async () => {
