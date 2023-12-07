@@ -3,8 +3,8 @@ import { assertAccount, assertHexList } from "../assert";
 import { e } from "../data";
 import { kvsToRawKvs } from "../data/kvs";
 import { DummySigner } from "./signer";
-import { SWorld, SContract, SWallet } from "./sworld";
 import { isContractAddress } from "./utils";
+import { SWorld, SContract, SWallet } from ".";
 
 let world: SWorld;
 let wallet: SWallet;
