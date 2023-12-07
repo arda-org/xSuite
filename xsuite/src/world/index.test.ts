@@ -375,7 +375,7 @@ test("SWallet.callContract failure", async () => {
     message: expect.stringMatching(
       /^Query failed: 1 - invalid function \(not found\) - Result:\n\{\n {2}"executionLogs": "(.*)",/,
     ),
-    stack: expect.stringMatching(/src\/world\/sworld\.test\.ts:[0-9]+:3\)$/),
+    stack: expect.stringMatching(/src\/world\/index\.test\.ts:[0-9]+:3\)$/),
   });
 });
 
@@ -607,7 +607,7 @@ test("SWallet.callContract failure", async () => {
     message: expect.stringMatching(
       /^Transaction failed: 1 - invalid function \(not found\) - Result:\n\{\n {2}"explorerUrl": "(.*)",\n {2}"hash": "(.*)",\n {2}"executionLogs": "(.*)",/,
     ),
-    stack: expect.stringMatching(/src\/world\/sworld\.test\.ts:[0-9]+:3\)$/),
+    stack: expect.stringMatching(/src\/world\/index\.test\.ts:[0-9]+:3\)$/),
   });
 });
 
