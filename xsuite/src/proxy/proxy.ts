@@ -1,6 +1,10 @@
 import { e } from "../data";
 import { Encodable } from "../data/Encodable";
-import { Address, addressToAddressEncodable } from "../data/address";
+import {
+  Address,
+  addressToAddressEncodable,
+  addressToBech32,
+} from "../data/address";
 import { Hex, broadHexToHex } from "../data/broadHex";
 import { RawKvs } from "../data/kvs";
 import { b64ToHex } from "../data/utils";
@@ -130,9 +134,7 @@ export class Proxy {
   }
 
   static getAccountRaw(baseUrl: string, address: Address) {
-    return Proxy.fetchRaw(
-      `${baseUrl}/address/${addressToAddressEncodable(address)}`,
-    );
+    return Proxy.fetchRaw(`${baseUrl}/address/${addressToBech32(address)}`);
   }
 
   getAccountRaw(address: Address) {
@@ -142,6 +144,7 @@ export class Proxy {
   static async getAccount(baseUrl: string, address: Address) {
     const res = unrawRes(await Proxy.getAccountRaw(baseUrl, address));
     return {
+      address: res.account.address,
       nonce: res.account.nonce,
       balance: BigInt(res.account.balance),
       code: res.account.code ? res.account.code : null,
@@ -150,6 +153,7 @@ export class Proxy {
         : null,
       owner: res.account.ownerAddress ? res.account.ownerAddress : null,
     } as {
+      address: string;
       nonce: number;
       balance: bigint;
       code: string | null;
@@ -164,7 +168,7 @@ export class Proxy {
 
   static getAccountNonceRaw(baseUrl: string, address: Address) {
     return Proxy.fetchRaw(
-      `${baseUrl}/address/${addressToAddressEncodable(address)}/nonce`,
+      `${baseUrl}/address/${addressToBech32(address)}/nonce`,
     );
   }
 
@@ -183,7 +187,7 @@ export class Proxy {
 
   static getAccountBalanceRaw(baseUrl: string, address: Address) {
     return Proxy.fetchRaw(
-      `${baseUrl}/address/${addressToAddressEncodable(address)}/balance`,
+      `${baseUrl}/address/${addressToBech32(address)}/balance`,
     );
   }
 
@@ -202,7 +206,7 @@ export class Proxy {
 
   static getAccountKvsRaw(baseUrl: string, address: Address) {
     return Proxy.fetchRaw(
-      `${baseUrl}/address/${addressToAddressEncodable(address)}/keys`,
+      `${baseUrl}/address/${addressToBech32(address)}/keys`,
     );
   }
 
@@ -229,6 +233,17 @@ export class Proxy {
   getAccountWithKvs(address: Address) {
     return Proxy.getAccountWithKvs(this.baseUrl, address);
   }
+
+  static getSerializableAccountWithKvs(baseUrl: string, address: Address) {
+    return Proxy.getAccountWithKvs(baseUrl, address).then((account) => ({
+      ...account,
+      balance: account.balance.toString(),
+    }));
+  }
+
+  getSerializableAccountWithKvs(address: Address) {
+    return Proxy.getSerializableAccountWithKvs(this.baseUrl, address);
+  }
 }
 
 export class Tx {
@@ -239,8 +254,8 @@ export class Tx {
     this.unsignedRawTx = {
       nonce: params.nonce,
       value: (params.value ?? 0n).toString(),
-      receiver: params.receiver.toString(),
-      sender: params.sender.toString(),
+      receiver: addressToBech32(params.receiver),
+      sender: addressToBech32(params.sender),
       gasPrice: params.gasPrice,
       gasLimit: params.gasLimit,
       data: params.data === undefined ? undefined : btoa(params.data),
@@ -395,10 +410,11 @@ const broadTxToRawTx = (tx: BroadTx): RawTx => {
 const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
   if ("callee" in query) {
     query = {
-      scAddress: query.callee.toString(),
+      scAddress: addressToBech32(query.callee),
       funcName: query.funcName,
       args: (query.funcArgs ?? []).map(broadHexToHex),
-      caller: query.sender !== undefined ? query.sender.toString() : undefined,
+      caller:
+        query.sender !== undefined ? addressToBech32(query.sender) : undefined,
       value: query.value !== undefined ? query.value.toString() : undefined,
     };
   }

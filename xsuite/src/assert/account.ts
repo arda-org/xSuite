@@ -1,5 +1,7 @@
 import assert from "node:assert";
+import { addressToBech32 } from "../data/address";
 import { Kvs, kvsToRawKvs } from "../data/kvs";
+import { Optional } from "../helpers";
 import { Proxy } from "../proxy";
 import { codeMetadataToHex } from "../proxy/proxy";
 import { Account } from "../proxy/sproxy";
@@ -28,6 +30,7 @@ export const assertHasKvs = (actualKvs: Kvs, hasKvs: Kvs) => {
 export const assertAccount = (
   actualAccount: ActualAccount,
   {
+    address,
     nonce,
     balance,
     code,
@@ -38,6 +41,9 @@ export const assertAccount = (
     hasKvs,
   }: ExpectedAccount,
 ) => {
+  if (address !== undefined) {
+    assert.strictEqual(actualAccount.address, addressToBech32(address));
+  }
   if (nonce !== undefined) {
     assert.strictEqual(actualAccount.nonce, nonce);
   }
@@ -59,7 +65,7 @@ export const assertAccount = (
   if (owner !== undefined) {
     assert.strictEqual(
       actualAccount.owner,
-      owner == null ? owner : owner.toString(),
+      owner == null ? owner : addressToBech32(owner),
     );
   }
   if (kvs !== undefined) {
@@ -77,7 +83,7 @@ type ActualAccount = Partial<
   Awaited<ReturnType<typeof Proxy.getAccountWithKvs>>
 >;
 
-type ExpectedAccount = Omit<Account, "address"> & {
+type ExpectedAccount = Optional<Account, "address"> & {
   /**
    * @deprecated Use `.kvs` instead.
    */

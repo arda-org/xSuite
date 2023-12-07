@@ -1,6 +1,5 @@
 import { test, expect } from "@jest/globals";
-import { assertKvs, assertHasKvs, assertAccount } from "./account";
-import { assertHexList } from "./hexList";
+import { assertAccount, assertHexList } from ".";
 
 test("assertHexList - matching", () => {
   assertHexList(["00"], ["00"]);
@@ -10,43 +9,10 @@ test("assertHexList - not matching", () => {
   expect(() => assertHexList(["00"], ["01"])).toThrow();
 });
 
-test("assertKvs - matching", () => {
-  assertKvs({ "01": "01" }, { "01": "01", "02": "" });
-});
-
-test("assertKvs - value not maching", () => {
-  expect(() =>
-    assertKvs({ "01": "01", "02": "" }, { "01": "01", "02": "02" }),
-  ).toThrow();
-});
-
-test("assertKvs - value missing", () => {
-  expect(() => assertKvs({ "01": "01" }, { "01": "01", "03": "03" })).toThrow();
-});
-
-test("assertKvs - value in excess", () => {
-  expect(() => assertKvs({ "01": "01", "02": "02" }, { "01": "01" })).toThrow();
-});
-
-test("assertHasKvs - matching", () => {
-  assertHasKvs({ "01": "01", "03": "03" }, { "01": "01", "02": "" });
-});
-
-test("assertHasKvs - value not maching", () => {
-  expect(() =>
-    assertHasKvs({ "01": "01", "02": "02" }, { "01": "01", "02": "" }),
-  ).toThrow();
-});
-
-test("assertHasKvs - value missing", () => {
-  expect(() =>
-    assertHasKvs({ "01": "01" }, { "01": "01", "03": "03" }),
-  ).toThrow();
-});
-
-test("assertAccount", () => {
+test("assertAccount - matching", () => {
   assertAccount(
     {
+      address: "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu",
       balance: 10n,
       code: "010203",
       codeMetadata: "0400",
@@ -57,6 +23,7 @@ test("assertAccount", () => {
       },
     },
     {
+      address: "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu",
       balance: 10n,
       code: "010203",
       codeMetadata: ["readable"],
@@ -72,4 +39,128 @@ test("assertAccount", () => {
       ],
     },
   );
+});
+
+test("assertAccount - not matching - address", () => {
+  expect(() =>
+    assertAccount(
+      {
+        address:
+          "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu",
+      },
+      {
+        address:
+          "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hd",
+      },
+    ),
+  ).toThrow();
+});
+
+test("assertAccount - not matching - balance", () => {
+  expect(() => assertAccount({ balance: 10n }, { balance: 11n })).toThrow();
+});
+
+test("assertAccount - not matching - code", () => {
+  expect(() => assertAccount({ code: "010203" }, { code: "010204" })).toThrow();
+});
+
+test("assertAccount - not matching - codeMetadata", () => {
+  expect(() =>
+    assertAccount({ codeMetadata: "0400" }, { codeMetadata: ["payable"] }),
+  ).toThrow();
+});
+
+test("assertAccount - not matching - owner", () => {
+  expect(() =>
+    assertAccount(
+      {
+        owner: "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu",
+      },
+      {
+        owner: "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hd",
+      },
+    ),
+  ).toThrow();
+});
+
+test("assertAccount - not matching - kvs - value not matching", () => {
+  expect(() =>
+    assertAccount(
+      {
+        kvs: { "01": "01", "02": "" },
+      },
+      {
+        kvs: [
+          ["01", "01"],
+          ["02", "02"],
+        ],
+      },
+    ),
+  ).toThrow();
+});
+
+test("assertAccount - not matching - kvs - key missing", () => {
+  expect(() =>
+    assertAccount(
+      {
+        kvs: { "01": "01" },
+      },
+      {
+        kvs: [
+          ["01", "01"],
+          ["03", "03"],
+        ],
+      },
+    ),
+  ).toThrow();
+});
+
+test("assertAccount - not matching - kvs - key in excess", () => {
+  expect(() =>
+    assertAccount(
+      {
+        kvs: { "01": "01", "02": "02" },
+      },
+      {
+        kvs: [["01", "01"]],
+      },
+    ),
+  ).toThrow();
+});
+
+test("assertAccount - not matching - hasKvs - value not matching", () => {
+  expect(() =>
+    assertAccount(
+      {
+        kvs: {
+          "01": "01",
+          "02": "02",
+        },
+      },
+      {
+        hasKvs: [
+          ["01", "01"],
+          ["02", ""],
+        ],
+      },
+    ),
+  ).toThrow();
+});
+
+test("assertAccount - not matching - hasKvs - value missing", () => {
+  expect(() =>
+    assertAccount(
+      {
+        kvs: {
+          "01": "01",
+        },
+      },
+      {
+        hasKvs: [
+          ["01", "01"],
+          ["03", "03"],
+        ],
+      },
+    ),
+  ).toThrow();
 });
