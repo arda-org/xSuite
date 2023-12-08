@@ -8,23 +8,35 @@ import { Account } from "../proxy/sproxy";
 import { expandCode } from "../world/world";
 
 export const assertKvs = (actualKvs: Kvs, expectedKvs: Kvs) => {
-  const rawActualKvs = kvsToRawKvs(actualKvs);
-  const rawExpectedKvs = kvsToRawKvs(expectedKvs);
-  const keys = new Set([
-    ...Object.keys(rawActualKvs),
-    ...Object.keys(rawExpectedKvs),
-  ]);
-  for (const k of keys) {
-    assert.strictEqual(rawActualKvs[k] ?? "", rawExpectedKvs[k] ?? "");
+  const rawActualKvs = { ...kvsToRawKvs(actualKvs) };
+  const rawExpectedKvs = { ...kvsToRawKvs(expectedKvs) };
+  for (const k of Object.keys(rawActualKvs)) {
+    if (!rawActualKvs[k]) {
+      delete rawActualKvs[k];
+    }
   }
+  for (const k of Object.keys(rawExpectedKvs)) {
+    if (!(k in rawActualKvs)) {
+      rawActualKvs[k] = "";
+    }
+  }
+  assert.deepStrictEqual(rawActualKvs, rawExpectedKvs);
 };
 
 export const assertHasKvs = (actualKvs: Kvs, hasKvs: Kvs) => {
-  const rawActualKvs = kvsToRawKvs(actualKvs);
-  const rawHasKvs = kvsToRawKvs(hasKvs);
-  for (const k in rawHasKvs) {
-    assert.strictEqual(rawActualKvs[k] ?? "", rawHasKvs[k] ?? "");
+  const rawActualKvs = { ...kvsToRawKvs(actualKvs) };
+  const rawHasKvs = { ...kvsToRawKvs(hasKvs) };
+  for (const k of Object.keys(rawActualKvs)) {
+    if (!rawActualKvs[k] || !(k in rawHasKvs)) {
+      delete rawActualKvs[k];
+    }
   }
+  for (const k of Object.keys(rawHasKvs)) {
+    if (!(k in rawActualKvs)) {
+      rawActualKvs[k] = "";
+    }
+  }
+  assert.deepStrictEqual(rawActualKvs, rawHasKvs);
 };
 
 export const assertAccount = (
