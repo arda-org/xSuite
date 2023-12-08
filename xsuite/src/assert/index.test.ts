@@ -144,7 +144,7 @@ test("assertAccount - not matching - hasKvs - value not matching", () => {
         ],
       },
     ),
-  ).toThrow();
+  ).toThrow("'02': '02'");
 });
 
 test("assertAccount - not matching - hasKvs - value missing", () => {
@@ -162,5 +162,5 @@ test("assertAccount - not matching - hasKvs - value missing", () => {
         ],
       },
     ),
-  ).toThrow();
+  ).toThrow("'03': ''");
 });
