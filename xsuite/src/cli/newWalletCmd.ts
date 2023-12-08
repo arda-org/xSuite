@@ -44,7 +44,12 @@ const action = async ({
   log(chalk.bold.blue("Address:") + ` ${keystore.newSigner()}`);
   log();
   log(chalk.bold.blue("Private key:"));
-  log(keystore.mnemonicWords.map((w, i) => `  ${i + 1}. ${w}`).join("\n"));
+  log(
+    keystore
+      .getMnemonicWords()
+      .map((w, i) => `  ${i + 1}. ${w}`)
+      .join("\n"),
+  );
   log();
   log(chalk.bold.yellow(`Please backup the private key in a secure place.`));
 };
