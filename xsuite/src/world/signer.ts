@@ -56,12 +56,10 @@ export class KeystoreSigner extends UserSigner {
 export class Keystore {
   key: any;
   password: string;
-  mnemonicWords: string[];
 
   constructor(key: any, password: string) {
     this.key = key;
     this.password = password;
-    this.mnemonicWords = UserWallet.decryptMnemonic(key, password).getWords();
   }
 
   static async createFile(filePath: string) {
@@ -93,6 +91,10 @@ export class Keystore {
   static fromFile_unsafe(filePath: string, password: string) {
     const keystore = JSON.parse(fs.readFileSync(filePath, "utf8"));
     return new Keystore(keystore, password);
+  }
+
+  getMnemonicWords() {
+    return UserWallet.decryptMnemonic(this.key, this.password).getWords();
   }
 
   newSigner(addressIndex?: number) {
