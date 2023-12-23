@@ -62,6 +62,18 @@ test("new-wallet --wallet wallet.json | error: passwords don't match", async () 
   ]);
 });
 
+test("new-wallet --wallet wallet.json | error: already exists", async () => {
+  const walletPath = path.resolve("wallet.json");
+  fs.writeFileSync(walletPath, "");
+  stdoutInt.start();
+  await run(`new-wallet --wallet ${walletPath}`);
+  stdoutInt.stop();
+  expect(stdoutInt.data.split("\n")).toEqual([
+    chalk.red(`Wallet already exists at "${walletPath}".`),
+    "",
+  ]);
+});
+
 test("new-wallet --wallet wallet.json --password 1234", async () => {
   const walletPath = path.resolve("wallet.json");
   stdoutInt.start();
@@ -78,18 +90,6 @@ test("new-wallet --wallet wallet.json --password 1234", async () => {
     ...keystore.getMnemonicWords().map((w, i) => `  ${i + 1}. ${w}`),
     "",
     chalk.bold.yellow("Please backup the private key in a secure place."),
-    "",
-  ]);
-});
-
-test("new-wallet --wallet wallet.json --password 1234 | error: already exists", async () => {
-  const walletPath = path.resolve("wallet.json");
-  fs.writeFileSync(walletPath, "");
-  stdoutInt.start();
-  await run(`new-wallet --wallet ${walletPath} --password 1234`);
-  stdoutInt.stop();
-  expect(stdoutInt.data.split("\n")).toEqual([
-    chalk.red(`Wallet already exists at "${walletPath}".`),
     "",
   ]);
 });
