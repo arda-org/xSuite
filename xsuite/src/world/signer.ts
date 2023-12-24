@@ -34,7 +34,7 @@ export class UserSigner extends Signer {
 export class KeystoreSigner extends UserSigner {
   constructor(keystore: Keystore, addressIndex?: number) {
     super(
-      BaseUserSigner.fromWallet(keystore.key, keystore.password, addressIndex),
+      BaseUserSigner.fromWallet(keystore.data, keystore.password, addressIndex),
     );
   }
 
@@ -54,11 +54,11 @@ export class KeystoreSigner extends UserSigner {
 }
 
 export class Keystore {
-  key: any;
+  data: any;
   password: string;
 
-  constructor(key: any, password: string) {
-    this.key = key;
+  constructor(data: any, password: string) {
+    this.data = data;
     this.password = password;
   }
 
@@ -94,7 +94,7 @@ export class Keystore {
   }
 
   getMnemonicWords() {
-    return UserWallet.decryptMnemonic(this.key, this.password).getWords();
+    return UserWallet.decryptMnemonic(this.data, this.password).getWords();
   }
 
   newSigner(addressIndex?: number) {
