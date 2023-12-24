@@ -6,8 +6,8 @@ import { Keystore, KeystoreSigner } from "./signer";
 
 const tmpDir = "/tmp/xsuite-tests";
 const walletPath = path.resolve(tmpDir, "wallet.json");
-const keystoreV1Path = path.resolve("wallets", "keystore_v1.json");
-const keystoreV2Path = path.resolve("wallets", "keystore_v2.json");
+const keyKeystorePath = path.resolve("wallets", "keystore_key.json");
+const mneKeystorePath = path.resolve("wallets", "keystore_mnemonic.json");
 
 beforeEach(() => {
   fs.mkdirSync(tmpDir);
@@ -17,9 +17,9 @@ afterEach(() => {
   fs.rmSync(tmpDir, { recursive: true, force: true });
 });
 
-test("KeystoreSigner.fromFile_unsafe - keystore v1", async () => {
+test("KeystoreSigner.fromFile_unsafe - keystore key", async () => {
   const signer = KeystoreSigner.fromFile_unsafe(
-    keystoreV1Path,
+    keyKeystorePath,
     "qpGjv7ZJ9gcPXWSN",
   );
   expect(signer.toString()).toEqual(
@@ -31,8 +31,8 @@ test("KeystoreSigner.fromFile_unsafe - keystore v1", async () => {
   );
 });
 
-test("KeystoreSigner.fromFile_unsafe - keystore v2", async () => {
-  const signer = KeystoreSigner.fromFile_unsafe(keystoreV2Path, "1234");
+test("KeystoreSigner.fromFile_unsafe - keystore mnemonic", async () => {
+  const signer = KeystoreSigner.fromFile_unsafe(mneKeystorePath, "1234");
   expect(signer.toString()).toEqual(
     "erd1jdf0xwqrx9y47mlp6n5q29wlk7jh2p63j3raekknhky3f2f6668qzjwmee",
   );
@@ -45,7 +45,7 @@ test("KeystoreSigner.fromFile_unsafe - keystore v2", async () => {
 test("KeystoreSigner.fromFile", async () => {
   stdoutInt.start();
   input.inject("1234");
-  const signer = await KeystoreSigner.fromFile(keystoreV2Path);
+  const signer = await KeystoreSigner.fromFile(mneKeystorePath);
   expect(signer.toString()).toEqual(
     "erd1jdf0xwqrx9y47mlp6n5q29wlk7jh2p63j3raekknhky3f2f6668qzjwmee",
   );
@@ -55,7 +55,7 @@ test("KeystoreSigner.fromFile", async () => {
   );
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
-    `Loading keystore wallet at "${keystoreV2Path}"...`,
+    `Loading keystore wallet at "${mneKeystorePath}"...`,
     "Enter password: ",
     "",
   ]);
