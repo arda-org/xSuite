@@ -61,7 +61,7 @@ export class Keystore {
   constructor(data: any, password: string) {
     this.data = data;
     this.password = password;
-    this.kind = Keystore.getSupportedKeystoreKind(data);
+    this.kind = getSupportedKeystoreKind(data);
   }
 
   static async createFile(filePath: string, data?: any) {
@@ -97,25 +97,35 @@ export class Keystore {
     return new Keystore(keystore, password);
   }
 
-  static getSupportedKeystoreKind(data: any) {
-    const kind = data.kind;
-    if (!["mnemonic", "secretKey", undefined].includes(kind)) {
+  getMnemonicWords() {
+    if (this.kind !== "mnemonic") {
       throw new Error(
-        `Invalid kind value: "${kind}". It must be "mnemonic", "secretKey", or undefined.`,
+        `Cannot get mnemonic from a keystore of kind ${this.kind}.`,
       );
     }
-    return kind ?? "secretKey";
-  }
-
-  getMnemonicWords() {
     return UserWallet.decryptMnemonic(this.data, this.password).getWords();
   }
 
   getSecretKey() {
+    if (this.kind && this.kind !== "secretKey") {
+      throw new Error(
+        `Cannot get secretKey from a keystore of kind ${this.kind}.`,
+      );
+    }
     return UserWallet.decryptSecretKey(this.data, this.password).hex();
   }
 
   newSigner(addressIndex?: number) {
     return new KeystoreSigner(this, addressIndex);
   }
+}
+
+function getSupportedKeystoreKind(data: any) {
+  const kind = data.kind;
+  if (!["mnemonic", "secretKey", undefined].includes(kind)) {
+    throw new Error(
+      `Invalid kind value: "${kind}". It must be "mnemonic", "secretKey", or undefined.`,
+    );
+  }
+  return kind ?? "secretKey";
 }

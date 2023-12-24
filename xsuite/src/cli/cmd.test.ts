@@ -13,6 +13,8 @@ import { rustToolchain, rustTarget, rustKey } from "./helpers";
 const cwd = process.cwd();
 const tmpDir = "/tmp/xsuite-tests";
 const pemPath = path.resolve("wallets", "wallet.pem");
+const keyKeystorePath = path.resolve("wallets", "keystore_key.json");
+const mneKeystorePath = path.resolve("wallets", "keystore_mnemonic.json");
 
 beforeEach(() => {
   fs.mkdirSync(tmpDir);
@@ -106,6 +108,39 @@ test("new-wallet --wallet wallet.json --password 1234 --from-pem wallet.pem", as
     fs.readFileSync(pemPath, "utf8"),
   ).hex();
   expect(keystore.getSecretKey()).toEqual(secretKey);
+});
+
+test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_key.json", async () => {
+  const walletPath = path.resolve("wallet.json");
+  input.inject("qpGjv7ZJ9gcPXWSN");
+  await run(
+    `new-wallet --wallet ${walletPath} --password 1234 --from-wallet ${keyKeystorePath}`,
+  );
+  const newKeystore = Keystore.fromFile_unsafe(walletPath, "1234");
+  const oldKeystore = Keystore.fromFile_unsafe(
+    keyKeystorePath,
+    "qpGjv7ZJ9gcPXWSN",
+  );
+  const [newSignature, oldSignature] = await Promise.all([
+    newKeystore.newSigner().sign(Buffer.from("hello")),
+    oldKeystore.newSigner().sign(Buffer.from("hello")),
+  ]);
+  expect(newSignature).toEqual(oldSignature);
+});
+
+test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_mnemonic.json", async () => {
+  const walletPath = path.resolve("wallet.json");
+  input.inject("1234");
+  await run(
+    `new-wallet --wallet ${walletPath} --password 1234 --from-wallet ${mneKeystorePath}`,
+  );
+  const newKeystore = Keystore.fromFile_unsafe(walletPath, "1234");
+  const oldKeystore = Keystore.fromFile_unsafe(mneKeystorePath, "1234");
+  const [newSignature, oldSignature] = await Promise.all([
+    newKeystore.newSigner().sign(Buffer.from("hello")),
+    oldKeystore.newSigner().sign(Buffer.from("hello")),
+  ]);
+  expect(newSignature).toEqual(oldSignature);
 });
 
 test("request-xegld --wallet wallet.json", async () => {
