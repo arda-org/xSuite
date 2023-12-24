@@ -56,13 +56,15 @@ export class KeystoreSigner extends UserSigner {
 export class Keystore {
   data: any;
   password: string;
+  kind: "mnemonic" | "secretKey";
 
   constructor(data: any, password: string) {
     this.data = data;
     this.password = password;
+    this.kind = Keystore.getSupportedKeystoreKind(data);
   }
 
-  static async createFile(filePath: string) {
+  static async createFile(filePath: string, data?: any) {
     filePath = path.resolve(filePath);
     log(`Creating keystore wallet at "${filePath}"...`);
     const password = await input.hidden("Enter password: ");
@@ -70,12 +72,14 @@ export class Keystore {
     if (password !== passwordAgain) {
       throw new Error("Passwords do not match.");
     }
-    return this.createFile_unsafe(filePath, password);
+    return this.createFile_unsafe(filePath, password, data);
   }
 
-  static createFile_unsafe(filePath: string, password: string) {
-    const mnemonic = Mnemonic.generate().toString();
-    const data = UserWallet.fromMnemonic({ mnemonic, password }).toJSON();
+  static createFile_unsafe(filePath: string, password: string, data?: any) {
+    if (data === undefined) {
+      const mnemonic = Mnemonic.generate().toString();
+      data = UserWallet.fromMnemonic({ mnemonic, password }).toJSON();
+    }
     fs.writeFileSync(filePath, JSON.stringify(data), "utf8");
     return new Keystore(data, password);
   }
@@ -93,8 +97,22 @@ export class Keystore {
     return new Keystore(keystore, password);
   }
 
+  static getSupportedKeystoreKind(data: any) {
+    const kind = data.kind;
+    if (!["mnemonic", "secretKey", undefined].includes(kind)) {
+      throw new Error(
+        `Invalid kind value: "${kind}". It must be "mnemonic", "secretKey", or undefined.`,
+      );
+    }
+    return kind ?? "secretKey";
+  }
+
   getMnemonicWords() {
     return UserWallet.decryptMnemonic(this.data, this.password).getWords();
+  }
+
+  getSecretKey() {
+    return UserWallet.decryptSecretKey(this.data, this.password).hex();
   }
 
   newSigner(addressIndex?: number) {
