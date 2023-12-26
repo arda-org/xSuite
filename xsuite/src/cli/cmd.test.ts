@@ -57,7 +57,7 @@ test("new-wallet --wallet wallet.json | error: passwords don't match", async () 
     `Creating keystore wallet at "${walletPath}"...`,
     "Enter password: ",
     "Re-enter password: ",
-    chalk.red(`Passwords do not match.`),
+    chalk.red("Passwords do not match."),
     "",
   ]);
 });
@@ -255,7 +255,7 @@ test("new --dir contract && build --locked && build -r && test-rust && test-scen
   ]);
 }, 600_000);
 
-test(`new --starter vested-transfers --dir contract --no-git --no-install`, async () => {
+test("new --starter vested-transfers --dir contract --no-git --no-install", async () => {
   const contract = "vested-transfers";
   stdoutInt.start();
   await run(`new --starter ${contract} --dir contract --no-git --no-install`);

@@ -51,5 +51,5 @@ const action = async ({
       .join("\n"),
   );
   log();
-  log(chalk.bold.yellow(`Please backup the private key in a secure place.`));
+  log(chalk.bold.yellow("Please backup the private key in a secure place."));
 };

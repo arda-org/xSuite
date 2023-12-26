@@ -37,7 +37,7 @@ export const bytesToBechAddress = (bytes: Uint8Array): string => {
 export const bechAddressToBytes = (bechAddress: string): Uint8Array => {
   const { prefix, words } = bech32.decode(bechAddress);
   if (prefix !== HRP) {
-    throw new Error(`Invalid address HRP.`);
+    throw new Error("Invalid address HRP.");
   }
   return Uint8Array.from(bech32.fromWords(words));
 };

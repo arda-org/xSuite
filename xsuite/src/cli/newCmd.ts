@@ -60,13 +60,13 @@ const action = async ({
   log();
   log("Inside that directory, you can run several commands:");
   log();
-  logCommand(`  npm run build`);
+  logCommand("  npm run build");
   log("    Builds the contract.");
   log();
-  logCommand(`  npm run test`);
+  logCommand("  npm run test");
   log("    Tests the contract.");
   log();
-  logCommand(`  npm run deploy`);
+  logCommand("  npm run deploy");
   log("    Deploys the contract to devnet.");
   log();
   log("We suggest that you begin by typing:");
@@ -77,12 +77,12 @@ const action = async ({
 
 const downloadAndExtractContract = async (contract: string, cwd: string) => {
   const archive = await downloadArchive(
-    `https://codeload.github.com/arda-org/xSuite/tar.gz/main`,
+    "https://codeload.github.com/arda-org/xSuite/tar.gz/main",
   );
   const xsuiteVersion = await new Promise<string>((r) => {
     tar.t({
       file: archive,
-      filter: (p) => p.includes(`/xsuite/package.json`),
+      filter: (p) => p.includes("/xsuite/package.json"),
       onentry: async (e) => {
         const f = (await e.concat()).toString();
         r(JSON.parse(f)["version"]);
