@@ -40,7 +40,7 @@
         }
       }
     ],
-    "quotes": ["error", { "avoidEscape": true }],
+    "quotes": ["error", "double", { "avoidEscape": true }],
     "no-useless-rename": "error",
     "object-shorthand": "error",
     "prettier/prettier": "error"
