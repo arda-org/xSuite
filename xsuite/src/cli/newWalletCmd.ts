@@ -10,7 +10,7 @@ export const registerNewWalletCmd = (cmd: Command) => {
   cmd
     .command("new-wallet")
     .description("Create a new wallet.")
-    .requiredOption("--wallet <WALLET>", "Wallet path")
+    .requiredOption("--wallet <WALLET_PATH>", "Wallet path")
     .option("--password <PASSWORD>", "Wallet password")
     .action(action);
 };
