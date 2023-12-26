@@ -75,9 +75,9 @@ export class Keystore {
 
   static createFile_unsafe(filePath: string, password: string) {
     const mnemonic = Mnemonic.generate().toString();
-    const keystore = UserWallet.fromMnemonic({ mnemonic, password }).toJSON();
-    fs.writeFileSync(filePath, JSON.stringify(keystore), "utf8");
-    return new Keystore(keystore, password);
+    const data = UserWallet.fromMnemonic({ mnemonic, password }).toJSON();
+    fs.writeFileSync(filePath, JSON.stringify(data), "utf8");
+    return new Keystore(data, password);
   }
 
   static async fromFile(filePath: string) {
