@@ -312,10 +312,9 @@ export class Tx {
     ...txParams
   }: Pick<TransferTxParams, "receiver" | "esdts"> & { sender: U } & T) {
     let receiver: Address;
-    let data: string | undefined;
+    const dataParts: string[] = [];
     if (esdts?.length) {
       receiver = sender;
-      const dataParts: string[] = [];
       dataParts.push("MultiESDTNFTTransfer");
       dataParts.push(addressToAddressEncodable(_receiver).toTopHex());
       dataParts.push(e.U(esdts.length).toTopHex());
@@ -324,16 +323,11 @@ export class Tx {
         dataParts.push(e.U(esdt.nonce ?? 0).toTopHex());
         dataParts.push(e.U(esdt.amount).toTopHex());
       }
-      data = dataParts.join("@");
     } else {
       receiver = _receiver;
     }
-    return {
-      receiver,
-      sender,
-      data,
-      ...txParams,
-    };
+    const data = dataParts.join("@");
+    return { receiver, sender, data, ...txParams };
   }
 
   static getParamsToCallContract<T, U extends Address>({
@@ -365,12 +359,8 @@ export class Tx {
       dataParts.push(funcName);
     }
     dataParts.push(...(funcArgs ?? []).map(broadHexToHex));
-    return {
-      receiver,
-      sender,
-      data: dataParts.join("@"),
-      ...txParams,
-    };
+    const data = dataParts.join("@");
+    return { receiver, sender, data, ...txParams };
   }
 
   async sign(signer: { sign: (data: Buffer) => Promise<Buffer> }) {
@@ -409,10 +399,26 @@ const broadTxToRawTx = (tx: BroadTx): RawTx => {
 
 const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
   if ("callee" in query) {
+    let funcName: string;
+    const args: string[] = [];
+    if (query.esdts?.length) {
+      funcName = "MultiESDTNFTTransfer";
+      args.push(addressToAddressEncodable(query.callee).toTopHex());
+      args.push(e.U(query.esdts.length).toTopHex());
+      for (const esdt of query.esdts) {
+        args.push(e.Str(esdt.id).toTopHex());
+        args.push(e.U(esdt.nonce ?? 0).toTopHex());
+        args.push(e.U(esdt.amount).toTopHex());
+      }
+      args.push(e.Str(query.funcName).toTopHex());
+    } else {
+      funcName = query.funcName;
+    }
+    args.push(...(query.funcArgs ?? []).map(broadHexToHex));
     query = {
       scAddress: addressToBech32(query.callee),
-      funcName: query.funcName,
-      args: (query.funcArgs ?? []).map(broadHexToHex),
+      funcName,
+      args,
       caller:
         query.sender !== undefined ? addressToBech32(query.sender) : undefined,
       value: query.value !== undefined ? query.value.toString() : undefined,
@@ -475,7 +481,10 @@ export type Query = {
   funcArgs?: Hex[];
   sender?: Address;
   value?: number | bigint;
+  esdts?: Esdt[];
 };
+
+type Esdt = { id: string; nonce?: number; amount: number | bigint };
 
 type RawQuery = {
   scAddress: string;
@@ -535,7 +544,7 @@ export type TransferTxParams = {
   sender: Address;
   gasPrice: number;
   gasLimit: number;
-  esdts?: { id: string; nonce?: number; amount: number | bigint }[];
+  esdts?: Esdt[];
   chainId: string;
   version?: number;
 };
@@ -549,7 +558,7 @@ export type CallContractTxParams = {
   gasLimit: number;
   funcName: string;
   funcArgs?: Hex[];
-  esdts?: { id: string; nonce?: number; amount: number | bigint }[];
+  esdts?: Esdt[];
   chainId: string;
   version?: number;
 };

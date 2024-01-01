@@ -52,14 +52,63 @@ func (ae *Executor) HandleVmQuery(r *http.Request) (interface{}, error) {
 		}
 		tx.Tx.EGLDValue = mj.JSONBigInt{Value: egldValue}
 	}
-	tx.Tx.Function = rawQuery.FuncName
-	tx.Tx.Arguments = []mj.JSONBytesFromTree{}
-	for _, rawArgument := range rawQuery.Args {
-		argument, err := hex.DecodeString(rawArgument)
+	args := rawQuery.Args
+	i := 0
+	if rawQuery.FuncName == "MultiESDTNFTTransfer" {
+		realReceiver, err := hex.DecodeString(args[i])
 		if err != nil {
 			return nil, err
 		}
-		tx.Tx.Arguments = append(tx.Tx.Arguments, mj.JSONBytesFromTree{Value: argument})
+		tx.Tx.To = mj.JSONBytesFromString{Value: realReceiver}
+		i += 1
+		l, err := hexToUint64(args[i])
+		if err != nil {
+			return nil, err
+		}
+		i += 1
+		tx.Tx.ESDTValue = []*mj.ESDTTxData{}
+		for j := uint64(0); j < l; j++ {
+			id, err := hex.DecodeString(args[i])
+			if err != nil {
+				return nil, err
+			}
+			i += 1
+			nonce, err := hexToUint64(args[i])
+			if err != nil {
+				return nil, err
+			}
+			i += 1
+			amount, err := hexToBigint(args[i])
+			if err != nil {
+				return nil, err
+			}
+			i += 1
+			tx.Tx.ESDTValue = append(tx.Tx.ESDTValue, &mj.ESDTTxData{
+				TokenIdentifier: mj.JSONBytesFromString{Value: id},
+				Nonce: mj.JSONUint64{Value: nonce},
+				Value: mj.JSONBigInt{Value: amount},
+			})
+		}
+		if i < len(args) {
+			function, err := hex.DecodeString(args[i])
+			if err != nil {
+				return nil, err
+			}
+			tx.Tx.Function = string(function)
+			i += 1
+		}
+	} else {
+		tx.Tx.Function = rawQuery.FuncName
+	}
+	if i < len(args) {
+		tx.Tx.Arguments = []mj.JSONBytesFromTree{}
+		for _, rawArgument := range args[i:] {
+			argument, err := hex.DecodeString(rawArgument)
+			if err != nil {
+				return nil, err
+			}
+			tx.Tx.Arguments = append(tx.Tx.Arguments, mj.JSONBytesFromTree{Value: argument})
+		}
 	}
 	vmOutput, err := ae.vmTestExecutor.ExecuteTxStep(tx)
 	if err != nil {

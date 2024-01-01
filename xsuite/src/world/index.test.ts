@@ -239,7 +239,7 @@ test("SWorld.query - value", async () => {
   const { returnData } = await world.query({
     callee: contract,
     funcName: "get_value",
-    value: 10,
+    value: 10n ** 19n, // TODO: tmp
   });
   assertHexList(returnData, [e.U(10)]);
 });
@@ -255,6 +255,20 @@ test("SWorld.query - try to change the state", async () => {
       e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }]),
       e.kvs.Mapper("n").Value(e.U64(2)),
     ],
+  });
+});
+
+test("SWorld.query - failure", async () => {
+  await expect(
+    world.query({
+      callee: contract,
+      funcName: "non_existent_function",
+    }),
+  ).rejects.toMatchObject({
+    message: expect.stringMatching(
+      /^Query failed: 1 - invalid function \(not found\) - Result:\n\{\n {2}"executionLogs": "(.*)",/,
+    ),
+    stack: expect.stringMatching(/src\/world\/index\.test\.ts:[0-9]+:3\)$/),
   });
 });
 
@@ -349,7 +363,9 @@ test("SWallet.query", async () => {
   assertHexList(returnData, [wallet]);
 });
 
-test.failing("SWallet.query - esdts", async () => {
+test("SWallet.query - esdts", async () => {
+  // TODO: ca devrait être world.query
+  // TODO: déplacer ce test ailleurs
   const { returnData } = await wallet.query({
     callee: contract,
     funcName: "get_esdts",
@@ -357,26 +373,11 @@ test.failing("SWallet.query - esdts", async () => {
       { id: fftId, amount: 10 },
       { id: sftId, nonce: 1, amount: 20 },
     ],
-  } as any);
-  // remove the "as any"
+  });
   assertHexList(returnData, [
     e.Tuple(e.Str(fftId), e.U64(0), e.U(10)),
     e.Tuple(e.Str(sftId), e.U64(1), e.U(20)),
   ]);
-});
-
-test("SWallet.callContract failure", async () => {
-  await expect(
-    world.query({
-      callee: contract,
-      funcName: "non_existent_function",
-    }),
-  ).rejects.toMatchObject({
-    message: expect.stringMatching(
-      /^Query failed: 1 - invalid function \(not found\) - Result:\n\{\n {2}"executionLogs": "(.*)",/,
-    ),
-    stack: expect.stringMatching(/src\/world\/index\.test\.ts:[0-9]+:3\)$/),
-  });
 });
 
 test("SWorld.query.assertFail - Correct parameters", async () => {
@@ -581,7 +582,7 @@ test("SWallet.callContract with return", async () => {
   assertHexList(returnData, [e.U64(20)]);
 });
 
-test("SWorld.callContract - change the state", async () => {
+test("SWallet.callContract - change the state", async () => {
   await wallet.callContract({
     callee: contract,
     funcName: "set_n",
@@ -596,7 +597,7 @@ test("SWorld.callContract - change the state", async () => {
   });
 });
 
-test("SWallet.callContract failure", async () => {
+test("SWallet.callContract - failure", async () => {
   await expect(
     wallet.callContract({
       callee: contract,

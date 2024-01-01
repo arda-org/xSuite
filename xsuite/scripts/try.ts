@@ -1,15 +1,14 @@
-import { SWorld } from "../src";
+import { World } from "../src";
 
 const main = async () => {
-  const world = await SWorld.start();
-  const sender = await world.createWallet({ balance: 100 });
-  const receiver = await world.createWallet({ balance: 100 });
-  await sender.transfer({
-    receiver,
-    value: 100,
-    gasLimit: 100_000,
+  const world = World.newMainnet();
+  const result = await world.query({
+    sender: "erd1ff377y7qdldtsahvt28ec45zkyu0pepuup33adhr8wr2yuelwv7qpevs9e",
+    callee: "erd1qqqqqqqqqqqqqpgqhe8t5jewej70zupmh44jurgn29psua5l2jps3ntjj3",
+    funcName: "wrapEgld",
+    value: 10,
   });
-  await world.terminate();
+  console.log("Transaction:", result);
 };
 
 main();
