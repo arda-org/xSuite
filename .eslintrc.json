@@ -43,7 +43,8 @@
     "quotes": ["error", "double", { "avoidEscape": true }],
     "no-useless-rename": "error",
     "object-shorthand": "error",
-    "prettier/prettier": "error"
+    "prettier/prettier": "error",
+    "curly": ["error", "multi-line"]
   },
   "ignorePatterns": ["**/*.js", "xsuite/*.d.ts", "xsuite/dist/"]
 }
