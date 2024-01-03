@@ -14,17 +14,20 @@ export const registerNewWalletCmd = (cmd: Command) => {
     .requiredOption("--wallet <WALLET_PATH>", "Wallet path")
     .option("--password <PASSWORD>", "Wallet password")
     .option("--from-pem <PEM_PATH>", "PEM path")
+    .option("--from-wallet <WALLET_PATH>", "Wallet path")
     .action(action);
 };
 
 const action = async ({
   wallet: walletPath,
   password,
-  fromPem: pemPath,
+  fromPem: fromPemPath,
+  fromWallet: fromWalletPath,
 }: {
   wallet: string;
   password?: string;
   fromPem?: string;
+  fromWallet?: string;
 }) => {
   walletPath = path.resolve(walletPath);
   if (fs.existsSync(walletPath)) {
@@ -41,14 +44,34 @@ const action = async ({
       return;
     }
   } else {
-    if (!pemPath) {
-      keystore = Keystore.createFile_unsafe(walletPath, password);
-    } else {
-      const secretKey = UserSecretKey.fromPem(fs.readFileSync(pemPath, "utf8"));
-      const wallet = UserWallet.fromSecretKey({ secretKey, password });
-      const data = wallet.toJSON();
-      keystore = Keystore.createFile_unsafe(walletPath, password, data);
+    let data;
+    if (fromPemPath && fromWalletPath) {
+      throw new Error(
+        "Both --from-pem and --from-wallet options cannot be set simultaneously.",
+      );
     }
+    if (fromPemPath) {
+      const secretKey = UserSecretKey.fromPem(
+        fs.readFileSync(fromPemPath, "utf8"),
+      );
+      const wallet = UserWallet.fromSecretKey({ secretKey, password });
+      data = wallet.toJSON();
+    }
+    if (fromWalletPath) {
+      const oldKeystore = await Keystore.fromFile(fromWalletPath);
+      const newWallet =
+        oldKeystore.kind === "mnemonic"
+          ? UserWallet.fromMnemonic({
+              mnemonic: oldKeystore.getMnemonicWords().join(" "),
+              password,
+            })
+          : UserWallet.fromSecretKey({
+              secretKey: UserSecretKey.fromString(oldKeystore.getSecretKey()),
+              password,
+            });
+      data = newWallet.toJSON();
+    }
+    keystore = Keystore.createFile_unsafe(walletPath, password, data);
   }
   logSuccess(`Wallet created at "${walletPath}".`);
   log();
