@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { test, beforeEach, afterEach, expect } from "@jest/globals";
+import { UserSecretKey } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
 import { http } from "msw";
 import { setupServer } from "msw/node";
@@ -11,6 +12,7 @@ import { rustToolchain, rustTarget, rustKey } from "./helpers";
 
 const cwd = process.cwd();
 const tmpDir = "/tmp/xsuite-tests";
+const pemPath = path.resolve("wallets", "wallet.pem");
 
 beforeEach(() => {
   fs.mkdirSync(tmpDir);
@@ -92,6 +94,18 @@ test("new-wallet --wallet wallet.json --password 1234", async () => {
     chalk.bold.yellow("Please backup the private key in a secure place."),
     "",
   ]);
+});
+
+test("new-wallet --wallet wallet.json --password 1234 --from-pem wallet.pem", async () => {
+  const walletPath = path.resolve("wallet.json");
+  await run(
+    `new-wallet --wallet ${walletPath} --password 1234 --from-pem ${pemPath}`,
+  );
+  const keystore = Keystore.fromFile_unsafe(walletPath, "1234");
+  const secretKey = UserSecretKey.fromPem(
+    fs.readFileSync(pemPath, "utf8"),
+  ).hex();
+  expect(keystore.getSecretKey()).toEqual(secretKey);
 });
 
 test("request-xegld --wallet wallet.json", async () => {
