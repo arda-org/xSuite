@@ -1059,10 +1059,20 @@ test("d.Tuple.fromTop - empty map", () => {
 });
 
 test("d.Tuple.fromTop - non-empty map", () => {
-  expect(d.Tuple({ a: d.U8(), b: d.U8() }).fromTop("0102")).toEqual({
-    a: 1n,
-    b: 2n,
-  });
+  expect(
+    d.Tuple({ a: d.Str(), b: d.U8() }).fromTop("0000000568656c6c6f02"),
+  ).toEqual({ a: "hello", b: 2n });
+});
+
+test("d.Tuple.fromTop - empty list", () => {
+  expect(d.Tuple().fromTop("")).toEqual([]);
+});
+
+test("d.Tuple.fromTop - non-empty list", () => {
+  expect(d.Tuple(d.Str(), d.U8()).fromTop("0000000568656c6c6f02")).toEqual([
+    "hello",
+    2n,
+  ]);
 });
 
 test("d.Tuple.fromNest - empty map", () => {
@@ -1070,10 +1080,20 @@ test("d.Tuple.fromNest - empty map", () => {
 });
 
 test("d.Tuple.fromNest - non-empty map", () => {
-  expect(d.Tuple({ a: d.U8(), b: d.U8() }).fromNest("0102")).toEqual({
-    a: 1n,
-    b: 2n,
-  });
+  expect(
+    d.Tuple({ a: d.Str(), b: d.U8() }).fromNest("0000000568656c6c6f02"),
+  ).toEqual({ a: "hello", b: 2n });
+});
+
+test("d.Tuple.fromNest - empty list", () => {
+  expect(d.Tuple().fromNest("")).toEqual([]);
+});
+
+test("d.Tuple.fromNest - non-empty list", () => {
+  expect(d.Tuple(d.Str(), d.U8()).fromNest("0000000568656c6c6f02")).toEqual([
+    "hello",
+    2n,
+  ]);
 });
 
 test("d.List.fromTop - empty array", () => {
