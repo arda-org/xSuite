@@ -1068,7 +1068,11 @@ test("d.Tuple.fromTop - empty list", () => {
   expect(d.Tuple().fromTop("")).toEqual([]);
 });
 
-test("d.Tuple.fromTop - non-empty list", () => {
+test("d.Tuple.fromTop - list of 1", () => {
+  expect(d.Tuple(d.Str()).fromTop("0000000568656c6c6f")).toEqual(["hello"]);
+});
+
+test("d.Tuple.fromTop - list of 2", () => {
   expect(d.Tuple(d.Str(), d.U8()).fromTop("0000000568656c6c6f02")).toEqual([
     "hello",
     2n,
