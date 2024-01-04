@@ -100,6 +100,7 @@ test("new-wallet --wallet wallet.json --password 1234", async () => {
 
 test("new-wallet --wallet wallet.json --password 1234 --from-pem wallet.pem", async () => {
   const walletPath = path.resolve("wallet.json");
+  stdoutInt.start();
   await run(
     `new-wallet --wallet ${walletPath} --password 1234 --from-pem ${pemPath}`,
   );
@@ -107,11 +108,19 @@ test("new-wallet --wallet wallet.json --password 1234 --from-pem wallet.pem", as
   const secretKey = UserSecretKey.fromPem(
     fs.readFileSync(pemPath, "utf8"),
   ).hex();
+  stdoutInt.stop();
   expect(keystore.getSecretKey()).toEqual(secretKey);
+  expect(stdoutInt.data.split("\n")).toEqual([
+    chalk.green(`Wallet created at "${walletPath}".`),
+    "",
+    chalk.bold.blue("Address:") + ` ${keystore.newSigner()}`,
+    "",
+  ]);
 });
 
 test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_key.json", async () => {
   const walletPath = path.resolve("wallet.json");
+  stdoutInt.start();
   input.inject("qpGjv7ZJ9gcPXWSN");
   await run(
     `new-wallet --wallet ${walletPath} --password 1234 --from-wallet ${keyKeystorePath}`,
@@ -125,11 +134,21 @@ test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_key
     newKeystore.newSigner().sign(Buffer.from("hello")),
     oldKeystore.newSigner().sign(Buffer.from("hello")),
   ]);
+  stdoutInt.stop();
   expect(newSignature).toEqual(oldSignature);
+  expect(stdoutInt.data.split("\n")).toEqual([
+    `Loading keystore wallet at "${keyKeystorePath}"...`,
+    "Enter password: ",
+    chalk.green(`Wallet created at "${walletPath}".`),
+    "",
+    chalk.bold.blue("Address:") + ` ${newKeystore.newSigner()}`,
+    "",
+  ]);
 });
 
 test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_mnemonic.json", async () => {
   const walletPath = path.resolve("wallet.json");
+  stdoutInt.start();
   input.inject("1234");
   await run(
     `new-wallet --wallet ${walletPath} --password 1234 --from-wallet ${mneKeystorePath}`,
@@ -140,7 +159,21 @@ test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_mne
     newKeystore.newSigner().sign(Buffer.from("hello")),
     oldKeystore.newSigner().sign(Buffer.from("hello")),
   ]);
+  stdoutInt.stop();
   expect(newSignature).toEqual(oldSignature);
+  expect(stdoutInt.data.split("\n")).toEqual([
+    `Loading keystore wallet at "${mneKeystorePath}"...`,
+    "Enter password: ",
+    chalk.green(`Wallet created at "${walletPath}".`),
+    "",
+    chalk.bold.blue("Address:") + ` ${newKeystore.newSigner()}`,
+    "",
+    chalk.bold.blue("Private key:"),
+    ...newKeystore.getMnemonicWords().map((w, i) => `  ${i + 1}. ${w}`),
+    "",
+    chalk.bold.yellow("Please backup the private key in a secure place."),
+    "",
+  ]);
 });
 
 test("request-xegld --wallet wallet.json", async () => {
