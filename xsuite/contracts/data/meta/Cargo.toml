@@ -1,10 +1,10 @@
 [package]
-name = "mapper-meta"
+name = "data-meta"
 version = "0.0.0"
 edition = "2021"
 publish = false
 
-[dependencies.mapper]
+[dependencies.data]
 path = ".."
 
 [dependencies.multiversx-sc-meta]
