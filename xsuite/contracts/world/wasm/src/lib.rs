@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                            3
+// Endpoints:                            6
 // Async Callback (empty):               1
-// Total number of exported functions:   5
+// Total number of exported functions:   8
 
 #![no_std]
 
@@ -24,7 +24,10 @@ multiversx_sc_wasm_adapter::endpoints! {
         init => init
         fund => fund
         require_positive => require_positive
-        get_n => get_n
+        get_value => get_value
+        get_caller => get_caller
+        multiply_by_n => multiply_by_n
+        set_n => set_n
     )
 }
 

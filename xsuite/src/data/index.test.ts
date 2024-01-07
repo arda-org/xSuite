@@ -511,11 +511,9 @@ describe("e.kvs", () => {
 
   describe("e.kvs.Mapper", () => {
     beforeEach(async () => {
-      ({ contract } = await wallet.deployContract({
-        code: "file:contracts/mapper/output/mapper.wasm",
-        codeMetadata: [],
-        gasLimit: 10_000_000,
-      }));
+      contract = await wallet.createContract({
+        code: "file:contracts/data/output/data.wasm",
+      });
     });
 
     test("e.kvs.Mapper.Value", async () => {
@@ -716,7 +714,7 @@ describe("e.kvs", () => {
   describe("e.kvs.Esdts", () => {
     beforeEach(async () => {
       contract = await world.createContract({
-        code: "file:contracts/esdt/output/esdt.wasm",
+        code: "file:contracts/data/output/data.wasm",
         kvs: [
           e.kvs.Esdts([
             {

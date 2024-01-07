@@ -5,7 +5,7 @@
 # ##########################################
 
 [package]
-name = "mapper-wasm"
+name = "data-wasm"
 version = "0.0.0"
 edition = "2021"
 publish = false
@@ -20,7 +20,7 @@ lto = true
 debug = false
 panic = "abort"
 
-[dependencies.mapper]
+[dependencies.data]
 path = ".."
 
 [dependencies.multiversx-sc-wasm-adapter]
