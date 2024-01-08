@@ -1,9 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
-import { UserSecretKey, UserWallet } from "@multiversx/sdk-wallet";
+import { UserSecretKey, UserWallet, Mnemonic } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
 import { Command } from "commander";
-import { log } from "../_stdio";
+import { input, log } from "../_stdio";
 import { Keystore } from "../world/signer";
 import { logError, logSuccess } from "./helpers";
 
@@ -34,45 +34,49 @@ const action = async ({
     logError(`Wallet already exists at "${walletPath}".`);
     return;
   }
-  let keystore: Keystore;
   if (password === undefined) {
-    try {
-      keystore = await Keystore.createFile(walletPath);
-      log();
-    } catch (err: any) {
-      logError(err.message);
+    log(`Creating keystore wallet at "${walletPath}"...`);
+    password = await input.hidden("Enter password: ");
+    const passwordAgain = await input.hidden("Re-enter password: ");
+    if (password !== passwordAgain) {
+      logError("Passwords do not match.");
       return;
     }
-  } else {
-    let data;
-    if (fromPemPath && fromWalletPath) {
-      throw new Error(
-        "Both --from-pem and --from-wallet options cannot be set simultaneously.",
-      );
-    }
-    if (fromPemPath) {
-      const secretKey = UserSecretKey.fromPem(
-        fs.readFileSync(fromPemPath, "utf8"),
-      );
-      const wallet = UserWallet.fromSecretKey({ secretKey, password });
-      data = wallet.toJSON();
-    }
-    if (fromWalletPath) {
-      const oldKeystore = await Keystore.fromFile(fromWalletPath);
-      const newWallet =
-        oldKeystore.kind === "mnemonic"
-          ? UserWallet.fromMnemonic({
-              mnemonic: oldKeystore.getMnemonicWords().join(" "),
-              password,
-            })
-          : UserWallet.fromSecretKey({
-              secretKey: UserSecretKey.fromString(oldKeystore.getSecretKey()),
-              password,
-            });
-      data = newWallet.toJSON();
-    }
-    keystore = Keystore.createFile_unsafe(walletPath, password, data);
+    log();
   }
+  let data;
+  if (fromPemPath && fromWalletPath) {
+    throw new Error(
+      "Both --from-pem and --from-wallet options cannot be set simultaneously.",
+    );
+  }
+  if (fromPemPath) {
+    const secretKey = UserSecretKey.fromPem(
+      fs.readFileSync(fromPemPath, "utf8"),
+    );
+    const wallet = UserWallet.fromSecretKey({ secretKey, password });
+    data = wallet.toJSON();
+  }
+  if (fromWalletPath) {
+    const oldKeystore = await Keystore.fromFile(fromWalletPath);
+    const newWallet =
+      oldKeystore.kind === "mnemonic"
+        ? UserWallet.fromMnemonic({
+            mnemonic: oldKeystore.getMnemonicWords().join(" "),
+            password,
+          })
+        : UserWallet.fromSecretKey({
+            secretKey: UserSecretKey.fromString(oldKeystore.getSecretKey()),
+            password,
+          });
+    data = newWallet.toJSON();
+  }
+  if (data === undefined) {
+    const mnemonic = Mnemonic.generate().toString();
+    data = UserWallet.fromMnemonic({ mnemonic, password }).toJSON();
+  }
+  fs.writeFileSync(walletPath, JSON.stringify(data), "utf8");
+  const keystore = new Keystore(data, password);
   logSuccess(`Wallet created at "${walletPath}".`);
   log();
   log(chalk.bold.blue("Address:") + ` ${keystore.newSigner()}`);
