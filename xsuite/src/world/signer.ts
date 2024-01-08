@@ -2,7 +2,6 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   UserSigner as BaseUserSigner,
-  Mnemonic,
   UserWallet,
 } from "@multiversx/sdk-wallet";
 import { input, log } from "../_stdio";
@@ -62,26 +61,6 @@ export class Keystore {
     this.data = data;
     this.password = password;
     this.kind = getSupportedKeystoreKind(data);
-  }
-
-  static async createFile(filePath: string, data?: any) {
-    filePath = path.resolve(filePath);
-    log(`Creating keystore wallet at "${filePath}"...`);
-    const password = await input.hidden("Enter password: ");
-    const passwordAgain = await input.hidden("Re-enter password: ");
-    if (password !== passwordAgain) {
-      throw new Error("Passwords do not match.");
-    }
-    return this.createFile_unsafe(filePath, password, data);
-  }
-
-  static createFile_unsafe(filePath: string, password: string, data?: any) {
-    if (data === undefined) {
-      const mnemonic = Mnemonic.generate().toString();
-      data = UserWallet.fromMnemonic({ mnemonic, password }).toJSON();
-    }
-    fs.writeFileSync(filePath, JSON.stringify(data), "utf8");
-    return new Keystore(data, password);
   }
 
   static async fromFile(filePath: string) {

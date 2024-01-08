@@ -98,6 +98,29 @@ test("new-wallet --wallet wallet.json --password 1234", async () => {
   ]);
 });
 
+test("new-wallet --wallet wallet.json --from-pem wallet.pem", async () => {
+  const walletPath = path.resolve("wallet.json");
+  stdoutInt.start();
+  input.inject("1234", "1234");
+  await run(`new-wallet --wallet ${walletPath} --from-pem ${pemPath}`);
+  const keystore = Keystore.fromFile_unsafe(walletPath, "1234");
+  const secretKey = UserSecretKey.fromPem(
+    fs.readFileSync(pemPath, "utf8"),
+  ).hex();
+  stdoutInt.stop();
+  expect(keystore.getSecretKey()).toEqual(secretKey);
+  expect(stdoutInt.data.split("\n")).toEqual([
+    `Creating keystore wallet at "${walletPath}"...`,
+    "Enter password: ",
+    "Re-enter password: ",
+    "",
+    chalk.green(`Wallet created at "${walletPath}".`),
+    "",
+    chalk.bold.blue("Address:") + ` ${keystore.newSigner()}`,
+    "",
+  ]);
+});
+
 test("new-wallet --wallet wallet.json --password 1234 --from-pem wallet.pem", async () => {
   const walletPath = path.resolve("wallet.json");
   stdoutInt.start();
@@ -178,7 +201,8 @@ test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_mne
 
 test("request-xegld --wallet wallet.json", async () => {
   const walletPath = path.resolve("wallet.json");
-  const signer = Keystore.createFile_unsafe(walletPath, "1234").newSigner();
+  fs.copyFileSync(mneKeystorePath, walletPath);
+  const signer = Keystore.fromFile_unsafe(walletPath, "1234").newSigner();
   const address = signer.toString();
   let balances: number[] = [];
   const server = setupServer(
