@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 env:
-  TAG: v1.4.81
+  TAG: v1.5.22
 
 jobs:
   build:
@@ -22,8 +22,8 @@ jobs:
 
       - name: Build binary
         run: |
-          git clone https://github.com/multiversx/mx-chain-vm-v1_4-go
-          cd mx-chain-vm-v1_4-go
+          git clone https://github.com/multiversx/mx-chain-vm-go
+          cd mx-chain-vm-go
           git checkout tags/${{ env.TAG }}
           cd cmd/test
           go build -o scenexec-${{ matrix.os }} -ldflags "-extldflags '-Wl,-rpath,\$ORIGIN'"
@@ -32,7 +32,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: scenexec
-          path: ./mx-chain-vm-v1_4-go/cmd/test/scenexec-${{ matrix.os }}
+          path: ./mx-chain-vm-go/cmd/test/scenexec-${{ matrix.os }}
 
   release:
     needs: build
