@@ -9,6 +9,11 @@ pub trait World {
         self.n().set(n);
     }
 
+    #[upgrade]
+    fn upgrade(&self, n: u64) {
+        self.init(n);
+    }
+
     #[payable("*")]
     #[endpoint]
     fn fund(&self) {}

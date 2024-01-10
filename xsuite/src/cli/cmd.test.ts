@@ -347,16 +347,22 @@ test("new --dir contract && build --locked && build -r && test-rust && test-scen
     "",
   ]);
 
-  const scenexecName = "scenexec-ubuntu-20.04-v1.4.81";
-  const scenexecPath = path.join(__dirname, "..", "..", "bin", scenexecName);
-  fs.rmSync(scenexecPath, { force: true });
+  const extractPath = path.join(
+    __dirname,
+    "..",
+    "..",
+    "bin",
+    "scenexec-v1.5.22-ubuntu-20.04",
+  );
+  const binaryPath = path.join(extractPath, "scenexec");
+  fs.rmSync(extractPath, { recursive: true, force: true });
   stdoutInt.start();
   await run("test-scen");
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Testing contract with scenarios..."),
-    "Downloading scenexec-ubuntu-20.04-v1.4.81...",
-    chalk.cyan(`$ ${scenexecPath} .`),
+    "Downloading scenexec-v1.5.22-ubuntu-20.04...",
+    chalk.cyan(`$ ${binaryPath} .`),
     "",
   ]);
 }, 600_000);

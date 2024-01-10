@@ -8,7 +8,7 @@ import (
 	"math"
 	"net/http"
 
-	mj "github.com/multiversx/mx-chain-vm-v1_4-go/scenarios/model"
+	mj "github.com/multiversx/mx-chain-scenario-go/model"
 )
 
 func (ae *Executor) HandleVmQuery(r *http.Request) (interface{}, error) {
@@ -28,15 +28,15 @@ func (ae *Executor) HandleVmQuery(r *http.Request) (interface{}, error) {
 		Tx: &mj.Transaction{
 			Type: mj.ScCall,
 			EGLDValue: mj.JSONBigIntZero(),
-			GasLimit: mj.JSONUint64{Value: math.MaxUint64},
+			GasLimit: mj.JSONUint64{Value: math.MaxInt64},
 		},
 	}
-	scAddress, err := addressConverter.Decode(rawQuery.ScAddress)
+	scAddress, err := bech32Decode(rawQuery.ScAddress)
 	if err != nil {
 		return nil, err
 	}
 	if rawQuery.Caller != nil {
-		caller, err := addressConverter.Decode(*rawQuery.Caller)
+		caller, err := bech32Decode(*rawQuery.Caller)
 		if err != nil {
 			return nil, err
 		}

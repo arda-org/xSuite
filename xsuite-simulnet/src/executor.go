@@ -1,8 +1,8 @@
 package main
 
 import (
-	se "github.com/multiversx/mx-chain-vm-v1_4-go/scenarioexec"
-	mj "github.com/multiversx/mx-chain-vm-v1_4-go/scenarios/model"
+	mj "github.com/multiversx/mx-chain-scenario-go/model"
+	se "github.com/multiversx/mx-chain-vm-go/scenarioexec"
 )
 
 type Executor struct {

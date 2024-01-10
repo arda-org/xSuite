@@ -7,6 +7,9 @@ pub trait Data {
     #[init]
     fn init(&self) {}
 
+    #[upgrade]
+    fn upgrade(&self) {}
+
     #[endpoint]
     fn single_add(&self, key: ManagedBuffer, value: u64) {
         self.single(key).set(value);
