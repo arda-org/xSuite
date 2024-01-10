@@ -1,15 +1,17 @@
 import { execSync } from "node:child_process";
 import fs from "node:fs";
-import https from "node:https";
-import os from "node:os";
 import path from "node:path";
-import stream from "node:stream";
-import util from "node:util";
 import chalk from "chalk";
 import { Command } from "commander";
 import tar from "tar";
 import { log } from "../_stdio";
-import { logTitle, logAndRunCommand, logCommand, logError } from "./helpers";
+import {
+  logTitle,
+  logAndRunCommand,
+  logCommand,
+  logError,
+  downloadArchive,
+} from "./helpers";
 
 export const registerNewCmd = (cmd: Command) => {
   cmd
@@ -76,12 +78,12 @@ const action = async ({
 };
 
 const downloadAndExtractContract = async (contract: string, cwd: string) => {
-  const archive = await downloadArchive(
+  const archivePath = await downloadArchive(
     "https://codeload.github.com/arda-org/xSuite/tar.gz/main",
   );
   const xsuiteVersion = await new Promise<string>((r) => {
     tar.t({
-      file: archive,
+      file: archivePath,
       filter: (p) => p.includes("/xsuite/package.json"),
       onentry: async (e) => {
         const f = (await e.concat()).toString();
@@ -90,12 +92,12 @@ const downloadAndExtractContract = async (contract: string, cwd: string) => {
     });
   });
   await tar.x({
-    file: archive,
+    file: archivePath,
     strip: 2 + contract.split("/").length,
     filter: (p) => p.includes(`/contracts/${contract}/`),
     cwd,
   });
-  fs.unlinkSync(archive);
+  fs.unlinkSync(archivePath);
   const pkgjsonPath = path.join(cwd, "package.json");
   let pkgjson = fs.readFileSync(pkgjsonPath, "utf-8");
   pkgjson = pkgjson.replace(
@@ -103,21 +105,6 @@ const downloadAndExtractContract = async (contract: string, cwd: string) => {
     `"xsuite": "${xsuiteVersion}"`,
   );
   fs.writeFileSync(pkgjsonPath, pkgjson);
-};
-
-const pipeline = util.promisify(stream.Stream.pipeline);
-
-const downloadArchive = (url: string) => {
-  const file = path.join(os.tmpdir(), `xSuite-contract-${Date.now()}`);
-  return new Promise<string>((resolve, reject) => {
-    https
-      .get(url, (response) => {
-        pipeline(response, fs.createWriteStream(file))
-          .then(() => resolve(file))
-          .catch(reject);
-      })
-      .on("error", reject);
-  });
 };
 
 const tryGitInit = (cwd: string): boolean => {

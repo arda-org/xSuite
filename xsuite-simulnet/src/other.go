@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/multiversx/mx-chain-core-go/core/mock"
-	"github.com/multiversx/mx-chain-core-go/core/pubkeyConverter"
+	"github.com/multiversx/mx-chain-core-go/core"
+	pc "github.com/multiversx/mx-chain-core-go/core/pubkeyConverter"
 )
 
 func stringToBigint(value string) (*big.Int, error) {
@@ -59,7 +59,29 @@ func uint64ToBytesAddress(n uint64, isContract bool) []byte {
 	return newAddress
 }
 
+func bech32Decode(input string) ([]byte, error) {
+	if input == "" {
+		return nil, nil
+	}
+	bpc, _ := pc.NewBech32PubkeyConverter(addressByteLength, core.DefaultAddressPrefix)
+	res, err := bpc.Decode(input)
+	if err != nil {
+		return []byte{}, err
+	}
+	return res, err
+}
+
+func bech32Encode(input []byte) (string, error) {
+	if input == nil {
+		return "", nil
+	}
+	bpc, _ := pc.NewBech32PubkeyConverter(addressByteLength, core.DefaultAddressPrefix)
+	res, err := bpc.Encode(input)
+	if err != nil {
+		return "", err
+	}
+	return res, err
+}
+
 var addressByteLength = 32
 var contractAddressLeftShift = 8
-
-var addressConverter, _ = pubkeyConverter.NewBech32PubkeyConverter(32, &mock.LoggerMock{})

@@ -6,25 +6,29 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
-	worldmock "github.com/multiversx/mx-chain-vm-v1_4-go/mock/world"
+	worldmock "github.com/multiversx/mx-chain-vm-go/mock/world"
 )
 
 func (ae *Executor) HandleAddress(r *http.Request) (interface{}, error) {
 	bechAddress := chi.URLParam(r, "address")
-	address, err := addressConverter.Decode(bechAddress)
+	address, err := bech32Decode(bechAddress)
 	if err != nil {
 		return nil, err
 	}
 	account := ae.getAccount(address)
+	bechOwnerAddress, err := bech32Encode(account.OwnerAddress)
+	if err != nil {
+		return nil, err
+	}
 	jData := map[string]interface{}{
 		"data": map[string]interface{}{
 			"account": map[string]interface{}{
-				"address": 			addressConverter.Encode(account.Address),
+				"address": 			bechAddress,
 				"nonce":   			account.Nonce,
 				"balance": 			account.Balance.String(),
 				"code": 				hex.EncodeToString(account.Code),
 				"codeMetadata": base64.StdEncoding.EncodeToString(account.CodeMetadata),
-				"ownerAddress": addressConverter.Encode(account.OwnerAddress),
+				"ownerAddress": bechOwnerAddress,
 			},
 		},
 		"code": "successful",
@@ -34,7 +38,7 @@ func (ae *Executor) HandleAddress(r *http.Request) (interface{}, error) {
 
 func (ae *Executor) HandleAddressNonce(r *http.Request) (interface{}, error) {
 	bechAddress := chi.URLParam(r, "address")
-	address, err := addressConverter.Decode(bechAddress)
+	address, err := bech32Decode(bechAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +54,7 @@ func (ae *Executor) HandleAddressNonce(r *http.Request) (interface{}, error) {
 
 func (ae *Executor) HandleAddressBalance(r *http.Request) (interface{}, error) {
 	bechAddress := chi.URLParam(r, "address")
-	address, err := addressConverter.Decode(bechAddress)
+	address, err := bech32Decode(bechAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +70,7 @@ func (ae *Executor) HandleAddressBalance(r *http.Request) (interface{}, error) {
 
 func (ae *Executor) HandleAddressKeys(r *http.Request) (interface{}, error) {
 	bechAddress := chi.URLParam(r, "address")
-	address, err := addressConverter.Decode(bechAddress)
+	address, err := bech32Decode(bechAddress)
 	if err != nil {
 		return nil, err
 	}
