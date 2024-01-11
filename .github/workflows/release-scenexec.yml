@@ -15,9 +15,11 @@ jobs:
           - os: ubuntu-20.04
             wasmer_lib: libwasmer_linux_amd64.so
             wasmer2_lib: libvmexeccapi.so
+            flags: -ldflags "-extldflags '-Wl,-rpath,\$ORIGIN'"
           - os: macos-12
             wasmer_lib: libwasmer_darwin_amd64.dylib
             wasmer2_lib: libvmexeccapi.dylib
+            flags: -ldflags "-extldflags '-Wl,-rpath,@loader_path'"
 
     runs-on: ${{ matrix.os }}
 
@@ -33,7 +35,7 @@ jobs:
           cd mx-chain-vm-go
           git checkout tags/${{ env.TAG }}
           cd cmd/test
-          go build -o scenexec -ldflags "-extldflags '-Wl,-rpath,\$ORIGIN'"
+          go build -o scenexec ${{ matrix.flags }}
 
       - name: Package binary
         run: |
@@ -43,17 +45,35 @@ jobs:
           cp mx-chain-vm-go/wasmer2/${{ matrix.wasmer2_lib }} scenexec/${{ matrix.wasmer2_lib }}
           tar -czvf scenexec-${{ env.TAG }}-${{ matrix.os }}.tar.gz scenexec
 
-      - name: Test binary
-        run: cd scenexec && ./scenexec .
-
       - name: Upload binary
         uses: actions/upload-artifact@v3
         with:
           name: scenexec
           path: scenexec-${{ env.TAG }}-${{ matrix.os }}.tar.gz
 
-  release:
+  test:
     needs: build
+
+    strategy:
+      matrix:
+        os: [ubuntu-20.04, macos-12]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Download binaries
+        uses: actions/download-artifact@v3
+        with:
+          name: scenexec
+
+      - name: Unpackage binary
+        run: tar -xzvf scenexec-${{ env.TAG }}-${{ matrix.os }}.tar.gz
+
+      - name: Test binary
+        run: cd scenexec && ./scenexec .
+
+  release:
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
