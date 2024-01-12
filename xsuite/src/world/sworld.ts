@@ -103,6 +103,10 @@ export class SWorld extends World {
     return this.proxy.setCurrentBlock(block);
   }
 
+  setPreviousBlockInfo(block: Block) {
+    return this.proxy.setPreviousBlock(block);
+  }
+
   terminate() {
     return this.proxy.terminate();
   }

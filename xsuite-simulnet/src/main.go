@@ -74,6 +74,11 @@ func main() {
 		respond(w, resBody, err)
 	})
 
+	router.Post("/admin/set-previous-block", func(w http.ResponseWriter, r *http.Request) {
+		resBody, err := executor.HandleAdminSetPreviousBlock(r)
+		respond(w, resBody, err)
+	})
+
 	router.Get("/admin/terminate", func(w http.ResponseWriter, r *http.Request) {
 		os.Exit(0)
 	})
