@@ -16,7 +16,7 @@ export const registerNewWalletCmd = (cmd: Command) => {
     .option("--password <PASSWORD>", "Wallet password")
     .option("--from-pem <PEM_PATH>", "PEM path")
     .option("--from-wallet <WALLET_PATH>", "Wallet path")
-    .option("--shard <SHARD>", "Shard of the wallet")
+    .option("--shard <SHARD>", "Shard of the wallet", parseInt)
     .action(action);
 };
 
@@ -49,19 +49,22 @@ const action = async ({
     log();
   }
   let data;
-  if (fromPemPath && fromWalletPath) {
-    throw new Error(
-      "Both --from-pem and --from-wallet options cannot be set simultaneously.",
-    );
-  }
-  if (fromPemPath) {
+  if (fromPemPath !== undefined) {
+    if (data !== undefined) {
+      logError("Multiple wallet sources have been specified.");
+      return;
+    }
     const secretKey = UserSecretKey.fromPem(
       fs.readFileSync(fromPemPath, "utf8"),
     );
     const wallet = UserWallet.fromSecretKey({ secretKey, password });
     data = wallet.toJSON();
   }
-  if (fromWalletPath) {
+  if (fromWalletPath !== undefined) {
+    if (data !== undefined) {
+      logError("Multiple wallet sources have been specified.");
+      return;
+    }
     const oldKeystore = await Keystore.fromFile(fromWalletPath);
     const newWallet =
       oldKeystore.kind === "mnemonic"
@@ -75,28 +78,27 @@ const action = async ({
           });
     data = newWallet.toJSON();
   }
-  if (data === undefined) {
-    let mnemonic;
-    if (shard === undefined) {
-      mnemonic = Mnemonic.generate().toString();
-    } else if (shard < 0 || shard >= totalShards) {
+  if (shard !== undefined) {
+    if (data !== undefined) {
+      logError("Multiple wallet sources have been specified.");
+      return;
+    }
+    if (shard < 0 || shard >= totalShards) {
       logError("The shard you entered does not exist.");
       return;
     }
-
-    while (!mnemonic) {
-      const generatedMnemonic = Mnemonic.generate();
-      const pubKey = generatedMnemonic
-        .deriveKey()
-        .generatePublicKey()
-        .hex()
-        .toString();
-
-      const shardOfMnemonic = computeShard(pubKey);
-      if (shardOfMnemonic == shard) {
-        mnemonic = generatedMnemonic.toString();
-      }
-    }
+    let mnemonic: string;
+    let shardOfMnemonic: number;
+    do {
+      const _mnemonic = Mnemonic.generate();
+      const pubKey = _mnemonic.deriveKey().generatePublicKey().hex().toString();
+      mnemonic = _mnemonic.toString();
+      shardOfMnemonic = computeShard(pubKey);
+    } while (shardOfMnemonic !== shard);
+    data = UserWallet.fromMnemonic({ mnemonic, password }).toJSON();
+  }
+  if (data === undefined) {
+    const mnemonic = Mnemonic.generate().toString();
     data = UserWallet.fromMnemonic({ mnemonic, password }).toJSON();
   }
 
@@ -110,7 +112,7 @@ const action = async ({
   log(chalk.bold.blue("Shard:") + ` ${computeShard(signer.toTopHex())}`);
   if (keystore.kind === "mnemonic") {
     log();
-    log(chalk.bold.blue("Private key:"));
+    log(chalk.bold.blue("Mnemonic phrase:"));
     log(
       keystore
         .getMnemonicWords()
@@ -118,6 +120,8 @@ const action = async ({
         .join("\n"),
     );
     log();
-    log(chalk.bold.yellow("Please backup the private key in a secure place."));
+    log(
+      chalk.bold.yellow("Please backup the mnemonic phrase in a secure place."),
+    );
   }
 };

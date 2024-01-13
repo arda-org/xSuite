@@ -47,10 +47,10 @@ test("new-wallet --wallet wallet.json", async () => {
     "",
     chalk.bold.blue("Shard:") + ` ${computeShard(keystoreSigner.toTopHex())}`,
     "",
-    chalk.bold.blue("Private key:"),
+    chalk.bold.blue("Mnemonic phrase:"),
     ...keystore.getMnemonicWords().map((w, i) => `  ${i + 1}. ${w}`),
     "",
-    chalk.bold.yellow("Please backup the private key in a secure place."),
+    chalk.bold.yellow("Please backup the mnemonic phrase in a secure place."),
     "",
   ]);
 });
@@ -75,10 +75,10 @@ for (const shard of [0, 1, 2]) {
       "",
       chalk.bold.blue("Shard:") + ` ${shard}`,
       "",
-      chalk.bold.blue("Private key:"),
+      chalk.bold.blue("Mnemonic phrase:"),
       ...keystore.getMnemonicWords().map((w, i) => `  ${i + 1}. ${w}`),
       "",
-      chalk.bold.yellow("Please backup the private key in a secure place."),
+      chalk.bold.yellow("Please backup the mnemonic phrase in a secure place."),
       "",
     ]);
   });
@@ -145,10 +145,10 @@ test("new-wallet --wallet wallet.json --password 1234", async () => {
     "",
     chalk.bold.blue("Shard:") + ` ${computeShard(keystoreSigner.toTopHex())}`,
     "",
-    chalk.bold.blue("Private key:"),
+    chalk.bold.blue("Mnemonic phrase:"),
     ...keystore.getMnemonicWords().map((w, i) => `  ${i + 1}. ${w}`),
     "",
-    chalk.bold.yellow("Please backup the private key in a secure place."),
+    chalk.bold.yellow("Please backup the mnemonic phrase in a secure place."),
     "",
   ]);
 });
@@ -260,10 +260,10 @@ test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_mne
     chalk.bold.blue("Shard:") +
       ` ${computeShard(newKeystoreSigner.toTopHex())}`,
     "",
-    chalk.bold.blue("Private key:"),
+    chalk.bold.blue("Mnemonic phrase:"),
     ...newKeystore.getMnemonicWords().map((w, i) => `  ${i + 1}. ${w}`),
     "",
-    chalk.bold.yellow("Please backup the private key in a secure place."),
+    chalk.bold.yellow("Please backup the mnemonic phrase in a secure place."),
     "",
   ]);
 });
