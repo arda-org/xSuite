@@ -77,7 +77,7 @@ func (ae *Executor) HandleAdminSetAccount(r *http.Request) (interface{}, error) 
 	return jData, err
 }
 
-func (ae *Executor) HandleAdminSetCurrentBlock(r *http.Request) (interface{}, error) {
+func (ae *Executor) HandleAdminSetCurrentBlockInfo(r *http.Request) (interface{}, error) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var block Block
 	err := json.Unmarshal(reqBody, &block)
@@ -97,7 +97,7 @@ func (ae *Executor) HandleAdminSetCurrentBlock(r *http.Request) (interface{}, er
 	return jData, nil
 }
 
-func (ae *Executor) HandleAdminSetPreviousBlock(r *http.Request) (interface{}, error) {
+func (ae *Executor) HandleAdminSetPreviousBlockInfo(r *http.Request) (interface{}, error) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var block Block
 	err := json.Unmarshal(reqBody, &block)

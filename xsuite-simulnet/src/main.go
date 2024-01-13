@@ -69,13 +69,13 @@ func main() {
 		respond(w, resBody, err)
 	})
 
-	router.Post("/admin/set-current-block", func(w http.ResponseWriter, r *http.Request) {
-		resBody, err := executor.HandleAdminSetCurrentBlock(r)
+	router.Post("/admin/set-current-block-info", func(w http.ResponseWriter, r *http.Request) {
+		resBody, err := executor.HandleAdminSetCurrentBlockInfo(r)
 		respond(w, resBody, err)
 	})
 
-	router.Post("/admin/set-previous-block", func(w http.ResponseWriter, r *http.Request) {
-		resBody, err := executor.HandleAdminSetPreviousBlock(r)
+	router.Post("/admin/set-previous-block-info", func(w http.ResponseWriter, r *http.Request) {
+		resBody, err := executor.HandleAdminSetPreviousBlockInfo(r)
 		respond(w, resBody, err)
 	})
 

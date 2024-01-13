@@ -14,20 +14,20 @@ export class SProxy extends Proxy {
     return SProxy.setAccount(this.baseUrl, account);
   }
 
-  static setCurrentBlock(baseUrl: string, block: Block) {
-    return Proxy.fetch(`${baseUrl}/admin/set-current-block`, block);
+  static setCurrentBlockInfo(baseUrl: string, block: Block) {
+    return Proxy.fetch(`${baseUrl}/admin/set-current-block-info`, block);
   }
 
-  setCurrentBlock(block: Block) {
-    return SProxy.setCurrentBlock(this.baseUrl, block);
+  setCurrentBlockInfo(block: Block) {
+    return SProxy.setCurrentBlockInfo(this.baseUrl, block);
   }
 
-  static setPreviousBlock(baseUrl: string, block: Block) {
-    return Proxy.fetch(`${baseUrl}/admin/set-previous-block`, block);
+  static setPreviousBlockInfo(baseUrl: string, block: Block) {
+    return Proxy.fetch(`${baseUrl}/admin/set-previous-block-info`, block);
   }
 
-  setPreviousBlock(block: Block) {
-    return SProxy.setPreviousBlock(this.baseUrl, block);
+  setPreviousBlockInfo(block: Block) {
+    return SProxy.setPreviousBlockInfo(this.baseUrl, block);
   }
 
   static terminate(baseUrl: string) {
@@ -42,6 +42,20 @@ export class SProxy extends Proxy {
 
   terminate() {
     return SProxy.terminate(this.baseUrl);
+  }
+
+  /**
+   * @deprecated Use `.setCurrentBlockInfo` instead.
+   */
+  static setCurrentBlock(baseUrl: string, block: Block) {
+    return SProxy.setCurrentBlockInfo(baseUrl, block);
+  }
+
+  /**
+   * @deprecated Use `.setCurrentBlockInfo` instead.
+   */
+  setCurrentBlock(block: Block) {
+    return this.setCurrentBlockInfo(block);
   }
 }
 
