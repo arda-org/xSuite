@@ -22,6 +22,14 @@ export class SProxy extends Proxy {
     return SProxy.setCurrentBlock(this.baseUrl, block);
   }
 
+  static setPreviousBlock(baseUrl: string, block: Block) {
+    return Proxy.fetch(`${baseUrl}/admin/set-previous-block`, block);
+  }
+
+  setPreviousBlock(block: Block) {
+    return SProxy.setPreviousBlock(this.baseUrl, block);
+  }
+
   static terminate(baseUrl: string) {
     return Proxy.fetch(`${baseUrl}/admin/terminate`)
       .then(() => {

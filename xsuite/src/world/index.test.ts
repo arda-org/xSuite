@@ -203,7 +203,7 @@ test("SWorld.setAccount", async () => {
   });
 });
 
-test.failing("SWorld.setCurrentBlockInfo", async () => {
+test("SWorld.setCurrentBlockInfo", async () => {
   await world.setCurrentBlockInfo({
     epoch: 100,
     nonce: 200,
@@ -215,6 +215,20 @@ test.failing("SWorld.setCurrentBlockInfo", async () => {
     funcName: "get_current_block_info",
   });
   assertHexList(returnData, [e.U64(100), e.U64(200), e.U64(300), e.U64(400)]);
+});
+
+test("SWorld.setPreviousBlockInfo", async () => {
+  await world.setPreviousBlockInfo({
+    epoch: 10,
+    nonce: 20,
+    round: 30,
+    timestamp: 40,
+  });
+  const { returnData } = await world.query({
+    callee: contract,
+    funcName: "get_prev_block_info",
+  });
+  assertHexList(returnData, [e.U64(10), e.U64(20), e.U64(30), e.U64(40)]);
 });
 
 test("SWorld.query - basic", async () => {

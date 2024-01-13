@@ -97,6 +97,26 @@ func (ae *Executor) HandleAdminSetCurrentBlock(r *http.Request) (interface{}, er
 	return jData, nil
 }
 
+func (ae *Executor) HandleAdminSetPreviousBlock(r *http.Request) (interface{}, error) {
+	reqBody, _ := io.ReadAll(r.Body)
+	var block Block
+	err := json.Unmarshal(reqBody, &block)
+	if err != nil {
+		return nil, err
+	}
+	ae.vmTestExecutor.World.PreviousBlockInfo = &worldmock.BlockInfo{
+		BlockTimestamp: block.Timestamp,
+		BlockNonce:     block.Nonce,
+		BlockRound:     block.Round,
+		BlockEpoch:     block.Epoch,
+		RandomSeed:     nil,
+	}
+	jData := map[string]interface{}{
+		"code": "successful",
+	}
+	return jData, nil
+}
+
 func (ae *Executor) HandleAdminTerminate() (interface{}, error) {
 	jData := map[string]interface{}{
 		"code": "successful",
