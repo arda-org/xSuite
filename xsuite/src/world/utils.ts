@@ -24,5 +24,27 @@ export const numberToBytesAddress = (
   return new Uint8Array(buffer);
 };
 
+const calculateMasks = (numOfShards: number) => {
+  const n = Math.ceil(Math.log2(numOfShards));
+  const mask1 = (1 << n) - 1;
+  const mask2 = (1 << (n - 1)) - 1;
+  return [mask1, mask2];
+};
+
+// https://github.com/multiversx/mx-sdk-nestjs/blob/8209a33d01dfb2a09085479444112192c8342aa9/packages/common/src/utils/address.utils.ts#L40
+export const computeShard = (hexPubKey: string): number => {
+  const [maskHigh, maskLow] = calculateMasks(totalShards);
+  const pubKey = Buffer.from(hexPubKey, "hex");
+  const lastByteOfPubKey = pubKey[addressByteLength - 1];
+  let shard = lastByteOfPubKey & maskHigh;
+  if (shard > totalShards - 1) {
+    shard = lastByteOfPubKey & maskLow;
+  }
+
+  return shard;
+};
+
+export const totalShards = 3;
+
 const addressByteLength = 32;
 const contractAddressLeftShift = 8;

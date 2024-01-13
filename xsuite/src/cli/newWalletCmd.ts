@@ -5,6 +5,7 @@ import chalk from "chalk";
 import { Command } from "commander";
 import { input, log } from "../_stdio";
 import { Keystore } from "../world/signer";
+import { computeShard, totalShards } from "../world/utils";
 import { logError, logSuccess } from "./helpers";
 
 export const registerNewWalletCmd = (cmd: Command) => {
@@ -15,6 +16,7 @@ export const registerNewWalletCmd = (cmd: Command) => {
     .option("--password <PASSWORD>", "Wallet password")
     .option("--from-pem <PEM_PATH>", "PEM path")
     .option("--from-wallet <WALLET_PATH>", "Wallet path")
+    .option("--shard <SHARD>", "Shard of the wallet")
     .action(action);
 };
 
@@ -23,11 +25,13 @@ const action = async ({
   password,
   fromPem: fromPemPath,
   fromWallet: fromWalletPath,
+  shard,
 }: {
   wallet: string;
   password?: string;
   fromPem?: string;
   fromWallet?: string;
+  shard?: number;
 }) => {
   walletPath = path.resolve(walletPath);
   if (fs.existsSync(walletPath)) {
@@ -72,14 +76,38 @@ const action = async ({
     data = newWallet.toJSON();
   }
   if (data === undefined) {
-    const mnemonic = Mnemonic.generate().toString();
+    let mnemonic;
+    if (shard === undefined) {
+      mnemonic = Mnemonic.generate().toString();
+    } else if (shard < 0 || shard >= totalShards) {
+      logError("The shard you entered does not exist.");
+      return;
+    }
+
+    while (!mnemonic) {
+      const generatedMnemonic = Mnemonic.generate();
+      const pubKey = generatedMnemonic
+        .deriveKey()
+        .generatePublicKey()
+        .hex()
+        .toString();
+
+      const shardOfMnemonic = computeShard(pubKey);
+      if (shardOfMnemonic == shard) {
+        mnemonic = generatedMnemonic.toString();
+      }
+    }
     data = UserWallet.fromMnemonic({ mnemonic, password }).toJSON();
   }
+
   fs.writeFileSync(walletPath, JSON.stringify(data), "utf8");
   const keystore = new Keystore(data, password);
+  const signer = keystore.newSigner();
   logSuccess(`Wallet created at "${walletPath}".`);
   log();
   log(chalk.bold.blue("Address:") + ` ${keystore.newSigner()}`);
+  log();
+  log(chalk.bold.blue("Shard:") + ` ${computeShard(signer.toTopHex())}`);
   if (keystore.kind === "mnemonic") {
     log();
     log(chalk.bold.blue("Private key:"));
