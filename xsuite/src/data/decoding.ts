@@ -1,12 +1,27 @@
 import { AddressDecoder } from "./AddressDecoder";
 import { BufferDecoder } from "./BufferDecoder";
 import { BytesDecoder } from "./BytesDecoder";
-import { Decoder } from "./Decoder";
+import { Decoder, isDecoder } from "./Decoder";
 import { IntDecoder } from "./IntDecoder";
 import { ListDecoder } from "./ListDecoder";
 import { OptionDecoder } from "./OptionDecoder";
-import { DecoderMap, TupleDecoder } from "./TupleDecoder";
+import { TupleDecoderList, TupleDecoderMap } from "./TupleDecoder";
 import { UintDecoder } from "./UintDecoder";
+
+function Tuple<const T extends readonly Decoder<any>[]>(
+  ...decoders: T
+): TupleDecoderList<T>;
+function Tuple<T extends Record<string, Decoder<any>>>(
+  decoders: T,
+): TupleDecoderMap<T>;
+function Tuple(
+  ...params: Decoder<any>[] | [Record<string, Decoder<any>>]
+): TupleDecoderList<any> | TupleDecoderMap<any> {
+  if (params.length !== 1 || isDecoder(params[0])) {
+    return new TupleDecoderList(params as any);
+  }
+  return new TupleDecoderMap(params[0]);
+}
 
 export const d = {
   Buffer: () => {
@@ -69,9 +84,7 @@ export const d = {
   TopI: () => {
     return d.TopBuffer().then((b) => d.I().fromTop(b));
   },
-  Tuple: <T extends DecoderMap<any>>(decoders: T) => {
-    return new TupleDecoder(decoders);
-  },
+  Tuple,
   List: <T>(decoder: Decoder<T>) => {
     return new ListDecoder(decoder);
   },

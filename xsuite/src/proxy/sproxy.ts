@@ -1,4 +1,4 @@
-import { Address } from "../data/address";
+import { Address, addressToBech32 } from "../data/address";
 import { Kvs, RawKvs, kvsToRawKvs } from "../data/kvs";
 import { CodeMetadata, codeMetadataToHex, Proxy } from "./proxy";
 
@@ -14,12 +14,20 @@ export class SProxy extends Proxy {
     return SProxy.setAccount(this.baseUrl, account);
   }
 
-  static setCurrentBlock(baseUrl: string, block: Block) {
-    return Proxy.fetch(`${baseUrl}/admin/set-current-block`, block);
+  static setCurrentBlockInfo(baseUrl: string, block: Block) {
+    return Proxy.fetch(`${baseUrl}/admin/set-current-block-info`, block);
   }
 
-  setCurrentBlock(block: Block) {
-    return SProxy.setCurrentBlock(this.baseUrl, block);
+  setCurrentBlockInfo(block: Block) {
+    return SProxy.setCurrentBlockInfo(this.baseUrl, block);
+  }
+
+  static setPreviousBlockInfo(baseUrl: string, block: Block) {
+    return Proxy.fetch(`${baseUrl}/admin/set-previous-block-info`, block);
+  }
+
+  setPreviousBlockInfo(block: Block) {
+    return SProxy.setPreviousBlockInfo(this.baseUrl, block);
   }
 
   static terminate(baseUrl: string) {
@@ -35,11 +43,25 @@ export class SProxy extends Proxy {
   terminate() {
     return SProxy.terminate(this.baseUrl);
   }
+
+  /**
+   * @deprecated Use `.setCurrentBlockInfo` instead.
+   */
+  static setCurrentBlock(baseUrl: string, block: Block) {
+    return SProxy.setCurrentBlockInfo(baseUrl, block);
+  }
+
+  /**
+   * @deprecated Use `.setCurrentBlockInfo` instead.
+   */
+  setCurrentBlock(block: Block) {
+    return this.setCurrentBlockInfo(block);
+  }
 }
 
 const accountToRawAccount = (account: Account): RawAccount => {
   return {
-    address: account.address.toString(),
+    address: addressToBech32(account.address),
     nonce: account.nonce,
     balance: account.balance?.toString(),
     kvs: account.kvs != null ? kvsToRawKvs(account.kvs) : undefined,
@@ -48,14 +70,14 @@ const accountToRawAccount = (account: Account): RawAccount => {
       account.codeMetadata != null
         ? codeMetadataToHex(account.codeMetadata)
         : undefined,
-    owner: account.owner != null ? account.owner.toString() : undefined,
+    owner: account.owner != null ? addressToBech32(account.owner) : undefined,
   };
 };
 
 export type Account = {
   address: Address;
   nonce?: number;
-  balance?: number | bigint;
+  balance?: number | bigint | string;
   code?: string | null;
   codeMetadata?: CodeMetadata | null;
   owner?: Address | null;

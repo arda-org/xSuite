@@ -462,7 +462,7 @@ const query = (proxy: Proxy, params: QueryParams) =>
     }
     return {
       query: resQuery,
-      returnData: [...resQuery.returnData].map(b64ToHex),
+      returnData: resQuery.returnData.map(b64ToHex),
     };
   });
 

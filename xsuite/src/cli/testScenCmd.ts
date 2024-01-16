@@ -1,11 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
-import { Readable } from "node:stream";
-import { finished } from "node:stream/promises";
 import { Command } from "commander";
+import tar from "tar";
 import { pkgPath } from "../_pkg";
 import { log } from "../_stdio";
-import { logTitle, logAndRunCommand } from "./helpers";
+import { logTitle, logAndRunCommand, downloadArchive } from "./helpers";
 
 export const registerTestScenCmd = (cmd: Command) => {
   cmd
@@ -15,29 +14,25 @@ export const registerTestScenCmd = (cmd: Command) => {
 };
 
 const repoUrl = "https://github.com/arda-org/xSuite";
-const TAG = "v1.4.81";
+const TAG = "v1.5.22";
 const BINARY_NAME = "scenexec";
 
 const action = async () => {
   logTitle("Testing contract with scenarios...");
   const binaryOs = getBinaryOs();
-  const localBinaryName = `${BINARY_NAME}-${binaryOs}-${TAG}`;
-  const binaryPath = path.join(pkgPath, "bin", localBinaryName);
+  const localBinaryName = `${BINARY_NAME}-${TAG}-${binaryOs}`;
+  const extractPath = path.join(pkgPath, "bin", localBinaryName);
+  const binaryPath = path.join(extractPath, BINARY_NAME);
   if (!fs.existsSync(binaryPath)) {
     log(`Downloading ${localBinaryName}...`);
-    const url = `${repoUrl}/releases/download/${BINARY_NAME}-${TAG}/${BINARY_NAME}-${binaryOs}`;
-    await downloadFile(url, binaryPath);
+    fs.mkdirSync(extractPath);
+    const url = `${repoUrl}/releases/download/${BINARY_NAME}-${TAG}/${localBinaryName}.tar.gz`;
+    const archivePath = await downloadArchive(url);
+    await tar.x({ file: archivePath, strip: 1, cwd: extractPath });
+    fs.unlinkSync(archivePath);
     fs.chmodSync(binaryPath, "755");
   }
   logAndRunCommand(binaryPath, ["."]);
-};
-
-const downloadFile = async (url: string, dest: string) => {
-  const res = await fetch(url);
-  /* istanbul ignore next */
-  if (!res.body) throw new Error("No request body.");
-  const stream = fs.createWriteStream(dest);
-  await finished(Readable.fromWeb(res.body as any).pipe(stream));
 };
 
 function getBinaryOs() {

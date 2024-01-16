@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	vmcommon "github.com/multiversx/mx-chain-vm-common-go"
-	worldmock "github.com/multiversx/mx-chain-vm-v1_4-go/mock/world"
+	worldmock "github.com/multiversx/mx-chain-vm-go/mock/world"
 )
 
 func (ae *Executor) HandleAdminSetAccount(r *http.Request) (interface{}, error) {
@@ -25,7 +25,7 @@ func (ae *Executor) HandleAdminSetAccount(r *http.Request) (interface{}, error) 
 		Storage:         map[string][]byte{},
 		MockWorld: 			 ae.vmTestExecutor.World,
 	}
-	worldAccount.Address, err = addressConverter.Decode(rawAccount.Address)
+	worldAccount.Address, err = bech32Decode(rawAccount.Address)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (ae *Executor) HandleAdminSetAccount(r *http.Request) (interface{}, error) 
 		worldAccount.CodeMetadata = (&vmcommon.CodeMetadata{ Readable: true }).ToBytes();
 	}
 	if rawAccount.Owner != nil {
-		worldAccount.OwnerAddress, err = addressConverter.Decode(*rawAccount.Owner)
+		worldAccount.OwnerAddress, err = bech32Decode(*rawAccount.Owner)
 	}
 	if err != nil {
 		return nil, err
@@ -77,7 +77,7 @@ func (ae *Executor) HandleAdminSetAccount(r *http.Request) (interface{}, error) 
 	return jData, err
 }
 
-func (ae *Executor) HandleAdminSetCurrentBlock(r *http.Request) (interface{}, error) {
+func (ae *Executor) HandleAdminSetCurrentBlockInfo(r *http.Request) (interface{}, error) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var block Block
 	err := json.Unmarshal(reqBody, &block)
@@ -85,6 +85,26 @@ func (ae *Executor) HandleAdminSetCurrentBlock(r *http.Request) (interface{}, er
 		return nil, err
 	}
 	ae.vmTestExecutor.World.CurrentBlockInfo = &worldmock.BlockInfo{
+		BlockTimestamp: block.Timestamp,
+		BlockNonce:     block.Nonce,
+		BlockRound:     block.Round,
+		BlockEpoch:     block.Epoch,
+		RandomSeed:     nil,
+	}
+	jData := map[string]interface{}{
+		"code": "successful",
+	}
+	return jData, nil
+}
+
+func (ae *Executor) HandleAdminSetPreviousBlockInfo(r *http.Request) (interface{}, error) {
+	reqBody, _ := io.ReadAll(r.Body)
+	var block Block
+	err := json.Unmarshal(reqBody, &block)
+	if err != nil {
+		return nil, err
+	}
+	ae.vmTestExecutor.World.PreviousBlockInfo = &worldmock.BlockInfo{
 		BlockTimestamp: block.Timestamp,
 		BlockNonce:     block.Nonce,
 		BlockRound:     block.Round,

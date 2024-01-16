@@ -1,16 +1,21 @@
 import fs from "node:fs";
 import path from "node:path";
 import { test, beforeEach, afterEach, expect } from "@jest/globals";
+import { UserSecretKey } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
 import { http } from "msw";
 import { setupServer } from "msw/node";
 import { stdoutInt, input } from "../_stdio";
 import { Keystore } from "../world/signer";
+import { computeShard } from "../world/utils";
 import { getCommand } from "./cmd";
 import { rustToolchain, rustTarget, rustKey } from "./helpers";
 
 const cwd = process.cwd();
 const tmpDir = "/tmp/xsuite-tests";
+const pemPath = path.resolve("wallets", "wallet.pem");
+const keyKeystorePath = path.resolve("wallets", "keystore_key.json");
+const mneKeystorePath = path.resolve("wallets", "keystore_mnemonic.json");
 
 beforeEach(() => {
   fs.mkdirSync(tmpDir);
@@ -28,6 +33,7 @@ test("new-wallet --wallet wallet.json", async () => {
   input.inject("1234", "1234");
   await run(`new-wallet --wallet ${walletPath}`);
   const keystore = Keystore.fromFile_unsafe(walletPath, "1234");
+  const keystoreSigner = keystore.newSigner();
   stdoutInt.stop();
   expect(fs.existsSync(walletPath)).toEqual(true);
   expect(stdoutInt.data.split("\n")).toEqual([
@@ -37,15 +43,65 @@ test("new-wallet --wallet wallet.json", async () => {
     "",
     chalk.green(`Wallet created at "${walletPath}".`),
     "",
-    chalk.bold.blue("Address:") + ` ${keystore.newSigner()}`,
+    chalk.bold.blue("Address:") + ` ${keystoreSigner}`,
     "",
-    chalk.bold.blue("Private key:"),
-    ...keystore.mnemonicWords.map((w, i) => `  ${i + 1}. ${w}`),
+    chalk.bold.blue("Shard:") + ` ${computeShard(keystoreSigner.toTopHex())}`,
     "",
-    chalk.bold.yellow("Please backup the private key in a secure place."),
+    chalk.bold.blue("Mnemonic phrase:"),
+    ...keystore.getMnemonicWords().map((w, i) => `  ${i + 1}. ${w}`),
+    "",
+    chalk.bold.yellow("Please backup the mnemonic phrase in a secure place."),
     "",
   ]);
 });
+
+for (const shard of [0, 1, 2]) {
+  test(`new-wallet --wallet wallet.json --shard ${shard}`, async () => {
+    const walletPath = path.resolve("wallet.json");
+    stdoutInt.start();
+    input.inject("1234", "1234");
+    await run(`new-wallet --wallet ${walletPath} --shard ${shard}`);
+    const keystore = Keystore.fromFile_unsafe(walletPath, "1234");
+    stdoutInt.stop();
+    expect(fs.existsSync(walletPath)).toEqual(true);
+    expect(stdoutInt.data.split("\n")).toEqual([
+      `Creating keystore wallet at "${walletPath}"...`,
+      "Enter password: ",
+      "Re-enter password: ",
+      "",
+      chalk.green(`Wallet created at "${walletPath}".`),
+      "",
+      chalk.bold.blue("Address:") + ` ${keystore.newSigner()}`,
+      "",
+      chalk.bold.blue("Shard:") + ` ${shard}`,
+      "",
+      chalk.bold.blue("Mnemonic phrase:"),
+      ...keystore.getMnemonicWords().map((w, i) => `  ${i + 1}. ${w}`),
+      "",
+      chalk.bold.yellow("Please backup the mnemonic phrase in a secure place."),
+      "",
+    ]);
+  });
+}
+
+for (const shard of [-1, 3]) {
+  test(`new-wallet --wallet wallet.json --shard ${shard} | error: The shard you entered does not exist`, async () => {
+    const walletPath = path.resolve("wallet.json");
+    stdoutInt.start();
+    input.inject("1234", "1234");
+    await run(`new-wallet --wallet ${walletPath} --shard ${shard}`);
+    stdoutInt.stop();
+    expect(fs.existsSync(walletPath)).toEqual(false);
+    expect(stdoutInt.data.split("\n")).toEqual([
+      `Creating keystore wallet at "${walletPath}"...`,
+      "Enter password: ",
+      "Re-enter password: ",
+      "",
+      chalk.red("The shard you entered does not exist."),
+      "",
+    ]);
+  });
+}
 
 test("new-wallet --wallet wallet.json | error: passwords don't match", async () => {
   const walletPath = path.resolve("wallet.json");
@@ -57,7 +113,19 @@ test("new-wallet --wallet wallet.json | error: passwords don't match", async () 
     `Creating keystore wallet at "${walletPath}"...`,
     "Enter password: ",
     "Re-enter password: ",
-    chalk.red(`Passwords do not match.`),
+    chalk.red("Passwords do not match."),
+    "",
+  ]);
+});
+
+test("new-wallet --wallet wallet.json | error: already exists", async () => {
+  const walletPath = path.resolve("wallet.json");
+  fs.writeFileSync(walletPath, "");
+  stdoutInt.start();
+  await run(`new-wallet --wallet ${walletPath}`);
+  stdoutInt.stop();
+  expect(stdoutInt.data.split("\n")).toEqual([
+    chalk.red(`Wallet already exists at "${walletPath}".`),
     "",
   ]);
 });
@@ -67,36 +135,143 @@ test("new-wallet --wallet wallet.json --password 1234", async () => {
   stdoutInt.start();
   await run(`new-wallet --wallet ${walletPath} --password 1234`);
   const keystore = Keystore.fromFile_unsafe(walletPath, "1234");
+  const keystoreSigner = keystore.newSigner();
   stdoutInt.stop();
   expect(fs.existsSync(walletPath)).toEqual(true);
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.green(`Wallet created at "${walletPath}".`),
     "",
-    chalk.bold.blue("Address:") + ` ${keystore.newSigner()}`,
+    chalk.bold.blue("Address:") + ` ${keystoreSigner}`,
     "",
-    chalk.bold.blue("Private key:"),
-    ...keystore.mnemonicWords.map((w, i) => `  ${i + 1}. ${w}`),
+    chalk.bold.blue("Shard:") + ` ${computeShard(keystoreSigner.toTopHex())}`,
     "",
-    chalk.bold.yellow("Please backup the private key in a secure place."),
+    chalk.bold.blue("Mnemonic phrase:"),
+    ...keystore.getMnemonicWords().map((w, i) => `  ${i + 1}. ${w}`),
+    "",
+    chalk.bold.yellow("Please backup the mnemonic phrase in a secure place."),
     "",
   ]);
 });
 
-test("new-wallet --wallet wallet.json --password 1234 | error: already exists", async () => {
+test("new-wallet --wallet wallet.json --from-pem wallet.pem", async () => {
   const walletPath = path.resolve("wallet.json");
-  fs.writeFileSync(walletPath, "");
   stdoutInt.start();
-  await run(`new-wallet --wallet ${walletPath} --password 1234`);
+  input.inject("1234", "1234");
+  await run(`new-wallet --wallet ${walletPath} --from-pem ${pemPath}`);
+  const keystore = Keystore.fromFile_unsafe(walletPath, "1234");
+  const keystoreSigner = keystore.newSigner();
+  const secretKey = UserSecretKey.fromPem(
+    fs.readFileSync(pemPath, "utf8"),
+  ).hex();
   stdoutInt.stop();
+  expect(keystore.getSecretKey()).toEqual(secretKey);
   expect(stdoutInt.data.split("\n")).toEqual([
-    chalk.red(`Wallet already exists at "${walletPath}".`),
+    `Creating keystore wallet at "${walletPath}"...`,
+    "Enter password: ",
+    "Re-enter password: ",
+    "",
+    chalk.green(`Wallet created at "${walletPath}".`),
+    "",
+    chalk.bold.blue("Address:") + ` ${keystoreSigner}`,
+    "",
+    chalk.bold.blue("Shard:") + ` ${computeShard(keystoreSigner.toTopHex())}`,
+    "",
+  ]);
+});
+
+test("new-wallet --wallet wallet.json --password 1234 --from-pem wallet.pem", async () => {
+  const walletPath = path.resolve("wallet.json");
+  stdoutInt.start();
+  await run(
+    `new-wallet --wallet ${walletPath} --password 1234 --from-pem ${pemPath}`,
+  );
+  const keystore = Keystore.fromFile_unsafe(walletPath, "1234");
+  const keystoreSigner = keystore.newSigner();
+  const secretKey = UserSecretKey.fromPem(
+    fs.readFileSync(pemPath, "utf8"),
+  ).hex();
+  stdoutInt.stop();
+  expect(keystore.getSecretKey()).toEqual(secretKey);
+  expect(stdoutInt.data.split("\n")).toEqual([
+    chalk.green(`Wallet created at "${walletPath}".`),
+    "",
+    chalk.bold.blue("Address:") + ` ${keystoreSigner}`,
+    "",
+    chalk.bold.blue("Shard:") + ` ${computeShard(keystoreSigner.toTopHex())}`,
+    "",
+  ]);
+});
+
+test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_key.json", async () => {
+  const walletPath = path.resolve("wallet.json");
+  stdoutInt.start();
+  input.inject("qpGjv7ZJ9gcPXWSN");
+  await run(
+    `new-wallet --wallet ${walletPath} --password 1234 --from-wallet ${keyKeystorePath}`,
+  );
+  const newKeystore = Keystore.fromFile_unsafe(walletPath, "1234");
+  const oldKeystore = Keystore.fromFile_unsafe(
+    keyKeystorePath,
+    "qpGjv7ZJ9gcPXWSN",
+  );
+  const newKeystoreSigner = newKeystore.newSigner();
+  const [newSignature, oldSignature] = await Promise.all([
+    newKeystore.newSigner().sign(Buffer.from("hello")),
+    oldKeystore.newSigner().sign(Buffer.from("hello")),
+  ]);
+  stdoutInt.stop();
+  expect(newSignature).toEqual(oldSignature);
+  expect(stdoutInt.data.split("\n")).toEqual([
+    `Loading keystore wallet at "${keyKeystorePath}"...`,
+    "Enter password: ",
+    chalk.green(`Wallet created at "${walletPath}".`),
+    "",
+    chalk.bold.blue("Address:") + ` ${newKeystoreSigner}`,
+    "",
+    chalk.bold.blue("Shard:") +
+      ` ${computeShard(newKeystoreSigner.toTopHex())}`,
+    "",
+  ]);
+});
+
+test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_mnemonic.json", async () => {
+  const walletPath = path.resolve("wallet.json");
+  stdoutInt.start();
+  input.inject("1234");
+  await run(
+    `new-wallet --wallet ${walletPath} --password 1234 --from-wallet ${mneKeystorePath}`,
+  );
+  const newKeystore = Keystore.fromFile_unsafe(walletPath, "1234");
+  const oldKeystore = Keystore.fromFile_unsafe(mneKeystorePath, "1234");
+  const [newSignature, oldSignature] = await Promise.all([
+    newKeystore.newSigner().sign(Buffer.from("hello")),
+    oldKeystore.newSigner().sign(Buffer.from("hello")),
+  ]);
+  const newKeystoreSigner = newKeystore.newSigner();
+  stdoutInt.stop();
+  expect(newSignature).toEqual(oldSignature);
+  expect(stdoutInt.data.split("\n")).toEqual([
+    `Loading keystore wallet at "${mneKeystorePath}"...`,
+    "Enter password: ",
+    chalk.green(`Wallet created at "${walletPath}".`),
+    "",
+    chalk.bold.blue("Address:") + ` ${newKeystoreSigner}`,
+    "",
+    chalk.bold.blue("Shard:") +
+      ` ${computeShard(newKeystoreSigner.toTopHex())}`,
+    "",
+    chalk.bold.blue("Mnemonic phrase:"),
+    ...newKeystore.getMnemonicWords().map((w, i) => `  ${i + 1}. ${w}`),
+    "",
+    chalk.bold.yellow("Please backup the mnemonic phrase in a secure place."),
     "",
   ]);
 });
 
 test("request-xegld --wallet wallet.json", async () => {
   const walletPath = path.resolve("wallet.json");
-  const signer = Keystore.createFile_unsafe(walletPath, "1234").newSigner();
+  fs.copyFileSync(mneKeystorePath, walletPath);
+  const signer = Keystore.fromFile_unsafe(walletPath, "1234").newSigner();
   const address = signer.toString();
   let balances: number[] = [];
   const server = setupServer(
@@ -241,21 +416,27 @@ test("new --dir contract && build --locked && build -r && test-rust && test-scen
     "",
   ]);
 
-  const scenexecName = "scenexec-ubuntu-20.04-v1.4.81";
-  const scenexecPath = path.join(__dirname, "..", "..", "bin", scenexecName);
-  fs.rmSync(scenexecPath, { force: true });
+  const extractPath = path.join(
+    __dirname,
+    "..",
+    "..",
+    "bin",
+    "scenexec-v1.5.22-ubuntu-20.04",
+  );
+  const binaryPath = path.join(extractPath, "scenexec");
+  fs.rmSync(extractPath, { recursive: true, force: true });
   stdoutInt.start();
   await run("test-scen");
   stdoutInt.stop();
   expect(stdoutInt.data.split("\n")).toEqual([
     chalk.blue("Testing contract with scenarios..."),
-    "Downloading scenexec-ubuntu-20.04-v1.4.81...",
-    chalk.cyan(`$ ${scenexecPath} .`),
+    "Downloading scenexec-v1.5.22-ubuntu-20.04...",
+    chalk.cyan(`$ ${binaryPath} .`),
     "",
   ]);
 }, 600_000);
 
-test(`new --starter vested-transfers --dir contract --no-git --no-install`, async () => {
+test("new --starter vested-transfers --dir contract --no-git --no-install", async () => {
   const contract = "vested-transfers";
   stdoutInt.start();
   await run(`new --starter ${contract} --dir contract --no-git --no-install`);

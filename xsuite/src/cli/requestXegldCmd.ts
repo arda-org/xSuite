@@ -12,7 +12,7 @@ export const registerRequestXegldCmd = (cmd: Command) => {
   cmd
     .command("request-xegld")
     .description("Request xEGLD (once per day).")
-    .requiredOption("--wallet <WALLET>", "Wallet path")
+    .requiredOption("--wallet <WALLET_PATH>", "Wallet path")
     .option("--password <PASSWORD>", "Wallet password")
     .action(action);
 };

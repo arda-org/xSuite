@@ -1,6 +1,14 @@
 import { ByteReader } from "./ByteReader";
 import { hexToBytes, narrowBytes } from "./utils";
 
+export const isDecoder = (value: unknown): value is Decoder<any> =>
+  !!value &&
+  typeof value === "object" &&
+  "fromTop" in value &&
+  typeof value.fromTop === "function" &&
+  "fromNest" in value &&
+  typeof value.fromNest === "function";
+
 export type Decoder<T> = {
   fromTop(
     bytes: string | number[] | Uint8Array | ByteReader,

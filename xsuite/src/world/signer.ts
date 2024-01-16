@@ -2,7 +2,6 @@ import fs from "node:fs";
 import path from "node:path";
 import {
   UserSigner as BaseUserSigner,
-  Mnemonic,
   UserWallet,
 } from "@multiversx/sdk-wallet";
 import { input, log } from "../_stdio";
@@ -34,7 +33,7 @@ export class UserSigner extends Signer {
 export class KeystoreSigner extends UserSigner {
   constructor(keystore: Keystore, addressIndex?: number) {
     super(
-      BaseUserSigner.fromWallet(keystore.key, keystore.password, addressIndex),
+      BaseUserSigner.fromWallet(keystore.data, keystore.password, addressIndex),
     );
   }
 
@@ -54,32 +53,14 @@ export class KeystoreSigner extends UserSigner {
 }
 
 export class Keystore {
-  key: any;
+  data: any;
   password: string;
-  mnemonicWords: string[];
+  kind: "mnemonic" | "secretKey";
 
-  constructor(key: any, password: string) {
-    this.key = key;
+  constructor(data: any, password: string) {
+    this.data = data;
     this.password = password;
-    this.mnemonicWords = UserWallet.decryptMnemonic(key, password).getWords();
-  }
-
-  static async createFile(filePath: string) {
-    filePath = path.resolve(filePath);
-    log(`Creating keystore wallet at "${filePath}"...`);
-    const password = await input.hidden("Enter password: ");
-    const passwordAgain = await input.hidden("Re-enter password: ");
-    if (password !== passwordAgain) {
-      throw new Error("Passwords do not match.");
-    }
-    return this.createFile_unsafe(filePath, password);
-  }
-
-  static createFile_unsafe(filePath: string, password: string) {
-    const mnemonic = Mnemonic.generate().toString();
-    const keystore = UserWallet.fromMnemonic({ mnemonic, password }).toJSON();
-    fs.writeFileSync(filePath, JSON.stringify(keystore), "utf8");
-    return new Keystore(keystore, password);
+    this.kind = getSupportedKeystoreKind(data);
   }
 
   static async fromFile(filePath: string) {
@@ -95,7 +76,35 @@ export class Keystore {
     return new Keystore(keystore, password);
   }
 
+  getMnemonicWords() {
+    if (this.kind !== "mnemonic") {
+      throw new Error(
+        `Cannot get mnemonic from a keystore of kind ${this.kind}.`,
+      );
+    }
+    return UserWallet.decryptMnemonic(this.data, this.password).getWords();
+  }
+
+  getSecretKey() {
+    if (this.kind && this.kind !== "secretKey") {
+      throw new Error(
+        `Cannot get secretKey from a keystore of kind ${this.kind}.`,
+      );
+    }
+    return UserWallet.decryptSecretKey(this.data, this.password).hex();
+  }
+
   newSigner(addressIndex?: number) {
     return new KeystoreSigner(this, addressIndex);
   }
+}
+
+function getSupportedKeystoreKind(data: any) {
+  const kind = data.kind;
+  if (!["mnemonic", "secretKey", undefined].includes(kind)) {
+    throw new Error(
+      `Invalid kind value: "${kind}". It must be "mnemonic", "secretKey", or undefined.`,
+    );
+  }
+  return kind ?? "secretKey";
 }

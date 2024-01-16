@@ -36,8 +36,49 @@ jobs:
           name: package
           path: xsuite-simulnet/bin
 
-  publish:
+  test:
     needs: build
+
+    strategy:
+      matrix:
+        os: [macos-12, ubuntu-20.04]
+        include:
+          - os: ubuntu-20.04
+            binary: sproxy-linux-amd64
+          - os: macos-12
+            binary: sproxy-darwin-amd64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Download package
+        uses: actions/download-artifact@v3
+        with:
+          name: package
+          path: xsuite-simulnet/bin
+
+      - name: Add execute permissions
+        run: chmod +x xsuite-simulnet/bin/sproxy-*
+
+      - name: Test
+        run: |
+          ./xsuite-simulnet/bin/${{ matrix.binary }} &
+          SERVER_PID=$!
+          sleep 2
+          if kill -0 $SERVER_PID 2>/dev/null; then
+            echo "Simulnet succeeded to start."
+            kill $SERVER_PID
+            wait $SERVER_PID || [ $? -eq 143 ]
+          else
+            echo "Simulnet failed to start."
+            exit 1
+          fi
+
+  publish:
+    needs: test
 
     runs-on: ubuntu-20.04
 

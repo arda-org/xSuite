@@ -14,10 +14,13 @@ xSuite utility provides the following commands:
 - `xsuite test-rust` - runs contract Rust tests
 - `xsuite test-scen` - runs contract scenarios tests
 - `xsuite new-wallet` - creates a new wallet file; currently it has the following options:
-    - `--wallet <WALLET>` - specify the wallet path
+    - `--wallet <WALLET_PATH>` - specify the wallet path
     - `--password <PASSWORD>` - specify the wallet password
+    - `--from-pem <PEM_PATH>` - specify the PEM path
+    - `--from-pem <WALLET_PATH>` - specify the old wallet path
+    - `--shard <SHARD>` - specify the shard the wallet is created for
 - `xsuite request-xegld` - requests XEGLD tokens for a wallet; currently it has the following options:
-    - `--wallet <WALLET>` - specify the wallet path
+    - `--wallet <WALLET_PATH>` - specify the wallet path
     - `--password <PASSWORD>` - specify the wallet password
 
 To learn more about the commands you can run `xsuite --help` for a general help or for example `xsuite new --help` for a help for a specific command.

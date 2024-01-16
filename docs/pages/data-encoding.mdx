@@ -95,7 +95,7 @@ await deployer.callContract({
   funcName: "test",
   funcArgs: [
     e.Buffer("0101"),
-    e.Addr(deployer.toString()),
+    deployer,
     e.Option(null),
     e.Tuple(
       e.U32(2),

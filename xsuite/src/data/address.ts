@@ -9,3 +9,6 @@ export const addressToAddressEncodable = (address: Address) => {
   }
   return e.Addr(address);
 };
+
+export const addressToBech32 = (address: Address) =>
+  addressToAddressEncodable(address).toString();

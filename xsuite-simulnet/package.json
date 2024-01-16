@@ -1,11 +1,11 @@
 {
   "name": "@xsuite/simulnet",
-  "version": "0.0.10",
+  "version": "0.0.13",
   "license": "MIT",
   "scripts": {
     "build": "run-script-os",
     "build:linux": "cd src && GOOS=linux GOARCH=amd64 go build -o ../bin/sproxy-linux-amd64 -ldflags \"-extldflags '-Wl,-rpath,\\$ORIGIN'\"",
-    "build:darwin": "cd src && GOOS=darwin GOARCH=amd64 go build -o ../bin/sproxy-darwin-amd64",
+    "build:darwin": "cd src && GOOS=darwin GOARCH=amd64 go build -o ../bin/sproxy-darwin-amd64 -ldflags \"-extldflags '-Wl,-rpath,@loader_path'\"",
     "postinstall": "chmod -f +x ./bin/sproxy-* || true"
   },
   "files": [

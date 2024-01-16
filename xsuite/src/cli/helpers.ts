@@ -2,6 +2,11 @@ import {
   SpawnSyncOptionsWithBufferEncoding,
   spawnSync,
 } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { Readable } from "node:stream";
+import { finished } from "node:stream/promises";
 import chalk from "chalk";
 import { log } from "../_stdio";
 
@@ -29,6 +34,17 @@ export const logAndRunCommand = (
     logError(`Command failed with exit code ${result.status}.`);
     process.exit(1);
   }
+};
+
+export const downloadArchive = async (url: string) => {
+  const archivePath = path.join(os.tmpdir(), `xSuite-archive-${Date.now()}`);
+  const stream = fs.createWriteStream(archivePath);
+  const { body } = await fetch(url);
+  if (!body) {
+    throw new Error("No body.");
+  }
+  await finished(Readable.fromWeb(body as any).pipe(stream));
+  return archivePath;
 };
 
 export const rustToolchain = "nightly-2023-06-15";

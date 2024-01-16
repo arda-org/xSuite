@@ -511,11 +511,9 @@ describe("e.kvs", () => {
 
   describe("e.kvs.Mapper", () => {
     beforeEach(async () => {
-      ({ contract } = await wallet.deployContract({
-        code: "file:contracts/mapper/output/mapper.wasm",
-        codeMetadata: [],
-        gasLimit: 10_000_000,
-      }));
+      contract = await wallet.createContract({
+        code: "file:contracts/data/output/data.wasm",
+      });
     });
 
     test("e.kvs.Mapper.Value", async () => {
@@ -716,7 +714,7 @@ describe("e.kvs", () => {
   describe("e.kvs.Esdts", () => {
     beforeEach(async () => {
       contract = await world.createContract({
-        code: "file:contracts/esdt/output/esdt.wasm",
+        code: "file:contracts/data/output/data.wasm",
         kvs: [
           e.kvs.Esdts([
             {
@@ -1059,10 +1057,24 @@ test("d.Tuple.fromTop - empty map", () => {
 });
 
 test("d.Tuple.fromTop - non-empty map", () => {
-  expect(d.Tuple({ a: d.U8(), b: d.U8() }).fromTop("0102")).toEqual({
-    a: 1n,
-    b: 2n,
-  });
+  expect(
+    d.Tuple({ a: d.Str(), b: d.U8() }).fromTop("0000000568656c6c6f02"),
+  ).toEqual({ a: "hello", b: 2n });
+});
+
+test("d.Tuple.fromTop - empty list", () => {
+  expect(d.Tuple().fromTop("")).toEqual([]);
+});
+
+test("d.Tuple.fromTop - list of 1", () => {
+  expect(d.Tuple(d.Str()).fromTop("0000000568656c6c6f")).toEqual(["hello"]);
+});
+
+test("d.Tuple.fromTop - list of 2", () => {
+  expect(d.Tuple(d.Str(), d.U8()).fromTop("0000000568656c6c6f02")).toEqual([
+    "hello",
+    2n,
+  ]);
 });
 
 test("d.Tuple.fromNest - empty map", () => {
@@ -1070,10 +1082,20 @@ test("d.Tuple.fromNest - empty map", () => {
 });
 
 test("d.Tuple.fromNest - non-empty map", () => {
-  expect(d.Tuple({ a: d.U8(), b: d.U8() }).fromNest("0102")).toEqual({
-    a: 1n,
-    b: 2n,
-  });
+  expect(
+    d.Tuple({ a: d.Str(), b: d.U8() }).fromNest("0000000568656c6c6f02"),
+  ).toEqual({ a: "hello", b: 2n });
+});
+
+test("d.Tuple.fromNest - empty list", () => {
+  expect(d.Tuple().fromNest("")).toEqual([]);
+});
+
+test("d.Tuple.fromNest - non-empty list", () => {
+  expect(d.Tuple(d.Str(), d.U8()).fromNest("0000000568656c6c6f02")).toEqual([
+    "hello",
+    2n,
+  ]);
 });
 
 test("d.List.fromTop - empty array", () => {
