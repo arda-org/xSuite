@@ -48,7 +48,7 @@ test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Cl
   // Create transfer at epoch 0
   const result1 = await sender1.callContract({
     callee: contract,
-    funcName: "create_transfer",
+    funcName: "createTransfer",
     funcArgs: [
       receiver1,
       e.List(
@@ -97,7 +97,7 @@ test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Cl
   await world.setCurrentBlockInfo({ epoch: 4 });
   await executor.callContract({
     callee: contract,
-    funcName: "execute_transfer",
+    funcName: "executeTransfer",
     funcArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
@@ -137,7 +137,7 @@ test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Cl
   await world.setCurrentBlockInfo({ epoch: 5 });
   await executor.callContract({
     callee: contract,
-    funcName: "execute_transfer",
+    funcName: "executeTransfer",
     funcArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
@@ -179,7 +179,7 @@ test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Cl
   await world.setCurrentBlockInfo({ epoch: 15 });
   await executor.callContract({
     callee: contract,
-    funcName: "execute_transfer",
+    funcName: "executeTransfer",
     funcArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
@@ -202,7 +202,7 @@ test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Cl
   // Claim balances
   await receiver1.callContract({
     callee: contract,
-    funcName: "claim_balances",
+    funcName: "claimBalances",
     funcArgs: [e.Tuple(e.Str(egldId), e.U64(0))],
     gasLimit: 10_000_000,
   });
@@ -222,7 +222,7 @@ test("SFT transfer vested over epochs 5, 10, 15. Execute at epoch 20. Claim.", a
   // Create transfer at epoch 0
   const result1 = await sender1.callContract({
     callee: contract,
-    funcName: "create_transfer",
+    funcName: "createTransfer",
     funcArgs: [
       receiver1,
       e.List(
@@ -271,7 +271,7 @@ test("SFT transfer vested over epochs 5, 10, 15. Execute at epoch 20. Claim.", a
   await world.setCurrentBlockInfo({ epoch: 20 });
   await executor.callContract({
     callee: contract,
-    funcName: "execute_transfer",
+    funcName: "executeTransfer",
     funcArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
@@ -294,7 +294,7 @@ test("SFT transfer vested over epochs 5, 10, 15. Execute at epoch 20. Claim.", a
   // Claim balances
   await receiver1.callContract({
     callee: contract,
-    funcName: "claim_balances",
+    funcName: "claimBalances",
     funcArgs: [e.Tuple(e.Str(sftId), e.U64(1))],
     gasLimit: 10_000_000,
   });
@@ -314,7 +314,7 @@ test("EGLD transfer vested over epochs 5, 10. Cancelled at epoch 7. Claim.", asy
   // Create transfer at epoch 0
   await sender1.callContract({
     callee: contract,
-    funcName: "create_transfer",
+    funcName: "createTransfer",
     funcArgs: [
       receiver1,
       e.List(e.Tuple(e.U64(5), e.U(3000)), e.Tuple(e.U64(10), e.U(7000))),
@@ -357,7 +357,7 @@ test("EGLD transfer vested over epochs 5, 10. Cancelled at epoch 7. Claim.", asy
   await world.setCurrentBlockInfo({ epoch: 7 });
   await sender1.callContract({
     callee: contract,
-    funcName: "cancel_transfer",
+    funcName: "cancelTransfer",
     funcArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
@@ -383,13 +383,13 @@ test("EGLD transfer vested over epochs 5, 10. Cancelled at epoch 7. Claim.", asy
   // Claim balances
   await sender1.callContract({
     callee: contract,
-    funcName: "claim_balances",
+    funcName: "claimBalances",
     funcArgs: [e.Tuple(e.Str(egldId), e.U64(0))],
     gasLimit: 10_000_000,
   });
   await receiver1.callContract({
     callee: contract,
-    funcName: "claim_balances",
+    funcName: "claimBalances",
     funcArgs: [e.Tuple(e.Str(egldId), e.U64(0))],
     gasLimit: 10_000_000,
   });
@@ -409,7 +409,7 @@ test("EGLD transfer to oneself over epochs 5, 10. Cancelled at epoch 7. Claim.",
   // Create transfer at epoch 0
   await sender1.callContract({
     callee: contract,
-    funcName: "create_transfer",
+    funcName: "createTransfer",
     funcArgs: [
       sender1,
       e.List(e.Tuple(e.U64(5), e.U(3000)), e.Tuple(e.U64(10), e.U(7000))),
@@ -449,7 +449,7 @@ test("EGLD transfer to oneself over epochs 5, 10. Cancelled at epoch 7. Claim.",
   await world.setCurrentBlockInfo({ epoch: 7 });
   await sender1.callContract({
     callee: contract,
-    funcName: "cancel_transfer",
+    funcName: "cancelTransfer",
     funcArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
@@ -469,7 +469,7 @@ test("EGLD transfer to oneself over epochs 5, 10. Cancelled at epoch 7. Claim.",
   // Claim balances
   await sender1.callContract({
     callee: contract,
-    funcName: "claim_balances",
+    funcName: "claimBalances",
     funcArgs: [e.Tuple(e.Str(egldId), e.U64(0))],
     gasLimit: 10_000_000,
   });
@@ -486,7 +486,7 @@ test("Multiple transfers.", async () => {
   // Create transfers at epoch 0
   await sender1.callContract({
     callee: contract,
-    funcName: "create_transfer",
+    funcName: "createTransfer",
     funcArgs: [
       receiver1,
       e.List(e.Tuple(e.U64(5), e.U(3000)), e.Tuple(e.U64(10), e.U(7000))),
@@ -496,7 +496,7 @@ test("Multiple transfers.", async () => {
   });
   await sender1.callContract({
     callee: contract,
-    funcName: "create_transfer",
+    funcName: "createTransfer",
     funcArgs: [
       receiver2,
       e.List(e.Tuple(e.U64(5), e.U(6000)), e.Tuple(e.U64(10), e.U(9000))),
@@ -506,7 +506,7 @@ test("Multiple transfers.", async () => {
   });
   await sender2.callContract({
     callee: contract,
-    funcName: "create_transfer",
+    funcName: "createTransfer",
     funcArgs: [
       receiver1,
       e.List(e.Tuple(e.U64(5), e.U(4000)), e.Tuple(e.U64(10), e.U(6000))),
@@ -516,7 +516,7 @@ test("Multiple transfers.", async () => {
   });
   await sender2.callContract({
     callee: contract,
-    funcName: "create_transfer",
+    funcName: "createTransfer",
     funcArgs: [
       receiver2,
       e.List(e.Tuple(e.U64(5), e.U(1000)), e.Tuple(e.U64(10), e.U(14000))),
@@ -529,13 +529,13 @@ test("Multiple transfers.", async () => {
   await world.setCurrentBlockInfo({ epoch: 6 });
   await sender1.callContract({
     callee: contract,
-    funcName: "cancel_transfer",
+    funcName: "cancelTransfer",
     funcArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
   await sender2.callContract({
     callee: contract,
-    funcName: "cancel_transfer",
+    funcName: "cancelTransfer",
     funcArgs: [e.U64(3)],
     gasLimit: 10_000_000,
   });
@@ -544,13 +544,13 @@ test("Multiple transfers.", async () => {
   await world.setCurrentBlockInfo({ epoch: 10 });
   await executor.callContract({
     callee: contract,
-    funcName: "execute_transfer",
+    funcName: "executeTransfer",
     funcArgs: [e.U64(2)],
     gasLimit: 10_000_000,
   });
   await executor.callContract({
     callee: contract,
-    funcName: "execute_transfer",
+    funcName: "executeTransfer",
     funcArgs: [e.U64(4)],
     gasLimit: 10_000_000,
   });
@@ -558,19 +558,19 @@ test("Multiple transfers.", async () => {
   // Claim balances
   await sender1.callContract({
     callee: contract,
-    funcName: "claim_balances",
+    funcName: "claimBalances",
     funcArgs: [e.Tuple(e.Str(egldId), e.U64(0))],
     gasLimit: 10_000_000,
   });
   await sender2.callContract({
     callee: contract,
-    funcName: "claim_balances",
+    funcName: "claimBalances",
     funcArgs: [e.Tuple(e.Str(sftId), e.U64(1))],
     gasLimit: 10_000_000,
   });
   await receiver1.callContract({
     callee: contract,
-    funcName: "claim_balances",
+    funcName: "claimBalances",
     funcArgs: [
       e.Tuple(e.Str(egldId), e.U64(0)),
       e.Tuple(e.Str(sftId), e.U64(1)),
@@ -579,7 +579,7 @@ test("Multiple transfers.", async () => {
   });
   await receiver2.callContract({
     callee: contract,
-    funcName: "claim_balances",
+    funcName: "claimBalances",
     funcArgs: [
       e.Tuple(e.Str(egldId), e.U64(0)),
       e.Tuple(e.Str(sftId), e.U64(1)),
@@ -610,11 +610,11 @@ test("Multiple transfers.", async () => {
   });
 });
 
-test("get_transfers", async () => {
+test("getTransfers", async () => {
   // Create transfers at epoch 0
   await sender1.callContract({
     callee: contract,
-    funcName: "create_transfer",
+    funcName: "createTransfer",
     funcArgs: [
       receiver1,
       e.List(e.Tuple(e.U64(5), e.U(3000)), e.Tuple(e.U64(10), e.U(7000))),
@@ -624,7 +624,7 @@ test("get_transfers", async () => {
   });
   await sender1.callContract({
     callee: contract,
-    funcName: "create_transfer",
+    funcName: "createTransfer",
     funcArgs: [
       receiver1,
       e.List(e.Tuple(e.U64(5), e.U(3000)), e.Tuple(e.U64(10), e.U(7000))),
@@ -634,10 +634,10 @@ test("get_transfers", async () => {
     gasLimit: 10_000_000,
   });
 
-  // Query get_transfers
+  // Query getTransfers
   const result = await world.query({
     callee: contract,
-    funcName: "get_transfers",
+    funcName: "getTransfers",
   });
   assertHexList(result.returnData, [
     e.Tuple(
@@ -663,11 +663,11 @@ test("get_transfers", async () => {
   ]);
 });
 
-test("get_address_balances", async () => {
+test("getAddressBalances", async () => {
   // Create transfers at epoch 0 and cancel transfers at epoch 7
   await sender1.callContract({
     callee: contract,
-    funcName: "create_transfer",
+    funcName: "createTransfer",
     funcArgs: [
       receiver1,
       e.List(e.Tuple(e.U64(5), e.U(3000)), e.Tuple(e.U64(10), e.U(7000))),
@@ -677,7 +677,7 @@ test("get_address_balances", async () => {
   });
   await sender1.callContract({
     callee: contract,
-    funcName: "create_transfer",
+    funcName: "createTransfer",
     funcArgs: [
       receiver1,
       e.List(e.Tuple(e.U64(5), e.U(3000)), e.Tuple(e.U64(10), e.U(7000))),
@@ -689,21 +689,21 @@ test("get_address_balances", async () => {
   await world.setCurrentBlockInfo({ epoch: 7 });
   await sender1.callContract({
     callee: contract,
-    funcName: "cancel_transfer",
+    funcName: "cancelTransfer",
     funcArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
   await sender1.callContract({
     callee: contract,
-    funcName: "cancel_transfer",
+    funcName: "cancelTransfer",
     funcArgs: [e.U64(2)],
     gasLimit: 10_000_000,
   });
 
-  // Query get_address_balances
+  // Query getAddressBalances
   const result1 = await world.query({
     callee: contract,
-    funcName: "get_address_balances",
+    funcName: "getAddressBalances",
     funcArgs: [sender1],
   });
   assertHexList(result1.returnData, [
@@ -712,7 +712,7 @@ test("get_address_balances", async () => {
   ]);
   const result2 = await world.query({
     callee: contract,
-    funcName: "get_address_balances",
+    funcName: "getAddressBalances",
     funcArgs: [receiver1],
   });
   assertHexList(result2.returnData, [
@@ -724,7 +724,7 @@ test("get_address_balances", async () => {
 test("Invalid canceller.", async () => {
   await sender1.callContract({
     callee: contract,
-    funcName: "create_transfer",
+    funcName: "createTransfer",
     funcArgs: [
       receiver1,
       e.List(e.Tuple(e.U64(5), e.U(3000)), e.Tuple(e.U64(10), e.U(7000))),
@@ -735,7 +735,7 @@ test("Invalid canceller.", async () => {
   await receiver1
     .callContract({
       callee: contract,
-      funcName: "cancel_transfer",
+      funcName: "cancelTransfer",
       funcArgs: [e.U64(1)],
       gasLimit: 10_000_000,
     })
@@ -753,7 +753,7 @@ test("Too many milestones.", async () => {
   await sender1
     .callContract({
       callee: contract,
-      funcName: "create_transfer",
+      funcName: "createTransfer",
       funcArgs: [receiver1, e.List(...milestones)],
       gasLimit: 10_000_000,
     })
@@ -761,7 +761,7 @@ test("Too many milestones.", async () => {
   milestones.pop();
   await sender1.callContract({
     callee: contract,
-    funcName: "create_transfer",
+    funcName: "createTransfer",
     funcArgs: [receiver1, e.List(...milestones)],
     value: limit * 1_000,
     gasLimit: 10_000_000,
@@ -792,7 +792,7 @@ test("Milestone not in future.", async () => {
   await sender1
     .callContract({
       callee: contract,
-      funcName: "create_transfer",
+      funcName: "createTransfer",
       funcArgs: [receiver1, e.List(e.Tuple(e.U64(0), e.U(1000)))],
       gasLimit: 10_000_000,
     })
@@ -807,7 +807,7 @@ test("Mis-ordered milestones.", async () => {
   await sender1
     .callContract({
       callee: contract,
-      funcName: "create_transfer",
+      funcName: "createTransfer",
       funcArgs: [
         receiver1,
         e.List(e.Tuple(e.U64(2), e.U(1000)), e.Tuple(e.U64(1), e.U(1000))),
@@ -825,7 +825,7 @@ test("Wrong milestones amounts.", async () => {
   await sender1
     .callContract({
       callee: contract,
-      funcName: "create_transfer",
+      funcName: "createTransfer",
       funcArgs: [
         receiver1,
         e.List(e.Tuple(e.U64(1), e.U(1000)), e.Tuple(e.U64(2), e.U(1000))),
@@ -842,7 +842,7 @@ test("Wrong milestones amounts.", async () => {
 test("Wrong transfer index.", async () => {
   await sender1.callContract({
     callee: contract,
-    funcName: "create_transfer",
+    funcName: "createTransfer",
     funcArgs: [receiver1, e.List(e.Tuple(e.U64(1), e.U(1000)))],
     value: 1_000,
     gasLimit: 10_000_000,
@@ -850,7 +850,7 @@ test("Wrong transfer index.", async () => {
   await executor
     .callContract({
       callee: contract,
-      funcName: "execute_transfer",
+      funcName: "executeTransfer",
       funcArgs: [e.U64(2)],
       gasLimit: 10_000_000,
     })

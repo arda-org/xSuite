@@ -9,7 +9,7 @@ pub trait Contract {
     fn init(&self) {}
 
     #[payable("*")]
-    #[endpoint]
+    #[endpoint(createTransfer)]
     fn create_transfer(
         &self,
         receiver: ManagedAddress,
@@ -37,7 +37,7 @@ pub trait Contract {
         index
     }
 
-    #[endpoint]
+    #[endpoint(executeTransfer)]
     fn execute_transfer(&self, index: u64) {
         let mut transfer = self.load_transfer(index);
         self.claim_transfer_past_milestones(&mut transfer);
@@ -69,7 +69,7 @@ pub trait Contract {
         self.balances(&address).insert((token_id.clone(), token_nonce), balance + amount);
     }
 
-    #[endpoint]
+    #[endpoint(cancelTransfer)]
     fn cancel_transfer(&self, index: u64) {
         let mut transfer = self.load_transfer(index);
         require!(transfer.sender == self.blockchain().get_caller(), "Caller is not the sender of the transfer.");
@@ -87,7 +87,7 @@ pub trait Contract {
         remaining_amount
     }
 
-    #[endpoint]
+    #[endpoint(claimBalances)]
     fn claim_balances(&self, tokens: MultiValueEncoded<(EgldOrEsdtTokenIdentifier, u64)>) {
         let caller = self.blockchain().get_caller();
         for (token_id, token_nonce) in tokens {
@@ -98,7 +98,7 @@ pub trait Contract {
         }
     }
 
-    #[view]
+    #[view(getTransfers)]
     fn get_transfers(&self) -> MultiValueEncoded<(u64, Transfer<Self::Api>)> {
         let mut transfers = MultiValueEncoded::new();
         for (index, transfer) in self.transfers().iter() {
@@ -107,7 +107,7 @@ pub trait Contract {
         transfers
     }
 
-    #[view]
+    #[view(getAddressBalances)]
     fn get_address_balances(&self, address: ManagedAddress) -> MultiValueEncoded<(EgldOrEsdtTokenIdentifier, u64, BigUint)> {
         let mut balances = MultiValueEncoded::new();
         for ((token_id, token_nonce), balance) in self.balances(&address).iter() {
