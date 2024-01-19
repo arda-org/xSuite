@@ -22,12 +22,12 @@ multiversx_sc_wasm_adapter::endpoints! {
     contract
     (
         init => init
-        create_transfer => create_transfer
-        execute_transfer => execute_transfer
-        cancel_transfer => cancel_transfer
-        claim_balances => claim_balances
-        get_transfers => get_transfers
-        get_address_balances => get_address_balances
+        createTransfer => create_transfer
+        executeTransfer => execute_transfer
+        cancelTransfer => cancel_transfer
+        claimBalances => claim_balances
+        getTransfers => get_transfers
+        getAddressBalances => get_address_balances
     )
 }
 
