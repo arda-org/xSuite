@@ -432,6 +432,26 @@ test("e.Tuple.toNestHex - e.U8 + e.U16", () => {
   expect(e.Tuple(e.U8(1), e.U16(2)).toNestHex()).toEqual("010002");
 });
 
+test("e.ListN.toTopHex - length 2", () => {
+  expect(e.ListN(e.U8(1), e.U8(2)).toTopHex()).toEqual("0102");
+});
+
+test("e.ListN.toNestHex - length 2", () => {
+  expect(e.ListN(e.U8(1), e.U8(2)).toNestHex()).toEqual("0102");
+});
+
+test("e.ListN.toTopHex - length 5", () => {
+  expect(
+    e.ListN(e.U8(0), e.U8(1), e.U8(2), e.U8(3), e.U8(4)).toTopHex(),
+  ).toEqual("0001020304");
+});
+
+test("e.ListN.toNestHex - length 5", () => {
+  expect(
+    e.ListN(e.U8(0), e.U8(1), e.U8(2), e.U8(3), e.U8(4)).toNestHex(),
+  ).toEqual("0001020304");
+});
+
 test("e.List.toTopHex - e.U8 + e.U8", () => {
   expect(e.List(e.U8(1), e.U8(2)).toTopHex()).toEqual("0102");
 });
@@ -1112,6 +1132,34 @@ test("d.List.fromNest - empty array", () => {
 
 test("d.List.fromNest - non-empty array", () => {
   expect(d.List(d.U8()).fromNest("000000020102")).toEqual([1n, 2n]);
+});
+
+test("d.ListN.fromTop - lenght 2", () => {
+  expect(d.ListN(2, d.U8()).fromTop("0102")).toEqual([1n, 2n]);
+});
+
+test("d.ListN.fromNest - lenght 2", () => {
+  expect(d.ListN(2, d.U8()).fromNest("0102")).toEqual([1n, 2n]);
+});
+
+test("d.ListN.fromTop - lenght 5", () => {
+  expect(d.ListN(5, d.U8()).fromTop("0001020304")).toEqual([
+    0n,
+    1n,
+    2n,
+    3n,
+    4n,
+  ]);
+});
+
+test("d.ListN.fromNest - length 5", () => {
+  expect(d.ListN(5, d.U8()).fromNest("0001020304")).toEqual([
+    0n,
+    1n,
+    2n,
+    3n,
+    4n,
+  ]);
 });
 
 test("d.Option.fromTop - null of BigUint", () => {
