@@ -1,0 +1,195 @@
+{
+    "buildInfo": {
+        "rustc": {
+            "version": "1.71.0-nightly",
+            "commitHash": "a2b1646c597329d0a25efa3889b66650f65de1de",
+            "commitDate": "2023-05-25",
+            "channel": "Nightly",
+            "short": "rustc 1.71.0-nightly (a2b1646c5 2023-05-25)"
+        },
+        "contractCrate": {
+            "name": "crypto-bubbles",
+            "version": "0.0.0"
+        },
+        "framework": {
+            "name": "multiversx-sc",
+            "version": "0.45.2"
+        }
+    },
+    "name": "CryptoBubbles",
+    "constructor": {
+        "docs": [
+            "constructor function",
+            "is called immediately after the contract is created"
+        ],
+        "inputs": [],
+        "outputs": []
+    },
+    "endpoints": [
+        {
+            "docs": [
+                "player adds funds"
+            ],
+            "name": "topUp",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "EGLD"
+            ],
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "docs": [
+                "player withdraws funds"
+            ],
+            "name": "withdraw",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "joinGame",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "EGLD"
+            ],
+            "inputs": [
+                {
+                    "name": "game_index",
+                    "type": "BigUint"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "rewardWinner",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "game_index",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "winner",
+                    "type": "Address"
+                },
+                {
+                    "name": "prize",
+                    "type": "BigUint"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "rewardAndSendToWallet",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "game_index",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "winner",
+                    "type": "Address"
+                },
+                {
+                    "name": "prize",
+                    "type": "BigUint"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "balanceOf",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "player",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "BigUint"
+                }
+            ]
+        }
+    ],
+    "events": [
+        {
+            "identifier": "top_up",
+            "inputs": [
+                {
+                    "name": "player",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "identifier": "withdraw",
+            "inputs": [
+                {
+                    "name": "player",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "identifier": "player_joins_game",
+            "inputs": [
+                {
+                    "name": "game_index",
+                    "type": "BigUint",
+                    "indexed": true
+                },
+                {
+                    "name": "player",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "bet",
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "identifier": "reward_winner",
+            "inputs": [
+                {
+                    "name": "game_index",
+                    "type": "BigUint",
+                    "indexed": true
+                },
+                {
+                    "name": "winner",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "prize",
+                    "type": "BigUint"
+                }
+            ]
+        }
+    ],
+    "esdtAttributes": [],
+    "hasCallback": false,
+    "types": {}
+}

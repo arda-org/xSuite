@@ -1,0 +1,220 @@
+{
+    "buildInfo": {
+        "rustc": {
+            "version": "1.71.0-nightly",
+            "commitHash": "a2b1646c597329d0a25efa3889b66650f65de1de",
+            "commitDate": "2023-05-25",
+            "channel": "Nightly",
+            "short": "rustc 1.71.0-nightly (a2b1646c5 2023-05-25)"
+        },
+        "contractCrate": {
+            "name": "token-release",
+            "version": "0.0.1"
+        },
+        "framework": {
+            "name": "multiversx-sc",
+            "version": "0.45.2"
+        }
+    },
+    "name": "TokenRelease",
+    "constructor": {
+        "inputs": [
+            {
+                "name": "token_identifier",
+                "type": "TokenIdentifier"
+            }
+        ],
+        "outputs": []
+    },
+    "endpoints": [
+        {
+            "name": "addFixedAmountGroup",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "group_identifier",
+                    "type": "bytes"
+                },
+                {
+                    "name": "group_total_amount",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "period_unlock_amount",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "release_period",
+                    "type": "u64"
+                },
+                {
+                    "name": "release_ticks",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "addPercentageBasedGroup",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "group_identifier",
+                    "type": "bytes"
+                },
+                {
+                    "name": "group_total_amount",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "period_unlock_percentage",
+                    "type": "u8"
+                },
+                {
+                    "name": "release_period",
+                    "type": "u64"
+                },
+                {
+                    "name": "release_ticks",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "removeGroup",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "group_identifier",
+                    "type": "bytes"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "addUserGroup",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                },
+                {
+                    "name": "group_identifier",
+                    "type": "bytes"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "removeUser",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "requestAddressChange",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "new_address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "approveAddressChange",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "user_address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "endSetupPeriod",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "name": "claimTokens",
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "name": "verify_address_change",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
+        },
+        {
+            "name": "get_claimable_tokens",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "name": "getTokenIdentifier",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "TokenIdentifier"
+                }
+            ]
+        },
+        {
+            "name": "getTokenTotalSupply",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "BigUint"
+                }
+            ]
+        }
+    ],
+    "esdtAttributes": [],
+    "hasCallback": false,
+    "types": {}
+}

@@ -1,2 +1,3 @@
 */output/*
 !*/output/*.wasm
+!*/output/datatypes.abi.json

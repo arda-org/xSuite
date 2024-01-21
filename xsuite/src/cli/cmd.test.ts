@@ -14,6 +14,7 @@ import { rustToolchain, rustTarget, rustKey } from "./helpers";
 const cwd = process.cwd();
 let tmpDir: string;
 const pemPath = path.resolve("wallets", "wallet.pem");
+
 const keyKeystorePath = path.resolve("wallets", "keystore_key.json");
 const mneKeystorePath = path.resolve("wallets", "keystore_mnemonic.json");
 

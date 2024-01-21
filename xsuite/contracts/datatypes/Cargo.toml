@@ -1,0 +1,8 @@
+[package]
+name = "datatypes"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies.multiversx-sc]
+version = "0.45.1"

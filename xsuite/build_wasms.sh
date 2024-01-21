@@ -21,4 +21,13 @@ do
   fi
 done
 
+for file in **/*.abi.json
+do
+  if [ -f "$file" ]; then
+    destination=$SOURCE_DIR/$file
+    mkdir -p "$(dirname "$destination")"
+    cp "$file" "$destination"
+  fi
+done
+
 shopt -u globstar dotglob
