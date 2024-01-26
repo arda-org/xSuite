@@ -118,7 +118,7 @@
             ]
         },
         {
-            "name": "setArrayrDataTypes",
+            "name": "setArrayDataTypes",
             "mutability": "mutable",
             "inputs": [
                 {
@@ -165,6 +165,25 @@
             ]
         },
         {
+            "name": "getPrimitiveMultiValue2",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "multivalue",
+                    "type": "multi<u8,Address>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u8"
+                },
+                {
+                    "type": "Address"
+                }
+            ]
+        },
+        {
             "name": "getOptionalValue2ndArg",
             "mutability": "readonly",
             "inputs": [
@@ -184,6 +203,111 @@
                 },
                 {
                     "type": "optional<u8>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "getOptionalMultiValueEncoded",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "value",
+                    "type": "optional<variadic<tuple<Address,u64>>>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "optional<variadic<tuple<Address,u64>>>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "getOptionalMultiValue3",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "value",
+                    "type": "optional<multi<u32,BigUint,u8>>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "optional<multi<u32,BigUint,u8>>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "getMultiValueEncoded",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "value",
+                    "type": "variadic<Address>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "variadic<Address>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "getMultiValueEncodedWithMultiValue2",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "value",
+                    "type": "variadic<multi<u8,Address>>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "variadic<multi<u8,Address>>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "getIgnoreValue",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "value",
+                    "type": "ignore",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "ignore",
                     "multi_result": true
                 }
             ]
@@ -263,6 +387,22 @@
             "outputs": [
                 {
                     "type": "variadic<multi<u8,u16>>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "getMapMapperComplex",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "input",
+                    "type": "u8"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "variadic<multi<u8,tuple<u16,BigUint,u8>>>",
                     "multi_result": true
                 }
             ]
@@ -415,6 +555,10 @@
                 {
                     "name": "custom_type",
                     "type": "SubType"
+                },
+                {
+                    "name": "code_metadata",
+                    "type": "CodeMetadata"
                 }
             ]
         },

@@ -1,4 +1,4 @@
-export const splitCommaSeperatedArgs = (input: string) => {
+export const splitCommaSeparatedArgs = (input: string) => {
   const result = [];
   let currentSegment = "";
   let angleBracketCount = 0;

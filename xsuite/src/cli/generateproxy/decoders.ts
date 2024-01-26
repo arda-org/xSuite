@@ -1,15 +1,21 @@
-export const generateAbiDecoders = (abi: any) => {
+import { AbiDefinition, TypeDefinition, FieldDefinition } from "./abi";
+import { splitCommaSeparatedArgs } from "./utils";
+
+export const generateAbiDecoders = (abi: AbiDefinition) => {
   const code = Object.entries(abi.types)
-    .map((type) => generateTypeDecoder(type))
+    .map((type) => generateTypeDecoder(type, abi))
     .join("\n");
 
   return code;
 };
 
-const generateTypeDecoder = (typeDefinition: any) => {
+const generateTypeDecoder = (
+  typeDefinition: [string, TypeDefinition],
+  abi: AbiDefinition,
+) => {
   switch (typeDefinition[1].type) {
     case "struct":
-      return generateStructDecoder(typeDefinition);
+      return generateStructDecoder(typeDefinition, abi);
     case "enum":
     case "explicit-enum":
       return generateEnumDecoder(typeDefinition);
@@ -18,24 +24,27 @@ const generateTypeDecoder = (typeDefinition: any) => {
   }
 };
 
-const generateStructDecoder = (structDefinition: any) => {
+const generateStructDecoder = (
+  structDefinition: [string, TypeDefinition],
+  abi: AbiDefinition,
+) => {
   return `export const ${structDefinition[0]}Decoder = () => d.Tuple({
-  ${generateFieldsDecoder(structDefinition[1].fields).join("\n  ")}
+  ${generateFieldsDecoder(structDefinition[1].fields ?? [], abi).join("\n  ")}
 });
-  
-export const decode${structDefinition[0]} = (encodedData: string): ${
-    structDefinition[0]
-  } => {
-  return ${structDefinition[0]}Decoder().topDecode(encodedData);
-}
 `;
 };
 
-const generateFieldsDecoder = (fieldDefinitions: any) => {
-  return fieldDefinitions.map((f: any) => `${f.name}: ${mapType(f.type)},`);
+const generateFieldsDecoder = (
+  fieldDefinitions: FieldDefinition[],
+  abi: AbiDefinition,
+) => {
+  return (
+    fieldDefinitions?.map((f: any) => `${f.name}: ${mapType(f.type, abi)},`) ??
+    []
+  );
 };
 
-const generateEnumDecoder = (enumDefinition: any) => {
+const generateEnumDecoder = (enumDefinition: [string, TypeDefinition]) => {
   return `export const ${enumDefinition[0]}Decoder = () => d.U8().then((v) => {
   const enumValue: ${enumDefinition[0]} = Number(v);
   return enumValue;
@@ -43,36 +52,28 @@ const generateEnumDecoder = (enumDefinition: any) => {
 `;
 };
 
-export const mapType = (abiType: string): string => {
+export const mapType = (abiType: string, abi: AbiDefinition): string => {
   // handling List<MyType>
   const listMatch = abiType.match(/^List<(.+)>$/);
   if (listMatch) {
-    const innerTypeDecoder: any = mapType(listMatch[1]);
+    const innerTypeDecoder: any = mapType(listMatch[1], abi);
     return `d.List(${innerTypeDecoder})`;
   }
 
   // handling Option<MyType>
   const optionMatch = abiType.match(/^Option<(.+)>$/);
   if (optionMatch) {
-    const innerTypeDecoder: any = mapType(optionMatch[1]);
+    const innerTypeDecoder: any = mapType(optionMatch[1], abi);
     return `d.Option(${innerTypeDecoder})`;
-  }
-
-  // handling optional<MyType>
-  const optionalMatch = abiType.match(/^optional<(.+)>$/);
-  if (optionalMatch) {
-    const innerTypeDecoder: any = mapType(optionalMatch[1]);
-    return `${innerTypeDecoder}`;
   }
 
   // handling tuples
   const tupleMatch = abiType.match(/^tuple<(.+)>$/);
   if (tupleMatch) {
     const innerTypesSeperatedByComma: string = tupleMatch[1];
-    // todo splitting
-    const innerDecoders = innerTypesSeperatedByComma
-      .split(",")
-      .map((t) => mapType(t.trim()));
+    const innerDecoders = splitCommaSeparatedArgs(
+      innerTypesSeperatedByComma,
+    ).map((t) => mapType(t.trim(), abi));
     return `d.Tuple(${innerDecoders})`;
   }
 
@@ -80,7 +81,7 @@ export const mapType = (abiType: string): string => {
   const arrayNMatch = abiType.match(/^array(\d+)<(.+)>$/);
   if (arrayNMatch) {
     const arrayLength = Number(arrayNMatch[1]);
-    const innerType = mapType(arrayNMatch[2]);
+    const innerType = mapType(arrayNMatch[2], abi);
     const innerTypes: string[] = [];
     for (let i = 0; i < arrayLength; i++) {
       innerTypes.push(innerType);
@@ -96,6 +97,7 @@ export const mapType = (abiType: string): string => {
     case "u8":
       return "d.U8().toNum()";
     case "u16":
+    case "CodeMetadata":
       return "d.U16().toNum()";
     case "u32":
       return "d.U32().toNum()";
@@ -121,6 +123,11 @@ export const mapType = (abiType: string): string => {
     case "bytes":
       return "d.Buffer()";
     default:
+      if (abi.types[abiType] === undefined) {
+        throw Error(
+          `Type ${abiType} is currently not supported by the xsuite framework.`,
+        );
+      }
       return `${abiType}Decoder()`;
   }
 };

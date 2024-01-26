@@ -1,18 +1,18 @@
-import { test, expect } from "@jest/globals";
-import { splitCommaSeperatedArgs } from "./utils";
+import { test, expect } from "vitest";
+import { splitCommaSeparatedArgs } from "./utils";
 
-test("splitCommaSeperatedArgs splits 'tuple<TokenIdentifier,u64>,BigUint'", () => {
-  const commaseperatedTypes = "tuple<TokenIdentifier,u64>,BigUint";
-  expect(splitCommaSeperatedArgs(commaseperatedTypes)).toStrictEqual([
+test("splitCommaSeparatedArgs splits 'tuple<TokenIdentifier,u64>,BigUint'", () => {
+  const commaSeparatedTypes = "tuple<TokenIdentifier,u64>,BigUint";
+  expect(splitCommaSeparatedArgs(commaSeparatedTypes)).toStrictEqual([
     "tuple<TokenIdentifier,u64>",
     "BigUint",
   ]);
 });
 
-test("splitCommaSeperatedArgs splits 'BigUint,u8,BigUInt,Tuple<tuple<TokenIdentifier,u64>,TokenIdentifier,u16>'", () => {
-  const commaseperatedTypes =
+test("splitCommaSeparatedArgs splits 'BigUint,u8,BigUInt,Tuple<tuple<TokenIdentifier,u64>,TokenIdentifier,u16>'", () => {
+  const commaSeparatedTypes =
     "BigUint,u8,BigUint,tuple<tuple<TokenIdentifier,u64>,TokenIdentifier,u16>";
-  expect(splitCommaSeperatedArgs(commaseperatedTypes)).toStrictEqual([
+  expect(splitCommaSeparatedArgs(commaSeparatedTypes)).toStrictEqual([
     "BigUint",
     "u8",
     "BigUint",

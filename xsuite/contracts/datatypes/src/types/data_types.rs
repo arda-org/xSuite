@@ -1,8 +1,8 @@
 use multiversx_sc::{
     api::ManagedTypeApi,
     types::{
-        BigInt, BigUint, EgldOrEsdtTokenIdentifier, EgldOrEsdtTokenPayment, EsdtTokenPayment,
-        ManagedAddress, ManagedBuffer, ManagedVec, TokenIdentifier,
+        BigInt, BigUint, CodeMetadata, EgldOrEsdtTokenIdentifier, EgldOrEsdtTokenPayment,
+        EsdtTokenPayment, ManagedAddress, ManagedBuffer, ManagedVec, TokenIdentifier,
     },
 };
 
@@ -73,4 +73,5 @@ pub struct ArrayDataTypes<M: ManagedTypeApi> {
 pub struct OtherDataTypes<M: ManagedTypeApi> {
     pub custom_type: SubType<M>,
     // pub complex_enum: ComplexEnum<M>,
+    pub code_metadata: CodeMetadata,
 }

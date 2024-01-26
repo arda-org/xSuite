@@ -33,6 +33,14 @@ pub trait DataTypes {
         self.map_mapper(0).insert(1, 2);
         self.map_mapper(1).insert(1, 10);
         self.map_mapper(1).insert(2, 11);
+        self.map_mapper_complex(0)
+            .insert(0, (0, BigUint::from(12u16), 4));
+        self.map_mapper_complex(0)
+            .insert(1, (1, BigUint::from(24u16), 5));
+        self.map_mapper_complex(1)
+            .insert(0, (2, BigUint::from(48u16), 6));
+        self.map_mapper_complex(1)
+            .insert(1, (3, BigUint::from(72u16), 7));
     }
 
     #[view(getPrimitiveDataTypes)]
@@ -131,6 +139,7 @@ pub trait DataTypes {
                 address: self.blockchain().get_sc_address(),
                 big_unsigned_integer: BigUint::from(100000000u64),
             },
+            code_metadata: CodeMetadata::UPGRADEABLE,
         };
         return types;
     }
@@ -153,7 +162,7 @@ pub trait DataTypes {
         data
     }
 
-    #[endpoint(setArrayrDataTypes)]
+    #[endpoint(setArrayDataTypes)]
     fn set_array_datatypes(&self, data: ArrayDataTypes<Self::Api>) -> ArrayDataTypes<Self::Api> {
         data
     }
@@ -171,6 +180,14 @@ pub trait DataTypes {
         optional_value_arg
     }
 
+    #[view(getPrimitiveMultiValue2)]
+    fn get_primitive_mutlivalue2(
+        &self,
+        multivalue: MultiValue2<u8, ManagedAddress>,
+    ) -> MultiValue2<u8, ManagedAddress> {
+        multivalue
+    }
+
     #[view(getOptionalValue2ndArg)]
     fn get_optional_value_2nd_arg(
         &self,
@@ -179,6 +196,47 @@ pub trait DataTypes {
     ) -> MultiValue2<u8, OptionalValue<u8>> {
         let result = MultiValue2::from((required_arg, optional_value_arg));
         result
+    }
+
+    #[view(getOptionalMultiValueEncoded)]
+    fn get_optional_multi_value_encoded(
+        &self,
+        _id: u64,
+        value: OptionalValue<MultiValueEncoded<(ManagedAddress, u64)>>,
+    ) -> OptionalValue<MultiValueEncoded<(ManagedAddress, u64)>> {
+        value
+    }
+
+    #[view(getOptionalMultiValue3)]
+    fn get_optional_multi_value_3(
+        &self,
+        _id: u64,
+        value: OptionalValue<MultiValue3<u32, BigUint, u8>>,
+    ) -> OptionalValue<MultiValue3<u32, BigUint, u8>> {
+        value
+    }
+
+    #[view(getMultiValueEncoded)]
+    fn get_multi_value_encoded(
+        &self,
+        _id: u64,
+        value: MultiValueEncoded<ManagedAddress>,
+    ) -> MultiValueEncoded<ManagedAddress> {
+        value
+    }
+
+    #[view(getMultiValueEncodedWithMultiValue2)]
+    fn get_multi_value_encoded_with_multivalue2(
+        &self,
+        _id: u64,
+        value: MultiValueEncoded<MultiValue2<u8, ManagedAddress>>,
+    ) -> MultiValueEncoded<MultiValue2<u8, ManagedAddress>> {
+        value
+    }
+
+    #[view(getIgnoreValue)]
+    fn get_ignore_value(&self, _id: u64, value: IgnoreValue) -> IgnoreValue {
+        value
     }
 
     #[view(getSingleValueMapper)]
@@ -200,6 +258,10 @@ pub trait DataTypes {
     #[view(getMapMapper)]
     #[storage_mapper("map_mapper")]
     fn map_mapper(&self, input: u8) -> MapMapper<u8, u16>;
+
+    #[view(getMapMapperComplex)]
+    #[storage_mapper("map_mapper_complex")]
+    fn map_mapper_complex(&self, input: u8) -> MapMapper<u8, (u16, BigUint, u8)>;
 
     fn get_sample_mvec(&self) -> ManagedVec<u16> {
         let mut vec = ManagedVec::new();

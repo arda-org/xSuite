@@ -1,46 +1,66 @@
 import fs from "node:fs";
 import path from "node:path";
-import { test, beforeEach, afterEach, expect } from "@jest/globals";
-import { Encodable } from "../../data/Encodable";
+
+import { test, beforeEach, afterEach, expect } from "vitest";
 import { SContract, SWallet, SWorld } from "../../world";
 import { getCommand } from "../cmd";
 
-const abiDir = path.resolve("abis");
-const tmpDir = "/tmp/xsuite-tests";
-
+const abiDirSupported = path.resolve(__dirname, "abis/supported");
+const abiDirUnsupported = path.resolve(__dirname, "abis/unsupported");
 const dataTypesAbiPath = path.resolve(
-  "contracts/datatypes/output",
+  __dirname,
+  "../../../contracts/datatypes/output",
   "datatypes.abi.json",
 );
 const dataTypesWasmPath = path.resolve(
-  "contracts/datatypes/output",
+  __dirname,
+  "../../../contracts/datatypes/output",
   "datatypes.wasm",
 );
 
+let tmpDir: string;
+
 beforeEach(() => {
-  if (fs.existsSync(tmpDir)) {
-    fs.rmSync(tmpDir, { recursive: true, force: true });
-  }
-  fs.mkdirSync(tmpDir);
-  process.chdir(tmpDir);
+  tmpDir = fs.mkdtempSync("/tmp/xsuite-tests-");
 });
 
 afterEach(() => {
-  // fs.rmSync(tmpDir, { recursive: true, force: true });
-  // process.chdir(cwd);
+  fs.rmSync(tmpDir, { recursive: true, force: true });
+});
+
+test("generateproxy throws, when a type is not supported", async () => {
+  const targetFilePath = `${tmpDir}/datatypes.ts`;
+  await expect(() =>
+    run(
+      `generateproxy --from-abi ${abiDirUnsupported}/type_not_supported.abi.json --output=${targetFilePath}`,
+    ),
+  ).rejects.toThrow(
+    "Type NOTSUPPORTEDTYPE is currently not supported by the xsuite framework.",
+  );
+});
+
+test("generateproxy throws, when two multivalues are given", async () => {
+  const targetFilePath = `${tmpDir}/datatypes.ts`;
+  await expect(() =>
+    run(
+      `generateproxy --from-abi ${abiDirUnsupported}/nft-minter.abi.json --output=${targetFilePath}`,
+    ),
+  ).rejects.toThrow(
+    "The endpoint createNft contains multiple multi_args, which is currently not supported by the xsuite framework.",
+  );
 });
 
 test("generateproxy test abis", async () => {
-  const files = fs.readdirSync(abiDir);
+  const files = fs.readdirSync(abiDirSupported);
   files.forEach(async (file) => {
-    const filePath = path.resolve(abiDir, file);
+    const filePath = path.resolve(abiDirSupported, file);
     await run(
       `generateproxy --from-abi ${filePath} --output=${tmpDir}/${file}.ts`,
     );
   });
 });
 
-test("generateproxy generates types for datatypes smart contract", async () => {
+test("generateproxy generates functional endpoints for a given abi", async () => {
   const targetFilePath = `${tmpDir}/datatypes.ts`;
   await run(
     `generateproxy --from-abi ${dataTypesAbiPath} --output=${targetFilePath}`,
@@ -54,7 +74,7 @@ test("generateproxy generates types for datatypes smart contract", async () => {
     const deployedContract = await owner.deployContract({
       code: `file:${dataTypesWasmPath}`,
       codeMetadata: [],
-      gasLimit: 15_000_000,
+      gasLimit: 20_000_000,
     });
 
     const generatedCode = await import(targetFilePath);
@@ -65,34 +85,47 @@ test("generateproxy generates types for datatypes smart contract", async () => {
     );
 
     for (let i = 0; i < testCases.length; i++) {
-      const testCase = testCases[0];
-      const getResponse = await world.query({
+      const testCase = testCases[i];
+
+      const getBuilder = generatedCode[`get${testCase.type}Builder`]();
+      const setBuilder = generatedCode[`set${testCase.type}Builder`]();
+
+      const queryResponse = await world.query({
         callee: deployedContract.contract,
-        funcName: `get${testCase.type}`,
-        funcArgs: [],
+        funcName: getBuilder.functionName,
+        funcArgs: getBuilder.encodeInput(),
       });
 
-      const decodedType = generatedCode[`decode${testCase.type}`](
-        getResponse.returnData[0],
-      );
-
-      expect(decodedType).toStrictEqual(testCase.result);
-
-      const encodedData: Encodable =
-        generatedCode[`encode${testCase.type}`](decodedType);
+      const decodedData = getBuilder.decodeOutput(queryResponse.returnData);
+      expect(decodedData).toStrictEqual(testCase.result);
 
       const setResponse = await owner.callContract({
         callee: deployedContract.contract,
-        funcName: `set${testCase.type}`,
-        funcArgs: [encodedData],
-        gasLimit: 10_000_000,
+        funcName: setBuilder.functionName,
+        funcArgs: setBuilder.encodeInput(decodedData),
+        gasLimit: 20_000_000,
       });
 
-      expect(setResponse.returnData[0]).toBe(getResponse.returnData[0]);
+      expect(setResponse.returnData).toStrictEqual(queryResponse.returnData);
     }
   } finally {
     await world.terminate();
   }
+});
+
+test("generateproxy proccesses multivalue2 properly", async () => {
+  const targetFilePath = `${tmpDir}/datatypes.ts`;
+  await run(
+    `generateproxy --from-abi ${dataTypesAbiPath} --output=${targetFilePath}`,
+  );
+
+  const generatedCode = await import(targetFilePath);
+  const builder = generatedCode.getPrimitiveMultiValue2Builder();
+  await queryAndVerify(
+    builder,
+    [[0, "erd1gnnva3r3x490s9ap0s53u2edht6zpnxhrwtcty7ljf3hmasxenjqw5hux8"]],
+    [0, "erd1gnnva3r3x490s9ap0s53u2edht6zpnxhrwtcty7ljf3hmasxenjqw5hux8"],
+  );
 });
 
 test("generateproxy proccesses optional<T> properly", async () => {
@@ -111,6 +144,112 @@ test("generateproxy proccesses optional<T> properly", async () => {
   await queryAndVerify(builder2, [0, null], [0, null]);
   await queryAndVerify(builder2, [0, 0], [0, 0]);
   await queryAndVerify(builder2, [0, 1], [0, 1]);
+});
+
+test("generateproxy optional<multivalueencoded<T>> properly", async () => {
+  const targetFilePath = `${tmpDir}/datatypes.ts`;
+  await run(
+    `generateproxy --from-abi ${dataTypesAbiPath} --output=${targetFilePath}`,
+  );
+
+  const generatedCode = await import(targetFilePath);
+  const builder = generatedCode.getOptionalMultiValueEncodedBuilder();
+  await queryAndVerify(
+    builder,
+    [
+      77n,
+      [
+        ["erd1gnnva3r3x490s9ap0s53u2edht6zpnxhrwtcty7ljf3hmasxenjqw5hux8", 10n],
+        ["erd1zznu64h9npj9640qljhjstdt7luw47vehglavfs28f796y7acuns7c8f2t", 90n],
+      ],
+    ],
+    [
+      ["erd1gnnva3r3x490s9ap0s53u2edht6zpnxhrwtcty7ljf3hmasxenjqw5hux8", 10n],
+      ["erd1zznu64h9npj9640qljhjstdt7luw47vehglavfs28f796y7acuns7c8f2t", 90n],
+    ],
+  );
+  await queryAndVerify(builder, [77n, null], null);
+  await queryAndVerify(builder, [77n, []], null);
+});
+
+test("generateproxy optional<multivalue3<T>> properly", async () => {
+  const targetFilePath = `${tmpDir}/datatypes.ts`;
+  await run(
+    `generateproxy --from-abi ${dataTypesAbiPath} --output=${targetFilePath}`,
+  );
+
+  const generatedCode = await import(targetFilePath);
+  const builder = generatedCode.getOptionalMultiValue3Builder();
+  await queryAndVerify(builder, [77n, [1, 30n, 2]], [1, 30n, 2]);
+  await queryAndVerify(builder, [77n, null], null);
+});
+
+test("generateproxy multivalueencoded properly", async () => {
+  const targetFilePath = `${tmpDir}/datatypes.ts`;
+  await run(
+    `generateproxy --from-abi ${dataTypesAbiPath} --output=${targetFilePath}`,
+  );
+
+  const generatedCode = await import(targetFilePath);
+  const builder = generatedCode.getMultiValueEncodedBuilder();
+  await queryAndVerify(
+    builder,
+    [
+      77n,
+      [
+        "erd1gnnva3r3x490s9ap0s53u2edht6zpnxhrwtcty7ljf3hmasxenjqw5hux8",
+        "erd1zznu64h9npj9640qljhjstdt7luw47vehglavfs28f796y7acuns7c8f2t",
+      ],
+    ],
+    [
+      "erd1gnnva3r3x490s9ap0s53u2edht6zpnxhrwtcty7ljf3hmasxenjqw5hux8",
+      "erd1zznu64h9npj9640qljhjstdt7luw47vehglavfs28f796y7acuns7c8f2t",
+    ],
+  );
+  await queryAndVerify(
+    builder,
+    [77n, ["erd1zznu64h9npj9640qljhjstdt7luw47vehglavfs28f796y7acuns7c8f2t"]],
+    ["erd1zznu64h9npj9640qljhjstdt7luw47vehglavfs28f796y7acuns7c8f2t"],
+  );
+  await queryAndVerify(builder, [77n, []], []);
+});
+
+test("generateproxy multivalueencoded<multivalue2<T>> properly", async () => {
+  const targetFilePath = `${tmpDir}/datatypes.ts`;
+  await run(
+    `generateproxy --from-abi ${dataTypesAbiPath} --output=${targetFilePath}`,
+  );
+
+  const generatedCode = await import(targetFilePath);
+  const builder = generatedCode.getMultiValueEncodedWithMultiValue2Builder();
+  await queryAndVerify(
+    builder,
+    [
+      77n,
+      [
+        [37, "erd1gnnva3r3x490s9ap0s53u2edht6zpnxhrwtcty7ljf3hmasxenjqw5hux8"],
+        [180, "erd1zznu64h9npj9640qljhjstdt7luw47vehglavfs28f796y7acuns7c8f2t"],
+      ],
+    ],
+    [
+      [37, "erd1gnnva3r3x490s9ap0s53u2edht6zpnxhrwtcty7ljf3hmasxenjqw5hux8"],
+      [180, "erd1zznu64h9npj9640qljhjstdt7luw47vehglavfs28f796y7acuns7c8f2t"],
+    ],
+  );
+  await queryAndVerify(builder, [77n, []], []);
+});
+
+test("generateproxy processes IgnoreValue properly", async () => {
+  const targetFilePath = `${tmpDir}/datatypes.ts`;
+  await run(
+    `generateproxy --from-abi ${dataTypesAbiPath} --output=${targetFilePath}`,
+  );
+
+  const generatedCode = await import(targetFilePath);
+  const builder = generatedCode.getIgnoreValueBuilder();
+  await queryAndVerify(builder, [0], undefined);
+  await queryAndVerify(builder, [1, "ignored"], undefined);
+  await queryAndVerify(builder, [1, ["ignored", 12]], undefined);
 });
 
 test("generateproxy processes VecMapper properly", async () => {
@@ -149,7 +288,7 @@ test("generateproxy processes UnorderedSetMapper properly", async () => {
   await queryAndVerify(builder, [1], [5n, 6n]);
 });
 
-test("generateproxy processes MapMapper properly", async () => {
+test("generateproxy processes a simple MapMapper properly", async () => {
   const targetFilePath = `${tmpDir}/datatypes.ts`;
   await run(
     `generateproxy --from-abi ${dataTypesAbiPath} --output=${targetFilePath}`,
@@ -157,8 +296,49 @@ test("generateproxy processes MapMapper properly", async () => {
 
   const generatedCode = await import(targetFilePath);
   const builder = generatedCode.getMapMapperBuilder();
-  await queryAndVerify(builder, [0], [1n, 2n]);
-  await queryAndVerify(builder, [1], [5n, 6n]);
+  await queryAndVerify(
+    builder,
+    [0],
+    [
+      [0, 1],
+      [1, 2],
+    ],
+  );
+  await queryAndVerify(
+    builder,
+    [1],
+    [
+      [1, 10],
+      [2, 11],
+    ],
+  );
+  await queryAndVerify(builder, [2], []);
+});
+
+test("generateproxy processes a complex MapMapper properly", async () => {
+  const targetFilePath = `${tmpDir}/datatypes.ts`;
+  await run(
+    `generateproxy --from-abi ${dataTypesAbiPath} --output=${targetFilePath}`,
+  );
+
+  const generatedCode = await import(targetFilePath);
+  const builder = generatedCode.getMapMapperComplexBuilder();
+  await queryAndVerify(
+    builder,
+    [0],
+    [
+      [0, [0, 12n, 4]],
+      [1, [1, 24n, 5]],
+    ],
+  );
+  await queryAndVerify(
+    builder,
+    [1],
+    [
+      [0, [2, 48n, 6]],
+      [1, [3, 72n, 7]],
+    ],
+  );
 });
 
 const queryAndVerify = async (
@@ -175,7 +355,7 @@ const queryAndVerify = async (
     const deployedContract = await owner.deployContract({
       code: `file:${dataTypesWasmPath}`,
       codeMetadata: [],
-      gasLimit: 15_000_000,
+      gasLimit: 20_000_000,
     });
 
     const funcArgs = builder.encodeInput(...input);
@@ -290,6 +470,7 @@ const loadGenerateProxyTestCases = (contract: SContract, owner: SWallet) => [
           "erd1qqqqqqqqqqqqqqqqqqqqqqqqqyqqqqqqqqqqqqqqqqqqqqqqqqqq8u9arm",
         big_unsigned_integer: 100000000n,
       },
+      code_metadata: 256,
     },
   },
 ];

@@ -1,74 +1,63 @@
-import { mapType as mapDecoderType } from "./decoders";
-import { mapType as mapEncoderType } from "./encoders";
-import { mapType } from "./types";
+import { AbiDefinition, EndpointDefinition } from "./abi";
+import { buildArguments, buildEncodedInput } from "./endpointinputs";
+import { buildDecodedResponse, buildResponseType } from "./endpointoutputs";
 
-export const generateAbiEndpoints = (abi: any) => {
-  const code = Object.entries(abi.endpoints)
-    .map((e) => generateEndpoint(e[1]))
-    .join("\n");
-
+export const generateAbiEndpoints = (abi: AbiDefinition) => {
+  const code = abi.endpoints?.map((e) => generateEndpoint(e, abi)).join("\n");
   return code;
 };
 
-const generateEndpoint = (endpoint: any) => {
-  const args = buildArguments(endpoint.inputs).join(", ");
-  const inputRequestArguments = buildEncodedInput(endpoint.inputs);
-  const outputDecoders = buildDecodedOutput(endpoint.outputs);
+const generateEndpoint = (endpoint: EndpointDefinition, abi: AbiDefinition) => {
+  ensureCompatibility(endpoint);
+
+  const args = buildArguments(endpoint.inputs, abi).join(", ");
+  const inputEncoders = buildEncodedInput(endpoint.inputs, abi);
+
+  const responseType = buildResponseType(endpoint.outputs, abi);
+  const decodedResponse = buildDecodedResponse(endpoint.outputs, abi);
 
   return `export const ${endpoint.name}Builder = () => ({
   functionName: "${endpoint.name}",
   encodeInput: (${args}) => {
-    return ${inputRequestArguments};
+    ${inputEncoders}
   },
-  decodeOutput: (data: string[]) =>
+  decodeOutput: (data: string[]): ${responseType} =>
   {
-    ${outputDecoders}
+    ${decodedResponse}
   }
 });
 `;
 };
 
-const buildArguments = (inputs: any) => {
-  return inputs.map((input: any) => `${input.name}: ${mapType(input.type)}`);
-};
-
-const buildEncodedInput = (inputs: any) => {
-  const requestParts = inputs.map(
-    (input: any) => `${mapEncoderType(input.name, input.type)}`,
-  );
-
-  if (requestParts.length === 0) {
-    return "undefined";
-  }
-  if (requestParts.length === 1) {
-    return `[ ${requestParts[0]} ].filter(p => p !== undefined)`;
+const ensureCompatibility = (endpoint: EndpointDefinition) => {
+  const multiArgs = endpoint.inputs.filter((p) => p.multi_arg === true).length;
+  if (multiArgs > 1) {
+    throw Error(
+      `The endpoint ${endpoint.name} contains multiple multi_args, which is currently not supported by the xsuite framework.`,
+    );
   }
 
-  return `[ ${requestParts.join(", ")} ].filter(p => p !== undefined)`;
-};
-
-const buildDecodedOutput = (outputs: any) => {
-  if (outputs.length === 0) {
-    return "return null;";
+  if (multiArgs === 1 && endpoint.inputs.slice(-1)[0].multi_arg !== true) {
+    throw Error(
+      `The endpoint ${endpoint.name} contains a multi_arg that isn't positioned at the last position. This is not supported.`,
+    );
   }
 
-  const matchVariadic = outputs[0].type.match(/^variadic<(.+)>$/);
-  if (matchVariadic) {
-    const innerType = matchVariadic[1];
-    return `return data.map(item => ${mapDecoderType(
-      innerType,
-    )}.topDecode(item));`;
+  const multiResults = endpoint.outputs.filter(
+    (p) => p.multi_result === true,
+  ).length;
+  if (multiResults > 1) {
+    throw Error(
+      `The endpoint ${endpoint.name} contains multiple multi_results, which is currently not supported by the xsuite framework.`,
+    );
   }
 
-  const responseDecoders = outputs.map(
-    (output: any) => `${mapDecoderType(output.type)}`,
-  );
-
-  if (responseDecoders.length === 1) {
-    return `return data.length === 0 ? null : ${responseDecoders[0]}.topDecode(data[0]);`;
+  if (
+    multiResults === 1 &&
+    endpoint.outputs.slice(-1)[0].multi_result !== true
+  ) {
+    throw Error(
+      `The endpoint ${endpoint.name} contains a multi_result that isn't positioned at the last position. This is not supported.`,
+    );
   }
-
-  const decoders = responseDecoders.join(", ");
-  return `const decoders = [ ${decoders} ];
-    return decoders.map((d, i) => i >= data.length ? null : d.fromTop(data[i]));`;
 };

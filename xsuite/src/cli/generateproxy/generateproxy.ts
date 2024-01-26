@@ -1,5 +1,7 @@
 import fs from "node:fs";
 import { Command } from "commander";
+import * as prettier from "prettier";
+import { AbiDefinition } from "./abi";
 import { generateAbiDecoders } from "./decoders";
 import { generateAbiEncoders } from "./encoders";
 import { generateAbiEndpoints } from "./endpoints";
@@ -24,7 +26,9 @@ const action = async ({
   output: string;
 }) => {
   // Read and parse the ABI JSON from file
-  const abiJson = JSON.parse(fs.readFileSync(abiFilePath, "utf-8"));
+  const abiJson: AbiDefinition = JSON.parse(
+    fs.readFileSync(abiFilePath, "utf-8"),
+  );
 
   let code = `import { d } from "xsuite";
 import { e } from "xsuite";
@@ -38,6 +42,11 @@ import { Encodable } from "xsuite/dist/data/Encodable";
   code += generateAbiEncoders(abiJson);
   code += "\n";
   code += generateAbiEndpoints(abiJson);
+
+  code = await prettier.format(code, {
+    parser: "typescript",
+    trailingComma: "all",
+  });
 
   fs.writeFileSync(outputFilePath, code);
 };
