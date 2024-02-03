@@ -51,7 +51,7 @@ const action = async ({
   log();
   log("Open the URL and request tokens:");
   log(chalk.bold(faucetUrl));
-  if (!process.env.JEST_WORKER_ID) {
+  if (!process.env.VITEST_WORKER_ID) {
     open(faucetUrl);
   }
 

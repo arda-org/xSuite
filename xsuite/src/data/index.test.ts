@@ -1,4 +1,4 @@
-import { describe, expect, test, beforeEach, afterEach } from "@jest/globals";
+import { describe, expect, test, beforeEach, afterEach } from "vitest";
 import { assertKvs } from "../assert/account";
 import { SWorld, SContract, SWallet } from "../world";
 import { d, e } from "./index";
