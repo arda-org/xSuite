@@ -1,4 +1,4 @@
-import { test, expect } from "@jest/globals";
+import { test, expect } from "vitest";
 import { assertAccount, assertHexList } from ".";
 
 test("assertHexList - matching", () => {

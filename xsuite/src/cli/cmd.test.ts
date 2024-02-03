@@ -1,10 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
-import { test, beforeEach, afterEach, expect } from "@jest/globals";
 import { UserSecretKey } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
 import { http } from "msw";
 import { setupServer } from "msw/node";
+import { test, beforeEach, afterEach, expect } from "vitest";
 import { stdoutInt, input } from "../_stdio";
 import { Keystore } from "../world/signer";
 import { computeShard } from "../world/utils";
@@ -12,13 +12,13 @@ import { getCommand } from "./cmd";
 import { rustToolchain, rustTarget, rustKey } from "./helpers";
 
 const cwd = process.cwd();
-const tmpDir = "/tmp/xsuite-tests";
+let tmpDir: string;
 const pemPath = path.resolve("wallets", "wallet.pem");
 const keyKeystorePath = path.resolve("wallets", "keystore_key.json");
 const mneKeystorePath = path.resolve("wallets", "keystore_mnemonic.json");
 
 beforeEach(() => {
-  fs.mkdirSync(tmpDir);
+  tmpDir = fs.mkdtempSync("/tmp/xsuite-tests-");
   process.chdir(tmpDir);
 });
 

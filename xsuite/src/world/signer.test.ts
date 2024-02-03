@@ -1,16 +1,17 @@
 import fs from "node:fs";
 import path from "node:path";
-import { afterEach, beforeEach, expect, test } from "@jest/globals";
+import { afterEach, beforeEach, expect, test } from "vitest";
 import { input, stdoutInt } from "../_stdio";
 import { KeystoreSigner } from "./signer";
 
-const tmpDir = "/tmp/xsuite-tests";
-const walletPath = path.resolve(tmpDir, "wallet.json");
+let tmpDir: string;
+let walletPath: string;
 const keyKeystorePath = path.resolve("wallets", "keystore_key.json");
 const mneKeystorePath = path.resolve("wallets", "keystore_mnemonic.json");
 
 beforeEach(() => {
-  fs.mkdirSync(tmpDir);
+  tmpDir = fs.mkdtempSync("/tmp/xsuite-tests-");
+  walletPath = path.resolve(tmpDir, "wallet.json");
 });
 
 afterEach(() => {
