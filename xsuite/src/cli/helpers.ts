@@ -47,7 +47,7 @@ export const downloadArchive = async (url: string) => {
   return archivePath;
 };
 
-export const rustToolchain = "nightly-2023-06-15";
+export const rustToolchain = "nightly-2023-12-11";
 
 export const rustTarget = "wasm32-unknown-unknown";
 
