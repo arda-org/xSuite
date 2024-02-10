@@ -9,7 +9,7 @@
     "build": "rimraf ./dist && tsc",
     "build-wasms": "bash build_wasms.sh",
     "verify-wasms": "pnpm build-wasms && (git status | grep -q \\\\.wasm && exit 1 || exit 0)",
-    "test": "jest -i src/",
+    "test": "vitest run",
     "open-coverage": "open ./coverage/lcov-report/index.html",
     "try": "tsx scripts/try.ts"
   },
@@ -44,16 +44,14 @@
     "tar": "6.2.0"
   },
   "devDependencies": {
-    "@jest/globals": "29.7.0",
-    "@swc/core": "1.3.96",
-    "@swc/jest": "0.2.29",
     "@types/node": "20.11.16",
     "@types/tar": "6.1.7",
-    "jest": "29.7.0",
+    "@vitest/coverage-istanbul": "^1.2.2",
     "msw": "2.1.5",
     "rimraf": "5.0.5",
     "tsx": "4.7.0",
-    "typescript": "5.3.3"
+    "typescript": "5.3.3",
+    "vitest": "^1.2.2"
   },
   "engines": {
     "node": ">=18.0.0"

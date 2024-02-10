@@ -1,4 +1,4 @@
-import { test, expect, afterEach } from "@jest/globals";
+import { test, expect, afterEach } from "vitest";
 import { envChain } from "./index";
 
 afterEach(() => {
