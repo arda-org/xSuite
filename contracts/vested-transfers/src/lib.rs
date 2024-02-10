@@ -8,6 +8,9 @@ pub trait Contract {
     #[init]
     fn init(&self) {}
 
+    #[upgrade]
+    fn upgrade(&self) {}
+
     #[payable("*")]
     #[endpoint(createTransfer)]
     fn create_transfer(

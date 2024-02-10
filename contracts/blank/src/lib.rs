@@ -6,4 +6,7 @@ multiversx_sc::imports!();
 pub trait Contract {
     #[init]
     fn init(&self) {}
+
+    #[upgrade]
+    fn upgrade(&self) {}
 }
