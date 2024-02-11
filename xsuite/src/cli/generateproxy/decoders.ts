@@ -45,10 +45,20 @@ const generateFieldsDecoder = (
 };
 
 const generateEnumDecoder = (enumDefinition: [string, TypeDefinition]) => {
-  return `export const ${enumDefinition[0]}Decoder = () => d.U8().then((v) => {
-  const enumValue: ${enumDefinition[0]} = Number(v);
-  return enumValue;
-});
+  const hasFields =
+    enumDefinition[1].variants?.filter((p) => p.fields?.length ?? 0 > 0)
+      ?.length ?? 0 > 0;
+  if (hasFields) {
+    throw Error(
+      "Complex enums are currently not supported by the xsuite framework.",
+    );
+  }
+
+  return `
+  export const ${enumDefinition[0]}Decoder = () => d.U8().then((v) => {
+    const enumValue: ${enumDefinition[0]} = Number(v);
+    return enumValue;
+  });
 `;
 };
 

@@ -1,11 +1,11 @@
 {
     "buildInfo": {
         "rustc": {
-            "version": "1.72.0-nightly",
-            "commitHash": "8c74a5d27c644a0f7a22bb2fa8dd3ff8257bc220",
-            "commitDate": "2023-06-14",
+            "version": "1.76.0-nightly",
+            "commitHash": "d86d65bbc19b928387f68427fcc3a0da498d8a19",
+            "commitDate": "2023-12-10",
             "channel": "Nightly",
-            "short": "rustc 1.72.0-nightly (8c74a5d27 2023-06-14)"
+            "short": "rustc 1.76.0-nightly (d86d65bbc 2023-12-10)"
         },
         "contractCrate": {
             "name": "datatypes",
@@ -13,7 +13,7 @@
         },
         "framework": {
             "name": "multiversx-sc",
-            "version": "0.45.2"
+            "version": "0.47.4"
         }
     },
     "name": "DataTypes",
@@ -324,6 +324,21 @@
             "outputs": [
                 {
                     "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "getSingleValueMapperComplex",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "input",
+                    "type": "u8"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "SubType"
                 }
             ]
         },

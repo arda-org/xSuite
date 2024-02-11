@@ -28,14 +28,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "datatypes-wasm"
-version = "0.0.0"
-dependencies = [
- "datatypes",
- "multiversx-sc-wasm-adapter",
-]
-
-[[package]]
 name = "endian-type"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -99,15 +91,6 @@ dependencies = [
  "quote",
  "radix_trie",
  "syn",
-]
-
-[[package]]
-name = "multiversx-sc-wasm-adapter"
-version = "0.47.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "304900b34dfae6fd5baddd4c98345f1b7fa7e839257dac961023733be40dd81e"
-dependencies = [
- "multiversx-sc",
 ]
 
 [[package]]

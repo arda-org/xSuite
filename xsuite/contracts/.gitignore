@@ -1,3 +1,4 @@
 */output/*
+*/target/*
 !*/output/*.wasm
 !*/output/datatypes.abi.json

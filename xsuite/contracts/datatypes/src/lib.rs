@@ -15,6 +15,10 @@ pub trait DataTypes {
     fn init(&self) {
         self.single_value_mapper(0).set(1);
         self.single_value_mapper(1).set(2);
+        self.single_value_mapper_complex(0).set(SubType {
+            big_unsigned_integer: BigUint::from(12u8),
+            address: self.blockchain().get_sc_address(),
+        });
         self.vec_mapper(0).push(&1);
         self.vec_mapper(0).push(&2);
         self.vec_mapper(1).push(&10);
@@ -242,6 +246,10 @@ pub trait DataTypes {
     #[view(getSingleValueMapper)]
     #[storage_mapper("single_value_mapper")]
     fn single_value_mapper(&self, input: u8) -> SingleValueMapper<u64>;
+
+    #[view(getSingleValueMapperComplex)]
+    #[storage_mapper("single_value_mapper_complex")]
+    fn single_value_mapper_complex(&self, input: u8) -> SingleValueMapper<SubType<Self::Api>>;
 
     #[view(getVecMapper)]
     #[storage_mapper("vec_mapper")]

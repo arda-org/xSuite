@@ -24,3 +24,21 @@ export const splitCommaSeparatedArgs = (input: string) => {
 
   return result;
 };
+
+export const replaceInObject = (
+  obj: any,
+  replacements: [toReplace: string, replaceValue: string][],
+) => {
+  if (typeof obj === "object") {
+    for (const keys in obj) {
+      if (typeof obj[keys] === "object") {
+        replaceInObject(obj[keys], replacements);
+      } else if (typeof obj[keys] === "string") {
+        replacements.forEach((r) => {
+          obj[keys] = obj[keys].replace(r[0], r[1]);
+        });
+      }
+    }
+  }
+  return obj;
+};

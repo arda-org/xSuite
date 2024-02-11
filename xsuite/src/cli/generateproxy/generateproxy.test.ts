@@ -4,6 +4,7 @@ import path from "node:path";
 import { test, beforeEach, afterEach, expect } from "vitest";
 import { SContract, SWallet, SWorld } from "../../world";
 import { getCommand } from "../cmd";
+import { replaceInObject } from "./utils";
 
 const abiDirSupported = path.resolve(__dirname, "abis/supported");
 const abiDirUnsupported = path.resolve(__dirname, "abis/unsupported");
@@ -47,6 +48,17 @@ test("generateproxy throws, when two multivalues are given", async () => {
     ),
   ).rejects.toThrow(
     "The endpoint createNft contains multiple multi_args, which is currently not supported by the xsuite framework.",
+  );
+});
+
+test("generateproxy throws, when a complex enum type is provided", async () => {
+  const targetFilePath = `${tmpDir}/datatypes.ts`;
+  await expect(() =>
+    run(
+      `generateproxy --from-abi ${abiDirUnsupported}/complex_enum.abi.json --output=${targetFilePath}`,
+    ),
+  ).rejects.toThrow(
+    "Complex enums are currently not supported by the xsuite framework.",
   );
 });
 
@@ -252,6 +264,38 @@ test("generateproxy processes IgnoreValue properly", async () => {
   await queryAndVerify(builder, [1, ["ignored", 12]], undefined);
 });
 
+test("generateproxy processes SingleValueMapper properly", async () => {
+  const targetFilePath = `${tmpDir}/datatypes.ts`;
+  await run(
+    `generateproxy --from-abi ${dataTypesAbiPath} --output=${targetFilePath}`,
+  );
+
+  const generatedCode = await import(targetFilePath);
+  const builder = generatedCode.getSingleValueMapperBuilder();
+  await queryAndVerify(builder, [0], 1n);
+  await queryAndVerify(builder, [1], 2n);
+  await queryAndVerify(builder, [2], 0n);
+});
+
+test("generateproxy processes SingleValueMapper with Complex Type properly", async () => {
+  const targetFilePath = `${tmpDir}/datatypes.ts`;
+  await run(
+    `generateproxy --from-abi ${dataTypesAbiPath} --output=${targetFilePath}`,
+  );
+
+  const generatedCode = await import(targetFilePath);
+  const builder = generatedCode.getSingleValueMapperComplexBuilder();
+  await queryAndVerify(builder, [0], {
+    address: "%contract%",
+    big_unsigned_integer: 12n,
+  });
+  await expect(
+    async () => await queryAndVerify(builder, [1], null),
+  ).rejects.toThrow(
+    /(Query failed: 4 - storage decode error: input too short - Result:)/,
+  );
+});
+
 test("generateproxy processes VecMapper properly", async () => {
   const targetFilePath = `${tmpDir}/datatypes.ts`;
   await run(
@@ -366,7 +410,11 @@ const queryAndVerify = async (
     });
 
     const decodedData = builder.decodeOutput(response.returnData);
-    expect(decodedData).toStrictEqual(expectedOutput);
+    const expected = replaceInObject(expectedOutput, [
+      ["%owner%", owner.toString()],
+      ["%contract%", deployedContract.contract.toString()],
+    ]);
+    expect(decodedData).toStrictEqual(expected);
   } finally {
     await world.terminate();
   }
