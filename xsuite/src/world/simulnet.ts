@@ -1,7 +1,15 @@
 import { spawn } from "node:child_process";
-import { getSproxyBinPath } from "@xsuite/simulnet";
 
 export const startSimulnet = (): Promise<string> => {
+  let getSproxyBinPath: () => string;
+  try {
+    getSproxyBinPath = require("@xsuite/simulnet").getSproxyBinPath;
+  } catch (e) {
+    throw new Error(
+      'Trying to use @xsuite/simulnet without the required package installed. Run `npm install @xsuite/simulnet` to fix this'
+    );
+  }
+
   return new Promise((resolve, reject) => {
     const server = spawn(getSproxyBinPath());
 

@@ -396,7 +396,7 @@ const unrawRes = (res: any) => {
   }
 };
 
-const unrawTxRes = (r: any) => {
+export const unrawTxRes = (r: any) => {
   return unrawRes(r).transaction as Record<string, any>;
 };
 
@@ -452,7 +452,7 @@ export const codeMetadataToHex = (codeMetadata: CodeMetadata): string => {
 const zeroBechAddress =
   "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
 
-type BroadTx = Tx | RawTx;
+export type BroadTx = Tx | RawTx;
 
 type RawTx = {
   nonce: number;

@@ -1,0 +1,20 @@
+{
+  "name": "@xsuite/chain-simulator",
+  "version": "0.0.1",
+  "license": "MIT",
+  "scripts": {
+    "build": "run-script-os",
+    "build:linux": "PLATFORM=linux ./build-chain-simulator.sh",
+    "build:darwin": "PLATFORM=darwin ./build-chain-simulator.sh",
+    "postinstall": "chmod -f +x ./bin/chain-simulator-* || true"
+  },
+  "files": [
+    "bin",
+    "config",
+    "index.js",
+    "index.d.ts"
+  ],
+  "devDependencies": {
+    "run-script-os": "1.1.6"
+  }
+}
