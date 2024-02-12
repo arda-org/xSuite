@@ -4,6 +4,7 @@ import { BytesDecoder } from "./BytesDecoder";
 import { Decoder, isDecoder } from "./Decoder";
 import { IntDecoder } from "./IntDecoder";
 import { ListDecoder } from "./ListDecoder";
+import { ListNDecoder } from "./ListNDecoder";
 import { OptionDecoder } from "./OptionDecoder";
 import { TupleDecoderList, TupleDecoderMap } from "./TupleDecoder";
 import { UintDecoder } from "./UintDecoder";
@@ -85,6 +86,9 @@ export const d = {
     return d.TopBuffer().then((b) => d.I().fromTop(b));
   },
   Tuple,
+  ListN: <T>(length: number, decoder: Decoder<T>) => {
+    return new ListNDecoder(length, decoder);
+  },
   List: <T>(decoder: Decoder<T>) => {
     return new ListDecoder(decoder);
   },

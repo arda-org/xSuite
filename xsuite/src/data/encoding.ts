@@ -97,6 +97,9 @@ export const e = {
   Tuple: (...values: Encodable[]) => {
     return new TupleEncodable(values);
   },
+  ListN: (...values: Encodable[]) => {
+    return new TupleEncodable(values);
+  },
   List: (...values: Encodable[]) => {
     return new ListEncodable(values);
   },

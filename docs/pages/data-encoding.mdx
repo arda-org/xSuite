@@ -72,6 +72,14 @@ pub struct Data<M: ManagedTypeApi> {
 }
 ```
 
+### e.ListN
+
+- This functionality operates similarly to `e.Tuple` but introduces a specialized `d.ListN(listLength, T)` feature designed for decoding fixed arrays. It enables us to expressively write `d.ListN(5, d.U8())` as a concise alternative to the more verbose `d.Tuple(d.U8(), d.U8(), d.U8(), d.U8(), d.U8())` when performing decoding operations.
+
+```rust
+pub fixed_array: [u8; 5],
+```
+
 ### e.List
 
 - Encodes an array of values for use with vector data types such as `ManagedVec`, `MultiValueManagedVec` or `MultiValueEncoded`. Uses nest encoding for the underlying data. Adds the length of the array at the beginning when it is itself nest encoded i.e. as part of a `Tuple`.
@@ -97,22 +105,11 @@ await deployer.callContract({
     e.Buffer("0101"),
     deployer,
     e.Option(null),
-    e.Tuple(
-      e.U32(2),
-      e.List(e.U64(1), e.U64(2)),
-    ),
+    e.Tuple(e.U32(2), e.List(e.U64(1), e.U64(2))),
     e.List(
-      e.Tuple(
-        e.Str("TOKEN-123456"),
-        e.U32(BigInt(1)),
-        e.U(BigInt(3)),
-      ),
-      e.Tuple(
-        e.Str("TOKEN2-123456"),
-        e.U32(BigInt(2)),
-        e.U(BigInt(4)),
-      ),
-    )
+      e.Tuple(e.Str("TOKEN-123456"), e.U32(BigInt(1)), e.U(BigInt(3))),
+      e.Tuple(e.Str("TOKEN2-123456"), e.U32(BigInt(2)), e.U(BigInt(4))),
+    ),
   ],
 });
 ```
@@ -163,18 +160,12 @@ assertAccount(account, {
 
     e.kvs.Mapper("tokens").UnorderedSet([e.Str("TOKEN-123456")]),
 
-    e.kvs.Mapper("positions", e.Addr(address), e.Str("TOKEN-123456")).Vec([
-      e.Tuple(
-        e.Str("NAME1"),
-        e.U32(BigInt(1)),
-        e.U(BigInt(3)),
-      ),
-      e.Tuple(
-        e.Str("NAME2"),
-        e.U32(BigInt(2)),
-        e.U(BigInt(4)),
-      ),
-    ]),
+    e.kvs
+      .Mapper("positions", e.Addr(address), e.Str("TOKEN-123456"))
+      .Vec([
+        e.Tuple(e.Str("NAME1"), e.U32(BigInt(1)), e.U(BigInt(3))),
+        e.Tuple(e.Str("NAME2"), e.U32(BigInt(2)), e.U(BigInt(4))),
+      ]),
   ],
 });
 ```
@@ -213,8 +204,19 @@ assertAccount(account, {
     e.kvs.Esdts([
       { id: "TOKEN-123456", amount: 2_000 },
       { id: "NFT-123456", nonce: 1, name: "Nft Name", uris: ["url"] },
-      { id: "SFT-123456", nonce: 1, amount: 3_000, name: "Sft Name", uris: ["url"] },
-      { id: "META-123456", nonce: 1, amount: 3_000, attrs: e.Tuple(e.Str("test")) },
+      {
+        id: "SFT-123456",
+        nonce: 1,
+        amount: 3_000,
+        name: "Sft Name",
+        uris: ["url"],
+      },
+      {
+        id: "META-123456",
+        nonce: 1,
+        amount: 3_000,
+        attrs: e.Tuple(e.Str("test")),
+      },
     ]),
   ],
 });
