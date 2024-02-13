@@ -8,10 +8,10 @@ export const startChainSimulator = (
 ): Promise<string> => {
   let chainSimulator: any;
   try {
-    chainSimulator = require('@xsuite/chain-simulator');
+    chainSimulator = require('@xsuite/chainsimulator');
   } catch (e) {
     throw new Error(
-      'Trying to use @xsuite/chain-simulator without the required package installed. Run `npm install @xsuite/chain-simulator` to fix this',
+      'Trying to use @xsuite/chainsimulator without the required package installed. Run `npm install @xsuite/chainsimulator` to fix this',
     );
   }
 

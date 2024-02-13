@@ -132,6 +132,9 @@ importers:
       '@multiversx/sdk-wallet':
         specifier: 4.2.0
         version: 4.2.0
+      '@xsuite/simulnet':
+        specifier: workspace:*
+        version: link:../xsuite-simulnet
       bech32:
         specifier: 2.0.0
         version: 2.0.0
@@ -151,12 +154,9 @@ importers:
         specifier: 6.2.0
         version: 6.2.0
     optionalDependencies:
-      '@xsuite/chain-simulator':
+      '@xsuite/chainsimulator':
         specifier: workspace:*
-        version: link:../xsuite-chain-simulator
-      '@xsuite/simulnet':
-        specifier: workspace:*
-        version: link:../xsuite-simulnet
+        version: link:../xsuite-chainsimulator
     devDependencies:
       '@types/node':
         specifier: 20.11.16
@@ -183,23 +183,14 @@ importers:
         specifier: ^1.2.2
         version: 1.2.2(@types/node@20.11.16)
 
-  xsuite-chain-simulator:
-    devDependencies:
-      run-script-os:
-        specifier: 1.1.6
-        version: 1.1.6
-
   xsuite-chain-simulator-temp:
     devDependencies:
       '@multiversx/sdk-wallet':
         specifier: ^4.2.0
         version: 4.2.0
-      '@xsuite/chain-simulator':
+      '@xsuite/chainsimulator':
         specifier: workspace:*
-        version: link:../xsuite-chain-simulator
-      '@xsuite/simulnet':
-        specifier: workspace:*
-        version: link:../xsuite-simulnet
+        version: link:../xsuite-chainsimulator
       tsx:
         specifier: ^4.7.0
         version: 4.7.0
@@ -212,6 +203,12 @@ importers:
       xsuite:
         specifier: workspace:*
         version: link:../xsuite
+
+  xsuite-chainsimulator:
+    devDependencies:
+      run-script-os:
+        specifier: 1.1.6
+        version: 1.1.6
 
   xsuite-simulnet:
     devDependencies:
