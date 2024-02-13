@@ -15,13 +15,23 @@ export class CSProxy extends Proxy {
   }
 
   static async setAccount(baseUrl: string, account: Account, autoGenerateBlocks: boolean = true, verbose: boolean = false) {
+    const [previousAccount, kvs] = await Promise.all([
+      CSProxy.getAccount(baseUrl, account.address),
+      CSProxy.getAccountKvs(baseUrl, account.address),
+    ]);
+    const newAccount = {
+      ...previousAccount,
+      keys: kvs,
+      ...accountToRawAccount(account),
+    };
+
     if (verbose) {
-      console.log('Setting account', [accountToRawAccount(account)]);
+      console.log('Setting account', newAccount);
     }
 
     const result = Proxy.fetch(
       `${baseUrl}/simulator/set-state`,
-      [accountToRawAccount(account)],
+      [newAccount],
     );
 
     if (autoGenerateBlocks) {
@@ -108,7 +118,7 @@ export class CSProxy extends Proxy {
 }
 
 const accountToRawAccount = (account: Account) => {
-  return {
+  const rawAccount = {
     address: addressToBech32(account.address),
     nonce: account.nonce,
     balance: account.balance?.toString() || '0',
@@ -121,4 +131,8 @@ const accountToRawAccount = (account: Account) => {
     ownerAddress: account.owner != null ? addressToBech32(account.owner) : undefined,
     developerReward: '0',
   };
+
+  Object.keys(rawAccount).forEach(key => rawAccount[key] === undefined ? delete rawAccount[key] : {});
+
+  return rawAccount;
 };

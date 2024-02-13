@@ -1,22 +1,18 @@
 import { CSProxy } from '../proxy';
 import { Contract, expandCode, Wallet, WalletDeployContractParams, World, WorldNewOptions } from './world';
 import {
-  CreateContractParams,
   SContractSetAccountParams,
-  SWalletCreateContractParams,
   SWalletSetAccountParams,
-  SWorldCreateContractParams,
   SWorldCreateWalletParams,
   SWorldSetAccountParams,
 } from './sworld';
 import { startChainSimulator } from './chainSimulator';
 import { Keystore, KeystoreSigner, Signer } from './signer';
 import { Account } from '../proxy/sproxy';
-import { isContractAddress, numberToBytesAddress } from './utils';
+import { isContractAddress } from './utils';
 import walletJson from './wallet.json';
 
 let walletCounter = 0;
-let contractCounter = 0;
 
 export class CSWorld extends World {
   proxy: CSProxy;
@@ -119,10 +115,6 @@ export class CSWorld extends World {
     return setAccount(this.proxy, params);
   }
 
-  createContract(params?: SWorldCreateContractParams) {
-    return createContract(this.proxy, this.explorerUrl, params);
-  }
-
   generateBlocks(numBlocks: number = 1) {
     return this.proxy.generateBlocks(numBlocks);
   }
@@ -154,13 +146,6 @@ export class CSWallet extends Wallet {
 
   setAccount(params: SWalletSetAccountParams) {
     return setAccount(this.proxy, { ...params, address: this });
-  }
-
-  createContract(params?: SWalletCreateContractParams) {
-    return createContract(this.proxy, this.baseExplorerUrl, {
-      ...params,
-      owner: this,
-    });
   }
 
   deployContract(params: WalletDeployContractParams) {
@@ -205,19 +190,6 @@ const setAccount = (proxy: CSProxy, params: Account) => {
     params.code = expandCode(params.code);
   }
   return proxy.setAccount(params);
-};
-
-// TODO: Test that this works correctly
-const createContract = async (
-  proxy: CSProxy,
-  baseExplorerUrl?: string,
-  params: CreateContractParams = {},
-) => {
-  contractCounter += 1;
-  const address = numberToBytesAddress(contractCounter, true);
-  const contract = new CSContract({ address, proxy, baseExplorerUrl });
-  await contract.setAccount(params);
-  return contract;
 };
 
 type CSWorldNewOptions =

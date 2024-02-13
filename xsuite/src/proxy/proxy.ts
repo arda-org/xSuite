@@ -8,6 +8,7 @@ import {
 import { Hex, broadHexToHex } from "../data/broadHex";
 import { RawKvs } from "../data/kvs";
 import { b64ToHex } from "../data/utils";
+import { Account } from './sproxy';
 
 export class Proxy {
   baseUrl: string;
