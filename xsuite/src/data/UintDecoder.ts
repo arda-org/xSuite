@@ -13,7 +13,7 @@ export class UintDecoder extends AbstractDecoder<bigint> {
   _fromTop(r: ByteReader) {
     const u8a =
       this.#byteLength === undefined
-        ? r.readAll()
+        ? r.readRemaining()
         : r.readAtMost(this.#byteLength);
     return decode(u8a);
   }

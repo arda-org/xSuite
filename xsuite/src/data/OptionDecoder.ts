@@ -10,7 +10,7 @@ export class OptionDecoder<T> extends AbstractDecoder<T | null> {
   }
 
   _fromTop(r: ByteReader) {
-    if (r.length() === 0) {
+    if (r.remaining() === 0) {
       return null;
     }
     if (r.readExact(1)[0] === 1) {

@@ -5,7 +5,7 @@ import { u8aToBase64, u8aToHex } from "./utils";
 
 export class BufferDecoder extends AbstractDecoder<Uint8Array> {
   _fromTop(r: ByteReader) {
-    return r.readAll();
+    return r.readRemaining();
   }
 
   _fromNest(r: ByteReader) {

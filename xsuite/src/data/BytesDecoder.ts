@@ -3,7 +3,7 @@ import { AbstractDecoder } from "./Decoder";
 
 export class BytesDecoder extends AbstractDecoder<Uint8Array> {
   _fromTop(r: ByteReader) {
-    return r.readAll();
+    return r.readRemaining();
   }
 
   _fromNest(r: ByteReader) {
