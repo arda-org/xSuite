@@ -9,32 +9,16 @@ import { OptionEncodable } from "./OptionEncodable";
 import { TupleEncodable } from "./TupleEncodable";
 import { UintEncodable } from "./UintEncodable";
 import { Address, addressToAddressEncodable } from "./address";
-import { Hex, broadHexToBytes } from "./broadHex";
+import { Bytes, bytesToU8A } from "./bytes";
+import { BytesLike, bytesLikeToU8A } from "./bytesLike";
 import { Kv } from "./kvs";
-import { narrowBytes } from "./utils";
 
-function Buffer(
-  bytes: string | number[] | Uint8Array,
-  encoding?: "hex",
-): BufferEncodable;
-function Buffer(bytes: string, encoding: "b64"): BufferEncodable;
-function Buffer(
-  bytes: string | number[] | Uint8Array,
-  encoding?: "hex" | "b64",
-): BufferEncodable {
-  return new BufferEncodable(narrowBytes(bytes, encoding));
+function Buffer(bytes: Bytes): BufferEncodable {
+  return new BufferEncodable(bytesToU8A(bytes));
 }
 
-function TopBuffer(
-  bytes: string | number[] | Uint8Array,
-  encoding?: "hex",
-): BytesEncodable;
-function TopBuffer(bytes: string, encoding: "b64"): BytesEncodable;
-function TopBuffer(
-  bytes: string | number[] | Uint8Array,
-  encoding?: "hex" | "b64",
-): BytesEncodable {
-  return new BytesEncodable(narrowBytes(bytes, encoding));
+function TopBuffer(bytes: Bytes): BytesEncodable {
+  return new BytesEncodable(bytesToU8A(bytes));
 }
 
 export const e = {
@@ -44,7 +28,7 @@ export const e = {
     return e.Buffer(new TextEncoder().encode(string));
   },
   TopStr: (string: string) => {
-    return new BytesEncodable(e.Str(string).toTopBytes());
+    return new BytesEncodable(e.Str(string).toTopU8A());
   },
   Addr: (address: string | Uint8Array) => {
     return new AddressEncodable(address);
@@ -71,7 +55,7 @@ export const e = {
     return new UintEncodable(uint);
   },
   TopU: (uint: number | bigint) => {
-    return e.TopBuffer(e.U(uint).toTopBytes());
+    return e.TopBuffer(e.U(uint).toTopU8A());
   },
   I8: (int: number | bigint) => {
     return new IntEncodable(int, 1);
@@ -92,7 +76,7 @@ export const e = {
     return new IntEncodable(int);
   },
   TopI: (int: number | bigint) => {
-    return e.TopBuffer(e.I(int).toTopBytes());
+    return e.TopBuffer(e.I(int).toTopU8A());
   },
   Tuple: (...values: Encodable[]) => {
     return new TupleEncodable(values);
@@ -106,13 +90,13 @@ export const e = {
   /**
    * @deprecated Use `.TopBuffer` instead.
    */
-  Bytes: (bytes: string | number[] | Uint8Array) => {
+  Bytes: (bytes: Bytes) => {
     return e.TopBuffer(bytes);
   },
   /**
    * @deprecated Use `.TopBuffer` instead.
    */
-  CstBuffer: (bytes: string | number[] | Uint8Array) => {
+  CstBuffer: (bytes: Bytes) => {
     return e.TopBuffer(bytes);
   },
   /**
@@ -291,25 +275,22 @@ const getEsdtKvs = ({
     }
     const metadata: [string, any][] = [];
     if (name !== undefined) {
-      metadata.push(["Name", e.Str(name).toTopBytes()]);
+      metadata.push(["Name", e.Str(name).toTopU8A()]);
     }
     if (creator !== undefined) {
-      metadata.push([
-        "Creator",
-        addressToAddressEncodable(creator).toTopBytes(),
-      ]);
+      metadata.push(["Creator", addressToAddressEncodable(creator).toTopU8A()]);
     }
     if (royalties !== undefined) {
       metadata.push(["Royalties", royalties.toString()]);
     }
     if (hash !== undefined) {
-      metadata.push(["Hash", broadHexToBytes(hash)]);
+      metadata.push(["Hash", bytesLikeToU8A(hash)]);
     }
     if (uris !== undefined) {
       metadata.push(["URIs", uris]);
     }
     if (attrs !== undefined) {
-      metadata.push(["Attributes", broadHexToBytes(attrs)]);
+      metadata.push(["Attributes", bytesLikeToU8A(attrs)]);
     }
     if (metadata.length > 0 && nonce) {
       metadata.push(["Nonce", nonce.toString()]);
@@ -322,7 +303,7 @@ const getEsdtKvs = ({
     }
     if (metadata.length > 0 || amount) {
       amount ??= 0;
-      const bytes = amount > 0 ? e.U(amount).toTopBytes() : [0];
+      const bytes = amount > 0 ? e.U(amount).toTopU8A() : [0];
       message["Value"] = new Uint8Array([0, ...bytes]);
     }
     if (metadata.length > 0) {
@@ -371,9 +352,9 @@ type Esdt = {
   name?: string;
   creator?: Address;
   royalties?: number;
-  hash?: Hex;
+  hash?: BytesLike;
   uris?: string[];
-  attrs?: Hex;
+  attrs?: BytesLike;
 };
 
 type Role =

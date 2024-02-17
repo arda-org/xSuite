@@ -1,9 +1,11 @@
+import { Bytes, bytesToU8A } from "./bytes";
+
 export class ByteReader {
-  bytes: Uint8Array;
+  u8a: Uint8Array;
   offset: number;
 
-  constructor(bytes: Uint8Array) {
-    this.bytes = bytes;
+  constructor(bytes: Bytes) {
+    this.u8a = bytesToU8A(bytes);
     this.offset = 0;
   }
 
@@ -13,7 +15,7 @@ export class ByteReader {
   }
 
   readAtMost(size: number): Uint8Array {
-    const result = this.bytes.slice(this.offset, this.offset + size);
+    const result = this.u8a.slice(this.offset, this.offset + size);
     this.offset += result.byteLength;
     return result;
   }
@@ -23,10 +25,10 @@ export class ByteReader {
   }
 
   length() {
-    return this.bytes.byteLength - this.offset;
+    return this.u8a.byteLength - this.offset;
   }
 
   isConsumed(): boolean {
-    return this.offset == this.bytes.byteLength;
+    return this.offset == this.u8a.byteLength;
   }
 }

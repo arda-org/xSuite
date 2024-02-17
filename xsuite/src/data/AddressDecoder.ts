@@ -1,16 +1,15 @@
 import {
   addressByteLength,
-  bechAddressToBytes,
-  bytesToBechAddress,
+  bechAddressToU8AAddress,
+  u8aAddressToBechAddress,
 } from "./AddressEncodable";
 import { ByteReader } from "./ByteReader";
 import { AbstractDecoder } from "./Decoder";
-import { bytesToHex } from "./utils";
+import { u8aToHex } from "./utils";
 
 export class AddressDecoder extends AbstractDecoder<string> {
   _fromTop(r: ByteReader) {
-    const bytes = r.readExact(addressByteLength);
-    return bytesToBechAddress(bytes);
+    return u8aAddressToBechAddress(r.readExact(addressByteLength));
   }
 
   _fromNest(r: ByteReader) {
@@ -18,6 +17,6 @@ export class AddressDecoder extends AbstractDecoder<string> {
   }
 
   toHex() {
-    return this.then((a) => bytesToHex(bechAddressToBytes(a)));
+    return this.then((a) => u8aToHex(bechAddressToU8AAddress(a)));
   }
 }

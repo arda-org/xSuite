@@ -1,6 +1,6 @@
 import { AddressEncodable } from "../data/AddressEncodable";
 import { Address } from "../data/address";
-import { b64ToHex } from "../data/utils";
+import { base64ToHex } from "../data/utils";
 import { Optional, Prettify } from "../helpers";
 import {
   devnetMinGasPrice,
@@ -204,7 +204,7 @@ export class Wallet extends Signer {
     gasPrice: number;
     baseExplorerUrl?: string;
   }) {
-    super(signer.toTopBytes());
+    super(signer.toTopU8A());
     this.signer = signer;
     this.proxy = proxy;
     this.chainId = chainId;
@@ -462,7 +462,7 @@ const query = (proxy: Proxy, params: QueryParams) =>
     }
     return {
       query: resQuery,
-      returnData: resQuery.returnData.map(b64ToHex),
+      returnData: resQuery.returnData.map(base64ToHex),
     };
   });
 

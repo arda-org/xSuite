@@ -17,7 +17,7 @@ import {
   Heading,
 } from "@chakra-ui/react";
 import React, { useEffect, useMemo, useState } from "react";
-import { e, d } from "xsuite/data";
+import { e, d, B64 } from "xsuite/data";
 
 export default function Convert() {
   const [converterStates, setConverterStates] = useState<ConverterState[]>([]);
@@ -268,7 +268,7 @@ const convert = (
   if (inputType === "hex") {
     hex = inputValue;
   } else if (inputType === "base64") {
-    hex = e.Buffer(inputValue, "b64").toTopHex();
+    hex = e.Buffer(B64(inputValue)).toTopHex();
   } else if (inputType === "bytes") {
     hex = e.Buffer(JSON.parse(inputValue)).toTopHex();
   } else if (inputType === "biguint") {

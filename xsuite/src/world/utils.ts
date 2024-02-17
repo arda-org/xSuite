@@ -11,7 +11,7 @@ export const isContractAddress = (address: Address) => {
     .startsWith("0000000000000000");
 };
 
-export const numberToBytesAddress = (
+export const numberToU8AAddress = (
   n: number,
   isContract: boolean,
 ): Uint8Array => {

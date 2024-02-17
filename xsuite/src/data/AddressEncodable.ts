@@ -1,40 +1,40 @@
 import { bech32 } from "bech32";
 import { Encodable } from "./Encodable";
-import { hexToBytes } from "./utils";
+import { hexToU8A } from "./utils";
 
 export class AddressEncodable extends Encodable {
-  #bytes: Uint8Array;
+  #u8a: Uint8Array;
 
   constructor(address: string | Uint8Array) {
     super();
     if (typeof address === "string") {
-      address = strAddressToBytes(address);
+      address = strAddressToU8AAddress(address);
     }
     if (address.byteLength !== addressByteLength) {
       throw new Error("Invalid address length.");
     }
-    this.#bytes = address;
+    this.#u8a = address;
   }
 
-  toTopBytes(): Uint8Array {
-    return this.#bytes;
+  toTopU8A(): Uint8Array {
+    return this.#u8a;
   }
 
-  toNestBytes(): Uint8Array {
-    return this.toTopBytes();
+  toNestU8A(): Uint8Array {
+    return this.toTopU8A();
   }
 
   toString(): string {
-    return bytesToBechAddress(this.#bytes);
+    return u8aAddressToBechAddress(this.#u8a);
   }
 }
 
-export const bytesToBechAddress = (bytes: Uint8Array): string => {
-  const words = bech32.toWords(bytes);
+export const u8aAddressToBechAddress = (u8a: Uint8Array): string => {
+  const words = bech32.toWords(u8a);
   return bech32.encode(HRP, words);
 };
 
-export const bechAddressToBytes = (bechAddress: string): Uint8Array => {
+export const bechAddressToU8AAddress = (bechAddress: string): Uint8Array => {
   const { prefix, words } = bech32.decode(bechAddress);
   if (prefix !== HRP) {
     throw new Error("Invalid address HRP.");
@@ -42,11 +42,11 @@ export const bechAddressToBytes = (bechAddress: string): Uint8Array => {
   return Uint8Array.from(bech32.fromWords(words));
 };
 
-const strAddressToBytes = (strAddress: string): Uint8Array => {
+const strAddressToU8AAddress = (strAddress: string): Uint8Array => {
   if (strAddress.length === 2 * addressByteLength) {
-    return hexToBytes(strAddress);
+    return hexToU8A(strAddress);
   }
-  return bechAddressToBytes(strAddress);
+  return bechAddressToU8AAddress(strAddress);
 };
 
 export const addressByteLength = 32;

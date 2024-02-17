@@ -1,10 +1,10 @@
-import { Hex, broadHexToHex } from "./broadHex";
+import { BytesLike, bytesLikeToHex } from "./bytesLike";
 
 export type RawKvs = Record<string, string>;
 
 export type Kvs = (Kv | Kv[])[] | RawKvs;
 
-export type Kv = [key: Hex, value: Hex];
+export type Kv = [key: BytesLike, value: BytesLike];
 
 export const kvsToRawKvs = (kvs: Kvs): RawKvs => {
   if (!Array.isArray(kvs)) {
@@ -12,7 +12,7 @@ export const kvsToRawKvs = (kvs: Kvs): RawKvs => {
   }
   const rawKvs: RawKvs = {};
   for (const [k, v] of flattenKvs(kvs)) {
-    rawKvs[broadHexToHex(k)] = broadHexToHex(v);
+    rawKvs[bytesLikeToHex(k)] = bytesLikeToHex(v);
   }
   return rawKvs;
 };

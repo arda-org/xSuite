@@ -1,13 +1,12 @@
 import { e } from "../data";
-import { Encodable } from "../data/Encodable";
 import {
   Address,
   addressToAddressEncodable,
   addressToBech32,
 } from "../data/address";
-import { Hex, broadHexToHex } from "../data/broadHex";
+import { BytesLike, bytesLikeToHex, isBytesLike } from "../data/bytesLike";
 import { RawKvs } from "../data/kvs";
-import { b64ToHex } from "../data/utils";
+import { base64ToHex } from "../data/utils";
 
 export class Proxy {
   baseUrl: string;
@@ -149,7 +148,7 @@ export class Proxy {
       balance: BigInt(res.account.balance),
       code: res.account.code ? res.account.code : null,
       codeMetadata: res.account.codeMetadata
-        ? b64ToHex(res.account.codeMetadata)
+        ? base64ToHex(res.account.codeMetadata)
         : null,
       owner: res.account.ownerAddress ? res.account.ownerAddress : null,
     } as {
@@ -276,7 +275,7 @@ export class Tx {
         code,
         "0500",
         codeMetadataToHex(codeMetadata),
-        ...(codeArgs ?? []).map(broadHexToHex),
+        ...(codeArgs ?? []).map(bytesLikeToHex),
       ].join("@"),
       ...txParams,
     };
@@ -299,7 +298,7 @@ export class Tx {
         "upgradeContract",
         code,
         codeMetadataToHex(codeMetadata),
-        ...(codeArgs ?? []).map(broadHexToHex),
+        ...(codeArgs ?? []).map(bytesLikeToHex),
       ].join("@"),
       ...txParams,
     };
@@ -364,7 +363,7 @@ export class Tx {
       receiver = callee;
       dataParts.push(funcName);
     }
-    dataParts.push(...(funcArgs ?? []).map(broadHexToHex));
+    dataParts.push(...(funcArgs ?? []).map(bytesLikeToHex));
     return {
       receiver,
       sender,
@@ -412,7 +411,7 @@ const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
     query = {
       scAddress: addressToBech32(query.callee),
       funcName: query.funcName,
-      args: (query.funcArgs ?? []).map(broadHexToHex),
+      args: (query.funcArgs ?? []).map(bytesLikeToHex),
       caller:
         query.sender !== undefined ? addressToBech32(query.sender) : undefined,
       value: query.value !== undefined ? query.value.toString() : undefined,
@@ -422,31 +421,28 @@ const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
 };
 
 export const codeMetadataToHex = (codeMetadata: CodeMetadata): string => {
-  if (typeof codeMetadata === "string") {
-    return codeMetadata;
+  if (isBytesLike(codeMetadata)) {
+    return bytesLikeToHex(codeMetadata);
   }
-  if (Array.isArray(codeMetadata)) {
-    const bytes: number[] = [];
-    let byteZero = 0;
-    if (codeMetadata.includes("upgradeable")) {
-      byteZero |= 1;
-    }
-    if (codeMetadata.includes("readable")) {
-      byteZero |= 4;
-    }
-    let byteOne = 0;
-    if (codeMetadata.includes("payable")) {
-      byteOne |= 2;
-    }
-    if (codeMetadata.includes("payableBySc")) {
-      byteOne |= 4;
-    }
-    if (byteZero > 0 || byteOne > 0) {
-      bytes.push(byteZero, byteOne);
-    }
-    codeMetadata = e.Buffer(bytes);
+  const bytes: number[] = [];
+  let byteZero = 0;
+  if (codeMetadata.includes("upgradeable")) {
+    byteZero |= 1;
   }
-  return codeMetadata.toTopHex();
+  if (codeMetadata.includes("readable")) {
+    byteZero |= 4;
+  }
+  let byteOne = 0;
+  if (codeMetadata.includes("payable")) {
+    byteOne |= 2;
+  }
+  if (codeMetadata.includes("payableBySc")) {
+    byteOne |= 4;
+  }
+  if (byteZero > 0 || byteOne > 0) {
+    bytes.push(byteZero, byteOne);
+  }
+  return e.Buffer(new Uint8Array(bytes)).toTopHex();
 };
 
 const zeroBechAddress =
@@ -472,7 +468,7 @@ type BroadQuery = Query | RawQuery;
 export type Query = {
   callee: Address;
   funcName: string;
-  funcArgs?: Hex[];
+  funcArgs?: BytesLike[];
   sender?: Address;
   value?: number | bigint;
 };
@@ -505,12 +501,12 @@ export type DeployContractTxParams = {
   gasLimit: number;
   code: string;
   codeMetadata: CodeMetadata;
-  codeArgs?: Hex[];
+  codeArgs?: BytesLike[];
   chainId: string;
   version?: number;
 };
 
-export type CodeMetadata = string | Encodable | CodeProperty[];
+export type CodeMetadata = BytesLike | CodeProperty[];
 
 type CodeProperty = "upgradeable" | "readable" | "payable" | "payableBySc";
 
@@ -523,7 +519,7 @@ export type UpgradeContractTxParams = {
   gasLimit: number;
   code: string;
   codeMetadata: CodeMetadata;
-  codeArgs?: Hex[];
+  codeArgs?: BytesLike[];
   chainId: string;
   version?: number;
 };
@@ -548,7 +544,7 @@ export type CallContractTxParams = {
   gasPrice: number;
   gasLimit: number;
   funcName: string;
-  funcArgs?: Hex[];
+  funcArgs?: BytesLike[];
   esdts?: { id: string; nonce?: number; amount: number | bigint }[];
   chainId: string;
   version?: number;
