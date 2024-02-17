@@ -26,15 +26,15 @@ export class IntEncodable extends Encodable {
     this.#byteLength = byteLength;
   }
 
-  toTopBytes(): Uint8Array {
+  toTopU8A(): Uint8Array {
     const numBytes = getUnambiguousNumBytes(this.#int);
     return complementOfTwo(this.#int, numBytes);
   }
 
-  toNestBytes(): Uint8Array {
+  toNestU8A(): Uint8Array {
     if (this.#byteLength === undefined) {
-      const tB = this.toTopBytes();
-      const lenB = new U32Encodable(tB.byteLength).toNestBytes();
+      const tB = this.toTopU8A();
+      const lenB = new U32Encodable(tB.byteLength).toNestU8A();
       return Uint8Array.from([...lenB, ...tB]);
     } else {
       return complementOfTwo(this.#int, this.#byteLength);
@@ -47,7 +47,7 @@ const complementOfTwo = (n: bigint, numBytes: number) => {
   if (u < 0) {
     u += 2n ** (8n * BigInt(numBytes));
   }
-  return new UintEncodable(u, numBytes).toNestBytes();
+  return new UintEncodable(u, numBytes).toNestU8A();
 };
 
 const getUnambiguousNumBytes = (n: bigint): number => {

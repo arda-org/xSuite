@@ -1,9 +1,13 @@
 import assert from "node:assert";
-import { Hex, broadHexToHex } from "../data/broadHex";
+import { BytesLike } from "../data";
+import { bytesLikeToHex } from "../data/bytesLike";
 
-export const assertHexList = (actualHexList: Hex[], expectedHexList: Hex[]) => {
+export const assertHexList = (
+  actualHexList: BytesLike[],
+  expectedHexList: BytesLike[],
+) => {
   assert.deepStrictEqual(
-    [...actualHexList.map(broadHexToHex)],
-    [...expectedHexList.map(broadHexToHex)],
+    [...actualHexList.map(bytesLikeToHex)],
+    [...expectedHexList.map(bytesLikeToHex)],
   );
 };

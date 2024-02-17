@@ -17,7 +17,7 @@ const zeroBechAddress =
   "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
 const zeroHexAddress =
   "0000000000000000000000000000000000000000000000000000000000000000";
-const zeroBytesAddress = new Uint8Array(32);
+const zeroU8AAddress = new Uint8Array(32);
 const emptyAccount = {
   nonce: 0,
   balance: 0,
@@ -58,8 +58,8 @@ test("SWorld.proxy.getAccountNonce on empty hex address", async () => {
   expect(await world.proxy.getAccountNonce(zeroHexAddress)).toEqual(0);
 });
 
-test("SWorld.proxy.getAccountNonce on empty bytes address", async () => {
-  expect(await world.proxy.getAccountNonce(zeroBytesAddress)).toEqual(0);
+test("SWorld.proxy.getAccountNonce on empty U8A address", async () => {
+  expect(await world.proxy.getAccountNonce(zeroU8AAddress)).toEqual(0);
 });
 
 test("SWorld.proxy.getAccountBalance on empty bech address", async () => {
@@ -70,8 +70,8 @@ test("SWorld.proxy.getAccountBalance on empty hex address", async () => {
   expect(await world.proxy.getAccountBalance(zeroHexAddress)).toEqual(0n);
 });
 
-test("SWorld.proxy.getAccountBalance on empty bytes address", async () => {
-  expect(await world.proxy.getAccountBalance(zeroBytesAddress)).toEqual(0n);
+test("SWorld.proxy.getAccountBalance on empty U8A address", async () => {
+  expect(await world.proxy.getAccountBalance(zeroU8AAddress)).toEqual(0n);
 });
 
 test("SWorld.proxy.getAccountWithKvs on empty bech address", async () => {
@@ -88,9 +88,9 @@ test("SWorld.proxy.getAccountWithKvs on empty hex address", async () => {
   );
 });
 
-test("SWorld.proxy.getAccountWithKvs on empty bytes address", async () => {
+test("SWorld.proxy.getAccountWithKvs on empty U8A address", async () => {
   assertAccount(
-    await world.proxy.getAccountWithKvs(zeroBytesAddress),
+    await world.proxy.getAccountWithKvs(zeroU8AAddress),
     emptyAccount,
   );
 });
@@ -114,13 +114,13 @@ test("SWorld.newMainnet", () => {
 });
 
 test("SWorld.newWallet", async () => {
-  const wallet = world.newWallet(new DummySigner(new Uint8Array(32)));
-  expect(wallet.toTopBytes()).toEqual(new Uint8Array(32));
+  const wallet = world.newWallet(new DummySigner(zeroU8AAddress));
+  expect(wallet.toTopU8A()).toEqual(zeroU8AAddress);
 });
 
 test("SWorld.newContract", async () => {
-  const wallet = world.newWallet(new DummySigner(new Uint8Array(32)));
-  expect(wallet.toTopBytes()).toEqual(new Uint8Array(32));
+  const wallet = world.newWallet(new DummySigner(zeroU8AAddress));
+  expect(wallet.toTopU8A()).toEqual(zeroU8AAddress);
 });
 
 test("SWorld.createWallet", async () => {

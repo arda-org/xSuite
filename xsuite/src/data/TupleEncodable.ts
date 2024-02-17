@@ -8,8 +8,8 @@ export class TupleEncodable extends Encodable {
     this.#encodables = encodables;
   }
 
-  toTopBytes(): Uint8Array {
-    const encodedItems = this.#encodables.map((e) => e.toNestBytes());
+  toTopU8A(): Uint8Array {
+    const encodedItems = this.#encodables.map((e) => e.toNestU8A());
     const flatNumberArray = encodedItems.reduce<number[]>((acc, curr) => {
       acc.push(...curr);
       return acc;
@@ -17,7 +17,7 @@ export class TupleEncodable extends Encodable {
     return Uint8Array.from(flatNumberArray);
   }
 
-  toNestBytes(): Uint8Array {
-    return this.toTopBytes();
+  toNestU8A(): Uint8Array {
+    return this.toTopU8A();
   }
 }

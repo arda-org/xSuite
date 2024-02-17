@@ -1,9 +1,9 @@
-export const bytesToHex = (bytes: Uint8Array) =>
-  Array.from(bytes)
+export const u8aToHex = (u8a: Uint8Array) =>
+  Array.from(u8a)
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
 
-export const hexToBytes = (hex: string) => {
+export const hexToU8A = (hex: string) => {
   if (hex.length % 2 !== 0) {
     throw new Error("Odd hex length.");
   }
@@ -14,18 +14,16 @@ export const hexToBytes = (hex: string) => {
   return Uint8Array.from(hs.map((h) => parseInt(h, 16)));
 };
 
-export const b64ToHex = (b64: string) => {
-  return Array.from(atob(b64), function (char) {
-    return char.charCodeAt(0).toString(16).padStart(2, "0");
-  }).join("");
+export const u8aToBase64 = (u8a: Uint8Array) => {
+  return btoa(Array.from(u8a, (b) => String.fromCharCode(b)).join(""));
 };
 
-export const bytesToB64 = (bytes: Uint8Array) => {
-  const binaryString = bytes.reduce(
-    (acc, byte) => acc + String.fromCharCode(byte),
-    "",
-  );
-  return btoa(binaryString);
+export const base64ToU8A = (base64: string) => {
+  return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+};
+
+export const base64ToHex = (base64: string) => {
+  return u8aToHex(base64ToU8A(base64));
 };
 
 export const safeBigintToNumber = (n: bigint) => {
@@ -37,16 +35,3 @@ export const safeBigintToNumber = (n: bigint) => {
   }
   return Number(n);
 };
-
-export function narrowBytes<T>(
-  bytes: string | T,
-  encoding: "hex" | "b64" | undefined,
-): string | T {
-  if (encoding === "b64") {
-    if (typeof bytes !== "string") {
-      throw new Error("bytes is not a base64 string.");
-    }
-    bytes = b64ToHex(bytes);
-  }
-  return bytes;
-}

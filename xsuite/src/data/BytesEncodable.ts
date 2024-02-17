@@ -1,24 +1,24 @@
 import { Encodable } from "./Encodable";
-import { hexToBytes } from "./utils";
+import { hexToU8A } from "./utils";
 
 export class BytesEncodable extends Encodable {
-  #bytes: Uint8Array;
+  #u8a: Uint8Array;
 
   constructor(bytes: string | number[] | Uint8Array) {
     super();
     if (typeof bytes === "string") {
-      bytes = hexToBytes(bytes);
+      bytes = hexToU8A(bytes);
     } else if (Array.isArray(bytes)) {
       bytes = new Uint8Array(bytes);
     }
-    this.#bytes = bytes;
+    this.#u8a = bytes;
   }
 
-  toTopBytes(): Uint8Array {
-    return this.#bytes;
+  toTopU8A(): Uint8Array {
+    return this.#u8a;
   }
 
-  toNestBytes(): Uint8Array {
-    return this.toTopBytes();
+  toNestU8A(): Uint8Array {
+    return this.toTopU8A();
   }
 }

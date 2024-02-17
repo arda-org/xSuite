@@ -1,27 +1,27 @@
 import { Encodable } from "./Encodable";
 import { U32Encodable } from "./UintEncodable";
-import { hexToBytes } from "./utils";
+import { hexToU8A } from "./utils";
 
 export class BufferEncodable extends Encodable {
-  #bytes: Uint8Array;
+  #u8a: Uint8Array;
 
   constructor(bytes: string | number[] | Uint8Array) {
     super();
     if (typeof bytes === "string") {
-      bytes = hexToBytes(bytes);
+      bytes = hexToU8A(bytes);
     } else if (Array.isArray(bytes)) {
       bytes = new Uint8Array(bytes);
     }
-    this.#bytes = bytes;
+    this.#u8a = bytes;
   }
 
-  toTopBytes(): Uint8Array {
-    return this.#bytes;
+  toTopU8A(): Uint8Array {
+    return this.#u8a;
   }
 
-  toNestBytes(): Uint8Array {
-    const tB = this.toTopBytes();
-    const lenB = new U32Encodable(tB.byteLength).toNestBytes();
+  toNestU8A(): Uint8Array {
+    const tB = this.toTopU8A();
+    const lenB = new U32Encodable(tB.byteLength).toNestU8A();
     return Uint8Array.from([...lenB, ...tB]);
   }
 }

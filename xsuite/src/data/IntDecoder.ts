@@ -12,11 +12,11 @@ export class IntDecoder extends AbstractDecoder<bigint> {
   }
 
   _fromTop(r: ByteReader): bigint {
-    const bytes =
+    const u8a =
       this.#byteLength === undefined
         ? r.readAll()
         : r.readAtMost(this.#byteLength);
-    return decode(bytes);
+    return decode(u8a);
   }
 
   _fromNest(r: ByteReader): bigint {
@@ -36,13 +36,13 @@ export class IntDecoder extends AbstractDecoder<bigint> {
   }
 }
 
-const decode = (bytes: Uint8Array): bigint => {
-  if (bytes.byteLength === 0) {
+const decode = (u8a: Uint8Array): bigint => {
+  if (u8a.byteLength === 0) {
     return 0n;
   }
-  let u = new UintDecoder().fromTop(bytes);
-  if (u >= 2n ** (8n * BigInt(bytes.byteLength)) / 2n) {
-    u -= 2n ** (8n * BigInt(bytes.byteLength));
+  let u = new UintDecoder().fromTop(u8a);
+  if (u >= 2n ** (8n * BigInt(u8a.byteLength)) / 2n) {
+    u -= 2n ** (8n * BigInt(u8a.byteLength));
   }
   return u;
 };

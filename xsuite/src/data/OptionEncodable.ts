@@ -8,19 +8,19 @@ export class OptionEncodable extends Encodable {
     this.#encodable = encodable;
   }
 
-  toTopBytes(): Uint8Array {
+  toTopU8A(): Uint8Array {
     if (this.#encodable === null) {
       return Uint8Array.from([]);
     } else {
-      return Uint8Array.from([1, ...this.#encodable.toNestBytes()]);
+      return Uint8Array.from([1, ...this.#encodable.toNestU8A()]);
     }
   }
 
-  toNestBytes(): Uint8Array {
+  toNestU8A(): Uint8Array {
     if (this.#encodable === null) {
       return Uint8Array.from([0]);
     } else {
-      return Uint8Array.from([1, ...this.#encodable.toNestBytes()]);
+      return Uint8Array.from([1, ...this.#encodable.toNestU8A()]);
     }
   }
 }

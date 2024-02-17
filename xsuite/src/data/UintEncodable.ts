@@ -19,7 +19,7 @@ export class UintEncodable extends Encodable {
     this.#byteLength = byteLength;
   }
 
-  toTopBytes(): Uint8Array {
+  toTopU8A(): Uint8Array {
     let u = this.#uint;
     const res: number[] = [];
     while (u > 0) {
@@ -29,10 +29,10 @@ export class UintEncodable extends Encodable {
     return Uint8Array.from(res);
   }
 
-  toNestBytes(): Uint8Array {
-    const tB = this.toTopBytes();
+  toNestU8A(): Uint8Array {
+    const tB = this.toTopU8A();
     if (this.#byteLength === undefined) {
-      const lenB = new U32Encodable(tB.byteLength).toNestBytes();
+      const lenB = new U32Encodable(tB.byteLength).toNestU8A();
       return Uint8Array.from([...lenB, ...tB]);
     } else {
       const nB = new Uint8Array(this.#byteLength);
