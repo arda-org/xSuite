@@ -96,25 +96,27 @@ pub trait Data {
     #[endpoint]
     fn esdt_nft_create(
         &self,
-        token_identifier: TokenIdentifier,
-        amount: BigUint,
-        name: ManagedBuffer,
-        royalties: BigUint,
-        hash: ManagedBuffer,
-        attributes: ManagedBuffer,
-        uris: ManagedVec<ManagedBuffer>,
-    ) -> u64 {
-        self.send().esdt_nft_create(&token_identifier, &amount, &name, &royalties, &hash, &attributes, &uris)
+        tokens: MultiValueEncoded<MultiValue7<TokenIdentifier, BigUint, ManagedBuffer, BigUint, ManagedBuffer, ManagedBuffer, ManagedVec<ManagedBuffer>>>,
+    ) -> MultiValueEncoded<u64> {
+        let mut nonces = MultiValueEncoded::new();
+        for token in tokens {
+            let t = token.into_tuple();
+            nonces.push(self.send().esdt_nft_create(&t.0, &t.1, &t.2, &t.3, &t.4, &t.5, &t.6));
+        }
+        nonces
     }
 
     #[endpoint]
     fn esdt_nft_create_compact(
         &self,
-        token_identifier: TokenIdentifier,
-        amount: BigUint,
-        attributes: ManagedBuffer,
-    ) -> u64 {
-        self.send().esdt_nft_create_compact(&token_identifier, &amount, &attributes)
+        tokens: MultiValueEncoded<MultiValue3<TokenIdentifier, BigUint, ManagedBuffer>>,
+    ) -> MultiValueEncoded<u64> {
+        let mut nonces = MultiValueEncoded::new();
+        for token in tokens {
+            let t = token.into_tuple();
+            nonces.push(self.send().esdt_nft_create_compact(&t.0, &t.1, &t.2));
+        }
+        nonces
     }
 
     #[endpoint]
