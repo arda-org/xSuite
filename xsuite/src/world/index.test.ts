@@ -258,20 +258,6 @@ test("SWorld.query - value", async () => {
   assertHexList(returnData, [e.U(10)]);
 });
 
-test("SWorld.query - try to change the state", async () => {
-  await world.query({
-    callee: contract,
-    funcName: "set_n",
-    funcArgs: [e.U64(100)],
-  });
-  assertAccount(await contract.getAccountWithKvs(), {
-    kvs: [
-      e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }]),
-      e.kvs.Mapper("n").Value(e.U64(2)),
-    ],
-  });
-});
-
 test("SWorld.executeTx", async () => {
   const { tx } = await world.executeTx({
     sender: wallet,
@@ -361,6 +347,33 @@ test("SWallet.query", async () => {
     funcName: "get_caller",
   });
   assertHexList(returnData, [wallet]);
+});
+
+test("SWallet.query - try to change the state", async () => {
+  assertAccount(await wallet.getAccountWithKvs(), {
+    balance: 10n ** 18n,
+  });
+  assertAccount(await contract.getAccountWithKvs(), {
+    balance: 10n ** 18n,
+    hasKvs: [e.kvs.Mapper("n").Value(e.U64(2))],
+  });
+  await wallet.query({
+    callee: contract,
+    funcName: "fund",
+    value: 10,
+  });
+  await world.query({
+    callee: contract,
+    funcName: "set_n",
+    funcArgs: [e.U64(100)],
+  });
+  assertAccount(await wallet.getAccountWithKvs(), {
+    balance: 10n ** 18n,
+  });
+  assertAccount(await contract.getAccountWithKvs(), {
+    balance: 10n ** 18n,
+    hasKvs: [e.kvs.Mapper("n").Value(e.U64(2))],
+  });
 });
 
 test.todo("SWallet.query - esdts", async () => {
