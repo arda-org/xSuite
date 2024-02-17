@@ -1,5 +1,5 @@
 import { describe, expect, test, beforeEach, afterEach } from "vitest";
-import { assertKvs } from "../assert/account";
+import { assertKvs } from "../assert/assert";
 import { SWorld, SContract, SWallet } from "../world";
 import { B64, d, e } from "./index";
 

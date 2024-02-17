@@ -1,5 +1,7 @@
 import assert from "node:assert";
+import { BytesLike } from "../data";
 import { addressToBech32 } from "../data/address";
+import { bytesLikeToHex } from "../data/bytesLike";
 import { Kvs, kvsToRawKvs } from "../data/kvs";
 import { Optional } from "../helpers";
 import { Proxy } from "../proxy";
@@ -7,36 +9,14 @@ import { codeMetadataToHex } from "../proxy/proxy";
 import { Account } from "../proxy/sproxy";
 import { expandCode } from "../world/world";
 
-export const assertKvs = (actualKvs: Kvs, expectedKvs: Kvs) => {
-  const rawActualKvs = { ...kvsToRawKvs(actualKvs) };
-  const rawExpectedKvs = { ...kvsToRawKvs(expectedKvs) };
-  for (const k of Object.keys(rawActualKvs)) {
-    if (!rawActualKvs[k]) {
-      delete rawActualKvs[k];
-    }
-  }
-  for (const k of Object.keys(rawExpectedKvs)) {
-    if (!(k in rawActualKvs)) {
-      rawActualKvs[k] = "";
-    }
-  }
-  assert.deepStrictEqual(rawActualKvs, rawExpectedKvs);
-};
-
-export const assertHasKvs = (actualKvs: Kvs, hasKvs: Kvs) => {
-  const rawActualKvs = { ...kvsToRawKvs(actualKvs) };
-  const rawHasKvs = { ...kvsToRawKvs(hasKvs) };
-  for (const k of Object.keys(rawActualKvs)) {
-    if (!rawActualKvs[k] || !(k in rawHasKvs)) {
-      delete rawActualKvs[k];
-    }
-  }
-  for (const k of Object.keys(rawHasKvs)) {
-    if (!(k in rawActualKvs)) {
-      rawActualKvs[k] = "";
-    }
-  }
-  assert.deepStrictEqual(rawActualKvs, rawHasKvs);
+export const assertHexList = (
+  actualHexList: BytesLike[],
+  expectedHexList: BytesLike[],
+) => {
+  assert.deepStrictEqual(
+    [...actualHexList.map(bytesLikeToHex)],
+    [...expectedHexList.map(bytesLikeToHex)],
+  );
 };
 
 export const assertAccount = (
@@ -91,14 +71,46 @@ export const assertAccount = (
   }
 };
 
+export const assertKvs = (actualKvs: Kvs, expectedKvs: Kvs) => {
+  const rawActualKvs = { ...kvsToRawKvs(actualKvs) };
+  const rawExpectedKvs = { ...kvsToRawKvs(expectedKvs) };
+  for (const k of Object.keys(rawActualKvs)) {
+    if (!rawActualKvs[k]) {
+      delete rawActualKvs[k];
+    }
+  }
+  for (const k of Object.keys(rawExpectedKvs)) {
+    if (!(k in rawActualKvs)) {
+      rawActualKvs[k] = "";
+    }
+  }
+  assert.deepStrictEqual(rawActualKvs, rawExpectedKvs);
+};
+
+const assertHasKvs = (actualKvs: Kvs, hasKvs: Kvs) => {
+  const rawActualKvs = { ...kvsToRawKvs(actualKvs) };
+  const rawHasKvs = { ...kvsToRawKvs(hasKvs) };
+  for (const k of Object.keys(rawActualKvs)) {
+    if (!rawActualKvs[k] || !(k in rawHasKvs)) {
+      delete rawActualKvs[k];
+    }
+  }
+  for (const k of Object.keys(rawHasKvs)) {
+    if (!(k in rawActualKvs)) {
+      rawActualKvs[k] = "";
+    }
+  }
+  assert.deepStrictEqual(rawActualKvs, rawHasKvs);
+};
+
 type ActualAccount = Partial<
   Awaited<ReturnType<typeof Proxy.getAccountWithKvs>>
 >;
 
 type ExpectedAccount = Optional<Account, "address"> & {
+  hasKvs?: Kvs;
   /**
    * @deprecated Use `.kvs` instead.
    */
   allKvs?: Kvs;
-  hasKvs?: Kvs;
 };
