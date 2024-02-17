@@ -1,8 +1,8 @@
 import { e } from "../data";
 import {
   Address,
-  addressToAddressEncodable,
-  addressToBech32,
+  addressToBechAddress,
+  addressToHexAddress,
 } from "../data/address";
 import { BytesLike, bytesLikeToHex, isBytesLike } from "../data/bytesLike";
 import { RawKvs } from "../data/kvs";
@@ -133,7 +133,9 @@ export class Proxy {
   }
 
   static getAccountRaw(baseUrl: string, address: Address) {
-    return Proxy.fetchRaw(`${baseUrl}/address/${addressToBech32(address)}`);
+    return Proxy.fetchRaw(
+      `${baseUrl}/address/${addressToBechAddress(address)}`,
+    );
   }
 
   getAccountRaw(address: Address) {
@@ -167,7 +169,7 @@ export class Proxy {
 
   static getAccountNonceRaw(baseUrl: string, address: Address) {
     return Proxy.fetchRaw(
-      `${baseUrl}/address/${addressToBech32(address)}/nonce`,
+      `${baseUrl}/address/${addressToBechAddress(address)}/nonce`,
     );
   }
 
@@ -186,7 +188,7 @@ export class Proxy {
 
   static getAccountBalanceRaw(baseUrl: string, address: Address) {
     return Proxy.fetchRaw(
-      `${baseUrl}/address/${addressToBech32(address)}/balance`,
+      `${baseUrl}/address/${addressToBechAddress(address)}/balance`,
     );
   }
 
@@ -205,7 +207,7 @@ export class Proxy {
 
   static getAccountKvsRaw(baseUrl: string, address: Address) {
     return Proxy.fetchRaw(
-      `${baseUrl}/address/${addressToBech32(address)}/keys`,
+      `${baseUrl}/address/${addressToBechAddress(address)}/keys`,
     );
   }
 
@@ -253,8 +255,8 @@ export class Tx {
     this.unsignedRawTx = {
       nonce: params.nonce,
       value: (params.value ?? 0n).toString(),
-      receiver: addressToBech32(params.receiver),
-      sender: addressToBech32(params.sender),
+      receiver: addressToBechAddress(params.receiver),
+      sender: addressToBechAddress(params.sender),
       gasPrice: params.gasPrice,
       gasLimit: params.gasLimit,
       data: params.data === undefined ? undefined : btoa(params.data),
@@ -316,7 +318,7 @@ export class Tx {
       receiver = sender;
       const dataParts: string[] = [];
       dataParts.push("MultiESDTNFTTransfer");
-      dataParts.push(addressToAddressEncodable(_receiver).toTopHex());
+      dataParts.push(addressToHexAddress(_receiver));
       dataParts.push(e.U(esdts.length).toTopHex());
       for (const esdt of esdts) {
         dataParts.push(e.Str(esdt.id).toTopHex());
@@ -351,7 +353,7 @@ export class Tx {
     if (esdts?.length) {
       receiver = sender;
       dataParts.push("MultiESDTNFTTransfer");
-      dataParts.push(addressToAddressEncodable(callee).toTopHex());
+      dataParts.push(addressToHexAddress(callee));
       dataParts.push(e.U(esdts.length).toTopHex());
       for (const esdt of esdts) {
         dataParts.push(e.Str(esdt.id).toTopHex());
@@ -409,11 +411,13 @@ const broadTxToRawTx = (tx: BroadTx): RawTx => {
 const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
   if ("callee" in query) {
     query = {
-      scAddress: addressToBech32(query.callee),
+      scAddress: addressToBechAddress(query.callee),
       funcName: query.funcName,
       args: (query.funcArgs ?? []).map(bytesLikeToHex),
       caller:
-        query.sender !== undefined ? addressToBech32(query.sender) : undefined,
+        query.sender !== undefined
+          ? addressToBechAddress(query.sender)
+          : undefined,
       value: query.value !== undefined ? query.value.toString() : undefined,
     };
   }

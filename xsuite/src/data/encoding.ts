@@ -8,7 +8,7 @@ import { ListEncodable } from "./ListEncodable";
 import { OptionEncodable } from "./OptionEncodable";
 import { TupleEncodable } from "./TupleEncodable";
 import { UintEncodable } from "./UintEncodable";
-import { Address, addressToAddressEncodable } from "./address";
+import { Address, addressToU8AAddress } from "./address";
 import { Bytes, bytesToU8A } from "./bytes";
 import { BytesLike, bytesLikeToU8A } from "./bytesLike";
 import { Kv } from "./kvs";
@@ -278,7 +278,7 @@ const getEsdtKvs = ({
       metadata.push(["Name", e.Str(name).toTopU8A()]);
     }
     if (creator !== undefined) {
-      metadata.push(["Creator", addressToAddressEncodable(creator).toTopU8A()]);
+      metadata.push(["Creator", addressToU8AAddress(creator)]);
     }
     if (royalties !== undefined) {
       metadata.push(["Royalties", royalties.toString()]);
