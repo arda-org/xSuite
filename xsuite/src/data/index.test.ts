@@ -112,7 +112,7 @@ test("e.Addr.toNestHex - u8a address", () => {
 test("e.Addr - Invalid address HRP", () => {
   const address =
     "btc1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq5mhdvz";
-  expect(() => e.Addr(address)).toThrow("Invalid address HRP.");
+  expect(() => e.Addr(address)).toThrow("Invalid address format.");
 });
 
 test("e.Addr - Too small address length", () => {

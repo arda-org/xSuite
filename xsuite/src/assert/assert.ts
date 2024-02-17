@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { BytesLike } from "../data";
-import { addressToBech32 } from "../data/address";
+import { addressToBechAddress } from "../data/address";
 import { bytesLikeToHex } from "../data/bytesLike";
 import { Kvs, kvsToRawKvs } from "../data/kvs";
 import { Optional } from "../helpers";
@@ -34,7 +34,7 @@ export const assertAccount = (
   }: ExpectedAccount,
 ) => {
   if (address !== undefined) {
-    assert.strictEqual(actualAccount.address, addressToBech32(address));
+    assert.strictEqual(actualAccount.address, addressToBechAddress(address));
   }
   if (nonce !== undefined) {
     assert.strictEqual(actualAccount.nonce, nonce);
@@ -57,7 +57,7 @@ export const assertAccount = (
   if (owner !== undefined) {
     assert.strictEqual(
       actualAccount.owner,
-      owner == null ? owner : addressToBech32(owner),
+      owner == null ? owner : addressToBechAddress(owner),
     );
   }
   if (kvs !== undefined) {
