@@ -1,5 +1,4 @@
 import { Address } from "../data/address";
-import { base64ToHex } from "../data/utils";
 import { Optional, Prettify } from "../helpers";
 import {
   devnetMinGasPrice,
@@ -460,10 +459,7 @@ const query = (proxy: Proxy, params: QueryParams) =>
         resQuery,
       );
     }
-    return {
-      query: resQuery,
-      returnData: resQuery.returnData.map(base64ToHex),
-    };
+    return { query: resQuery, returnData: resQuery.returnData };
   });
 
 const executeTx = (
