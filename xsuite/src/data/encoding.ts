@@ -1,165 +1,247 @@
 import { Field, Type } from "protobufjs";
-import { AddressEncodable } from "./AddressEncodable";
-import { BufferEncodable } from "./BufferEncodable";
-import { BytesEncodable } from "./BytesEncodable";
-import { Encodable } from "./Encodable";
-import { IntEncodable } from "./IntEncodable";
-import { ListEncodable } from "./ListEncodable";
-import { OptionEncodable } from "./OptionEncodable";
-import { TupleEncodable } from "./TupleEncodable";
-import { UintEncodable } from "./UintEncodable";
 import { Address, addressToU8AAddress } from "./address";
 import { Bytes, bytesToU8A } from "./bytes";
 import { BytesLike, bytesLikeToU8A } from "./bytesLike";
 import { Kv } from "./kvs";
+import { u8aToBase64, u8aToHex } from "./utils";
 
-function Buffer(bytes: Bytes): BufferEncodable {
-  return new BufferEncodable(bytesToU8A(bytes));
+const encodableSymbol = "xsuite.Encodable";
+
+export abstract class Encodable {
+  __kind = encodableSymbol;
+
+  abstract toTopU8A(): Uint8Array;
+
+  abstract toNestU8A(): Uint8Array;
+
+  toTopHex(): string {
+    return u8aToHex(this.toTopU8A());
+  }
+
+  toNestHex(): string {
+    return u8aToHex(this.toNestU8A());
+  }
+
+  toTopB64(): string {
+    return u8aToBase64(this.toTopU8A());
+  }
+
+  toNestB64(): string {
+    return u8aToBase64(this.toNestU8A());
+  }
+
+  /**
+   * @deprecated Use `.toTopU8A` instead.
+   */
+  toTopBytes(): Uint8Array {
+    return this.toTopU8A();
+  }
+
+  /**
+   * @deprecated Use `.toNestU8A` instead.
+   */
+  toNestBytes(): Uint8Array {
+    return this.toNestU8A();
+  }
 }
 
-function TopBuffer(bytes: Bytes): BytesEncodable {
-  return new BytesEncodable(bytesToU8A(bytes));
-}
+export const isEncodable = (value: unknown): value is Encodable =>
+  !!value &&
+  typeof value === "object" &&
+  "__kind" in value &&
+  value.__kind === encodableSymbol;
 
 export const e = {
-  Buffer,
-  TopBuffer,
+  Buffer: (bytes: Bytes) => {
+    const u8a = bytesToU8A(bytes);
+    const toTop = () => u8a;
+    const toNest = () => prependLength(u8a);
+    return newEncodable(toTop, toNest);
+  },
+  TopBuffer: (bytes: Bytes) => {
+    return newEncodable(e.Buffer(bytes).toTopU8A);
+  },
   Str: (string: string) => {
     return e.Buffer(new TextEncoder().encode(string));
   },
   TopStr: (string: string) => {
-    return new BytesEncodable(e.Str(string).toTopU8A());
+    return newEncodable(e.Str(string).toTopU8A);
   },
   Addr: (address: string | Uint8Array) => {
-    return new AddressEncodable(address);
+    address = addressToU8AAddress(address);
+    return newEncodable(() => address);
   },
-  Bool: (boolean: boolean) => {
-    return e.U8(Number(boolean));
-  },
-  U8: (uint: number | bigint) => {
-    return new UintEncodable(uint, 1);
-  },
-  U16: (uint: number | bigint) => {
-    return new UintEncodable(uint, 2);
-  },
-  U32: (uint: number | bigint) => {
-    return new UintEncodable(uint, 4);
-  },
-  Usize: (uint: number | bigint) => {
-    return new UintEncodable(uint, 4);
-  },
-  U64: (uint: number | bigint) => {
-    return new UintEncodable(uint, 8);
-  },
+  Bool: (boolean: boolean) => e.U8(Number(boolean)),
+  U8: (uint: number | bigint) => eUX(uint, 1),
+  U16: (uint: number | bigint) => eUX(uint, 2),
+  U32: (uint: number | bigint) => eUX(uint, 4),
+  Usize: (uint: number | bigint) => e.U32(uint),
+  U64: (uint: number | bigint) => eUX(uint, 8),
   U: (uint: number | bigint) => {
-    return new UintEncodable(uint);
+    if (typeof uint === "number") {
+      uint = BigInt(uint);
+    }
+    if (uint < 0) {
+      throw new Error("Number is negative.");
+    }
+    const toTop = () => biguintToU8A(uint);
+    const toNest = () => prependLength(toTop());
+    return newEncodable(toTop, toNest);
   },
   TopU: (uint: number | bigint) => {
-    return e.TopBuffer(e.U(uint).toTopU8A());
+    return newEncodable(e.U(uint).toTopU8A);
   },
-  I8: (int: number | bigint) => {
-    return new IntEncodable(int, 1);
-  },
-  I16: (int: number | bigint) => {
-    return new IntEncodable(int, 2);
-  },
-  I32: (int: number | bigint) => {
-    return new IntEncodable(int, 4);
-  },
-  Isize: (int: number | bigint) => {
-    return new IntEncodable(int, 4);
-  },
-  I64: (int: number | bigint) => {
-    return new IntEncodable(int, 8);
-  },
+  I8: (int: number | bigint) => eIX(int, 1),
+  I16: (int: number | bigint) => eIX(int, 2),
+  I32: (int: number | bigint) => eIX(int, 4),
+  Isize: (int: number | bigint) => e.I32(int),
+  I64: (int: number | bigint) => eIX(int, 8),
   I: (int: number | bigint) => {
-    return new IntEncodable(int);
+    if (typeof int === "number") {
+      int = BigInt(int);
+    }
+    const toTop = () => bigintToU8A(int);
+    const toNest = () => prependLength(toTop());
+    return newEncodable(toTop, toNest);
   },
   TopI: (int: number | bigint) => {
-    return e.TopBuffer(e.I(int).toTopU8A());
+    return newEncodable(e.I(int).toTopU8A);
   },
-  Tuple: (...values: Encodable[]) => {
-    return new TupleEncodable(values);
+  Tuple: (...encodables: Encodable[]) => {
+    return newEncodable(() => {
+      return Uint8Array.from(
+        encodables.flatMap((e) => Array.from(e.toNestU8A())),
+      );
+    });
   },
-  List: (...values: Encodable[]) => {
-    return new ListEncodable(values);
+  List: (...encodables: Encodable[]) => {
+    const toTop = e.Tuple(...encodables).toTopU8A;
+    const toNest = (): Uint8Array => {
+      return prependLength(toTop(), encodables.length);
+    };
+    return newEncodable(toTop, toNest);
   },
-  Option: (optValue: Encodable | null) => {
-    return new OptionEncodable(optValue);
-  },
-  /**
-   * @deprecated Use `.TopBuffer` instead.
-   */
-  Bytes: (bytes: Bytes) => {
-    return e.TopBuffer(bytes);
-  },
-  /**
-   * @deprecated Use `.TopBuffer` instead.
-   */
-  CstBuffer: (bytes: Bytes) => {
-    return e.TopBuffer(bytes);
-  },
-  /**
-   * @deprecated Use `.TopStr` instead.
-   */
-  CstStr: (string: string) => {
-    return e.TopStr(string);
+  Option: (optEncodable: Encodable | null) => {
+    if (optEncodable === null) {
+      return newEncodable(
+        () => new Uint8Array([]),
+        () => new Uint8Array([0]),
+      );
+    }
+    return newEncodable(() =>
+      Uint8Array.from([1, ...optEncodable.toNestU8A()]),
+    );
   },
   kvs: {
-    Mapper: (name: string, ...keys: Encodable[]) => {
-      const baseKey = e.Tuple(e.TopStr(name), ...keys);
+    Mapper: (name: string, ...vars: Encodable[]) => {
+      const baseKey = e.Tuple(e.TopStr(name), ...vars);
       return {
         Value: (data: Encodable | null) => {
-          return getValueMapperKvs(baseKey, data);
+          return eKvsMapperValue(baseKey, data);
         },
         UnorderedSet: (data: Encodable[] | null) => {
-          return getUnorderedSetMapperKvs(baseKey, data);
+          return eKvsMapperUnorderedSet(baseKey, data);
         },
         Set: (data: [index: number | bigint, value: Encodable][] | null) => {
-          return getSetMapperKvs(baseKey, data);
+          return eKvsMapperSet(baseKey, data);
         },
         Map: (
           data:
             | [index: number | bigint, key: Encodable, value: Encodable][]
             | null,
         ) => {
-          return getMapMapperKvs(baseKey, data);
+          return eKvsMapperMap(baseKey, data);
         },
         Vec: (data: Encodable[] | null) => {
-          return getVecMapperKvs(baseKey, data);
+          return eKvsMapperVec(baseKey, data);
         },
         User: (data: Encodable[] | null) => {
-          return getUserMapperKvs(baseKey, data);
+          return eKvsMapperUser(baseKey, data);
         },
       };
     },
     Esdts: (esdts: Esdt[]) => {
-      return getEsdtsKvs(esdts);
+      return eKvsEsdts(esdts);
     },
   },
+  /**
+   * @deprecated Use `.TopBuffer` instead.
+   */
+  Bytes: (bytes: Bytes) => e.TopBuffer(bytes),
+  /**
+   * @deprecated Use `.TopBuffer` instead.
+   */
+  CstBuffer: (bytes: Bytes) => e.TopBuffer(bytes),
+  /**
+   * @deprecated Use `.TopStr` instead.
+   */
+  CstStr: (string: string) => e.TopStr(string),
 };
 
-const getValueMapperKvs = (
-  baseKey: Encodable,
-  value: Encodable | null,
-): Kv[] => {
+const newEncodable = (
+  toTop: () => Uint8Array,
+  toNest?: () => Uint8Array,
+): Encodable => {
+  class NewEncodable extends Encodable {
+    toTopU8A = toTop;
+    toNestU8A = toNest ?? toTop;
+  }
+  return new NewEncodable();
+};
+
+const eUX = (uint: number | bigint, byteLength: number) => {
+  if (typeof uint === "number") {
+    uint = BigInt(uint);
+  }
+  if (uint < 0) {
+    throw new Error("Number is negative.");
+  }
+  if (uint >= 2n ** (8n * BigInt(byteLength))) {
+    throw new Error("Number above maximal value allowed.");
+  }
+  const toTop = () => biguintToU8A(uint);
+  const toNest = () => {
+    const b = toTop();
+    const nB = new Uint8Array(byteLength);
+    nB.set(b, byteLength - b.byteLength);
+    return nB;
+  };
+  return newEncodable(toTop, toNest);
+};
+
+const eIX = (int: number | bigint, byteLength: number) => {
+  if (typeof int === "number") {
+    int = BigInt(int);
+  }
+  if (int >= 2n ** (8n * BigInt(byteLength) - 1n)) {
+    throw new Error("Number above maximal value allowed.");
+  }
+  if (int < -(2n ** (8n * BigInt(byteLength) - 1n))) {
+    throw new Error("Number below minimal value allowed.");
+  }
+  const toTop = () => bigintToU8A(int);
+  const toNest = () => complementOfTwo(int, byteLength);
+  return newEncodable(toTop, toNest);
+};
+
+const eKvsMapperValue = (baseKey: Encodable, value: Encodable | null): Kv[] => {
   return [[baseKey, value ?? ""]];
 };
 
-const getUnorderedSetMapperKvs = (
+const eKvsMapperUnorderedSet = (
   baseKey: Encodable,
   data: Encodable[] | null,
 ) => {
   data ??= [];
   return [
-    ...getVecMapperKvs(baseKey, data),
+    ...eKvsMapperVec(baseKey, data),
     ...data.map(
       (v, i): Kv => [e.Tuple(baseKey, e.TopStr(".index"), v), e.U32(i + 1)],
     ),
   ];
 };
 
-const getSetMapperKvs = (
+const eKvsMapperSet = (
   baseKey: Encodable,
   data: [number | bigint, Encodable][] | null,
 ): Kv[] => {
@@ -198,13 +280,13 @@ const getSetMapperKvs = (
   return kvs;
 };
 
-const getMapMapperKvs = (
+const eKvsMapperMap = (
   baseKey: Encodable,
   data: [number | bigint, Encodable, Encodable][] | null,
 ): Kv[] => {
   data ??= [];
   return [
-    ...getSetMapperKvs(
+    ...eKvsMapperSet(
       baseKey,
       data.map(([i, k]) => [i, k]),
     ),
@@ -214,10 +296,7 @@ const getMapMapperKvs = (
   ];
 };
 
-const getVecMapperKvs = (
-  baseKey: Encodable,
-  data: Encodable[] | null,
-): Kv[] => {
+const eKvsMapperVec = (baseKey: Encodable, data: Encodable[] | null): Kv[] => {
   data ??= [];
   return [
     ...data.map(
@@ -227,10 +306,7 @@ const getVecMapperKvs = (
   ];
 };
 
-const getUserMapperKvs = (
-  baseKey: Encodable,
-  data: Encodable[] | null,
-): Kv[] => {
+const eKvsMapperUser = (baseKey: Encodable, data: Encodable[] | null): Kv[] => {
   data ??= [];
   return [
     ...data.flatMap((v, i): Kv[] => [
@@ -241,11 +317,11 @@ const getUserMapperKvs = (
   ];
 };
 
-const getEsdtsKvs = (esdts: Esdt[]) => {
-  return esdts.flatMap(getEsdtKvs);
+const eKvsEsdts = (esdts: Esdt[]) => {
+  return esdts.flatMap(eKvsEsdt);
 };
 
-const getEsdtKvs = ({
+const eKvsEsdt = ({
   id,
   nonce,
   amount,
@@ -320,6 +396,47 @@ const getEsdtKvs = ({
     kvs.push([e.Str(`ELRONDroleesdt${id}`), e.Buffer(messageBytes)]);
   }
   return kvs;
+};
+
+const biguintToU8A = (uint: bigint) => {
+  const res: number[] = [];
+  while (uint > 0) {
+    res.unshift(Number(uint % 256n));
+    uint = uint / 256n;
+  }
+  return Uint8Array.from(res);
+};
+
+const bigintToU8A = (int: bigint) => {
+  return complementOfTwo(int, getUnambiguousNumBytes(int));
+};
+
+const complementOfTwo = (n: bigint, numBytes: number) => {
+  let u = n;
+  if (u < 0) {
+    u += 2n ** (8n * BigInt(numBytes));
+  }
+  return eUX(u, numBytes).toNestU8A();
+};
+
+const getUnambiguousNumBytes = (n: bigint): number => {
+  if (n === 0n) {
+    return 0;
+  }
+  if (n < 0n) {
+    n = -n - 1n;
+  }
+  let bytes = 1;
+  while (n >= 128n) {
+    n >>= 8n;
+    bytes++;
+  }
+  return bytes;
+};
+
+const prependLength = (u8a: Uint8Array, length?: number) => {
+  length = length ?? u8a.byteLength;
+  return Uint8Array.from([...e.U32(length).toNestU8A(), ...u8a]);
 };
 
 const ESDTRolesMessage = new Type("ESDTRoles").add(

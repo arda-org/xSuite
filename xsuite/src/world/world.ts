@@ -1,4 +1,3 @@
-import { AddressEncodable } from "../data/AddressEncodable";
 import { Address } from "../data/address";
 import { base64ToHex } from "../data/utils";
 import { Optional, Prettify } from "../helpers";
@@ -26,6 +25,7 @@ import {
   UpgradeContractTxParams,
   Proxy,
 } from "../proxy/proxy";
+import { Account } from "./account";
 import { KeystoreSigner, Signer } from "./signer";
 import { readFileHex } from "./utils";
 
@@ -290,7 +290,7 @@ export class Wallet extends Signer {
   }
 }
 
-export class Contract extends AddressEncodable {
+export class Contract extends Account {
   proxy: Proxy;
   explorerUrl: string;
   baseExplorerUrl: string;

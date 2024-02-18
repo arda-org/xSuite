@@ -1,5 +1,5 @@
-import { Encodable, isEncodable } from "./Encodable";
 import { Bytes, bytesToU8A, isBytes } from "./bytes";
+import { Encodable, isEncodable } from "./encoding";
 import { u8aToHex } from "./utils";
 
 export type BytesLike = Bytes | Encodable;

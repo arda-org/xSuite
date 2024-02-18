@@ -890,8 +890,26 @@ test("d.Addr.fromNest", () => {
   expect(d.Addr().fromNest(zeroHexAddress)).toEqual(zeroBechAddress);
 });
 
-test("d.Bool", () => {
+test("d.Bool.fromTop - true", () => {
+  expect(d.Bool().fromTop("01")).toEqual(true);
+});
+
+test("d.Bool.fromTop - false", () => {
+  expect(d.Bool().fromTop("")).toEqual(false);
+});
+
+test("d.Bool.fromNest - true", () => {
   expect(d.Bool().fromNest("01")).toEqual(true);
+});
+
+test("d.Bool.fromNest - false", () => {
+  expect(d.Bool().fromNest("00")).toEqual(false);
+});
+
+test("d.Bool.fromNest - incomplete decoding", () => {
+  expect(() => d.Bool().fromNest("0100")).toThrow(
+    "Not all bytes have been read.",
+  );
 });
 
 UXTestCases.U8Success.forEach(([value, topEncoding, nestEncoding]) => {
