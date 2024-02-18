@@ -5,9 +5,9 @@ import {
   UserWallet,
 } from "@multiversx/sdk-wallet";
 import { input, log } from "../_stdio";
-import { AddressEncodable } from "../data/AddressEncodable";
+import { Account } from "./account";
 
-export abstract class Signer extends AddressEncodable {
+export abstract class Signer extends Account {
   abstract sign(data: Buffer): Promise<Buffer>;
 }
 

@@ -165,7 +165,7 @@ importers:
         version: 1.2.2(vitest@1.2.2)
       msw:
         specifier: 2.1.5
-        version: 2.1.5(typescript@5.3.3)
+        version: 2.1.5(typescript@5.4.0-beta)
       rimraf:
         specifier: 5.0.5
         version: 5.0.5
@@ -173,8 +173,8 @@ importers:
         specifier: 4.7.0
         version: 4.7.0
       typescript:
-        specifier: 5.3.3
-        version: 5.3.3
+        specifier: 5.4.0-beta
+        version: 5.4.0-beta
       vitest:
         specifier: ^1.2.2
         version: 1.2.2(@types/node@20.11.16)
@@ -6556,7 +6556,7 @@ packages:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
     dev: true
 
-  /msw@2.1.5(typescript@5.3.3):
+  /msw@2.1.5(typescript@5.4.0-beta):
     resolution: {integrity: sha512-r39AZk4taMmUEYwtzDAgFy38feqJy1yaKykvo0QE8q7H7c28yH/WIlOmE7oatjkC3dMgpTYfND8MaxeywgU+Yg==}
     engines: {node: '>=18'}
     hasBin: true
@@ -6584,7 +6584,7 @@ packages:
       path-to-regexp: 6.2.1
       strict-event-emitter: 0.5.1
       type-fest: 4.10.2
-      typescript: 5.3.3
+      typescript: 5.4.0-beta
       yargs: 17.7.2
     dev: true
 
@@ -8161,6 +8161,12 @@ packages:
 
   /typescript@5.3.3:
     resolution: {integrity: sha512-pXWcraxM0uxAS+tN0AG/BF2TyqmHO014Z070UsJ+pFvYuRSq8KH8DmWpnbXe0pEPDHXZV3FcAbJkijJ5oNEnWw==}
+    engines: {node: '>=14.17'}
+    hasBin: true
+    dev: true
+
+  /typescript@5.4.0-beta:
+    resolution: {integrity: sha512-KgekV5JS7TQ7Bb8eO64QGxdM7MSBUUXOXq28OWX23d2MA8SiVtNYoo4s33tCTEGV8+6AGBRD2+KiXNNnexRRYw==}
     engines: {node: '>=14.17'}
     hasBin: true
     dev: true

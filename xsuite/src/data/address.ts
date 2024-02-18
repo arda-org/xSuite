@@ -1,5 +1,5 @@
 import { bech32 } from "bech32";
-import { Encodable, isEncodable } from "./Encodable";
+import { isEncodable, Encodable } from "./encoding";
 import { hexToU8A, u8aToHex } from "./utils";
 
 export type Address = string | Uint8Array | Encodable;

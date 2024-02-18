@@ -10,7 +10,9 @@ export class ByteReader {
   }
 
   readExact(size: number): Uint8Array {
-    if (size > this.remaining()) throw new Error("No remaining byte to read.");
+    if (size > this.remaining()) {
+      throw new Error("No remaining byte to read.");
+    }
     return this.readAtMost(size);
   }
 
@@ -30,5 +32,11 @@ export class ByteReader {
 
   isConsumed(): boolean {
     return this.offset == this.u8a.byteLength;
+  }
+
+  assertConsumed() {
+    if (!this.isConsumed()) {
+      throw new Error("Not all bytes have been read.");
+    }
   }
 }
