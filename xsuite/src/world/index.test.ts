@@ -306,6 +306,7 @@ test("SWorld.deployContract & upgradeContract", async () => {
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
+  expect(isContractAddress(contract)).toEqual(true);
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
   assertAccount(await contract.getAccountWithKvs(), {
     code: worldCode,
@@ -540,6 +541,7 @@ test("SWallet.deployContract & upgradeContract", async () => {
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
+  expect(isContractAddress(contract)).toEqual(true);
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
   assertAccount(await contract.getAccountWithKvs(), {
     code: worldCode,
@@ -556,16 +558,6 @@ test("SWallet.deployContract & upgradeContract", async () => {
     code: worldCode,
     hasKvs: [[e.Str("n"), e.U64(2)]],
   });
-});
-
-test("SWallet.deployContract - is contract address", async () => {
-  const { contract } = await wallet.deployContract({
-    code: worldCode,
-    codeMetadata: [],
-    codeArgs: [e.U64(1)],
-    gasLimit: 10_000_000,
-  });
-  expect(isContractAddress(contract)).toEqual(true);
 });
 
 test("SWallet.callContract with EGLD", async () => {

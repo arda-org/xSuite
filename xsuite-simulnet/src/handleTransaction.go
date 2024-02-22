@@ -11,11 +11,12 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi"
-	mj "github.com/multiversx/mx-chain-scenario-go/model"
-	worldmock "github.com/multiversx/mx-chain-vm-go/mock/world"
+	model "github.com/multiversx/mx-chain-scenario-go/scenario/model"
+	worldmock "github.com/multiversx/mx-chain-scenario-go/worldmock"
+	vmcommon "github.com/multiversx/mx-chain-vm-common-go"
 )
 
-func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
+func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
 	logger := NewLoggerStarted()
 	reqBody, _ := io.ReadAll(r.Body)
 	var rawTx RawTx
@@ -29,20 +30,20 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 	if rawTx.Version != 1 {
 		return nil, errors.New("invalid version")
 	}
-	tx := &mj.TxStep{
-		Tx: &mj.Transaction{
-			Nonce: mj.JSONUint64{Value: rawTx.Nonce},
-			EGLDValue: mj.JSONBigIntZero(),
-			GasPrice: mj.JSONUint64{Value: rawTx.GasPrice},
-			GasLimit: mj.JSONUint64{Value: rawTx.GasLimit},
+	tx := &model.TxStep{
+		Tx: &model.Transaction{
+			Nonce: model.JSONUint64{Value: rawTx.Nonce},
+			EGLDValue: model.JSONBigIntZero(),
+			GasPrice: model.JSONUint64{Value: rawTx.GasPrice},
+			GasLimit: model.JSONUint64{Value: rawTx.GasLimit},
 		},
 	}
 	sender, err := bech32Decode(rawTx.Sender)
 	if err != nil {
 		return nil, err
 	}
-	tx.Tx.From = mj.JSONBytesFromString{Value: sender}
-	senderAccount := ae.vmTestExecutor.World.AcctMap.GetAccount(sender)
+	tx.Tx.From = model.JSONBytesFromString{Value: sender}
+	senderAccount := e.scenexec.World.AcctMap.GetAccount(sender)
 	if senderAccount.Nonce != rawTx.Nonce {
 		return nil, errors.New("invalid nonce")
 	}
@@ -50,12 +51,12 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 	if err != nil {
 		return nil, err
 	}
-	tx.Tx.To = mj.JSONBytesFromString{Value: receiver}
+	tx.Tx.To = model.JSONBytesFromString{Value: receiver}
 	egldValue, err := stringToBigint(rawTx.Value)
 	if err != nil {
 		return nil, err
 	}
-	tx.Tx.EGLDValue = mj.JSONBigInt{Value: egldValue}
+	tx.Tx.EGLDValue = model.JSONBigInt{Value: egldValue}
 	if rawTx.Data != nil {
 		dataBytes, err := base64.StdEncoding.DecodeString(*rawTx.Data)
 		if err != nil {
@@ -68,7 +69,12 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 			if err != nil {
 				return nil, err
 			}
-			tx.Tx.Code = mj.JSONBytesFromString{Value: code}
+			tx.Tx.Code = model.JSONBytesFromString{Value: code}
+			tx.Tx.CodeMetadata = model.JSONBytesFromString{Value: (&vmcommon.CodeMetadata{
+				Payable:     true,
+				Upgradeable: true,
+				Readable:    true,
+			}).ToBytes()}
 			i += 3
 		} else {
 			if dataParts[i] == "MultiESDTNFTTransfer" {
@@ -80,14 +86,14 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 				if err != nil {
 					return nil, err
 				}
-				tx.Tx.To = mj.JSONBytesFromString{Value: realReceiver}
+				tx.Tx.To = model.JSONBytesFromString{Value: realReceiver}
 				i += 1
 				l, err := hexToUint64(dataParts[i])
 				if err != nil {
 					return nil, err
 				}
 				i += 1
-				tx.Tx.ESDTValue = []*mj.ESDTTxData{}
+				tx.Tx.ESDTValue = []*model.ESDTTxData{}
 				for j := uint64(0); j < l; j++ {
 					id, err := hex.DecodeString(dataParts[i])
 					if err != nil {
@@ -104,10 +110,10 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 						return nil, err
 					}
 					i += 1
-					tx.Tx.ESDTValue = append(tx.Tx.ESDTValue, &mj.ESDTTxData{
-						TokenIdentifier: mj.JSONBytesFromString{Value: id},
-						Nonce: mj.JSONUint64{Value: nonce},
-						Value: mj.JSONBigInt{Value: amount},
+					tx.Tx.ESDTValue = append(tx.Tx.ESDTValue, &model.ESDTTxData{
+						TokenIdentifier: model.JSONBytesFromString{Value: id},
+						Nonce: model.JSONUint64{Value: nonce},
+						Value: model.JSONBigInt{Value: amount},
 					})
 				}
 				if i < len(dataParts) {
@@ -126,40 +132,40 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 			}
 		}
 		if i < len(dataParts) {
-			tx.Tx.Arguments = []mj.JSONBytesFromTree{}
+			tx.Tx.Arguments = []model.JSONBytesFromTree{}
 			for _, rawArgument := range dataParts[i:] {
 				argument, err := hex.DecodeString(rawArgument)
 				if err != nil {
 					return nil, err
 				}
-				tx.Tx.Arguments = append(tx.Tx.Arguments, mj.JSONBytesFromTree{Value: argument})
+				tx.Tx.Arguments = append(tx.Tx.Arguments, model.JSONBytesFromTree{Value: argument})
 			}
 		}
 	}
 	if isAllZero(receiver) {
-		tx.Tx.Type = mj.ScDeploy
+		tx.Tx.Type = model.ScDeploy
 	} else if tx.Tx.Function != "" {
-		tx.Tx.Type = mj.ScCall
+		tx.Tx.Type = model.ScCall
 	} else {
-		tx.Tx.Type = mj.Transfer
+		tx.Tx.Type = model.Transfer
 	}
-	if tx.Tx.Type == mj.ScDeploy {
-		ae.scCounter += 1
-		ae.vmTestExecutor.World.NewAddressMocks = append(
-			ae.vmTestExecutor.World.NewAddressMocks,
+	if tx.Tx.Type == model.ScDeploy {
+		e.scCounter += 1
+		e.scenexec.World.NewAddressMocks = append(
+			e.scenexec.World.NewAddressMocks,
 			&worldmock.NewAddressMock{
 				CreatorAddress: tx.Tx.From.Value,
 				CreatorNonce:   tx.Tx.Nonce.Value,
-				NewAddress:     uint64ToBytesAddress(ae.scCounter, true),
+				NewAddress:     uint64ToBytesAddress(e.scCounter, true),
 			},
 		)
 	}
-	vmOutput, err := ae.vmTestExecutor.ExecuteTxStep(tx)
+	vmOutput, err := e.scenexec.ExecuteTxStep(tx)
 	if err != nil {
 		return nil, err
 	}
-	ae.txCounter += 1
-	txHash := uint64ToString(ae.txCounter)
+	e.txCounter += 1
+	txHash := uint64ToString(e.txCounter)
 	var logs interface{}
 	var smartContractResults interface{}
 	var processStatus string
@@ -168,8 +174,8 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 		for _, data := range vmOutput.ReturnData {
 			jData += "@" + hex.EncodeToString(data)
 		}
-		if tx.Tx.Type == mj.ScDeploy {
-			bechAddress, err := bech32Encode(uint64ToBytesAddress(ae.scCounter, true))
+		if tx.Tx.Type == model.ScDeploy {
+			bechAddress, err := bech32Encode(uint64ToBytesAddress(e.scCounter, true))
 			if err != nil {
 				return nil, err
 			}
@@ -210,7 +216,7 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 		}
 		processStatus = "failed"
 	}
-	ae.txResps[txHash] = map[string]interface{}{
+	e.txResps[txHash] = map[string]interface{}{
 		"data": map[string]interface{}{
 			"transaction": map[string]interface{}{
 				"hash": txHash,
@@ -226,7 +232,7 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 		},
 		"code": "successful",
 	}
-	ae.txProcessStatusResps[txHash] = map[string]interface{}{
+	e.txProcessStatusResps[txHash] = map[string]interface{}{
 		"data": map[string]interface{}{
 			"status": processStatus,
 		},
@@ -241,10 +247,10 @@ func (ae *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) 
 	return jOutput, nil
 }
 
-func (ae *Executor) HandleTransaction(r *http.Request) (interface{}, error) {
+func (e *Executor) HandleTransaction(r *http.Request) (interface{}, error) {
 	txHash := chi.URLParam(r, "txHash")
 	withResults := r.URL.Query().Get("withResults")
-	res := ae.txResps[txHash]
+	res := e.txResps[txHash]
 	if withResults == "" || withResults == "false" {
 		if txMap, ok := res.(map[string]interface{}); ok {
 			if data, ok := txMap["data"].(map[string]interface{}); ok {
@@ -262,9 +268,9 @@ func (ae *Executor) HandleTransaction(r *http.Request) (interface{}, error) {
 	return res, nil
 }
 
-func (ae *Executor) HandleTransactionProcessStatus(r *http.Request) (interface{}, error) {
+func (e *Executor) HandleTransactionProcessStatus(r *http.Request) (interface{}, error) {
 	txHash := chi.URLParam(r, "txHash")
-	res := ae.txResps[txHash]
+	res := e.txResps[txHash]
 	return res, nil
 }
 

@@ -7,11 +7,11 @@ import (
 	"math/big"
 	"net/http"
 
+	worldmock "github.com/multiversx/mx-chain-scenario-go/worldmock"
 	vmcommon "github.com/multiversx/mx-chain-vm-common-go"
-	worldmock "github.com/multiversx/mx-chain-vm-go/mock/world"
 )
 
-func (ae *Executor) HandleAdminSetAccount(r *http.Request) (interface{}, error) {
+func (e *Executor) HandleAdminSetAccount(r *http.Request) (interface{}, error) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var rawAccount RawAccount
 	err := json.Unmarshal(reqBody, &rawAccount)
@@ -23,7 +23,7 @@ func (ae *Executor) HandleAdminSetAccount(r *http.Request) (interface{}, error) 
 		BalanceDelta:    big.NewInt(0),
 		DeveloperReward: big.NewInt(0),
 		Storage:         map[string][]byte{},
-		MockWorld: 			 ae.vmTestExecutor.World,
+		MockWorld: 			 e.scenexec.World,
 	}
 	worldAccount.Address, err = bech32Decode(rawAccount.Address)
 	if err != nil {
@@ -70,21 +70,21 @@ func (ae *Executor) HandleAdminSetAccount(r *http.Request) (interface{}, error) 
 	if err != nil {
 		return nil, err
 	}
-	ae.vmTestExecutor.World.AcctMap.PutAccount(worldAccount)
+	e.scenexec.World.AcctMap.PutAccount(worldAccount)
 	jData := map[string]interface{}{
 		"code": "successful",
 	}
 	return jData, err
 }
 
-func (ae *Executor) HandleAdminSetCurrentBlockInfo(r *http.Request) (interface{}, error) {
+func (e *Executor) HandleAdminSetCurrentBlockInfo(r *http.Request) (interface{}, error) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var block Block
 	err := json.Unmarshal(reqBody, &block)
 	if err != nil {
 		return nil, err
 	}
-	ae.vmTestExecutor.World.CurrentBlockInfo = &worldmock.BlockInfo{
+	e.scenexec.World.CurrentBlockInfo = &worldmock.BlockInfo{
 		BlockTimestamp: block.Timestamp,
 		BlockNonce:     block.Nonce,
 		BlockRound:     block.Round,
@@ -97,14 +97,14 @@ func (ae *Executor) HandleAdminSetCurrentBlockInfo(r *http.Request) (interface{}
 	return jData, nil
 }
 
-func (ae *Executor) HandleAdminSetPreviousBlockInfo(r *http.Request) (interface{}, error) {
+func (e *Executor) HandleAdminSetPreviousBlockInfo(r *http.Request) (interface{}, error) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var block Block
 	err := json.Unmarshal(reqBody, &block)
 	if err != nil {
 		return nil, err
 	}
-	ae.vmTestExecutor.World.PreviousBlockInfo = &worldmock.BlockInfo{
+	e.scenexec.World.PreviousBlockInfo = &worldmock.BlockInfo{
 		BlockTimestamp: block.Timestamp,
 		BlockNonce:     block.Nonce,
 		BlockRound:     block.Round,
@@ -117,7 +117,7 @@ func (ae *Executor) HandleAdminSetPreviousBlockInfo(r *http.Request) (interface{
 	return jData, nil
 }
 
-func (ae *Executor) HandleAdminTerminate() (interface{}, error) {
+func (e *Executor) HandleAdminTerminate() (interface{}, error) {
 	jData := map[string]interface{}{
 		"code": "successful",
 	}
@@ -128,7 +128,7 @@ type RawAccount struct {
 	Address 			string
 	Nonce 				uint64
 	Balance 			string
-	Kvs   			*map[string]string
+	Kvs   			  *map[string]string
 	Code 					*string
 	CodeMetadata	*string
 	Owner					*string

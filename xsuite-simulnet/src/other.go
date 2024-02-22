@@ -49,11 +49,14 @@ func uint64ToString(value uint64) string {
 
 func uint64ToBytesAddress(n uint64, isContract bool) []byte {
 	newAddress := make([]byte, addressByteLength)
-	var shift int
+	shift := 0
 	if isContract {
-		shift = contractAddressLeftShift
+		shift += contractAddressLeftShift
+		newAddress[shift] = 5
+		shift += 2
 	} else {
-		shift = 0
+		newAddress[shift] = 1
+		shift += 1
 	}
 	binary.BigEndian.PutUint64(newAddress[shift:], n)
 	return newAddress

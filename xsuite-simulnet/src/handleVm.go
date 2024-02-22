@@ -8,13 +8,13 @@ import (
 	"math"
 	"net/http"
 
-	mj "github.com/multiversx/mx-chain-scenario-go/model"
+	model "github.com/multiversx/mx-chain-scenario-go/scenario/model"
 )
 
-func (ae *Executor) HandleVmQuery(r *http.Request) (interface{}, error) {
-	snapshot := ae.vmTestExecutor.World.AcctMap.Clone()
+func (e *Executor) HandleVmQuery(r *http.Request) (interface{}, error) {
+	snapshot := e.scenexec.World.AcctMap.Clone()
 	defer func() {
-		ae.vmTestExecutor.World.AcctMap = snapshot
+		e.scenexec.World.AcctMap = snapshot
 	}()
 
 	logger := NewLoggerStarted()
@@ -24,11 +24,11 @@ func (ae *Executor) HandleVmQuery(r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	tx := &mj.TxStep{
-		Tx: &mj.Transaction{
-			Type: mj.ScCall,
-			EGLDValue: mj.JSONBigIntZero(),
-			GasLimit: mj.JSONUint64{Value: math.MaxInt64},
+	tx := &model.TxStep{
+		Tx: &model.Transaction{
+			Type: model.ScCall,
+			EGLDValue: model.JSONBigIntZero(),
+			GasLimit: model.JSONUint64{Value: math.MaxInt64},
 		},
 	}
 	scAddress, err := bech32Decode(rawQuery.ScAddress)
@@ -40,28 +40,28 @@ func (ae *Executor) HandleVmQuery(r *http.Request) (interface{}, error) {
 		if err != nil {
 			return nil, err
 		}
-		tx.Tx.From = mj.JSONBytesFromString{Value: caller}
+		tx.Tx.From = model.JSONBytesFromString{Value: caller}
 	} else {
-		tx.Tx.From = mj.JSONBytesFromString{Value: scAddress}
+		tx.Tx.From = model.JSONBytesFromString{Value: scAddress}
 	}
-	tx.Tx.To = mj.JSONBytesFromString{Value: scAddress}
+	tx.Tx.To = model.JSONBytesFromString{Value: scAddress}
 	if rawQuery.Value != nil {
 		egldValue, err := stringToBigint(*rawQuery.Value)
 		if err != nil {
 			return nil, err
 		}
-		tx.Tx.EGLDValue = mj.JSONBigInt{Value: egldValue}
+		tx.Tx.EGLDValue = model.JSONBigInt{Value: egldValue}
 	}
 	tx.Tx.Function = rawQuery.FuncName
-	tx.Tx.Arguments = []mj.JSONBytesFromTree{}
+	tx.Tx.Arguments = []model.JSONBytesFromTree{}
 	for _, rawArgument := range rawQuery.Args {
 		argument, err := hex.DecodeString(rawArgument)
 		if err != nil {
 			return nil, err
 		}
-		tx.Tx.Arguments = append(tx.Tx.Arguments, mj.JSONBytesFromTree{Value: argument})
+		tx.Tx.Arguments = append(tx.Tx.Arguments, model.JSONBytesFromTree{Value: argument})
 	}
-	vmOutput, err := ae.vmTestExecutor.ExecuteTxStep(tx)
+	vmOutput, err := e.scenexec.ExecuteTxStep(tx)
 	if err != nil {
 		return nil, err
 	}

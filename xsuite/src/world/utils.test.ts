@@ -13,7 +13,7 @@ test("numberToU8AAddress - non-positive number", () => {
 test("numberToU8AAddress - wallet", () => {
   expect(numberToU8AAddress(123, false)).toEqual(
     Uint8Array.from([
-      0, 0, 0, 123, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      1, 0, 0, 0, 123, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0,
     ]),
   );
@@ -22,7 +22,7 @@ test("numberToU8AAddress - wallet", () => {
 test("numberToU8AAddress - contract", () => {
   expect(numberToU8AAddress(456, true)).toEqual(
     Uint8Array.from([
-      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 200, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 5, 0, 0, 0, 1, 200, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
       0, 0, 0, 0, 0, 0, 0, 0,
     ]),
   );
