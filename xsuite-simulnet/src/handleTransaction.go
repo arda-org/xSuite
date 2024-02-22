@@ -13,7 +13,6 @@ import (
 	"github.com/go-chi/chi"
 	model "github.com/multiversx/mx-chain-scenario-go/scenario/model"
 	worldmock "github.com/multiversx/mx-chain-scenario-go/worldmock"
-	vmcommon "github.com/multiversx/mx-chain-vm-common-go"
 )
 
 func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
@@ -70,12 +69,13 @@ func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
 				return nil, err
 			}
 			tx.Tx.Code = model.JSONBytesFromString{Value: code}
-			tx.Tx.CodeMetadata = model.JSONBytesFromString{Value: (&vmcommon.CodeMetadata{
-				Payable:     true,
-				Upgradeable: true,
-				Readable:    true,
-			}).ToBytes()}
-			i += 3
+			i += 2
+			codeMetadata, err := hex.DecodeString(dataParts[i])
+			if err != nil {
+				return nil, err
+			}
+			tx.Tx.CodeMetadata = model.JSONBytesFromString{Value: codeMetadata}
+			i += 1
 		} else {
 			if dataParts[i] == "MultiESDTNFTTransfer" {
 				if !bytes.Equal(sender, receiver) {
