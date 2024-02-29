@@ -22,7 +22,7 @@ const emptyAccount = {
   nonce: 0,
   balance: 0,
   code: null,
-  codeMetadata: null,
+  codeMetadata: "",
   owner: null,
   kvs: {},
 };
@@ -31,7 +31,7 @@ const explorerUrl = 'http://explorer.local';
 beforeAll(async () => {
   world = await CSWorld.start({
     explorerUrl,
-    verbose: true,
+    // verbose: true,
     // debug: true,
   });
   wallet = await world.createWallet({
@@ -39,7 +39,7 @@ beforeAll(async () => {
     kvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
   }); // wallet in shard 0
 
-  // TODO: We generated multiple wallets until we got one in the same shard
+  // TODO: We generated multiple wallets until we got one in the same shard because of chain simulator bug
   otherWallet = await world.createWallet();
   otherWallet = await world.createWallet();
   otherWallet = await world.createWallet();
@@ -67,6 +67,7 @@ beforeEach(async () => {
   });
   await contract.setAccount({
     balance: 10n ** 18n,
+    codeMetadata: ['payable'],
     kvs: [
       e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }]),
       [e.Str("n"), e.U64(2)],
@@ -262,7 +263,7 @@ test('CSWorld.executeTx', async () => {
   expect(tx.hash).toBeTruthy();
   expect(tx.explorerUrl).toEqual(`${explorerUrl}/transactions/${tx.hash}`);
   assertAccount(await wallet.getAccountWithKvs(), {
-    balance: 9n * 10n ** 17n - 5n * (10n ** 13n),
+    balance: 9n * 10n ** 17n - 50_000n * (10n ** 9n),
   });
   assertAccount(await otherWallet.getAccountWithKvs(), {
     balance: 10n ** 17n,
@@ -367,9 +368,9 @@ test('CSWallet.callContract failure', async () => {
     }),
   ).rejects.toMatchObject({
     message: expect.stringMatching(
-      /^Query failed: 1 - invalid function \(not found\) - Result:\n\{\n {2}"executionLogs": "(.*)",/,
+      /^Query failed: function not found - invalid function \(not found\) - Result:\n\{\n {2}"returnData": null,/,
     ),
-    stack: expect.stringMatching(/src\/world\/index\.test\.ts:[0-9]+:[0-9]+/),
+    stack: expect.stringMatching(/src\/world\/csworld\.test\.ts:[0-9]+:[0-9]+/),
   });
 });
 
@@ -380,11 +381,19 @@ test('CSWorld.query.assertFail - Correct parameters', async () => {
       funcName: 'require_positive',
       funcArgs: [e.U64(0)],
     })
-    .assertFail({ code: 4, message: 'Amount is not positive.' });
+    .assertFail({ code: 'user error', message: 'Amount is not positive.' });
 });
 
 test('CSWallet.getAccountNonce', async () => {
+  const oldNonce = await wallet.getAccountNonce();
+
+  await wallet.setAccount({ nonce: 0 });
   expect(await wallet.getAccountNonce()).toEqual(0);
+
+  // Preserve old account nonce since these tests are ran on shared chain simulator
+  await wallet.setAccount({
+    nonce: oldNonce,
+  });
 });
 
 test('CSWallet.getAccountBalance', async () => {
@@ -398,23 +407,42 @@ test('CSWallet.getAccountKvs', async () => {
 });
 
 test('CSWallet.getAccount', async () => {
+  const oldNonce = await wallet.getAccountNonce();
+
+  await wallet.setAccount({ nonce: 0 });
+
   assertAccount(await wallet.getAccount(), {
     nonce: 0,
     balance: 10n ** 18n,
     code: null,
-    codeMetadata: ['readable'],
+    codeMetadata: [],
     owner: null,
+  });
+
+  // Preserve old account nonce since these tests are ran on shared chain simulator
+  await wallet.setAccount({
+    nonce: oldNonce,
   });
 });
 
 test('CSWallet.getAccountWithKvs', async () => {
+  const oldNonce = await wallet.getAccountNonce();
+
+  await wallet.setAccount({ nonce: 0 });
+
   assertAccount(await wallet.getAccountWithKvs(), {
     nonce: 0,
     balance: 10n ** 18n,
     code: null,
-    codeMetadata: ['readable'],
+    codeMetadata: [],
     owner: null,
     hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
+  });
+
+
+  // Preserve old account nonce since these tests are ran on shared chain simulator
+  await wallet.setAccount({
+    nonce: oldNonce,
   });
 });
 
@@ -467,7 +495,7 @@ test('CSWallet.executeTx', async () => {
   expect(tx.hash).toBeTruthy();
   expect(tx.explorerUrl).toEqual(`${explorerUrl}/transactions/${tx.hash}`);
   assertAccount(await wallet.getAccountWithKvs(), {
-    balance: 9n * 10n ** 17n,
+    balance: 9n * 10n ** 17n - 50_000n * (10n ** 9n),
   });
   assertAccount(await otherWallet.getAccountWithKvs(), {
     balance: 10n ** 17n,
@@ -486,7 +514,7 @@ test('CSWallet.transfer', async () => {
     gasLimit: 10_000_000,
   });
   assertAccount(await wallet.getAccountWithKvs(), {
-    balance: 9n * 10n ** 17n,
+    balance: 9n * 10n ** 17n - 388_095n * (10n ** 9n),
     hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 9n * 10n ** 17n }])],
   });
   assertAccount(await otherWallet.getAccountWithKvs(), {
@@ -538,7 +566,7 @@ test('CSWallet.callContract with EGLD', async () => {
     gasLimit: 10_000_000,
   });
   assertAccount(await wallet.getAccountWithKvs(), {
-    balance: 9n * 10n ** 17n,
+    balance: 9n * 10n ** 17n - 6_864_545n * (10n ** 7n),
   });
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 10n ** 18n + 10n ** 17n,
@@ -594,9 +622,9 @@ test('CSWallet.callContract failure', async () => {
     }),
   ).rejects.toMatchObject({
     message: expect.stringMatching(
-      /^Transaction failed: 1 - invalid function \(not found\) - Result:\n\{\n {2}"explorerUrl": "(.*)",\n {2}"hash": "(.*)",\n {2}"executionLogs": "(.*)",/,
+      /^Transaction failed: signalError - invalid function \(not found\) - Result:\n\{\n {2}"explorerUrl": "(.*)",\n {2}"hash": "(.*)",\n {2}"type": "(.*)",/,
     ),
-    stack: expect.stringMatching(/src\/world\/index\.test\.ts:[0-9]+:[0-9]+/),
+    stack: expect.stringMatching(/src\/world\/csworld\.test\.ts:[0-9]+:[0-9]+/),
   });
 });
 
@@ -608,7 +636,7 @@ test('CSWallet.callContract.assertFail - Correct parameters', async () => {
       funcArgs: [e.U64(0)],
       gasLimit: 10_000_000,
     })
-    .assertFail({ code: 4, message: 'Amount is not positive.' });
+    .assertFail({ code: 'signalError', message: 'Amount is not positive.' });
 });
 
 test('CSWallet.callContract.assertFail - Wrong code', async () => {
@@ -622,7 +650,7 @@ test('CSWallet.callContract.assertFail - Wrong code', async () => {
       })
       .assertFail({ code: 5 }),
   ).rejects.toThrow(
-    'Failed with unexpected error code.\nExpected code: 5\nReceived code: 4',
+    'Failed with unexpected error code.\nExpected code: 5\nReceived code: signalError',
   );
 });
 

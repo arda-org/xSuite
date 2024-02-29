@@ -70,8 +70,8 @@ export const assertAccount = (
   }
   if (codeMetadata !== undefined) {
     assert.strictEqual(
-      actualAccount.codeMetadata,
-      codeMetadata == null ? codeMetadata : codeMetadataToHex(codeMetadata),
+      actualAccount.codeMetadata == null ? "" : actualAccount.codeMetadata,
+      codeMetadata == null ? "" : codeMetadataToHex(codeMetadata),
     );
   }
   if (owner !== undefined) {

@@ -62,8 +62,6 @@ export class CSProxy extends Proxy {
   static async getCompletedTxRaw(baseUrl: string, txHash: string) {
     let res = await Proxy.getTxProcessStatusRaw(baseUrl, txHash);
 
-    console.log('get completed tx', res);
-
     let retries = 0;
 
     while (!res || res.code !== 'successful' || res.data.status === 'pending') {
@@ -76,8 +74,6 @@ export class CSProxy extends Proxy {
       res = await CSProxy.getTxProcessStatusRaw(baseUrl, txHash);
 
       retries++;
-
-      console.log('retry', retries);
 
       // Prevent too many retries in case something does not work as expected
       if (retries > 10) {
@@ -149,8 +145,12 @@ const accountToRawAccount = (account: Account, previousAccount: {
 
   Object.keys(rawAccount).forEach(key => rawAccount[key] === undefined ? delete rawAccount[key] : {});
 
+  // Preserve properties which need to have default values on initial account creation
   if (previousAccount.code && rawAccount.code === '00') {
     rawAccount.code = previousAccount.code;
+  }
+  if (previousAccount.balance > 0n && !account.balance?.toString()) {
+    rawAccount.balance = previousAccount.balance.toString();
   }
 
   return {
