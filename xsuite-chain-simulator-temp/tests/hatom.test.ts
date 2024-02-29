@@ -54,7 +54,7 @@ beforeEach(async () => {
   systemDelegationContract = world.newContract(SYSTEM_DELEGATION_MANAGER_ADDRESS);
   liquidStakingContract = world.newContract(LIQUID_STAKING_CONTRACT_ADDRESS);
 
-  // generate 20 blocks to pass an epoch and the smart contract deploys to be enabled
+  // generate 20 blocks to pass an epoch so system smart contracts are enabled
   await world.generateBlocks(20);
 }, 30_000);
 
@@ -340,4 +340,4 @@ test('Test', async () => {
   const { stakingProviderDelegationContract } = await deployDelegationProvider();
 
   await setupLiquidStaking(stakingProviderDelegationContract);
-}, { timeout: 0 }); // Test takes 1-2 minutes to run
+}, { timeout: 60_000 }); // Test takes 30-60 seconds to run
