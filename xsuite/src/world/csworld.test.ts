@@ -29,25 +29,49 @@ const emptyAccount = {
 const explorerUrl = 'http://explorer.local';
 
 beforeAll(async () => {
-  world = await CSWorld.start({ explorerUrl, verbose: true });
+  world = await CSWorld.start({
+    explorerUrl,
+    verbose: true,
+    // debug: true,
+  });
   wallet = await world.createWallet({
     balance: 10n ** 18n,
     kvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
-  });
+  }); // wallet in shard 0
+
+  // TODO: We generated multiple wallets until we got one in the same shard
   otherWallet = await world.createWallet();
-  await world.generateBlocks(20);
+  otherWallet = await world.createWallet();
+  otherWallet = await world.createWallet();
+  otherWallet = await world.createWallet();
+  otherWallet = await world.createWallet();
+  otherWallet = await world.createWallet(); // wallet in shard 0
+
   const result = await wallet.deployContract({
-    // balance: 10n ** 18n,
-    // kvs: [
-    //   e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }]),
-    //   [e.Str("n"), e.U64(2)],
-    // ],
     code: worldCode,
-    codeMetadata: ["payable"],
+    codeMetadata: ['payable'],
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
   contract = result.contract;
+}, 60_000);
+
+beforeEach(async () => {
+  await wallet.setAccount({
+    balance: 10n ** 18n,
+    kvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
+  });
+  await otherWallet.setAccount({
+    balance: 0,
+    kvs: [],
+  });
+  await contract.setAccount({
+    balance: 10n ** 18n,
+    kvs: [
+      e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }]),
+      [e.Str("n"), e.U64(2)],
+    ],
+  });
 });
 
 test('CSWorld.proxy.getAccountNonce on empty bech address', async () => {
@@ -139,25 +163,24 @@ test('CSWorld.getAccountNonce', async () => {
   expect(await world.getAccountNonce(wallet)).toEqual(10);
 });
 
-// TODO: Enable after balance bug is fixed in chain simulator
-test.skip('CSWorld.getAccountBalance', async () => {
+test('CSWorld.getAccountBalance', async () => {
   await wallet.setAccount({ balance: '1234' });
   expect(await world.getAccountBalance(wallet)).toEqual(1234n);
 });
 
-test.skip('CSWorld.getAccount', async () => {
+test('CSWorld.getAccount', async () => {
   await wallet.setAccount({ nonce: 10, balance: 1234 });
   assertAccount(await world.getAccount(wallet), { nonce: 10, balance: 1234 });
 });
 
-test.skip('CSWorld.getAccountKvs', async () => {
+test('CSWorld.getAccountKvs', async () => {
   await wallet.setAccount({ kvs: [e.kvs.Mapper('n').Value(e.U(12))] });
   expect(await world.getAccountKvs(wallet)).toEqual(
     kvsToRawKvs(e.kvs.Mapper('n').Value(e.U(12))),
   );
 });
 
-test.skip('CSWorld.getAccountWithKvs', async () => {
+test('CSWorld.getAccountWithKvs', async () => {
   await wallet.setAccount({
     nonce: 10,
     balance: 1234,
@@ -187,34 +210,6 @@ test('CSWorld.setAccount', async () => {
     owner: wallet,
   });
 });
-
-// test('CSWorld.setCurrentBlockInfo', async () => {
-//   await world.setCurrentBlockInfo({
-//     epoch: 100,
-//     nonce: 200,
-//     round: 300,
-//     timestamp: 400,
-//   });
-//   const { returnData } = await world.query({
-//     callee: contract,
-//     funcName: 'get_current_block_info',
-//   });
-//   assertHexList(returnData, [e.U64(100), e.U64(200), e.U64(300), e.U64(400)]);
-// });
-//
-// test('CSWorld.setPreviousBlockInfo', async () => {
-//   await world.setPreviousBlockInfo({
-//     epoch: 10,
-//     nonce: 20,
-//     round: 30,
-//     timestamp: 40,
-//   });
-//   const { returnData } = await world.query({
-//     callee: contract,
-//     funcName: 'get_prev_block_info',
-//   });
-//   assertHexList(returnData, [e.U64(10), e.U64(20), e.U64(30), e.U64(40)]);
-// });
 
 test('CSWorld.query - basic', async () => {
   const { returnData } = await world.query({
@@ -267,7 +262,7 @@ test('CSWorld.executeTx', async () => {
   expect(tx.hash).toBeTruthy();
   expect(tx.explorerUrl).toEqual(`${explorerUrl}/transactions/${tx.hash}`);
   assertAccount(await wallet.getAccountWithKvs(), {
-    balance: 9n * 10n ** 17n,
+    balance: 9n * 10n ** 17n - 5n * (10n ** 13n),
   });
   assertAccount(await otherWallet.getAccountWithKvs(), {
     balance: 10n ** 17n,
@@ -288,7 +283,7 @@ test('CSWorld.transfer', async () => {
     gasLimit: 10_000_000,
   });
   assertAccount(await wallet.getAccountWithKvs(), {
-    balance: 9n * 10n ** 17n,
+    balance: 9n * 10n ** 17n - 388_095n * (10n ** 9n),
     hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 9n * 10n ** 17n }])],
   });
   assertAccount(await otherWallet.getAccountWithKvs(), {
@@ -333,7 +328,7 @@ test('CSWorld.callContract', async () => {
     gasLimit: 10_000_000,
   });
   assertAccount(await wallet.getAccountWithKvs(), {
-    balance: 9n * 10n ** 17n,
+    balance: 9n * 10n ** 17n - 6_864_545n * (10n ** 7n),
   });
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 10n ** 18n + 10n ** 17n,
@@ -368,7 +363,7 @@ test('CSWallet.callContract failure', async () => {
   await expect(
     world.query({
       callee: contract,
-      funcName: 'non_existent_function',
+      funcName: "non_existent_function",
     }),
   ).rejects.toMatchObject({
     message: expect.stringMatching(

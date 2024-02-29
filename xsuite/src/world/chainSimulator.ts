@@ -26,6 +26,8 @@ export const startChainSimulator = (
         '--config', `${chainSimulatorConfigFolder}/config.toml`,
         '--node-configs', `${chainSimulatorConfigFolder}/node/config`,
         '--proxy-configs', `${chainSimulatorConfigFolder}/proxy/config`,
+        // '-log-level', '*:DEBUG,process:TRACE',
+        // '-log-save'
       ],
     );
 

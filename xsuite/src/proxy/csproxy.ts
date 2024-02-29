@@ -1,5 +1,5 @@
 import { addressToBech32 } from '../data/address';
-import { kvsToRawKvs } from '../data/kvs';
+import { kvsToRawKvs, RawKvs } from '../data/kvs';
 import { BroadTx, codeMetadataToHex, Proxy, unrawTxRes } from './proxy';
 import { Account } from './sproxy';
 
@@ -15,15 +15,11 @@ export class CSProxy extends Proxy {
   }
 
   static async setAccount(baseUrl: string, account: Account, autoGenerateBlocks: boolean = true, verbose: boolean = false) {
-    const [previousAccount, kvs] = await Promise.all([
+    const [previousAccount, previousKvs] = await Promise.all([
       CSProxy.getAccount(baseUrl, account.address),
       CSProxy.getAccountKvs(baseUrl, account.address),
     ]);
-    const newAccount = {
-      ...previousAccount,
-      keys: kvs,
-      ...accountToRawAccount(account),
-    };
+    const newAccount = accountToRawAccount(account, previousAccount as any, previousKvs as RawKvs);
 
     if (verbose) {
       console.log('Setting account', newAccount);
@@ -66,6 +62,8 @@ export class CSProxy extends Proxy {
   static async getCompletedTxRaw(baseUrl: string, txHash: string) {
     let res = await Proxy.getTxProcessStatusRaw(baseUrl, txHash);
 
+    console.log('get completed tx', res);
+
     let retries = 0;
 
     while (!res || res.code !== 'successful' || res.data.status === 'pending') {
@@ -78,6 +76,8 @@ export class CSProxy extends Proxy {
       res = await CSProxy.getTxProcessStatusRaw(baseUrl, txHash);
 
       retries++;
+
+      console.log('retry', retries);
 
       // Prevent too many retries in case something does not work as expected
       if (retries > 10) {
@@ -117,8 +117,15 @@ export class CSProxy extends Proxy {
   }
 }
 
-const accountToRawAccount = (account: Account) => {
-  const rawAccount = {
+const accountToRawAccount = (account: Account, previousAccount: {
+  address: string;
+  nonce: number;
+  balance: bigint;
+  code: string | null;
+  codeMetadata: string | null;
+  owner: string | null;
+}, previousKvs: RawKvs) => {
+  const rawAccount: any = {
     address: addressToBech32(account.address),
     nonce: account.nonce,
     balance: account.balance?.toString() || '0',
@@ -132,7 +139,22 @@ const accountToRawAccount = (account: Account) => {
     developerReward: '0',
   };
 
+  if (rawAccount.keys !== undefined && Object.keys(previousKvs).length) {
+    for (const key in previousKvs) {
+      if (!(key in rawAccount.keys)) {
+        rawAccount.keys[key] = '';
+      }
+    }
+  }
+
   Object.keys(rawAccount).forEach(key => rawAccount[key] === undefined ? delete rawAccount[key] : {});
 
-  return rawAccount;
+  if (previousAccount.code && rawAccount.code === '00') {
+    rawAccount.code = previousAccount.code;
+  }
+
+  return {
+    ...previousAccount,
+    ...rawAccount,
+  };
 };

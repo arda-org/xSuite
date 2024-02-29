@@ -1,12 +1,18 @@
-#/bin/sh
+#!/bin/sh
 
 REPOSRC="git@github.com:multiversx/mx-chain-simulator-go.git"
+REPOVERSION="v1.7.1"
 
 if [ ! -d $LOCALREPO_VC_DIR ]
 then
     git clone $REPOSRC
+    cd mx-chain-simulator-go
+    git checkout $REPOVERSION
+    cd ..
 else
     cd mx-chain-simulator-go
+    git pull $REPOSRC
+    git checkout $REPOVERSION
     git pull $REPOSRC
     cd ..
 fi
