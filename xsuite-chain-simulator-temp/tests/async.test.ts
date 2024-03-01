@@ -10,8 +10,8 @@ let contractB: CSContract;
 
 beforeEach(async () => {
   world = await CSWorld.start({
-    verbose: true,
-    debug: true,
+    // verbose: true,
+    // debug: true,
   });
 
   // Wallets always need EGLD balance to pay for fees

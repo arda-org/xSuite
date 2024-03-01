@@ -38,14 +38,7 @@ beforeAll(async () => {
     balance: 10n ** 18n,
     kvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
   }); // wallet in shard 0
-
-  // TODO: We generated multiple wallets until we got one in the same shard because of chain simulator bug
   otherWallet = await world.createWallet();
-  otherWallet = await world.createWallet();
-  otherWallet = await world.createWallet();
-  otherWallet = await world.createWallet();
-  otherWallet = await world.createWallet();
-  otherWallet = await world.createWallet(); // wallet in shard 0
 
   const result = await wallet.deployContract({
     code: worldCode,

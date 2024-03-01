@@ -1,7 +1,7 @@
 #!/bin/sh
 
 REPOSRC="git@github.com:multiversx/mx-chain-simulator-go.git"
-REPOVERSION="v1.7.1"
+REPOVERSION="v1.7.2"
 
 if [ ! -d $LOCALREPO_VC_DIR ]
 then
