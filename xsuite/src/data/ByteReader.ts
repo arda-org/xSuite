@@ -1,32 +1,42 @@
+import { Bytes, bytesToU8A } from "./bytes";
+
 export class ByteReader {
-  bytes: Uint8Array;
+  u8a: Uint8Array;
   offset: number;
 
-  constructor(bytes: Uint8Array) {
-    this.bytes = bytes;
+  constructor(bytes: Bytes) {
+    this.u8a = bytesToU8A(bytes);
     this.offset = 0;
   }
 
   readExact(size: number): Uint8Array {
-    if (size > this.length()) throw new Error("No remaining byte to read.");
+    if (size > this.remaining()) {
+      throw new Error("No remaining byte to read.");
+    }
     return this.readAtMost(size);
   }
 
   readAtMost(size: number): Uint8Array {
-    const result = this.bytes.slice(this.offset, this.offset + size);
+    const result = this.u8a.slice(this.offset, this.offset + size);
     this.offset += result.byteLength;
     return result;
   }
 
-  readAll(): Uint8Array {
-    return this.readExact(this.length());
+  readRemaining(): Uint8Array {
+    return this.readExact(this.remaining());
   }
 
-  length() {
-    return this.bytes.byteLength - this.offset;
+  remaining() {
+    return this.u8a.byteLength - this.offset;
   }
 
   isConsumed(): boolean {
-    return this.offset == this.bytes.byteLength;
+    return this.offset == this.u8a.byteLength;
+  }
+
+  assertConsumed() {
+    if (!this.isConsumed()) {
+      throw new Error("Not all bytes have been read.");
+    }
   }
 }

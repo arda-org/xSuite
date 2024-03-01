@@ -1,19 +1,13 @@
 import { describe, expect, test, beforeEach, afterEach } from "vitest";
-import { assertKvs } from "../assert/account";
+import { assertKvs } from "../assert/assert";
 import { SWorld, SContract, SWallet } from "../world";
-import { d, e } from "./index";
+import { B64, d, e } from "./index";
 
 const zeroBechAddress =
   "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
 const zeroHexAddress =
   "0000000000000000000000000000000000000000000000000000000000000000";
-const zeroBytesAddress = new Uint8Array(32);
-
-test("e.Buffer - bytes with base64", () => {
-  expect(() => e.Buffer([1] as any, "b64")).toThrow(
-    "bytes is not a base64 string.",
-  );
-});
+const zeroU8AAddress = new Uint8Array(32);
 
 test("e.Buffer - odd hex length", () => {
   expect(() => e.Buffer("48656c6c6")).toThrow("Odd hex length.");
@@ -36,15 +30,7 @@ test("e.Buffer.toTopB64 - non-empty hex", () => {
 });
 
 test("e.Buffer.toTopHex - non-empty base64", () => {
-  expect(e.Buffer("ASM=", "b64").toTopHex()).toEqual("0123");
-});
-
-test("e.Buffer.toTopHex - empty number[]", () => {
-  expect(e.Buffer([]).toTopHex()).toEqual("");
-});
-
-test("e.Buffer.toTopHex - non-empty number[]", () => {
-  expect(e.Buffer([72, 101, 108, 108]).toTopHex()).toEqual("48656c6c");
+  expect(e.Buffer(B64("ASM=")).toTopHex()).toEqual("0123");
 });
 
 test("e.Buffer.toTopHex - empty Uint8Array", () => {
@@ -78,15 +64,7 @@ test("e.TopBuffer.toTopHex - non-empty hex", () => {
 });
 
 test("e.TopBuffer.toTopHex - non-empty b64", () => {
-  expect(e.TopBuffer("ASM=", "b64").toTopHex()).toEqual("0123");
-});
-
-test("e.TopBuffer.toTopHex - empty number[]", () => {
-  expect(e.TopBuffer([]).toTopHex()).toEqual("");
-});
-
-test("e.TopBuffer.toTopHex - non-empty number[]", () => {
-  expect(e.TopBuffer([72, 101, 108, 108]).toTopHex()).toEqual("48656c6c");
+  expect(e.TopBuffer(B64("ASM=")).toTopHex()).toEqual("0123");
 });
 
 test("e.TopBuffer.toTopHex - empty Uint8Array", () => {
@@ -123,18 +101,18 @@ test("e.Addr.toTopHex - hex address", () => {
   expect(e.Addr(zeroHexAddress).toTopHex()).toEqual(zeroHexAddress);
 });
 
-test("e.Addr.toTopHex - bytes address", () => {
-  expect(e.Addr(zeroBytesAddress).toTopHex()).toEqual(zeroHexAddress);
+test("e.Addr.toTopHex - u8a address", () => {
+  expect(e.Addr(zeroU8AAddress).toTopHex()).toEqual(zeroHexAddress);
 });
 
-test("e.Addr.toNestHex - bytes address", () => {
-  expect(e.Addr(zeroBytesAddress).toNestHex()).toEqual(zeroHexAddress);
+test("e.Addr.toNestHex - u8a address", () => {
+  expect(e.Addr(zeroU8AAddress).toNestHex()).toEqual(zeroHexAddress);
 });
 
 test("e.Addr - Invalid address HRP", () => {
   const address =
     "btc1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq5mhdvz";
-  expect(() => e.Addr(address)).toThrow("Invalid address HRP.");
+  expect(() => e.Addr(address)).toThrow("Invalid address format.");
 });
 
 test("e.Addr - Too small address length", () => {
@@ -481,7 +459,7 @@ test("e.Option.toNestHex - e.U(256)", () => {
 });
 
 test("e.Bytes.toNestHex", () => {
-  expect(e.Bytes([65, 66, 67]).toNestHex()).toEqual("414243");
+  expect(e.Bytes(new Uint8Array([65, 66, 67])).toNestHex()).toEqual("414243");
 });
 
 test("e.CstStr.toNestHex", () => {
@@ -848,24 +826,14 @@ test("d.Buffer.fromTop - hex", () => {
   expect(d.Buffer().fromTop("01020304")).toEqual(new Uint8Array([1, 2, 3, 4]));
 });
 
-test("d.Buffer.fromTop - number[]", () => {
-  expect(d.Buffer().fromTop("01020304")).toEqual(new Uint8Array([1, 2, 3, 4]));
-});
-
-test("d.Buffer.fromTop - bytes", () => {
-  expect(d.Buffer().fromTop([1, 2, 3, 4])).toEqual(
-    new Uint8Array([1, 2, 3, 4]),
-  );
-});
-
-test("d.Buffer.fromTop - bytes", () => {
+test("d.Buffer.fromTop - u8a", () => {
   expect(d.Buffer().fromTop(new Uint8Array([1, 2, 3, 4]))).toEqual(
     new Uint8Array([1, 2, 3, 4]),
   );
 });
 
 test("d.Buffer.fromTop - b64", () => {
-  expect(d.Buffer().fromTop("AQIDBA==", "b64")).toEqual(
+  expect(d.Buffer().fromTop(B64("AQIDBA=="))).toEqual(
     new Uint8Array([1, 2, 3, 4]),
   );
 });
@@ -885,7 +853,7 @@ test("d.Buffer.fromNest - hex", () => {
 });
 
 test("d.Buffer.fromTop - b64", () => {
-  expect(d.Buffer().fromNest("AAAABAECAwQ=", "b64")).toEqual(
+  expect(d.Buffer().fromNest(B64("AAAABAECAwQ="))).toEqual(
     new Uint8Array([1, 2, 3, 4]),
   );
 });
@@ -922,8 +890,26 @@ test("d.Addr.fromNest", () => {
   expect(d.Addr().fromNest(zeroHexAddress)).toEqual(zeroBechAddress);
 });
 
-test("d.Bool", () => {
+test("d.Bool.fromTop - true", () => {
+  expect(d.Bool().fromTop("01")).toEqual(true);
+});
+
+test("d.Bool.fromTop - false", () => {
+  expect(d.Bool().fromTop("")).toEqual(false);
+});
+
+test("d.Bool.fromNest - true", () => {
   expect(d.Bool().fromNest("01")).toEqual(true);
+});
+
+test("d.Bool.fromNest - false", () => {
+  expect(d.Bool().fromNest("00")).toEqual(false);
+});
+
+test("d.Bool.fromNest - incomplete decoding", () => {
+  expect(() => d.Bool().fromNest("0100")).toThrow(
+    "Not all bytes have been read.",
+  );
 });
 
 UXTestCases.U8Success.forEach(([value, topEncoding, nestEncoding]) => {

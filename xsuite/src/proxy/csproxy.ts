@@ -1,4 +1,4 @@
-import { addressToBech32 } from '../data/address';
+import { addressToBechAddress } from '../data/address';
 import { kvsToRawKvs, RawKvs } from '../data/kvs';
 import { BroadTx, codeMetadataToHex, Proxy, unrawTxRes } from './proxy';
 import { Account } from './sproxy';
@@ -122,7 +122,7 @@ const accountToRawAccount = (account: Account, previousAccount: {
   owner: string | null;
 }, previousKvs: RawKvs) => {
   const rawAccount: any = {
-    address: addressToBech32(account.address),
+    address: addressToBechAddress(account.address),
     nonce: account.nonce,
     balance: account.balance?.toString() || '0',
     keys: account.kvs != null ? kvsToRawKvs(account.kvs) : undefined,
@@ -131,7 +131,7 @@ const accountToRawAccount = (account: Account, previousAccount: {
       account.codeMetadata != null
         ? codeMetadataToHex(account.codeMetadata)
         : undefined,
-    ownerAddress: account.owner != null ? addressToBech32(account.owner) : undefined,
+    ownerAddress: account.owner != null ? addressToBechAddress(account.owner) : undefined,
     developerReward: '0',
   };
 

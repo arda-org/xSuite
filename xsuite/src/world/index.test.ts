@@ -17,7 +17,7 @@ const zeroBechAddress =
   "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
 const zeroHexAddress =
   "0000000000000000000000000000000000000000000000000000000000000000";
-const zeroBytesAddress = new Uint8Array(32);
+const zeroU8AAddress = new Uint8Array(32);
 const emptyAccount = {
   nonce: 0,
   balance: 0,
@@ -58,8 +58,8 @@ test("SWorld.proxy.getAccountNonce on empty hex address", async () => {
   expect(await world.proxy.getAccountNonce(zeroHexAddress)).toEqual(0);
 });
 
-test("SWorld.proxy.getAccountNonce on empty bytes address", async () => {
-  expect(await world.proxy.getAccountNonce(zeroBytesAddress)).toEqual(0);
+test("SWorld.proxy.getAccountNonce on empty U8A address", async () => {
+  expect(await world.proxy.getAccountNonce(zeroU8AAddress)).toEqual(0);
 });
 
 test("SWorld.proxy.getAccountBalance on empty bech address", async () => {
@@ -70,8 +70,8 @@ test("SWorld.proxy.getAccountBalance on empty hex address", async () => {
   expect(await world.proxy.getAccountBalance(zeroHexAddress)).toEqual(0n);
 });
 
-test("SWorld.proxy.getAccountBalance on empty bytes address", async () => {
-  expect(await world.proxy.getAccountBalance(zeroBytesAddress)).toEqual(0n);
+test("SWorld.proxy.getAccountBalance on empty U8A address", async () => {
+  expect(await world.proxy.getAccountBalance(zeroU8AAddress)).toEqual(0n);
 });
 
 test("SWorld.proxy.getAccountWithKvs on empty bech address", async () => {
@@ -88,9 +88,9 @@ test("SWorld.proxy.getAccountWithKvs on empty hex address", async () => {
   );
 });
 
-test("SWorld.proxy.getAccountWithKvs on empty bytes address", async () => {
+test("SWorld.proxy.getAccountWithKvs on empty U8A address", async () => {
   assertAccount(
-    await world.proxy.getAccountWithKvs(zeroBytesAddress),
+    await world.proxy.getAccountWithKvs(zeroU8AAddress),
     emptyAccount,
   );
 });
@@ -114,13 +114,13 @@ test("SWorld.newMainnet", () => {
 });
 
 test("SWorld.newWallet", async () => {
-  const wallet = world.newWallet(new DummySigner(new Uint8Array(32)));
-  expect(wallet.toTopBytes()).toEqual(new Uint8Array(32));
+  const wallet = world.newWallet(new DummySigner(zeroU8AAddress));
+  expect(wallet.toTopU8A()).toEqual(zeroU8AAddress);
 });
 
 test("SWorld.newContract", async () => {
-  const wallet = world.newWallet(new DummySigner(new Uint8Array(32)));
-  expect(wallet.toTopBytes()).toEqual(new Uint8Array(32));
+  const wallet = world.newWallet(new DummySigner(zeroU8AAddress));
+  expect(wallet.toTopU8A()).toEqual(zeroU8AAddress);
 });
 
 test("SWorld.createWallet", async () => {
@@ -258,20 +258,6 @@ test("SWorld.query - value", async () => {
   assertHexList(returnData, [e.U(10)]);
 });
 
-test("SWorld.query - try to change the state", async () => {
-  await world.query({
-    callee: contract,
-    funcName: "set_n",
-    funcArgs: [e.U64(100)],
-  });
-  assertAccount(await contract.getAccountWithKvs(), {
-    kvs: [
-      e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }]),
-      e.kvs.Mapper("n").Value(e.U64(2)),
-    ],
-  });
-});
-
 test("SWorld.executeTx", async () => {
   const { tx } = await world.executeTx({
     sender: wallet,
@@ -320,6 +306,7 @@ test("SWorld.deployContract & upgradeContract", async () => {
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
+  expect(isContractAddress(contract)).toEqual(true);
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
   assertAccount(await contract.getAccountWithKvs(), {
     code: worldCode,
@@ -361,6 +348,33 @@ test("SWallet.query", async () => {
     funcName: "get_caller",
   });
   assertHexList(returnData, [wallet]);
+});
+
+test("SWallet.query - try to change the state", async () => {
+  assertAccount(await wallet.getAccountWithKvs(), {
+    balance: 10n ** 18n,
+  });
+  assertAccount(await contract.getAccountWithKvs(), {
+    balance: 10n ** 18n,
+    hasKvs: [e.kvs.Mapper("n").Value(e.U64(2))],
+  });
+  await wallet.query({
+    callee: contract,
+    funcName: "fund",
+    value: 10,
+  });
+  await world.query({
+    callee: contract,
+    funcName: "set_n",
+    funcArgs: [e.U64(100)],
+  });
+  assertAccount(await wallet.getAccountWithKvs(), {
+    balance: 10n ** 18n,
+  });
+  assertAccount(await contract.getAccountWithKvs(), {
+    balance: 10n ** 18n,
+    hasKvs: [e.kvs.Mapper("n").Value(e.U64(2))],
+  });
 });
 
 test.todo("SWallet.query - esdts", async () => {
@@ -527,6 +541,7 @@ test("SWallet.deployContract & upgradeContract", async () => {
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
+  expect(isContractAddress(contract)).toEqual(true);
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
   assertAccount(await contract.getAccountWithKvs(), {
     code: worldCode,
@@ -543,16 +558,6 @@ test("SWallet.deployContract & upgradeContract", async () => {
     code: worldCode,
     hasKvs: [[e.Str("n"), e.U64(2)]],
   });
-});
-
-test("SWallet.deployContract - is contract address", async () => {
-  const { contract } = await wallet.deployContract({
-    code: worldCode,
-    codeMetadata: [],
-    codeArgs: [e.U64(1)],
-    gasLimit: 10_000_000,
-  });
-  expect(isContractAddress(contract)).toEqual(true);
 });
 
 test("SWallet.callContract with EGLD", async () => {

@@ -1,6 +1,4 @@
-import { AddressEncodable } from "../data/AddressEncodable";
 import { Address } from "../data/address";
-import { b64ToHex } from "../data/utils";
 import { Optional, Prettify } from "../helpers";
 import {
   devnetMinGasPrice,
@@ -26,6 +24,7 @@ import {
   UpgradeContractTxParams,
   Proxy,
 } from "../proxy/proxy";
+import { Account } from "./account";
 import { KeystoreSigner, Signer } from "./signer";
 import { readFileHex } from "./utils";
 
@@ -204,7 +203,7 @@ export class Wallet extends Signer {
     gasPrice: number;
     baseExplorerUrl?: string;
   }) {
-    super(signer.toTopBytes());
+    super(signer.toTopU8A());
     this.signer = signer;
     this.proxy = proxy;
     this.chainId = chainId;
@@ -290,7 +289,7 @@ export class Wallet extends Signer {
   }
 }
 
-export class Contract extends AddressEncodable {
+export class Contract extends Account {
   proxy: Proxy;
   explorerUrl: string;
   baseExplorerUrl: string;
@@ -460,10 +459,7 @@ const query = (proxy: Proxy, params: QueryParams) =>
         resQuery,
       );
     }
-    return {
-      query: resQuery,
-      returnData: resQuery.returnData.map(b64ToHex),
-    };
+    return { query: resQuery, returnData: resQuery.returnData };
   });
 
 const executeTx = (

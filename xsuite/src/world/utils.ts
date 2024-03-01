@@ -1,17 +1,15 @@
 import fs from "node:fs";
-import { Address, addressToAddressEncodable } from "../data/address";
+import { Address, addressToHexAddress } from "../data/address";
 
 export const readFileHex = (path: string) => {
   return fs.readFileSync(path, "hex");
 };
 
 export const isContractAddress = (address: Address) => {
-  return addressToAddressEncodable(address)
-    .toTopHex()
-    .startsWith("0000000000000000");
+  return addressToHexAddress(address).startsWith("0000000000000000");
 };
 
-export const numberToBytesAddress = (
+export const numberToU8AAddress = (
   n: number,
   isContract: boolean,
 ): Uint8Array => {
@@ -20,7 +18,16 @@ export const numberToBytesAddress = (
   }
   const buffer = new ArrayBuffer(addressByteLength);
   const view = new DataView(buffer);
-  view.setUint32(isContract ? contractAddressLeftShift : 0, n);
+  let shift = 0;
+  if (isContract) {
+    shift += contractAddressLeftShift;
+    view.setUint8(shift, 5);
+    shift += 2;
+  } else {
+    view.setUint8(shift, 1);
+    shift += 1;
+  }
+  view.setUint32(shift, n);
   return new Uint8Array(buffer);
 };
 

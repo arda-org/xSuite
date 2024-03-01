@@ -3,7 +3,7 @@ import { SProxy } from "../proxy";
 import { Account, Block } from "../proxy/sproxy";
 import { DummySigner, Signer } from "./signer";
 import { startSimulnet } from "./simulnet";
-import { isContractAddress, numberToBytesAddress } from "./utils";
+import { isContractAddress, numberToU8AAddress } from "./utils";
 import {
   World,
   Contract,
@@ -85,7 +85,7 @@ export class SWorld extends World {
 
   async createWallet(params: SWorldCreateWalletParams = {}) {
     walletCounter += 1;
-    const address = numberToBytesAddress(walletCounter, false);
+    const address = numberToU8AAddress(walletCounter, false);
     const wallet = this.newWallet(new DummySigner(address));
     await wallet.setAccount(params);
     return wallet;
@@ -193,7 +193,7 @@ const createContract = async (
   params: CreateContractParams = {},
 ) => {
   contractCounter += 1;
-  const address = numberToBytesAddress(contractCounter, true);
+  const address = numberToU8AAddress(contractCounter, true);
   const contract = new SContract({ address, proxy, baseExplorerUrl });
   await contract.setAccount(params);
   return contract;

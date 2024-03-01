@@ -4,11 +4,11 @@ go 1.17
 
 require (
 	github.com/go-chi/chi v1.5.4
-	github.com/multiversx/mx-chain-core-go v1.2.13
+	github.com/multiversx/mx-chain-core-go v1.2.18
 	github.com/multiversx/mx-chain-logger-go v1.0.13
-	github.com/multiversx/mx-chain-scenario-go v1.2.1
-	github.com/multiversx/mx-chain-vm-common-go v1.5.9
-	github.com/multiversx/mx-chain-vm-go v1.5.22
+	github.com/multiversx/mx-chain-scenario-go v1.4.2
+	github.com/multiversx/mx-chain-vm-common-go v1.5.11
+	github.com/multiversx/mx-chain-vm-go v1.5.27
 )
 
 require (
@@ -24,7 +24,7 @@ require (
 	github.com/herumi/bls-go-binary v1.28.2 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
-	github.com/multiversx/mx-chain-crypto-go v1.2.8 // indirect
+	github.com/multiversx/mx-chain-crypto-go v1.2.9 // indirect
 	github.com/multiversx/mx-components-big-int v1.0.0 // indirect
 	github.com/pelletier/go-toml v1.9.3 // indirect
 	golang.org/x/crypto v0.3.0 // indirect
