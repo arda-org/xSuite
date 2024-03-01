@@ -361,7 +361,7 @@ test('CSWallet.callContract failure', async () => {
     }),
   ).rejects.toMatchObject({
     message: expect.stringMatching(
-      /^Query failed: function not found - invalid function \(not found\) - Result:\n\{\n {2}"returnData": null,/,
+      /^Query failed: function not found - invalid function \(not found\) - Result:\n\{\n {2}"returnData": \[],/,
     ),
     stack: expect.stringMatching(/src\/world\/csworld\.test\.ts:[0-9]+:[0-9]+/),
   });

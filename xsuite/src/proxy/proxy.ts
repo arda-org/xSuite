@@ -127,7 +127,7 @@ export class Proxy {
     const res = unrawRes(await Proxy.queryRaw(baseUrl, query));
     return {
       ...res.data,
-      returnData: res.data.returnData.map(base64ToHex),
+      returnData: (res.data.returnData ?? []).map(base64ToHex),
     } as Record<string, any> & { returnData: string[] };
   }
 
