@@ -5,7 +5,7 @@ export const startChainSimulator = (
   debug: boolean = false,
   waitFor: number = 30_000,
   configFolder?: string
-): Promise<string> => {
+): Promise<[string, () => void]> => {
   let chainSimulator: any;
   try {
     chainSimulator = require('@xsuite/chainsimulator');
@@ -45,7 +45,9 @@ export const startChainSimulator = (
       if (match) {
         clearTimeout(timeout);
 
-        setTimeout(() => resolve(`http://localhost:${port}`), 250);
+        setTimeout(() => resolve([`http://localhost:${port}`, () => {
+          server.kill();
+        }]), 250);
       }
     });
 

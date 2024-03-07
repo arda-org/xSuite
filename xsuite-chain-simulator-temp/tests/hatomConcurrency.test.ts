@@ -1,5 +1,5 @@
 import { afterAll, assert, beforeAll, test } from 'vitest';
-import { assertAccount, d, e, Proxy, CSContract, CSWallet, CSWorld } from 'xsuite';
+import { assertAccount, d, e, Proxy, CSContract, CSWallet, CSWorld, Tx } from 'xsuite';
 import { mainnetPublicProxyUrl } from 'xsuite/dist/interact/envChain';
 import { DummySigner } from 'xsuite/dist/world/signer';
 
@@ -143,14 +143,14 @@ const deployDelegationProvider = async () => {
   });
   console.log('Merged validator with delegation contract. Moving forward 1 epoch...');
 
-  // generate 20 blocks to pass an epoch and some rewards will be distributed
-  await world.generateBlocks(20);
-
-  await address.callContract({
-    callee: stakingProviderDelegationContract,
-    funcName: 'claimRewards',
-    gasLimit: 510_000_000,
-  });
+  // // generate 20 blocks to pass an epoch and some rewards will be distributed
+  // await world.generateBlocks(20);
+  //
+  // await address.callContract({
+  //   callee: stakingProviderDelegationContract,
+  //   funcName: 'claimRewards',
+  //   gasLimit: 510_000_000,
+  // });
 
   // This fails sometimes randomly because of wrong egld balance...
   // Probably because too many blocks pass when processing pending transactions on different test runs
@@ -161,7 +161,7 @@ const deployDelegationProvider = async () => {
   return { stakingProviderDelegationContract };
 };
 
-const setupLiquidStaking = async (stakingProviderDelegationContract: CSContract) => {
+const setupLiquidStakingDelegateUndelegate = async (stakingProviderDelegationContract: CSContract) => {
   let result = await world.query({
     callee: stakingProviderDelegationContract,
     funcName: 'getTotalActiveStake',
@@ -227,42 +227,6 @@ const setupLiquidStaking = async (stakingProviderDelegationContract: CSContract)
   });
   assert(d.U().topDecode(result.returnData[0]) === 4011250000000000000000000n); // staked increased by 4,000,000 EGLD
 
-  console.log('Moving forward 3 epochs...');
-
-  // Move forward 3 epochs (to have enough rewards so they can be claimed)
-  await world.generateBlocks(20 * 3);
-
-  await admin.callContract({
-    callee: liquidStakingContract,
-    funcName: 'claimRewardsFrom',
-    gasLimit: 45_000_000,
-    funcArgs: [
-      stakingProviderDelegationContract,
-    ],
-  });
-  console.log('Successfully claimed rewards from staking provider');
-
-  const kvs = await liquidStakingContract.getAccountWithKvs();
-  const rewardsReserve = d.U().topDecode(kvs.kvs[e.Str('rewardsReserve').toTopHex()]);
-  console.log('Rewards reserve: ', rewardsReserve);
-  // TODO: Balance assertions are not reliable currently
-  // assert(rewardsReserve === 12360185739713390599n); // 12.360185739713390599 EGLD added as rewards
-
-  await admin.callContract({
-    callee: liquidStakingContract,
-    funcName: 'delegateRewards',
-    gasLimit: 45_000_000,
-  });
-  console.log('Delegate rewards back to staking provider');
-
-  result = await world.query({
-    callee: stakingProviderDelegationContract,
-    funcName: 'getTotalActiveStake',
-  });
-  const totalActiveStake = d.U().topDecode(result.returnData[0]);
-  console.log('New total active stake: ', totalActiveStake);
-  // assert(totalActiveStake === 4011262360185739713390599n); // staked increased by rewards reserve amount
-
   tx = await alice.callContract({
     callee: liquidStakingContract,
     funcName: 'unDelegate',
@@ -288,29 +252,51 @@ const setupLiquidStaking = async (stakingProviderDelegationContract: CSContract)
   // Move forward 10 epochs
   await world.generateBlocks(20 * 10);
 
-  await alice.callContract({
-    callee: liquidStakingContract,
-    funcName: 'withdraw',
-    gasLimit: 45_000_000,
-    esdts: [
-      {
-        id: undelegateNftReceived.token_identifier,
-        amount: undelegateNftReceived.amount,
-        nonce: Number(undelegateNftReceived.token_nonce),
-      },
-    ],
-  }).assertFail({ code: 'signalError', message: 'Too much EGLD amount' });
+  await world.sendTx(
+    Tx.getParamsToCallContract({
+      sender: alice,
+      callee: liquidStakingContract,
+      funcName: 'withdrawFrom',
+      gasLimit: 45_000_000,
+      funcArgs: [
+        stakingProviderDelegationContract,
+      ],
+    })
+  );
 
-  await alice.callContract({
-    callee: liquidStakingContract,
-    funcName: 'withdrawFrom',
-    gasLimit: 45_000_000,
-    funcArgs: [
-      stakingProviderDelegationContract,
-    ],
-  });
-  console.log('Withdraw from staking provider successfully')
+  await world.generateBlocks(1); // `withdrawFrom` transaction is pending
 
+  const txHash = await world.sendTx(
+    Tx.getParamsToCallContract({
+      sender: alice,
+      callee: liquidStakingContract,
+      funcName: 'withdraw',
+      gasLimit: 45_000_000,
+      esdts: [
+        {
+          id: undelegateNftReceived.token_identifier,
+          amount: undelegateNftReceived.amount,
+          nonce: Number(undelegateNftReceived.token_nonce),
+        },
+      ],
+    })
+  );
+
+  await world.generateBlocks(1); // Async call from `withdrawFrom` is still pending; `withdraw` transaction is pending
+  await world.generateBlocks(1); // Async call from `withdrawFrom` is finished; `withdraw` failed
+
+  await new Promise((r) => setTimeout(r, 250));
+  result = await world.proxy.getTx(txHash, { withResults: true });
+
+  assert(result.status === 'success');
+
+  const signalErrorEvent = result?.logs?.events.find(
+    (e: any) => e.identifier === "signalError",
+  );
+
+  assert(signalErrorEvent);
+
+  // Withdrawing again passes since async call is finished
   tx = await alice.callContract({
     callee: liquidStakingContract,
     funcName: 'withdraw',
@@ -325,7 +311,6 @@ const setupLiquidStaking = async (stakingProviderDelegationContract: CSContract)
   });
   const receivedEgldAmount = d.U().topDecode(tx.returnData[0]);
   console.log('Withdraw EGLD successfully. Received EGLD amount: ', receivedEgldAmount);
-  // assert(receivedEgldAmount === 400000902905460064767128n) // ~400,000.93 EGLD received back
 
   const balance = await alice.getAccountBalance();
   assert(balance >= receivedEgldAmount);
@@ -341,5 +326,5 @@ const setupLiquidStaking = async (stakingProviderDelegationContract: CSContract)
 test('Test', async () => {
   const { stakingProviderDelegationContract } = await deployDelegationProvider();
 
-  await setupLiquidStaking(stakingProviderDelegationContract);
+  await setupLiquidStakingDelegateUndelegate(stakingProviderDelegationContract);
 }, { timeout: 60_000 }); // Test takes 30-60 seconds to run

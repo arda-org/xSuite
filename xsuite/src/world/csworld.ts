@@ -1,5 +1,13 @@
 import { CSProxy } from '../proxy';
-import { Contract, expandCode, Wallet, WalletDeployContractParams, World, WorldNewOptions } from './world';
+import {
+  Contract,
+  expandCode,
+  Wallet,
+  WalletDeployContractParams,
+  World,
+  WorldExecuteTxParams,
+  WorldNewOptions,
+} from './world';
 import {
   SContractSetAccountParams,
   SWalletSetAccountParams,
@@ -42,7 +50,7 @@ export class CSWorld extends World {
       throw new Error('chainId is not undefined.');
     }
     return new CSWorld({
-      proxy: new CSProxy(options.proxyUrl, options.autoGenerateBlocks ?? true, options.verbose ?? false),
+      proxy: new CSProxy(options.proxyUrl, options.stopChainSimulator, options.autoGenerateBlocks ?? true, options.verbose ?? false),
       gasPrice: options.gasPrice ?? 1000000000,
       explorerUrl: options.explorerUrl,
       verbose: options.verbose,
@@ -80,8 +88,8 @@ export class CSWorld extends World {
     configFolder?: string,
     debug?: boolean,
   } = {}): Promise<CSWorld> {
-    const proxyUrl = await startChainSimulator(port, debug, waitFor, configFolder);
-    return CSWorld.new({ proxyUrl, gasPrice, explorerUrl, autoGenerateBlocks, verbose });
+    const [proxyUrl, stopChainSimulator] = await startChainSimulator(port, debug, waitFor, configFolder);
+    return CSWorld.new({ proxyUrl, stopChainSimulator, gasPrice, explorerUrl, autoGenerateBlocks, verbose });
   }
 
   newWallet(signer: Signer): CSWallet {
@@ -121,6 +129,10 @@ export class CSWorld extends World {
 
   getInitialWallets() {
     return this.proxy.getInitialWallets();
+  }
+
+  terminate() {
+    return this.proxy.terminate();
   }
 }
 
@@ -196,6 +208,7 @@ type CSWorldNewOptions =
   | {
   chainId?: undefined;
   proxyUrl: string;
+  stopChainSimulator: () => void;
   gasPrice?: number;
   explorerUrl?: string;
   autoGenerateBlocks?: boolean;

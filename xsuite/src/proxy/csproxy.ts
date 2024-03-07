@@ -4,12 +4,14 @@ import { BroadTx, codeMetadataToHex, Proxy, unrawTxRes } from './proxy';
 import { Account } from './sproxy';
 
 export class CSProxy extends Proxy {
+  stopChainSimulator: () => void;
   autoGenerateBlocks: boolean;
   verbose: boolean;
 
-  constructor(baseUrl: string, autoGenerateBlocks: boolean = true, verbose: boolean = false) {
+  constructor(baseUrl: string, stopChainSimulator: () => void, autoGenerateBlocks: boolean = true, verbose: boolean = false) {
     super(baseUrl);
 
+    this.stopChainSimulator = stopChainSimulator;
     this.autoGenerateBlocks = autoGenerateBlocks;
     this.verbose = verbose;
   }
@@ -65,6 +67,7 @@ export class CSProxy extends Proxy {
     let retries = 0;
 
     while (!res || res.code !== 'successful' || res.data.status === 'pending') {
+      // We need delay since cross shard changes might not have been processed immediately
       await new Promise((r) => setTimeout(r, 250));
 
       if (res && res.data && res.data.status === 'pending') {
@@ -110,6 +113,14 @@ export class CSProxy extends Proxy {
 
   getInitialWallets() {
     return CSProxy.getInitialWallets(this.baseUrl);
+  }
+
+  static async terminate(stopChainSimulator: () => void) {
+    await stopChainSimulator();
+  }
+
+  terminate() {
+    return CSProxy.terminate(this.stopChainSimulator);
   }
 }
 

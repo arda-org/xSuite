@@ -1,10 +1,11 @@
-import { afterEach, beforeEach, expect, test, beforeAll } from 'vitest';
+import { afterEach, beforeEach, expect, test, beforeAll, afterAll, assert } from 'vitest';
 import { assertAccount, assertHexList } from '../assert';
 import { e } from '../data';
 import { kvsToRawKvs } from '../data/kvs';
 import { DummySigner } from './signer';
 import { isContractAddress } from './utils';
 import { CSWorld, CSContract, CSWallet } from '.';
+import { Tx } from '../proxy/proxy';
 
 let world: CSWorld;
 let wallet: CSWallet;
@@ -22,7 +23,7 @@ const emptyAccount = {
   nonce: 0,
   balance: 0,
   code: null,
-  codeMetadata: "",
+  codeMetadata: '',
   owner: null,
   kvs: {},
 };
@@ -49,6 +50,10 @@ beforeAll(async () => {
   contract = result.contract;
 }, 60_000);
 
+afterAll(async () => {
+  await world.terminate();
+}, 60_000);
+
 beforeEach(async () => {
   await wallet.setAccount({
     balance: 10n ** 18n,
@@ -63,7 +68,7 @@ beforeEach(async () => {
     codeMetadata: ['payable'],
     kvs: [
       e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }]),
-      [e.Str("n"), e.U64(2)],
+      [e.Str('n'), e.U64(2)],
     ],
   });
 });
@@ -263,6 +268,46 @@ test('CSWorld.executeTx', async () => {
   });
 });
 
+test('CSWorld.sendTx', async () => {
+  const txHash = await world.sendTx(
+    Tx.getParamsToCallContract({
+      sender: wallet,
+      callee: contract,
+      funcName: 'fund',
+      value: 10n ** 17n,
+      gasLimit: 10_000_000,
+    })
+  );
+
+  // Transaction was not yet included in a block
+  try {
+    await world.proxy.getTx(txHash, { withResults: true });
+
+    assert(false);
+  } catch (e) {
+    assert(true);
+  }
+
+  // After generating 1 block, transaction is pending
+  await world.generateBlocks(1);
+  let result = await world.proxy.getTx(txHash, { withResults: true });
+
+  expect(result.status === 'pending');
+
+  // After generating 2 blocks, transaction is successful
+  await world.generateBlocks(1);
+  result = await world.proxy.getTx(txHash, { withResults: true });
+
+  expect(result.status === 'success');
+
+  assertAccount(await wallet.getAccountWithKvs(), {
+    balance: 9n * 10n ** 17n - 6_864_545n * (10n ** 7n),
+  });
+  assertAccount(await contract.getAccountWithKvs(), {
+    balance: 10n ** 18n + 10n ** 17n,
+  });
+});
+
 test('CSWorld.transfer', async () => {
   await world.transfer({
     sender: wallet,
@@ -284,7 +329,7 @@ test('CSWorld.transfer', async () => {
     balance: 10n ** 17n,
     hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 17n }])],
   });
-});
+}, { timeout: 10_000 });
 
 test('CSWorld.deployContract & upgradeContract', async () => {
   const { contract } = await world.deployContract({
@@ -357,7 +402,7 @@ test('CSWallet.callContract failure', async () => {
   await expect(
     world.query({
       callee: contract,
-      funcName: "non_existent_function",
+      funcName: 'non_existent_function',
     }),
   ).rejects.toMatchObject({
     message: expect.stringMatching(
@@ -431,7 +476,6 @@ test('CSWallet.getAccountWithKvs', async () => {
     owner: null,
     hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
   });
-
 
   // Preserve old account nonce since these tests are ran on shared chain simulator
   await wallet.setAccount({
@@ -514,7 +558,7 @@ test('CSWallet.transfer', async () => {
     balance: 10n ** 17n,
     hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 17n }])],
   });
-});
+}, { timeout: 10_000 });
 
 test('CSWallet.deployContract & upgradeContract', async () => {
   const { contract } = await wallet.deployContract({

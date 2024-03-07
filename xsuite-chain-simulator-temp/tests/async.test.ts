@@ -1,4 +1,4 @@
-import { afterEach, assert, beforeEach, test } from 'vitest';
+import { assert, beforeAll, test, afterAll } from 'vitest';
 import { assertAccount, d, e, Proxy, CSContract, CSWallet, CSWorld } from 'xsuite';
 
 let world: CSWorld;
@@ -8,7 +8,7 @@ let deployerB: CSWallet;
 let contractA: CSContract;
 let contractB: CSContract;
 
-beforeEach(async () => {
+beforeAll(async () => {
   world = await CSWorld.start({
     // verbose: true,
     // debug: true,
@@ -35,6 +35,10 @@ beforeEach(async () => {
     gasLimit: 10_000_000,
   });
   contractB = resultB.contract;
+}, 30_000);
+
+afterAll(async () => {
+  await world.terminate();
 }, 30_000);
 
 test('Test', async () => {
