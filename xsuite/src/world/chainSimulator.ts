@@ -29,7 +29,7 @@ export const startChainSimulator = (
       ],
     );
 
-    const timeout = setTimeout(() => reject(new Error('Simulnet failed starting.')), waitFor);
+    const timeout = setTimeout(() => reject(new Error('Chain Simulator failed starting.')), waitFor);
 
     if (debug) {
       console.log('Starting chain simulator...');
@@ -40,7 +40,7 @@ export const startChainSimulator = (
         console.log(data.toString());
       }
 
-      const activeRegex = /shard 4294967295 active nodes/;
+      const activeRegex = /shard 4294967295 regular nodes/;
       const match = data.toString().match(activeRegex);
       if (match) {
         clearTimeout(timeout);

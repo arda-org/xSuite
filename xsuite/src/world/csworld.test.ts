@@ -374,6 +374,18 @@ test('CSWorld.callContract', async () => {
   });
 });
 
+test('CSWorld.getInitialWallets', async () => {
+  const initialWallets = await world.getInitialWallets();
+  const initialAddressWithStake = initialWallets.stakeWallets[0].address.bech32;
+  assert(initialAddressWithStake);
+
+  const initialAddressWithBalance = initialWallets.balanceWallets[0].address.bech32;
+  const initialAddressWithBalanceWallet = world.newWallet(new DummySigner(initialAddressWithBalance));
+  assertAccount(await initialAddressWithBalanceWallet.getAccountWithKvs(), {
+    balance: 6663333333333333333333333n,
+  });
+});
+
 test('CSWallet.query', async () => {
   const { returnData } = await wallet.query({
     callee: contract,

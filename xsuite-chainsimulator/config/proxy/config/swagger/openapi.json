@@ -686,12 +686,12 @@
         }
       }
     },
-    "/block/by-round/{round}": {
+    "/blocks/by-round/{round}": {
       "get": {
         "tags": [
           "block"
         ],
-        "summary": "returns all blocks by round.",
+        "summary": "returns all blocks from all shards for a specific round",
         "parameters": [
           {
             "name": "round",
@@ -1243,12 +1243,24 @@
         }
       }
     },
-    "/network/trie-statistics": {
+    "/network/trie-statistics/{shard}": {
       "get": {
         "tags": [
           "network"
         ],
-        "summary": "returns metrics for the trie statistics",
+        "summary": "returns metrics for the trie statistics in the given shard",
+        "parameters": [
+          {
+            "name": "shard",
+            "in": "path",
+            "description": "the shard ID to fetch the status from",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "successful operation",
@@ -1386,6 +1398,40 @@
             "description": "the nonce to look after",
             "schema": {
               "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "validation error"
+          }
+        }
+      }
+    },
+    "/node/waiting-epochs-left/{key}": {
+      "get": {
+        "tags": [
+          "node"
+        ],
+        "summary": "will return the number of epochs left for the public key until it becomes eligible",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "description": "the public key to look after",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -1650,7 +1696,7 @@
         "tags": [
           "internal"
         ],
-        "summary": "returns the block at the given nonce following the protocol structure, but JSON encoded",
+        "summary": "returns the block at the given nonce following the protocol structure, JSON encoded",
         "parameters": [
           {
             "name": "shard",
@@ -1693,7 +1739,7 @@
         "tags": [
           "internal"
         ],
-        "summary": "returns the block with the given hash following the protocol structure, nut JSON encoded",
+        "summary": "returns the block with the given hash following the protocol structure, JSON encoded",
         "parameters": [
           {
             "name": "shard",
@@ -2035,7 +2081,7 @@
         }
       }
     },
-    "/transaction/{txhash}": {
+    "/transaction/{txHash}": {
       "get": {
         "tags": [
           "transaction"
@@ -2043,7 +2089,7 @@
         "summary": "returns the transaction which corresponds to the hash",
         "parameters": [
           {
-            "name": "txhash",
+            "name": "txHash",
             "in": "path",
             "description": "the transaction hash to search for",
             "required": true,
@@ -2116,7 +2162,7 @@
         "summary": "returns the transaction and results which correspond to the hash",
         "parameters": [
           {
-            "name": "txhash",
+            "name": "txHash",
             "in": "path",
             "description": "the transaction hash to search for",
             "required": true,
@@ -2134,7 +2180,7 @@
                 "schema": {
                   "type": "object",
                   "items": {
-                    "$ref": "#/components/schemas/AddressEsdtToken"
+                    "$ref": "#/components/schemas/Transaction"
                   }
                 }
               }
@@ -2151,7 +2197,7 @@
         "summary": "returns the transaction which corresponds to the hash (faster because will ask for transaction from the observer which is in the shard in which the address is part).",
         "parameters": [
           {
-            "name": "txhash",
+            "name": "txHash",
             "in": "path",
             "description": "the transaction hash to search for",
             "required": true,
@@ -2193,7 +2239,7 @@
         "summary": "returns the transaction which corresponds to the hash (faster because will ask for transaction from the observer which is in the shard in which the address is part).",
         "parameters": [
           {
-            "name": "txhash",
+            "name": "txHash",
             "in": "path",
             "description": "the transaction hash to search for",
             "required": true,
@@ -2235,7 +2281,7 @@
         "summary": "returns the status of the transaction which corresponds to the hash (faster because will ask for transaction status from the observer which is in the shard in which the address is part).",
         "parameters": [
           {
-            "name": "txhash",
+            "name": "txHash",
             "in": "path",
             "description": "the transaction hash to search for",
             "required": true,
@@ -2269,7 +2315,7 @@
         }
       }
     },
-    "/transaction/{txhash}/status": {
+    "/transaction/{txHash}/status": {
       "get": {
         "tags": [
           "transaction"
@@ -2277,7 +2323,7 @@
         "summary": "returns the status of the transaction which corresponds to the hash",
         "parameters": [
           {
-            "name": "txhash",
+            "name": "txHash",
             "in": "path",
             "description": "the transaction hash to search for",
             "required": true,
@@ -2301,7 +2347,7 @@
         }
       }
     },
-    "/transaction/{txhash}/process-status": {
+    "/transaction/{txHash}/process-status": {
       "get": {
         "tags": [
           "transaction"
@@ -2309,7 +2355,7 @@
         "summary": "returns the processing status of the transaction which corresponds to the hash. It searches for SCRs generated by the transaction and computes the actual processing status",
         "parameters": [
           {
-            "name": "txhash",
+            "name": "txHash",
             "in": "path",
             "description": "the transaction hash to search for",
             "required": true,
@@ -2428,40 +2474,6 @@
             "required": true,
             "schema": {
               "$ref": "#/components/schemas/FundsRequest"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "successful operation",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/GenericResponse"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "validation error"
-          }
-        }
-      }
-    },
-    "/transaction/{hash}": {
-      "get": {
-        "tags": [
-          "transaction"
-        ],
-        "summary": "retrieves the transaction with the provided hash",
-        "parameters": [
-          {
-            "name": "hash",
-            "in": "path",
-            "required": true,
-            "description": "the hash of the transaction to look after",
-            "schema": {
-              "type": "string"
             }
           }
         ],

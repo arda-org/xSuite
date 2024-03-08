@@ -117,7 +117,7 @@ const deployDelegationProvider = async () => {
   console.log('Deployed new delegation contract', stakingProviderDelegationContract.toString());
 
   const initialWallets = await world.getInitialWallets();
-  const initialAddressWithStake = initialWallets.initialWalletWithStake.address;
+  const initialAddressWithStake = initialWallets.stakeWallets[0].address.bech32;
   const initialAddressWithStakeWallet = world.newWallet(new DummySigner(initialAddressWithStake));
   console.log('Initial address with stake', initialAddressWithStake);
 
