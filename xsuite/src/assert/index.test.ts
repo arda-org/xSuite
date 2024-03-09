@@ -1,12 +1,12 @@
 import { test, expect } from "vitest";
-import { assertAccount, assertHexList } from ".";
+import { assertAccount, assertVs, assertHexList } from ".";
 
-test("assertHexList - matching", () => {
-  assertHexList(["00"], ["00"]);
+test("assertVs - matching", () => {
+  assertVs(["00"], ["00"]);
 });
 
-test("assertHexList - not matching", () => {
-  expect(() => assertHexList(["00"], ["01"])).toThrow();
+test("assertVs - not matching", () => {
+  expect(() => assertVs(["00"], ["01"])).toThrow();
 });
 
 test("assertAccount - matching", () => {
@@ -163,4 +163,12 @@ test("assertAccount - not matching - hasKvs - value missing", () => {
       },
     ),
   ).toThrow("'03': ''");
+});
+
+test("assertHexList - matching", () => {
+  assertHexList(["00"], ["00"]);
+});
+
+test("assertHexList - not matching", () => {
+  expect(() => assertHexList(["00"], ["01"])).toThrow();
 });

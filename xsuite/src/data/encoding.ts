@@ -1,9 +1,74 @@
 import { Field, Type } from "protobufjs";
-import { Address, addressToU8AAddress } from "./address";
+import { Account } from "./account";
+import { Address, addressToBechAddress, addressToU8AAddress } from "./address";
 import { Bytes, bytesToU8A } from "./bytes";
-import { BytesLike, bytesLikeToU8A } from "./bytesLike";
-import { Kv } from "./kvs";
-import { u8aToBase64, u8aToHex } from "./utils";
+import {
+  BytesLike,
+  bytesLikeToHex,
+  bytesLikeToU8A,
+  isBytesLike,
+} from "./bytesLike";
+import { Kvs } from "./kvs";
+import { safeBigintToNumber, u8aToBase64, u8aToHex } from "./utils";
+import { Vs } from "./vs";
+
+export type EncodableVs = Vs | BytesLike[];
+
+export type EncodableKvs =
+  | Kvs
+  | EncodableCategorizedKvs
+  | (EncodableKv | EncodableKvs)[];
+type EncodableCategorizedKvs = {
+  esdts?: EncodableEsdt[];
+  mappers?: EncodableMapper[];
+  extraKvs?: EncodableKvs;
+};
+type EncodableEsdt = {
+  id: string;
+  roles?: Role[];
+  lastNonce?: number | bigint;
+} & (
+  | { amount?: number | bigint }
+  | EncodableEsdtVariant
+  | { variants: EncodableEsdtVariant[] }
+);
+type EncodableEsdtVariant = {
+  nonce: number | bigint;
+  amount?: number | bigint;
+  name?: string;
+  creator?: Address;
+  royalties?: number;
+  hash?: Bytes;
+  attrs?: BytesLike;
+  uris?: string[];
+};
+export type EncodableMapper = { key: EncodableMapperKey } & (
+  | { value: Encodable | null }
+  | { unorderedSet: Encodable[] | null }
+  | { set: [index: number | bigint, value: Encodable][] | null }
+  | { map: [index: number | bigint, key: Encodable, value: Encodable][] | null }
+  | { vec: Encodable[] | null }
+  | { user: Encodable[] | null }
+);
+type EncodableMapperKey = string | EncodableMapperKeyArgs;
+type EncodableMapperKeyArgs = [name: string, ...vars: Encodable[]];
+type EncodableKv = [key: BytesLike, value: BytesLike];
+
+export type EncodableAccount = {
+  address: Address;
+  nonce?: number | bigint;
+  balance?: number | bigint | string;
+  code?: string;
+  codeMetadata?: EncodableCodeMetadata;
+  owner?: Address;
+  kvs?: EncodableKvs;
+};
+export type EncodableCodeMetadata = BytesLike | CodeProperty[];
+export type CodeProperty =
+  | "upgradeable"
+  | "readable"
+  | "payable"
+  | "payableBySc";
 
 const encodableSymbol = "xsuite.Encodable";
 
@@ -132,37 +197,50 @@ export const e = {
       Uint8Array.from([1, ...optEncodable.toNestU8A()]),
     );
   },
-  kvs: {
-    Mapper: (name: string, ...vars: Encodable[]) => {
-      const baseKey = e.Tuple(e.TopStr(name), ...vars);
-      return {
-        Value: (data: Encodable | null) => {
-          return eKvsMapperValue(baseKey, data);
-        },
-        UnorderedSet: (data: Encodable[] | null) => {
-          return eKvsMapperUnorderedSet(baseKey, data);
-        },
-        Set: (data: [index: number | bigint, value: Encodable][] | null) => {
-          return eKvsMapperSet(baseKey, data);
-        },
-        Map: (
-          data:
-            | [index: number | bigint, key: Encodable, value: Encodable][]
-            | null,
-        ) => {
-          return eKvsMapperMap(baseKey, data);
-        },
-        Vec: (data: Encodable[] | null) => {
-          return eKvsMapperVec(baseKey, data);
-        },
-        User: (data: Encodable[] | null) => {
-          return eKvsMapperUser(baseKey, data);
-        },
-      };
+  vs: (encodableVs: EncodableVs): Vs => {
+    return encodableVs.map(bytesLikeToHex);
+  },
+  kvs: Object.assign(
+    (encodableKvs: EncodableKvs): Kvs => {
+      const kvs = eKvsUnfiltered(encodableKvs);
+      for (const k in kvs) if (kvs[k] === "") delete kvs[k];
+      return kvs;
     },
-    Esdts: (esdts: Esdt[]) => {
-      return eKvsEsdts(esdts);
+    {
+      Mapper: (...args: EncodableMapperKeyArgs) => ({
+        Value: curryEKvsMapper(eKvsMapperValue)(args),
+        UnorderedSet: curryEKvsMapper(eKvsMapperUnorderedSet)(args),
+        Set: curryEKvsMapper(eKvsMapperSet)(args),
+        Map: curryEKvsMapper(eKvsMapperMap)(args),
+        Vec: curryEKvsMapper(eKvsMapperVec)(args),
+        User: curryEKvsMapper(eKvsMapperUser)(args),
+      }),
+      Esdts: (esdts: EncodableEsdt[]) => eKvsEsdts(esdts),
     },
+  ),
+  account: (encodableAccount: EncodableAccount): Account => {
+    const account: Account = {
+      address: addressToBechAddress(encodableAccount.address),
+    };
+    if (encodableAccount.nonce !== undefined) {
+      account.nonce = safeBigintToNumber(BigInt(encodableAccount.nonce));
+    }
+    if (encodableAccount.balance !== undefined) {
+      account.balance = encodableAccount.balance.toString();
+    }
+    if (encodableAccount.code !== undefined) {
+      account.code = encodableAccount.code;
+    }
+    if (encodableAccount.codeMetadata !== undefined) {
+      account.codeMetadata = eCodeMetadata(encodableAccount.codeMetadata);
+    }
+    if (encodableAccount.kvs !== undefined) {
+      account.kvs = e.kvs(encodableAccount.kvs);
+    }
+    if (encodableAccount.owner !== undefined) {
+      account.owner = addressToBechAddress(encodableAccount.owner);
+    }
+    return account;
   },
   /**
    * @deprecated Use `.TopBuffer` instead.
@@ -176,17 +254,6 @@ export const e = {
    * @deprecated Use `.TopStr` instead.
    */
   CstStr: (string: string) => e.TopStr(string),
-};
-
-const newEncodable = (
-  toTop: () => Uint8Array,
-  toNest?: () => Uint8Array,
-): Encodable => {
-  class NewEncodable extends Encodable {
-    toTopU8A = toTop;
-    toNestU8A = toNest ?? toTop;
-  }
-  return new NewEncodable();
 };
 
 const eUX = (uint: number | bigint, byteLength: number) => {
@@ -224,30 +291,97 @@ const eIX = (int: number | bigint, byteLength: number) => {
   return newEncodable(toTop, toNest);
 };
 
-const eKvsMapperValue = (baseKey: Encodable, value: Encodable | null): Kv[] => {
-  return [[baseKey, value ?? ""]];
+export const eKvsUnfiltered = (kvs: EncodableKvs): Kvs => {
+  if (Array.isArray(kvs)) {
+    let encodedKvs: Kvs = {};
+    for (const kv of kvs) {
+      if (isEncodableKv(kv)) {
+        const [k, v] = kv;
+        encodedKvs[bytesLikeToHex(k)] = bytesLikeToHex(v);
+      } else {
+        encodedKvs = { ...encodedKvs, ...eKvsUnfiltered(kv) };
+      }
+    }
+    return encodedKvs;
+  } else if (isEncodableCategorizedKvs(kvs)) {
+    return {
+      ...(kvs.esdts ? e.kvs.Esdts(kvs.esdts) : {}),
+      ...(kvs.mappers ? eKvsMappers(kvs.mappers) : {}),
+      ...(kvs.extraKvs ? eKvsUnfiltered(kvs.extraKvs) : {}),
+    };
+  } else {
+    return kvs;
+  }
+};
+
+const eKvsMappers = (mappers: EncodableMapper[]): Kvs => {
+  let kvs: Kvs = {};
+  for (const { key, ...rest } of mappers) {
+    if (Object.keys(rest).length !== 1) {
+      throw new Error("More than one mapper defined.");
+    }
+    const args: EncodableMapperKeyArgs = typeof key === "string" ? [key] : key;
+    const newKvs =
+      "value" in rest
+        ? e.kvs.Mapper(...args).Value(rest.value)
+        : "vec" in rest
+        ? e.kvs.Mapper(...args).Vec(rest.vec)
+        : "unorderedSet" in rest
+        ? e.kvs.Mapper(...args).UnorderedSet(rest.unorderedSet)
+        : "set" in rest
+        ? e.kvs.Mapper(...args).Set(rest.set)
+        : "map" in rest
+        ? e.kvs.Mapper(...args).Map(rest.map)
+        : "user" in rest
+        ? e.kvs.Mapper(...args).User(rest.user)
+        : {};
+    kvs = { ...kvs, ...newKvs };
+  }
+  return kvs;
+};
+
+const eKvsMapperValue = (baseKey: Encodable, value: Encodable | null): Kvs => {
+  return eKvsUnfiltered([[baseKey, value ?? ""]]);
+};
+
+const eKvsMapperVec = (baseKey: Encodable, data: Encodable[] | null): Kvs => {
+  data ??= [];
+  return eKvsUnfiltered([
+    ...data.map(
+      (v, i): EncodableKv => [
+        e.Tuple(baseKey, e.TopStr(".item"), e.U32(i + 1)),
+        v,
+      ],
+    ),
+    [e.Tuple(baseKey, e.TopStr(".len")), e.U32(data.length)],
+  ]);
 };
 
 const eKvsMapperUnorderedSet = (
   baseKey: Encodable,
   data: Encodable[] | null,
-) => {
+): Kvs => {
   data ??= [];
-  return [
+  return {
     ...eKvsMapperVec(baseKey, data),
-    ...data.map(
-      (v, i): Kv => [e.Tuple(baseKey, e.TopStr(".index"), v), e.U32(i + 1)],
+    ...eKvsUnfiltered(
+      data.map(
+        (v, i): EncodableKv => [
+          e.Tuple(baseKey, e.TopStr(".index"), v),
+          e.U32(i + 1),
+        ],
+      ),
     ),
-  ];
+  };
 };
 
 const eKvsMapperSet = (
   baseKey: Encodable,
   data: [number | bigint, Encodable][] | null,
-): Kv[] => {
+): Kvs => {
   data ??= [];
   data.sort(([a], [b]) => (a <= b ? -1 : 1));
-  const kvs: Kv[] = [];
+  const kvs: EncodableKv[] = [];
   let maxIndex: number | bigint = 0n;
   for (let i = 0; i < data.length; i++) {
     const [index, v] = data[i];
@@ -277,126 +411,187 @@ const eKvsMapperSet = (
         )
       : "",
   ]);
-  return kvs;
+  return eKvsUnfiltered(kvs);
 };
 
 const eKvsMapperMap = (
   baseKey: Encodable,
   data: [number | bigint, Encodable, Encodable][] | null,
-): Kv[] => {
+): Kvs => {
   data ??= [];
-  return [
+  return {
     ...eKvsMapperSet(
       baseKey,
       data.map(([i, k]) => [i, k]),
     ),
-    ...data.map(
-      ([, k, v]): Kv => [e.Tuple(baseKey, e.TopStr(".mapped"), k), v],
+    ...eKvsUnfiltered(
+      data.map(
+        ([, k, v]): EncodableKv => [
+          e.Tuple(baseKey, e.TopStr(".mapped"), k),
+          v,
+        ],
+      ),
     ),
-  ];
+  };
 };
 
-const eKvsMapperVec = (baseKey: Encodable, data: Encodable[] | null): Kv[] => {
+const eKvsMapperUser = (baseKey: Encodable, data: Encodable[] | null): Kvs => {
   data ??= [];
-  return [
-    ...data.map(
-      (v, i): Kv => [e.Tuple(baseKey, e.TopStr(".item"), e.U32(i + 1)), v],
-    ),
-    [e.Tuple(baseKey, e.TopStr(".len")), e.U32(data.length)],
-  ];
-};
-
-const eKvsMapperUser = (baseKey: Encodable, data: Encodable[] | null): Kv[] => {
-  data ??= [];
-  return [
-    ...data.flatMap((v, i): Kv[] => [
+  return eKvsUnfiltered([
+    ...data.flatMap((v, i): EncodableKv[] => [
       [e.Tuple(baseKey, e.TopStr("_id_to_address"), e.U32(i + 1)), v],
       [e.Tuple(baseKey, e.TopStr("_address_to_id"), v), e.U32(i + 1)],
     ]),
     [e.Tuple(baseKey, e.TopStr("_count")), e.U32(data.length)],
-  ];
+  ]);
 };
 
-const eKvsEsdts = (esdts: Esdt[]) => {
-  return esdts.flatMap(eKvsEsdt);
+const eKvsEsdts = (esdts: EncodableEsdt[]) => {
+  let kvs: Kvs = {};
+  for (const esdt of esdts) {
+    kvs = { ...kvs, ...eKvsEsdt(esdt) };
+  }
+  return kvs;
 };
 
-const eKvsEsdt = ({
-  id,
-  nonce,
-  amount,
-  roles,
-  lastNonce,
-  name,
-  creator,
-  royalties,
-  hash,
-  uris,
-  attrs,
-}: Esdt): Kv[] => {
-  const kvs: Kv[] = [];
-  if (
-    amount !== undefined ||
-    name !== undefined ||
-    creator !== undefined ||
-    royalties !== undefined ||
-    hash !== undefined ||
-    uris !== undefined ||
-    attrs !== undefined
-  ) {
-    const keyEncs: Encodable[] = [e.TopStr("ELRONDesdt"), e.TopStr(id)];
-    const message: Record<string, any> = {};
-    if (nonce !== undefined && nonce !== 0) {
-      keyEncs.push(e.TopU(nonce));
-    }
-    const metadata: [string, any][] = [];
-    if (name !== undefined) {
-      metadata.push(["Name", e.Str(name).toTopU8A()]);
-    }
-    if (creator !== undefined) {
-      metadata.push(["Creator", addressToU8AAddress(creator)]);
-    }
-    if (royalties !== undefined) {
-      metadata.push(["Royalties", royalties.toString()]);
-    }
-    if (hash !== undefined) {
-      metadata.push(["Hash", bytesLikeToU8A(hash)]);
-    }
-    if (uris !== undefined) {
-      metadata.push(["URIs", uris]);
-    }
-    if (attrs !== undefined) {
-      metadata.push(["Attributes", bytesLikeToU8A(attrs)]);
-    }
-    if (metadata.length > 0 && nonce) {
-      metadata.push(["Nonce", nonce.toString()]);
-    }
-    if (nonce && (amount || metadata.length > 0)) {
-      message["Type"] = "1";
-    }
-    if (metadata.length > 0) {
-      message["Properties"] = new Uint8Array([1]);
-    }
-    if (metadata.length > 0 || amount) {
-      amount ??= 0;
-      const bytes = amount > 0 ? e.U(amount).toTopU8A() : [0];
-      message["Value"] = new Uint8Array([0, ...bytes]);
-    }
-    if (metadata.length > 0) {
-      message["Metadata"] = Object.fromEntries(metadata);
-    }
-    const messageBytes = ESDTSystemMessage.encode(message).finish();
-    kvs.push([e.Tuple(...keyEncs), e.Buffer(messageBytes)]);
-  }
-  if (lastNonce !== undefined) {
-    kvs.push([e.Str(`ELRONDnonce${id}`), e.U(lastNonce)]);
-  }
+const eKvsEsdt = ({ id, roles, lastNonce, ...rest }: EncodableEsdt): Kvs => {
+  const kvs: EncodableKv[] = [];
   if (roles !== undefined) {
     const messageBytes = ESDTRolesMessage.encode({ Roles: roles }).finish();
     kvs.push([e.Str(`ELRONDroleesdt${id}`), e.Buffer(messageBytes)]);
   }
-  return kvs;
+  if (lastNonce !== undefined) {
+    kvs.push([e.Str(`ELRONDnonce${id}`), e.U(lastNonce)]);
+  }
+  let variants: EncodableEsdtVariant[];
+  if ("variants" in rest) {
+    variants = rest.variants;
+  } else if ("nonce" in rest) {
+    variants = [rest];
+  } else if ("amount" in rest) {
+    variants = [{ nonce: 0, ...rest }];
+  } else {
+    variants = [];
+  }
+  for (const { nonce, amount, ...rest } of variants) {
+    const keyEncs: Encodable[] = [e.TopStr("ELRONDesdt"), e.TopStr(id)];
+    if (nonce) {
+      keyEncs.push(e.TopU(nonce));
+    }
+    const message: Record<string, any> = {};
+    const metadata: [string, any][] = [];
+    if (nonce) {
+      const { name, creator, royalties, hash, attrs, uris } = rest;
+      if (name !== undefined && name.length > 0) {
+        metadata.push(["Name", e.Str(name).toTopU8A()]);
+      }
+      if (creator !== undefined) {
+        metadata.push(["Creator", addressToU8AAddress(creator)]);
+      }
+      if (royalties !== undefined && royalties > 0) {
+        metadata.push(["Royalties", royalties.toString()]);
+      }
+      if (hash !== undefined) {
+        const u8a = bytesLikeToU8A(hash);
+        if (u8a.length > 0) {
+          metadata.push(["Hash", u8a]);
+        }
+      }
+      if (attrs !== undefined) {
+        const u8a = bytesLikeToU8A(attrs);
+        if (u8a.length > 0) {
+          metadata.push(["Attributes", u8a]);
+        }
+      }
+      if (metadata.length > 0 || uris !== undefined) {
+        const _uris = uris === undefined || uris.length === 0 ? [""] : uris;
+        metadata.push(["URIs", _uris]);
+      }
+      if (metadata.length > 0 || amount) {
+        message["Type"] = "1";
+      }
+      if (metadata.length > 0) {
+        metadata.push(["Nonce", nonce.toString()]);
+        message["Properties"] = new Uint8Array([1]);
+        message["Metadata"] = Object.fromEntries(metadata);
+      }
+    } else {
+      for (const [k, v] of Object.entries(rest)) {
+        if (v !== undefined) {
+          throw new Error(`${k} is not undefined.`);
+        }
+      }
+    }
+    if (metadata.length > 0 || amount) {
+      const _amount = amount ?? 0;
+      const bytes = _amount > 0 ? e.U(_amount).toTopU8A() : [0];
+      message["Value"] = new Uint8Array([0, ...bytes]);
+    }
+    const messageBytes = ESDTSystemMessage.encode(message).finish();
+    kvs.push([e.Tuple(...keyEncs), messageBytes]);
+  }
+  return eKvsUnfiltered(kvs);
 };
+
+export const eCodeMetadata = (codeMetadata: EncodableCodeMetadata): string => {
+  if (isBytesLike(codeMetadata)) {
+    return bytesLikeToHex(codeMetadata);
+  }
+  const bytes: number[] = [];
+  let byte0 = 0;
+  if (codeMetadata.includes("upgradeable")) {
+    byte0 |= 1;
+  }
+  if (codeMetadata.includes("readable")) {
+    byte0 |= 4;
+  }
+  let byte1 = 0;
+  if (codeMetadata.includes("payable")) {
+    byte1 |= 2;
+  }
+  if (codeMetadata.includes("payableBySc")) {
+    byte1 |= 4;
+  }
+  if (byte0 > 0 || byte1 > 0) {
+    bytes.push(byte0, byte1);
+  }
+  return e.Buffer(new Uint8Array(bytes)).toTopHex();
+};
+
+const newEncodable = (
+  toTop: () => Uint8Array,
+  toNest?: () => Uint8Array,
+): Encodable => {
+  class NewEncodable extends Encodable {
+    toTopU8A = toTop;
+    toNestU8A = toNest ?? toTop;
+  }
+  return new NewEncodable();
+};
+
+function curryEKvsMapper<T2, R>(fn: (baseKey: Encodable, data: T2) => R) {
+  return function ([name, ...vars]: EncodableMapperKeyArgs): (data: T2) => R {
+    return function (data: T2): R {
+      return fn(e.Tuple(e.TopStr(name), ...vars), data);
+    };
+  };
+}
+
+const isEncodableKv = (value: unknown): value is EncodableKv =>
+  Array.isArray(value) &&
+  value.length === 2 &&
+  isBytesLike(value[0]) &&
+  isBytesLike(value[1]);
+
+const isEncodableCategorizedKvs = (
+  value: unknown,
+): value is EncodableCategorizedKvs =>
+  !!value &&
+  typeof value === "object" &&
+  Object.entries(value).every(
+    ([k, v]) =>
+      ["esdts", "mappers", "extraKvs"].includes(k) && typeof v !== "string",
+  );
 
 const biguintToU8A = (uint: bigint) => {
   const res: number[] = [];
@@ -439,42 +634,28 @@ const prependLength = (u8a: Uint8Array, length?: number) => {
   return Uint8Array.from([...e.U32(length).toNestU8A(), ...u8a]);
 };
 
-const ESDTRolesMessage = new Type("ESDTRoles").add(
+export const ESDTRolesMessage = new Type("ESDTRoles").add(
   new Field("Roles", 1, "string", "repeated"),
 );
 
-const ESDTMetadataMessage = new Type("ESDTMetadata")
-  .add(new Field("Nonce", 1, "uint64"))
-  .add(new Field("Name", 2, "bytes"))
-  .add(new Field("Creator", 3, "bytes"))
-  .add(new Field("Royalties", 4, "uint64"))
-  .add(new Field("Hash", 5, "bytes"))
-  .add(new Field("URIs", 6, "string", "repeated"))
-  .add(new Field("Attributes", 7, "bytes"));
-
-const ESDTSystemMessage = new Type("ESDTSystem")
+export const ESDTSystemMessage = new Type("ESDTSystem")
   .add(new Field("Type", 1, "uint64"))
   .add(new Field("Value", 2, "bytes"))
   .add(new Field("Properties", 3, "bytes"))
   .add(new Field("Metadata", 4, "ESDTMetadata"))
   .add(new Field("Reserved", 5, "bytes"))
-  .add(ESDTMetadataMessage);
+  .add(
+    new Type("ESDTMetadata")
+      .add(new Field("Nonce", 1, "uint64"))
+      .add(new Field("Name", 2, "bytes"))
+      .add(new Field("Creator", 3, "bytes"))
+      .add(new Field("Royalties", 4, "uint64"))
+      .add(new Field("Hash", 5, "bytes"))
+      .add(new Field("URIs", 6, "string", "repeated"))
+      .add(new Field("Attributes", 7, "bytes")),
+  );
 
-type Esdt = {
-  id: string;
-  nonce?: number;
-  amount?: number | bigint;
-  roles?: Role[];
-  lastNonce?: number;
-  name?: string;
-  creator?: Address;
-  royalties?: number;
-  hash?: BytesLike;
-  uris?: string[];
-  attrs?: BytesLike;
-};
-
-type Role =
+export type Role =
   | "ESDTRoleLocalMint"
   | "ESDTRoleLocalBurn"
   | "ESDTTransferRole"
