@@ -290,5 +290,5 @@ const u8aToBigint = (u8a: Uint8Array): bigint => {
 };
 
 type DecodersToValues<T> = Prettify<{
-  [K in keyof T]: T[K] extends Decoder<infer U> ? U : never;
+  -readonly [K in keyof T]: T[K] extends Decoder<infer U> ? U : never;
 }>;
