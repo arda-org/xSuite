@@ -1,6 +1,7 @@
+import { EncodableAccount } from "../data/encoding";
 import { Prettify } from "../helpers";
 import { SProxy } from "../proxy";
-import { Account, Block } from "../proxy/sproxy";
+import { Block } from "../proxy/sproxy";
 import { DummySigner, Signer } from "./signer";
 import { startSimulnet } from "./simulnet";
 import { isContractAddress, numberToU8AAddress } from "./utils";
@@ -176,7 +177,7 @@ export class SContract extends Contract {
   }
 }
 
-const setAccount = (proxy: SProxy, params: Account) => {
+const setAccount = (proxy: SProxy, params: EncodableAccount) => {
   if (params.code == null) {
     if (isContractAddress(params.address)) {
       params.code = "00";
@@ -201,18 +202,18 @@ const createContract = async (
 
 type SWorldNewOptions =
   | {
-      chainId?: undefined;
-      proxyUrl: string;
-      gasPrice?: number;
-      explorerUrl?: string;
-    }
+  chainId?: undefined;
+  proxyUrl: string;
+  gasPrice?: number;
+  explorerUrl?: string;
+}
   | WorldNewOptions;
 
-export type SWorldCreateWalletParams = Prettify<Omit<Account, "address">>;
+export type SWorldCreateWalletParams = Prettify<Omit<EncodableAccount, "address">>;
 
-type SetAccountParams = Account;
+type SetAccountParams = EncodableAccount;
 
-export type CreateContractParams = Prettify<Omit<Account, "address">>;
+export type CreateContractParams = Prettify<Omit<EncodableAccount, "address">>;
 
 export type SWorldSetAccountParams = SetAccountParams;
 

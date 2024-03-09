@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { input, stdoutInt } from "./index";
+import { input, stdoutInt } from ".";
 
 test("input.hidden", async () => {
   stdoutInt.start();

@@ -1,13 +1,177 @@
-import { describe, expect, test, beforeEach, afterEach } from "vitest";
-import { assertKvs } from "../assert/assert";
+import { expect, test, beforeAll, afterAll } from "vitest";
 import { SWorld, SContract, SWallet } from "../world";
-import { B64, d, e } from "./index";
+import { expandCode } from "../world/world";
+import { Account } from "./account";
+import { EncodableMapper, eKvsUnfiltered } from "./encoding";
+import { B64, d, e } from ".";
+
+/* Data and helpers for tests */
 
 const zeroBechAddress =
   "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
 const zeroHexAddress =
   "0000000000000000000000000000000000000000000000000000000000000000";
 const zeroU8AAddress = new Uint8Array(32);
+
+const vs = ["0102", "0304", "0506", "0a"];
+let world: SWorld;
+let wallet: SWallet;
+let contract: SContract;
+const fftId = "FFT-abcdef";
+const sft1Id = "SFT1-abcdef";
+const sft2Id = "SFT2-abcdef";
+const sft3Id = "SFT3-abcdef";
+let walletState: Account;
+let complexContractState: Account;
+let complexSysAccState: Account;
+
+const range = (start: number, end: number) => {
+  const output = [];
+  for (let i = start; i < end; i++) {
+    output.push(i);
+  }
+  return output;
+};
+
+beforeAll(async () => {
+  world = await SWorld.start();
+  wallet = await world.createWallet({
+    balance: 20n,
+  });
+  walletState = await wallet.getSerializableAccountWithKvs();
+  contract = await wallet.createContract({
+    balance: 10n,
+    code: "file:contracts/data/output/data.wasm",
+    codeMetadata: ["readable", "upgradeable"],
+    kvs: {
+      esdts: [
+        { id: fftId, roles: ["ESDTRoleLocalMint"] },
+        {
+          id: sft1Id,
+          roles: ["ESDTRoleNFTCreate", "ESDTRoleNFTAddQuantity"],
+        },
+        {
+          id: sft2Id,
+          roles: ["ESDTRoleNFTCreate", "ESDTRoleNFTAddQuantity"],
+        },
+        {
+          id: sft3Id,
+          roles: ["ESDTRoleNFTCreate", "ESDTRoleNFTAddQuantity"],
+        },
+      ],
+      extraKvs: {
+        "010203": "040506",
+      },
+    },
+  });
+  await wallet.callContract({
+    callee: contract,
+    funcName: "esdt_local_mint",
+    funcArgs: [e.Str(fftId), e.U64(0), e.U(10)],
+    gasLimit: 10_000_000,
+  });
+  await wallet.callContract({
+    callee: contract,
+    funcName: "esdt_nft_create",
+    funcArgs: range(1, 11).flatMap((i) => [
+      e.Str(sft1Id),
+      e.U(i),
+      e.Str(`SFT1 ${i}`),
+      e.U(i),
+      e.U(i),
+      i <= 5 ? e.Tuple(e.U(i), e.U(i)) : e.Str(`Attr ${i}`),
+      e.List(e.Str(`URI1 ${i}`), e.Str(`URI2 ${i}`)),
+    ]),
+    gasLimit: 100_000_000,
+  });
+  await wallet.callContract({
+    callee: contract,
+    funcName: "esdt_nft_create_compact",
+    funcArgs: range(1, 11).flatMap((i) => [
+      e.Str(sft2Id),
+      e.U(i),
+      e.Tuple(e.Str(`${i}`), e.U(i)),
+    ]),
+    gasLimit: 100_000_000,
+  });
+  await wallet.callContract({
+    callee: contract,
+    funcName: "esdt_nft_create",
+    funcArgs: [e.Str(sft3Id), e.U(1), e.Str(""), e.U(0), "", "", e.List()],
+    gasLimit: 100_000_000,
+  });
+  await wallet.callContract({
+    callee: contract,
+    funcName: "value_set",
+    funcArgs: [e.Str("a"), e.U64(1), e.Str("b"), e.U64(2)],
+    gasLimit: 10_000_000,
+  });
+  await wallet.callContract({
+    callee: contract,
+    funcName: "vec_push",
+    funcArgs: [
+      e.U64(1),
+      e.U(1),
+      e.List(e.U64(1), e.U64(2), e.U64(3)),
+      e.U64(2),
+      e.U(2),
+      e.List(e.U64(4), e.U64(5), e.U64(6)),
+    ],
+    gasLimit: 10_000_000,
+  });
+  await wallet.callContract({
+    callee: contract,
+    funcName: "unordered_set_insert",
+    funcArgs: [
+      e.U64(3),
+      e.List(e.U(7), e.U(8), e.U(9)),
+      e.U64(4),
+      e.List(e.U(10), e.U(11), e.U(12)),
+    ],
+    gasLimit: 10_000_000,
+  });
+  await wallet.callContract({
+    callee: contract,
+    funcName: "set_insert",
+    funcArgs: [
+      e.U64(5),
+      e.List(e.U(13), e.U(14), e.U(15)),
+      e.U64(6),
+      e.List(e.U(16), e.U(17), e.U(18)),
+    ],
+    gasLimit: 10_000_000,
+  });
+  await wallet.callContract({
+    callee: contract,
+    funcName: "map_insert",
+    funcArgs: [
+      e.U(7),
+      e.List(e.Tuple(e.Str("a"), e.U64(1)), e.Tuple(e.Str("b"), e.U64(2))),
+      e.U(8),
+      e.List(e.Tuple(e.Str("c"), e.U64(3)), e.Tuple(e.Str("d"), e.U64(4))),
+    ],
+    gasLimit: 10_000_000,
+  });
+  await wallet.callContract({
+    callee: contract,
+    funcName: "user_create",
+    funcArgs: [
+      e.Str("a"),
+      e.List(wallet, contract),
+      e.Str("b"),
+      e.List(wallet, contract),
+    ],
+    gasLimit: 10_000_000,
+  });
+  complexContractState = await contract.getSerializableAccountWithKvs();
+  complexSysAccState = await world.sysAcc.getSerializableAccountWithKvs();
+});
+
+afterAll(async () => {
+  await world.terminate();
+});
+
+/* Encoding */
 
 test("e.Buffer - odd hex length", () => {
   expect(() => e.Buffer("48656c6c6")).toThrow("Odd hex length.");
@@ -109,7 +273,7 @@ test("e.Addr.toNestHex - u8a address", () => {
   expect(e.Addr(zeroU8AAddress).toNestHex()).toEqual(zeroHexAddress);
 });
 
-test("e.Addr - Invalid address HRP", () => {
+test("e.Addr - Invalid address format", () => {
   const address =
     "btc1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq5mhdvz";
   expect(() => e.Addr(address)).toThrow("Invalid address format.");
@@ -458,6 +622,219 @@ test("e.Option.toNestHex - e.U(256)", () => {
   expect(e.Option(e.U(256)).toNestHex()).toEqual("01000000020100");
 });
 
+test("e.vs", () => {
+  expect(e.vs(["0102", "0304", new Uint8Array([5, 6]), e.U8(10)])).toEqual(vs);
+});
+
+test("e.kvs - complex kvs", () => {
+  expect(walletState.kvs).toEqual({});
+  expect(complexContractState.kvs).toEqual(
+    e.kvs({
+      esdts: [
+        { id: fftId, roles: ["ESDTRoleLocalMint"], amount: 10n },
+        {
+          id: sft1Id,
+          roles: ["ESDTRoleNFTCreate", "ESDTRoleNFTAddQuantity"],
+          lastNonce: 10,
+          variants: range(1, 11).map((i) => ({ nonce: i, amount: i })),
+        },
+        {
+          id: sft2Id,
+          roles: ["ESDTRoleNFTCreate", "ESDTRoleNFTAddQuantity"],
+          lastNonce: 10,
+          variants: range(1, 11).map((i) => ({ nonce: i, amount: i })),
+        },
+        {
+          id: sft3Id,
+          roles: ["ESDTRoleNFTCreate", "ESDTRoleNFTAddQuantity"],
+          lastNonce: 1,
+          nonce: 1,
+          amount: 1,
+        },
+      ],
+      mappers: [
+        { key: ["value", e.Str("a")], value: e.U64(1) },
+        { key: ["value", e.Str("b")], value: e.U64(2) },
+        {
+          key: ["vec", e.U64(1), e.U(1)],
+          vec: [e.U64(1), e.U64(2), e.U64(3)],
+        },
+        {
+          key: ["vec", e.U64(2), e.U(2)],
+          vec: [e.U64(4), e.U64(5), e.U64(6)],
+        },
+        {
+          key: ["unordered_set", e.U64(3)],
+          unorderedSet: [e.U(7), e.U(8), e.U(9)],
+        },
+        {
+          key: ["unordered_set", e.U64(4)],
+          unorderedSet: [e.U(10), e.U(11), e.U(12)],
+        },
+        {
+          key: ["set", e.U64(5)],
+          set: [
+            [1, e.U(13)],
+            [2, e.U(14)],
+            [3, e.U(15)],
+          ],
+        },
+        {
+          key: ["set", e.U64(6)],
+          set: [
+            [1, e.U(16)],
+            [2, e.U(17)],
+            [3, e.U(18)],
+          ],
+        },
+        {
+          key: ["map", e.U(7)],
+          map: [
+            [1, e.Str("a"), e.U64(1)],
+            [2, e.Str("b"), e.U64(2)],
+          ],
+        },
+        {
+          key: ["map", e.U(8)],
+          map: [
+            [1, e.Str("c"), e.U64(3)],
+            [2, e.Str("d"), e.U64(4)],
+          ],
+        },
+        {
+          key: ["user", e.Str("a")],
+          user: [wallet, contract],
+        },
+        {
+          key: ["user", e.Str("b")],
+          user: [wallet, contract],
+        },
+      ],
+      extraKvs: {
+        "010203": "040506",
+      },
+    }),
+  );
+  expect(complexSysAccState.kvs).toEqual(
+    e.kvs({
+      esdts: [
+        {
+          id: sft1Id,
+          variants: range(1, 11).map((i) => ({
+            nonce: i,
+            name: `SFT1 ${i}`,
+            royalties: i,
+            hash: e.U(i),
+            attrs: i <= 5 ? e.Tuple(e.U(i), e.U(i)) : e.Str(`Attr ${i}`),
+            uris: [`URI1 ${i}`, `URI2 ${i}`],
+            creator: contract,
+          })),
+        },
+        {
+          id: sft2Id,
+          variants: range(1, 11).map((i) => ({
+            nonce: i,
+            attrs: e.Tuple(e.Str(`${i}`), e.U(i)),
+            creator: contract,
+          })),
+        },
+        {
+          id: sft3Id,
+          nonce: 1,
+          creator: contract,
+        },
+      ],
+    }),
+  );
+});
+
+test("e.kvs - omitting empty NFT properties", () => {
+  expect(
+    e.kvs({
+      esdts: [
+        {
+          id: sft3Id,
+          nonce: 1,
+          creator: contract,
+        },
+      ],
+    }),
+  ).toEqual(
+    e.kvs({
+      esdts: [
+        {
+          id: sft3Id,
+          nonce: 1,
+          name: "",
+          royalties: 0,
+          hash: "",
+          attrs: "",
+          uris: [""],
+          creator: contract,
+        },
+      ],
+    }),
+  );
+});
+
+test("eKvsUnfiltered - ESDTs with amount 0", () => {
+  const unfilteredKvs = eKvsUnfiltered({
+    esdts: [
+      { id: fftId, amount: 0n },
+      { id: sft1Id, nonce: 1, amount: 0n },
+    ],
+  });
+  expect(unfilteredKvs).toMatchObject({});
+  expect(unfilteredKvs).not.toMatchObject(complexContractState.kvs!);
+});
+
+test("eKvsUnfiltered - empty mappers", () => {
+  const mappers: EncodableMapper[] = [
+    { key: ["value", e.Str("a")], value: null },
+    { key: ["vec", e.U64(1), e.U(1)], vec: null },
+    { key: ["unordered_set", e.U64(3)], unorderedSet: null },
+    { key: ["set", e.U64(5)], set: null },
+    { key: ["map", e.U(7)], map: null },
+    { key: ["user", e.Str("a")], user: null },
+  ];
+  for (const mapper of mappers) {
+    const unfilteredKvs = eKvsUnfiltered({ mappers: [mapper] });
+    expect(unfilteredKvs).toMatchObject({});
+    expect(unfilteredKvs).not.toMatchObject(complexContractState.kvs!);
+  }
+});
+
+test("e.account", async () => {
+  expect(walletState).toEqual(
+    e.account({
+      address: wallet,
+      nonce: 0,
+      balance: 20,
+      codeMetadata: ["readable"],
+      kvs: {},
+    }),
+  );
+  expect(complexContractState).toEqual(
+    e.account({
+      address: contract,
+      nonce: 0,
+      balance: 10,
+      code: expandCode("file:contracts/data/output/data.wasm"),
+      codeMetadata: ["readable", "upgradeable"],
+      kvs: complexContractState.kvs,
+      owner: wallet,
+    }),
+  );
+  expect(complexSysAccState).toEqual(
+    e.account({
+      address: world.sysAcc,
+      nonce: 0,
+      balance: 0,
+      kvs: complexSysAccState.kvs,
+    }),
+  );
+});
+
 test("e.Bytes.toNestHex", () => {
   expect(e.Bytes(new Uint8Array([65, 66, 67])).toNestHex()).toEqual("414243");
 });
@@ -470,356 +847,10 @@ test("e.CstBuffer.toNestHex", () => {
   expect(e.CstBuffer("48656c6c").toNestHex()).toEqual("48656c6c");
 });
 
-describe("e.kvs", () => {
-  let world: SWorld;
-  let wallet: SWallet;
-  let contract: SContract;
+/* Decoding */
 
-  const fftId = "FFT-abcdef";
-  const sftId = "SFT-abcdef";
-
-  beforeEach(async () => {
-    world = await SWorld.start();
-    wallet = await world.createWallet();
-  });
-
-  afterEach(async () => {
-    await world.terminate();
-  });
-
-  describe("e.kvs.Mapper", () => {
-    beforeEach(async () => {
-      contract = await wallet.createContract({
-        code: "file:contracts/data/output/data.wasm",
-      });
-    });
-
-    test("e.kvs.Mapper.Value", async () => {
-      await wallet.callContract({
-        callee: contract,
-        funcName: "single_add",
-        funcArgs: [e.Str("a"), e.U64(1)],
-        gasLimit: 10_000_000,
-      });
-      assertKvs(
-        e.kvs.Mapper("single", e.Str("a")).Value(e.U64(1)),
-        await contract.getAccountKvs(),
-      );
-      await expect(async () =>
-        assertKvs(
-          e.kvs.Mapper("single", e.Str("a")).Value(null),
-          await contract.getAccountKvs(),
-        ),
-      ).rejects.toThrow();
-      await wallet.callContract({
-        callee: contract,
-        funcName: "single_remove",
-        funcArgs: [e.Str("a")],
-        gasLimit: 10_000_000,
-      });
-      assertKvs(
-        e.kvs.Mapper("single", e.Str("a")).Value(null),
-        await contract.getAccountKvs(),
-      );
-    });
-
-    test("e.kvs.Mapper.UnorderedSet", async () => {
-      await wallet.callContract({
-        callee: contract,
-        funcName: "unordered_set_add",
-        funcArgs: [e.U64(1), e.U(10), e.U(20)],
-        gasLimit: 10_000_000,
-      });
-      assertKvs(
-        e.kvs
-          .Mapper("unordered_set", e.U64(1))
-          .UnorderedSet([e.U(10), e.U(20)]),
-        await contract.getAccountKvs(),
-      );
-      await expect(async () =>
-        assertKvs(
-          e.kvs.Mapper("unordered_set", e.U64(1)).UnorderedSet(null),
-          await contract.getAccountKvs(),
-        ),
-      ).rejects.toThrow();
-      await wallet.callContract({
-        callee: contract,
-        funcName: "unordered_set_remove",
-        funcArgs: [e.U64(1), e.U(10), e.U(20)],
-        gasLimit: 10_000_000,
-      });
-      assertKvs(
-        e.kvs.Mapper("unordered_set", e.U64(1)).UnorderedSet(null),
-        await contract.getAccountKvs(),
-      );
-    });
-
-    test("e.kvs.Mapper.Set", async () => {
-      await wallet.callContract({
-        callee: contract,
-        funcName: "set_add",
-        funcArgs: [e.U64(1), e.U(10), e.U(20), e.U(30), e.U(40)],
-        gasLimit: 10_000_000,
-      });
-      await wallet.callContract({
-        callee: contract,
-        funcName: "set_remove",
-        funcArgs: [e.U64(1), e.U(20)],
-        gasLimit: 10_000_000,
-      });
-      assertKvs(
-        e.kvs.Mapper("set", e.U64(1)).Set([
-          [3, e.U(30)],
-          [1, e.U(10)],
-          [4, e.U(40)],
-        ]),
-        await contract.getAccountKvs(),
-      );
-      await expect(async () =>
-        assertKvs(
-          e.kvs.Mapper("set", e.U64(1)).Set(null),
-          await contract.getAccountKvs(),
-        ),
-      ).rejects.toThrow();
-      await wallet.callContract({
-        callee: contract,
-        funcName: "set_remove",
-        funcArgs: [e.U64(1), e.U(10), e.U(30), e.U(40)],
-        gasLimit: 10_000_000,
-      });
-      assertKvs(
-        e.kvs.Mapper("set", e.U64(1)).Set(null),
-        await contract.getAccountKvs(),
-      );
-    });
-
-    test("e.kvs.Mapper.Set - Negative id", () => {
-      expect(() => e.kvs.Mapper("set").Set([[0, e.U64(0)]])).toThrow(
-        "Negative id not allowed.",
-      );
-    });
-
-    test("e.kvs.Mapper.Map", async () => {
-      await wallet.callContract({
-        callee: contract,
-        funcName: "map_add",
-        funcArgs: [
-          e.U(1),
-          e.Tuple(e.Str("a"), e.U64(10)),
-          e.Tuple(e.Str("b"), e.U64(20)),
-          e.Tuple(e.Str("c"), e.U64(30)),
-        ],
-        gasLimit: 10_000_000,
-      });
-      await wallet.callContract({
-        callee: contract,
-        funcName: "map_remove",
-        funcArgs: [e.U(1), e.Str("b")],
-        gasLimit: 10_000_000,
-      });
-      assertKvs(
-        e.kvs.Mapper("map", e.U(1)).Map([
-          [3, e.Str("c"), e.U64(30)],
-          [1, e.Str("a"), e.U64(10)],
-        ]),
-        await contract.getAccountKvs(),
-      );
-      await expect(async () =>
-        assertKvs(
-          e.kvs.Mapper("map", e.U(1)).Map(null),
-          await contract.getAccountKvs(),
-        ),
-      ).rejects.toThrow();
-      await wallet.callContract({
-        callee: contract,
-        funcName: "map_remove",
-        funcArgs: [e.U(1), e.Str("a"), e.Str("c")],
-        gasLimit: 10_000_000,
-      });
-      assertKvs(
-        e.kvs.Mapper("map", e.U(1)).Map(null),
-        await contract.getAccountKvs(),
-      );
-    });
-
-    test("e.kvs.Mapper.User", async () => {
-      assertKvs(
-        e.kvs.Mapper("user", e.Str("test")).User(null),
-        await contract.getAccountKvs(),
-      );
-      await wallet.callContract({
-        callee: contract,
-        funcName: "user_add",
-        funcArgs: [e.Str("test"), wallet, contract],
-        gasLimit: 10_000_000,
-      });
-      assertKvs(
-        e.kvs.Mapper("user", e.Str("test")).User([wallet, contract]),
-        await contract.getAccountKvs(),
-      );
-    });
-
-    test("e.kvs.Mapper.Vec", async () => {
-      await wallet.callContract({
-        callee: contract,
-        funcName: "vec_add",
-        funcArgs: [e.U64(1), e.U(2), e.U64(1), e.U64(2)],
-        gasLimit: 10_000_000,
-      });
-      assertKvs(
-        e.kvs.Mapper("vec", e.U64(1), e.U(2)).Vec([e.U64(1), e.U64(2)]),
-        await contract.getAccountKvs(),
-      );
-      await expect(async () =>
-        assertKvs(
-          e.kvs.Mapper("vec", e.U64(1), e.U(2)).Vec(null),
-          await contract.getAccountKvs(),
-        ),
-      ).rejects.toThrow();
-      await wallet.callContract({
-        callee: contract,
-        funcName: "vec_remove",
-        funcArgs: [e.U64(1), e.U(2), e.U32(2), e.U32(1)],
-        gasLimit: 10_000_000,
-      });
-      assertKvs(
-        e.kvs.Mapper("vec", e.U64(1), e.U(2)).Vec(null),
-        await contract.getAccountKvs(),
-      );
-    });
-  });
-
-  describe("e.kvs.Esdts", () => {
-    beforeEach(async () => {
-      contract = await world.createContract({
-        code: "file:contracts/data/output/data.wasm",
-        kvs: [
-          e.kvs.Esdts([
-            {
-              id: fftId,
-              roles: ["ESDTRoleLocalMint"],
-            },
-            {
-              id: sftId,
-              roles: ["ESDTRoleNFTCreate", "ESDTRoleNFTAddQuantity"],
-            },
-          ]),
-        ],
-      });
-    });
-
-    test("e.kvs.Esdts", async () => {
-      const fftAmount = 10;
-      await wallet.callContract({
-        callee: contract,
-        funcName: "esdt_local_mint",
-        funcArgs: [e.Str(fftId), e.U64(0), e.U(fftAmount)],
-        gasLimit: 10_000_000,
-      });
-      await wallet.callContract({
-        callee: contract,
-        funcName: "direct_send",
-        funcArgs: [e.Str(fftId), e.U64(0), e.U(fftAmount)],
-        gasLimit: 10_000_000,
-      });
-      const sftAmount1 = 20;
-      const sftName1 = "Test 1";
-      const sftRoyalties1 = 20;
-      const sftHash1 = "0001";
-      const sftUris1 = ["https://google.com"];
-      const sftAttrs1 = e.Tuple(e.U8(0), e.U8(0), e.U8(0));
-      await wallet.callContract({
-        callee: contract,
-        funcName: "esdt_nft_create",
-        funcArgs: [
-          e.Str(sftId),
-          e.U(sftAmount1),
-          e.Str(sftName1),
-          e.U(sftRoyalties1),
-          e.Buffer(sftHash1),
-          sftAttrs1,
-          e.List(...sftUris1.map((u) => e.Str(u))),
-        ],
-        gasLimit: 10_000_000,
-      });
-      await wallet.callContract({
-        callee: contract,
-        funcName: "direct_send",
-        funcArgs: [e.Str(sftId), e.U64(1), e.U(sftAmount1 / 2)],
-        gasLimit: 10_000_000,
-      });
-      const sftAmount2 = 50;
-      const sftAttrs2 = e.Tuple(e.U8(255), e.U8(255), e.U8(255));
-      await wallet.callContract({
-        callee: contract,
-        funcName: "esdt_nft_create_compact",
-        funcArgs: [e.Str(sftId), e.U(sftAmount2), sftAttrs2],
-        gasLimit: 10_000_000,
-      });
-      await wallet.callContract({
-        callee: contract,
-        funcName: "direct_send",
-        funcArgs: [e.Str(sftId), e.U64(2), e.U(sftAmount2 / 2)],
-        gasLimit: 10_000_000,
-      });
-      assertKvs(
-        e.kvs.Esdts([
-          { id: fftId, amount: fftAmount },
-          { id: sftId, nonce: 1, amount: sftAmount1 / 2 },
-          { id: sftId, nonce: 2, amount: sftAmount2 / 2 },
-        ]),
-        await wallet.getAccountKvs(),
-      );
-      assertKvs(
-        e.kvs.Esdts([
-          {
-            id: fftId,
-            roles: ["ESDTRoleLocalMint"],
-          },
-          {
-            id: sftId,
-            roles: ["ESDTRoleNFTCreate", "ESDTRoleNFTAddQuantity"],
-            lastNonce: 2,
-          },
-          { id: sftId, nonce: 1, amount: sftAmount1 / 2 },
-          { id: sftId, nonce: 2, amount: sftAmount2 / 2 },
-        ]),
-        await contract.getAccountKvs(),
-      );
-      assertKvs(
-        e.kvs.Esdts([
-          {
-            id: sftId,
-            nonce: 1,
-            name: sftName1,
-            creator: contract,
-            royalties: sftRoyalties1,
-            hash: sftHash1,
-            uris: sftUris1,
-            attrs: sftAttrs1,
-          },
-          {
-            id: sftId,
-            nonce: 2,
-            creator: contract,
-            uris: [""],
-            attrs: sftAttrs2,
-          },
-        ]),
-        await world.sysAcc.getAccountKvs(),
-      );
-    });
-
-    test("e.kvs.Esdts - amount 0", () => {
-      assertKvs(
-        e.kvs.Esdts([
-          { id: fftId, amount: 0n },
-          { id: sftId, nonce: 1, amount: 0n },
-        ]),
-        {},
-      );
-    });
-  });
+test("d.U8.fromTop - not all bytes read", () => {
+  expect(() => d.U8().fromTop("0000")).toThrow("Not all bytes have been read.");
 });
 
 test("d.Buffer.fromTop - hex", () => {
@@ -1142,6 +1173,180 @@ test("d.Option.fromNest - first byte >= 2", () => {
   expect(() => d.Option(d.U8()).fromNest("0200")).toThrow(
     "Invalid Option nest-encoding.",
   );
+});
+
+test("d.vs - number of values and decoders matching", () => {
+  expect(d.vs([d.U(), d.U(), d.U(), d.U()]).from(vs)).toEqual([
+    258n,
+    772n,
+    1286n,
+    10n,
+  ]);
+});
+
+test("d.vs - number of values and decoders not matching", () => {
+  expect(() => d.vs([]).from(vs)).toThrow(
+    "Not the same number of values and decoders.",
+  );
+});
+
+test("d.kvs", async () => {
+  expect(
+    d
+      .kvs({
+        mappers: [
+          { key: ["value", d.Str()], value: d.U64() },
+          { key: ["vec", d.U64(), d.U()], vec: d.U64() },
+          { key: ["unordered_set", d.U64()], unorderedSet: d.U() },
+          { key: ["set", d.U64()], set: d.U() },
+          { key: ["map", d.U()], map: [d.Str(), d.U64()] },
+          { key: ["user", d.Str()], user: true },
+        ],
+      })
+      .from(complexContractState.kvs!),
+  ).toEqual({
+    esdts: [
+      { id: fftId, roles: ["ESDTRoleLocalMint"], amount: 10n },
+      {
+        id: sft1Id,
+        roles: ["ESDTRoleNFTCreate", "ESDTRoleNFTAddQuantity"],
+        lastNonce: 10,
+        variants: range(1, 11).map((i) => ({
+          nonce: i,
+          amount: BigInt(i),
+        })),
+      },
+      {
+        id: sft2Id,
+        roles: ["ESDTRoleNFTCreate", "ESDTRoleNFTAddQuantity"],
+        lastNonce: 10,
+        variants: range(1, 11).map((i) => ({
+          nonce: i,
+          amount: BigInt(i),
+        })),
+      },
+      {
+        id: sft3Id,
+        roles: ["ESDTRoleNFTCreate", "ESDTRoleNFTAddQuantity"],
+        lastNonce: 1,
+        variants: [{ nonce: 1, amount: 1n }],
+      },
+    ],
+    mappers: [
+      { key: ["value", "a"], value: 1n },
+      { key: ["value", "b"], value: 2n },
+      { key: ["vec", 1n, 1n], vec: [1n, 2n, 3n] },
+      { key: ["vec", 2n, 2n], vec: [4n, 5n, 6n] },
+      { key: ["unordered_set", 3n], unorderedSet: [7n, 8n, 9n] },
+      { key: ["unordered_set", 4n], unorderedSet: [10n, 11n, 12n] },
+      {
+        key: ["set", 5n],
+        set: [
+          [1, 13n],
+          [2, 14n],
+          [3, 15n],
+        ],
+      },
+      {
+        key: ["set", 6n],
+        set: [
+          [1, 16n],
+          [2, 17n],
+          [3, 18n],
+        ],
+      },
+      {
+        key: ["map", 7n],
+        map: [
+          [1, "a", 1n],
+          [2, "b", 2n],
+        ],
+      },
+      {
+        key: ["map", 8n],
+        map: [
+          [1, "c", 3n],
+          [2, "d", 4n],
+        ],
+      },
+      {
+        key: ["user", "a"],
+        user: [wallet, contract],
+      },
+      {
+        key: ["user", "b"],
+        user: [wallet, contract],
+      },
+    ],
+    extraKvs: {
+      "010203": "040506",
+    },
+  });
+  expect(
+    d
+      .kvs({
+        esdts: [
+          {
+            id: sft1Id,
+            attrs: (nonce) => (nonce <= 5 ? d.Tuple(d.U(), d.U()) : d.Str()),
+          },
+          {
+            id: sft2Id,
+            attrs: d.Tuple(d.Str(), d.U()),
+          },
+        ],
+      })
+      .from(complexSysAccState.kvs!),
+  ).toEqual({
+    esdts: [
+      {
+        id: sft1Id,
+        variants: range(1, 11).map((i) => ({
+          nonce: i,
+          name: `SFT1 ${i}`,
+          royalties: i,
+          hash: e.U(i).toTopHex(),
+          attrs: i <= 5 ? [BigInt(i), BigInt(i)] : `Attr ${i}`,
+          uris: [`URI1 ${i}`, `URI2 ${i}`],
+          creator: contract,
+        })),
+      },
+      {
+        id: sft2Id,
+        variants: range(1, 11).map((i) => ({
+          nonce: i,
+          attrs: [`${i}`, BigInt(i)],
+          creator: contract,
+        })),
+      },
+      { id: sft3Id, variants: [{ nonce: 1, creator: contract }] },
+    ],
+  });
+});
+
+test("d.account", () => {
+  expect(d.account().from(walletState)).toEqual({
+    address: wallet,
+    nonce: 0,
+    balance: 20n,
+    codeMetadata: ["readable"],
+    kvs: {},
+  });
+  expect(d.account().from(complexContractState)).toEqual({
+    address: contract,
+    nonce: 0,
+    balance: 10n,
+    code: expandCode("file:contracts/data/output/data.wasm"),
+    codeMetadata: ["upgradeable", "readable"],
+    kvs: expect.anything(),
+    owner: wallet,
+  });
+  expect(d.account().from(complexSysAccState)).toEqual({
+    address: world.sysAcc,
+    nonce: 0,
+    balance: 0n,
+    kvs: expect.anything(),
+  });
 });
 
 test("d.Bytes", () => {

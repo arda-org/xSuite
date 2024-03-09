@@ -133,6 +133,10 @@ export class World {
     return getAccountKvs(this.proxy, address);
   }
 
+  getSerializableAccountWithKvs(address: Address) {
+    return getSerializableAccountWithKvs(this.proxy, address);
+  }
+
   getAccountWithKvs(address: Address) {
     return getAccountWithKvs(this.proxy, address);
   }
@@ -243,6 +247,10 @@ export class Wallet extends Signer {
     return getAccountKvs(this.proxy, this);
   }
 
+  getSerializableAccountWithKvs() {
+    return getSerializableAccountWithKvs(this.proxy, this);
+  }
+
   getAccountWithKvs() {
     return getAccountWithKvs(this.proxy, this);
   }
@@ -334,6 +342,10 @@ export class Contract extends Account {
 
   getAccountKvs() {
     return getAccountKvs(this.proxy, this);
+  }
+
+  getSerializableAccountWithKvs() {
+    return getSerializableAccountWithKvs(this.proxy, this);
   }
 
   getAccountWithKvs() {
@@ -453,6 +465,9 @@ const getAccount = (proxy: Proxy, address: Address) =>
 
 const getAccountKvs = (proxy: Proxy, address: Address) =>
   proxy.getAccountKvs(address);
+
+const getSerializableAccountWithKvs = (proxy: Proxy, address: Address) =>
+  proxy.getSerializableAccountWithKvs(address);
 
 const getAccountWithKvs = (proxy: Proxy, address: Address) =>
   proxy.getAccountWithKvs(address);
