@@ -22,3 +22,9 @@ test("d.Tuple.fromTop - [d.Str, d.U8]", () => {
     [string, bigint]
   >();
 });
+
+test("d.vs.from - [d.Str, d.U]", () => {
+  expectTypeOf(d.vs([d.Str(), d.U()]).from([])).toEqualTypeOf<
+    [string, bigint]
+  >();
+});

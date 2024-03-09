@@ -2,6 +2,7 @@ import { addressToU8AAddress, u8aAddressToBechAddress } from "../data/address";
 import { Encodable } from "../data/encoding";
 
 export class Account extends Encodable {
+  $$typeof = Symbol.for("jest.asymmetricMatcher");
   u8a: Uint8Array;
 
   constructor(address: string | Uint8Array) {
@@ -19,5 +20,13 @@ export class Account extends Encodable {
 
   toString(): string {
     return u8aAddressToBechAddress(this.u8a);
+  }
+
+  asymmetricMatch(compareTo: string) {
+    return compareTo === this.toString();
+  }
+
+  toAsymmetricMatcher() {
+    return `"${this.toString()}"`;
   }
 }

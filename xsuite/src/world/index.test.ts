@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, expect, test } from "vitest";
-import { assertAccount, assertHexList } from "../assert";
+import { assertAccount, assertVs } from "../assert";
 import { e } from "../data";
-import { kvsToRawKvs } from "../data/kvs";
 import { DummySigner } from "./signer";
 import { isContractAddress } from "./utils";
 import { SWorld, SContract, SWallet } from ".";
@@ -32,17 +31,17 @@ beforeEach(async () => {
   world = await SWorld.start({ explorerUrl });
   wallet = await world.createWallet({
     balance: 10n ** 18n,
-    kvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
+    kvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
   });
   otherWallet = await world.createWallet();
   contract = await wallet.createContract({
     balance: 10n ** 18n,
     code: worldCode,
     codeMetadata: ["payable"],
-    kvs: [
-      e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }]),
-      [e.Str("n"), e.U64(2)],
-    ],
+    kvs: {
+      esdts: [{ id: fftId, amount: 10n ** 18n }],
+      mappers: [{ key: "n", value: e.U64(2) }],
+    },
   });
 });
 
@@ -166,9 +165,9 @@ test("SWorld.getAccount", async () => {
 });
 
 test("SWorld.getAccountKvs", async () => {
-  await wallet.setAccount({ kvs: [e.kvs.Mapper("n").Value(e.U(12))] });
+  await wallet.setAccount({ kvs: [[e.Str("n"), e.U(12)]] });
   expect(await world.getAccountKvs(wallet)).toEqual(
-    kvsToRawKvs(e.kvs.Mapper("n").Value(e.U(12))),
+    e.kvs([[e.Str("n"), e.U(12)]]),
   );
 });
 
@@ -176,12 +175,12 @@ test("SWorld.getAccountWithKvs", async () => {
   await wallet.setAccount({
     nonce: 10,
     balance: 1234,
-    kvs: [e.kvs.Mapper("n").Value(e.U(12))],
+    kvs: [[e.Str("n"), e.U(12)]],
   });
   assertAccount(await world.getAccountWithKvs(wallet), {
     nonce: 10,
     balance: 1234,
-    kvs: [e.kvs.Mapper("n").Value(e.U(12))],
+    kvs: [[e.Str("n"), e.U(12)]],
   });
 });
 
@@ -191,14 +190,14 @@ test("SWorld.setAccount", async () => {
     balance: 1234,
     code: worldCode,
     codeMetadata: ["upgradeable"],
-    kvs: [e.kvs.Mapper("n").Value(e.U64(10))],
+    kvs: [[e.Str("n"), e.U64(10)]],
     owner: wallet,
   });
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 1234,
     code: worldCode,
     codeMetadata: ["upgradeable"],
-    kvs: [e.kvs.Mapper("n").Value(e.U64(10))],
+    kvs: [[e.Str("n"), e.U64(10)]],
     owner: wallet,
   });
 });
@@ -214,7 +213,7 @@ test("SWorld.setCurrentBlockInfo", async () => {
     callee: contract,
     funcName: "get_current_block_info",
   });
-  assertHexList(returnData, [e.U64(100), e.U64(200), e.U64(300), e.U64(400)]);
+  assertVs(returnData, [e.U64(100), e.U64(200), e.U64(300), e.U64(400)]);
 });
 
 test("SWorld.setPreviousBlockInfo", async () => {
@@ -228,7 +227,7 @@ test("SWorld.setPreviousBlockInfo", async () => {
     callee: contract,
     funcName: "get_prev_block_info",
   });
-  assertHexList(returnData, [e.U64(10), e.U64(20), e.U64(30), e.U64(40)]);
+  assertVs(returnData, [e.U64(10), e.U64(20), e.U64(30), e.U64(40)]);
 });
 
 test("SWorld.query - basic", async () => {
@@ -237,7 +236,7 @@ test("SWorld.query - basic", async () => {
     funcName: "multiply_by_n",
     funcArgs: [e.U64(10)],
   });
-  assertHexList(returnData, [e.U64(20n)]);
+  assertVs(returnData, [e.U64(20n)]);
 });
 
 test("SWorld.query - sender", async () => {
@@ -246,7 +245,7 @@ test("SWorld.query - sender", async () => {
     funcName: "get_caller",
     sender: wallet,
   });
-  assertHexList(returnData, [wallet]);
+  assertVs(returnData, [wallet]);
 });
 
 test("SWorld.query - value", async () => {
@@ -255,7 +254,7 @@ test("SWorld.query - value", async () => {
     funcName: "get_value",
     value: 10,
   });
-  assertHexList(returnData, [e.U(10)]);
+  assertVs(returnData, [e.U(10)]);
 });
 
 test("SWorld.executeTx", async () => {
@@ -290,11 +289,11 @@ test("SWorld.transfer", async () => {
   });
   assertAccount(await wallet.getAccountWithKvs(), {
     balance: 9n * 10n ** 17n,
-    hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 9n * 10n ** 17n }])],
+    hasKvs: { esdts: [{ id: fftId, amount: 9n * 10n ** 17n }] },
   });
   assertAccount(await otherWallet.getAccountWithKvs(), {
     balance: 10n ** 17n,
-    hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 17n }])],
+    hasKvs: { esdts: [{ id: fftId, amount: 10n ** 17n }] },
   });
 });
 
@@ -347,7 +346,7 @@ test("SWallet.query", async () => {
     callee: contract,
     funcName: "get_caller",
   });
-  assertHexList(returnData, [wallet]);
+  assertVs(returnData, [wallet]);
 });
 
 test("SWallet.query - try to change the state", async () => {
@@ -356,7 +355,7 @@ test("SWallet.query - try to change the state", async () => {
   });
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 10n ** 18n,
-    hasKvs: [e.kvs.Mapper("n").Value(e.U64(2))],
+    hasKvs: [[e.Str("n"), e.U64(2)]],
   });
   await wallet.query({
     callee: contract,
@@ -373,7 +372,7 @@ test("SWallet.query - try to change the state", async () => {
   });
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 10n ** 18n,
-    hasKvs: [e.kvs.Mapper("n").Value(e.U64(2))],
+    hasKvs: [[e.Str("n"), e.U64(2)]],
   });
 });
 
@@ -385,9 +384,8 @@ test.todo("SWallet.query - esdts", async () => {
       { id: fftId, amount: 10 },
       { id: sftId, nonce: 1, amount: 20 },
     ],
-  } as any);
-  // remove the "as any"
-  assertHexList(returnData, [
+  } as any); // remove the "as any"
+  assertVs(returnData, [
     e.Tuple(e.Str(fftId), e.U64(0), e.U(10)),
     e.Tuple(e.Str(sftId), e.U64(1), e.U(20)),
   ]);
@@ -427,7 +425,7 @@ test("SWallet.getAccountBalance", async () => {
 
 test("SWallet.getAccountKvs", async () => {
   expect(await wallet.getAccountKvs()).toEqual(
-    kvsToRawKvs(e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])),
+    e.kvs({ esdts: [{ id: fftId, amount: 10n ** 18n }] }),
   );
 });
 
@@ -448,7 +446,7 @@ test("SWallet.getAccountWithKvs", async () => {
     code: null,
     codeMetadata: ["readable"],
     owner: null,
-    hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
+    hasKvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
   });
 });
 
@@ -467,10 +465,10 @@ test("SContract.getAccountBalance", async () => {
 
 test("SContract.getAccountKvs", async () => {
   expect(await contract.getAccountKvs()).toEqual(
-    kvsToRawKvs([
-      e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }]),
-      [e.Str("n"), e.U64(2)],
-    ]),
+    e.kvs({
+      esdts: [{ id: fftId, amount: 10n ** 18n }],
+      extraKvs: [[e.Str("n"), e.U64(2)]],
+    }),
   );
 });
 
@@ -488,7 +486,7 @@ test("SContract.getAccountWithKvs", async () => {
     code: worldCode,
     codeMetadata: ["payable"],
     owner: wallet,
-    hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
+    hasKvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
   });
 });
 
@@ -526,11 +524,11 @@ test("SWallet.transfer", async () => {
   });
   assertAccount(await wallet.getAccountWithKvs(), {
     balance: 9n * 10n ** 17n,
-    hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 9n * 10n ** 17n }])],
+    hasKvs: { esdts: [{ id: fftId, amount: 9n * 10n ** 17n }] },
   });
   assertAccount(await otherWallet.getAccountWithKvs(), {
     balance: 10n ** 17n,
-    hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 17n }])],
+    hasKvs: { esdts: [{ id: fftId, amount: 10n ** 17n }] },
   });
 });
 
@@ -583,10 +581,10 @@ test("SWallet.callContract with ESDT", async () => {
     gasLimit: 10_000_000,
   });
   assertAccount(await wallet.getAccountWithKvs(), {
-    hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 9n * 10n ** 17n }])],
+    hasKvs: { esdts: [{ id: fftId, amount: 9n * 10n ** 17n }] },
   });
   assertAccount(await contract.getAccountWithKvs(), {
-    hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n + 10n ** 17n }])],
+    hasKvs: { esdts: [{ id: fftId, amount: 10n ** 18n + 10n ** 17n }] },
   });
 });
 
@@ -597,7 +595,7 @@ test("SWallet.callContract with return", async () => {
     funcArgs: [e.U64(10)],
     gasLimit: 10_000_000,
   });
-  assertHexList(returnData, [e.U64(20)]);
+  assertVs(returnData, [e.U64(20)]);
 });
 
 test("SWorld.callContract - change the state", async () => {
@@ -608,10 +606,10 @@ test("SWorld.callContract - change the state", async () => {
     gasLimit: 10_000_000,
   });
   assertAccount(await contract.getAccountWithKvs(), {
-    kvs: [
-      e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }]),
-      e.kvs.Mapper("n").Value(e.U64(100)),
-    ],
+    kvs: {
+      esdts: [{ id: fftId, amount: 10n ** 18n }],
+      extraKvs: [[e.Str("n"), e.U64(100)]],
+    },
   });
 });
 

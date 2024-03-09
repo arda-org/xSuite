@@ -1,0 +1,1 @@
+export type Vs = string[];

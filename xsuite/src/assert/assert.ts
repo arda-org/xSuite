@@ -1,22 +1,18 @@
 import assert from "node:assert";
-import { BytesLike } from "../data";
-import { addressToBechAddress } from "../data/address";
-import { bytesLikeToHex } from "../data/bytesLike";
-import { Kvs, kvsToRawKvs } from "../data/kvs";
-import { Optional } from "../helpers";
+import { Address, addressToBechAddress } from "../data/address";
+import {
+  e,
+  eKvsUnfiltered,
+  EncodableVs,
+  EncodableKvs,
+  eCodeMetadata,
+  EncodableCodeMetadata,
+} from "../data/encoding";
 import { Proxy } from "../proxy";
-import { codeMetadataToHex } from "../proxy/proxy";
-import { Account } from "../proxy/sproxy";
 import { expandCode } from "../world/world";
 
-export const assertHexList = (
-  actualHexList: BytesLike[],
-  expectedHexList: BytesLike[],
-) => {
-  assert.deepStrictEqual(
-    [...actualHexList.map(bytesLikeToHex)],
-    [...expectedHexList.map(bytesLikeToHex)],
-  );
+export const assertVs = (actualVs: EncodableVs, expectedVs: EncodableVs) => {
+  assert.deepStrictEqual(e.vs(actualVs), e.vs(expectedVs));
 };
 
 export const assertAccount = (
@@ -45,19 +41,19 @@ export const assertAccount = (
   if (code !== undefined) {
     assert.strictEqual(
       actualAccount.code,
-      code == null ? code : expandCode(code),
+      code == null ? undefined : expandCode(code),
     );
   }
   if (codeMetadata !== undefined) {
     assert.strictEqual(
       actualAccount.codeMetadata,
-      codeMetadata == null ? codeMetadata : codeMetadataToHex(codeMetadata),
+      codeMetadata == null ? undefined : eCodeMetadata(codeMetadata),
     );
   }
   if (owner !== undefined) {
     assert.strictEqual(
       actualAccount.owner,
-      owner == null ? owner : addressToBechAddress(owner),
+      owner == null ? undefined : addressToBechAddress(owner),
     );
   }
   if (kvs !== undefined) {
@@ -71,25 +67,13 @@ export const assertAccount = (
   }
 };
 
-export const assertKvs = (actualKvs: Kvs, expectedKvs: Kvs) => {
-  const rawActualKvs = { ...kvsToRawKvs(actualKvs) };
-  const rawExpectedKvs = { ...kvsToRawKvs(expectedKvs) };
-  for (const k of Object.keys(rawActualKvs)) {
-    if (!rawActualKvs[k]) {
-      delete rawActualKvs[k];
-    }
-  }
-  for (const k of Object.keys(rawExpectedKvs)) {
-    if (!(k in rawActualKvs)) {
-      rawActualKvs[k] = "";
-    }
-  }
-  assert.deepStrictEqual(rawActualKvs, rawExpectedKvs);
+const assertKvs = (actualKvs: EncodableKvs, expectedKvs: EncodableKvs) => {
+  assert.deepStrictEqual(e.kvs(actualKvs), e.kvs(expectedKvs));
 };
 
-const assertHasKvs = (actualKvs: Kvs, hasKvs: Kvs) => {
-  const rawActualKvs = { ...kvsToRawKvs(actualKvs) };
-  const rawHasKvs = { ...kvsToRawKvs(hasKvs) };
+const assertHasKvs = (actualKvs: EncodableKvs, hasKvs: EncodableKvs) => {
+  const rawActualKvs = eKvsUnfiltered(actualKvs);
+  const rawHasKvs = eKvsUnfiltered(hasKvs);
   for (const k of Object.keys(rawActualKvs)) {
     if (!rawActualKvs[k] || !(k in rawHasKvs)) {
       delete rawActualKvs[k];
@@ -107,10 +91,27 @@ type ActualAccount = Partial<
   Awaited<ReturnType<typeof Proxy.getAccountWithKvs>>
 >;
 
-type ExpectedAccount = Optional<Account, "address"> & {
-  hasKvs?: Kvs;
+type ExpectedAccount = {
+  address?: Address;
+  nonce?: number;
+  balance?: number | bigint | string;
+  code?: string | null;
+  codeMetadata?: EncodableCodeMetadata | null;
+  owner?: Address | null;
+  kvs?: EncodableKvs;
+  hasKvs?: EncodableKvs;
   /**
    * @deprecated Use `.kvs` instead.
    */
-  allKvs?: Kvs;
+  allKvs?: EncodableKvs;
+};
+
+/**
+ * @deprecated Use `assertVs` instead.
+ */
+export const assertHexList = (
+  actualHexList: EncodableVs,
+  expectedHexList: EncodableVs,
+) => {
+  assertVs(actualHexList, expectedHexList);
 };
