@@ -1,7 +1,11 @@
+// eslint-disable-next-line import/no-unresolved
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
+    typecheck: {
+      enabled: true,
+    },
     coverage: {
       enabled: true,
       include: ["src/**/*.ts"],
