@@ -1,0 +1,309 @@
+{
+    "buildInfo": {
+        "rustc": {
+            "version": "1.71.0-nightly",
+            "commitHash": "a2b1646c597329d0a25efa3889b66650f65de1de",
+            "commitDate": "2023-05-25",
+            "channel": "Nightly",
+            "short": "rustc 1.71.0-nightly (a2b1646c5 2023-05-25)"
+        },
+        "contractCrate": {
+            "name": "bonding-curve-contract",
+            "version": "0.0.0"
+        },
+        "framework": {
+            "name": "multiversx-sc",
+            "version": "0.45.2"
+        }
+    },
+    "name": "Contract",
+    "constructor": {
+        "inputs": [],
+        "outputs": []
+    },
+    "endpoints": [
+        {
+            "name": "sellToken",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "*"
+            ],
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "name": "buyToken",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "*"
+            ],
+            "inputs": [
+                {
+                    "name": "requested_amount",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "requested_token",
+                    "type": "TokenIdentifier"
+                },
+                {
+                    "name": "requested_nonce",
+                    "type": "optional<u64>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "deposit",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "*"
+            ],
+            "inputs": [
+                {
+                    "name": "payment_token",
+                    "type": "optional<TokenIdentifier>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setBondingCurve",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "identifier",
+                    "type": "TokenIdentifier"
+                },
+                {
+                    "name": "function",
+                    "type": "FunctionSelector"
+                },
+                {
+                    "name": "sell_availability",
+                    "type": "bool"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "claim",
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "name": "view_buy_price",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "identifier",
+                    "type": "TokenIdentifier"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "name": "view_sell_price",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "identifier",
+                    "type": "TokenIdentifier"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "name": "getTokenAvailability",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "identifier",
+                    "type": "TokenIdentifier"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "variadic<multi<u64,BigUint>>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "setLocalRoles",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                },
+                {
+                    "name": "token_identifier",
+                    "type": "TokenIdentifier"
+                },
+                {
+                    "name": "roles",
+                    "type": "variadic<EsdtLocalRole>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "unsetLocalRoles",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                },
+                {
+                    "name": "token_identifier",
+                    "type": "TokenIdentifier"
+                },
+                {
+                    "name": "roles",
+                    "type": "variadic<EsdtLocalRole>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        }
+    ],
+    "events": [
+        {
+            "identifier": "buy-token",
+            "inputs": [
+                {
+                    "name": "user",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "identifier": "sell-token",
+            "inputs": [
+                {
+                    "name": "user",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                }
+            ]
+        }
+    ],
+    "esdtAttributes": [],
+    "hasCallback": false,
+    "types": {
+        "EsdtLocalRole": {
+            "type": "enum",
+            "variants": [
+                {
+                    "name": "None",
+                    "discriminant": 0
+                },
+                {
+                    "name": "Mint",
+                    "discriminant": 1
+                },
+                {
+                    "name": "Burn",
+                    "discriminant": 2
+                },
+                {
+                    "name": "NftCreate",
+                    "discriminant": 3
+                },
+                {
+                    "name": "NftAddQuantity",
+                    "discriminant": 4
+                },
+                {
+                    "name": "NftBurn",
+                    "discriminant": 5
+                },
+                {
+                    "name": "NftAddUri",
+                    "discriminant": 6
+                },
+                {
+                    "name": "NftUpdateAttributes",
+                    "discriminant": 7
+                },
+                {
+                    "name": "Transfer",
+                    "discriminant": 8
+                }
+            ]
+        },
+        "FunctionSelector": {
+            "type": "enum",
+            "variants": [
+                {
+                    "name": "Linear",
+                    "discriminant": 0,
+                    "fields": [
+                        {
+                            "name": "0",
+                            "type": "LinearFunction"
+                        }
+                    ]
+                },
+                {
+                    "name": "CustomExample",
+                    "discriminant": 1,
+                    "fields": [
+                        {
+                            "name": "0",
+                            "type": "BigUint"
+                        }
+                    ]
+                },
+                {
+                    "name": "None",
+                    "discriminant": 2
+                }
+            ]
+        },
+        "LinearFunction": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "initial_price",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "linear_coefficient",
+                    "type": "BigUint"
+                }
+            ]
+        }
+    }
+}

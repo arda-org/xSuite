@@ -1,0 +1,338 @@
+{
+    "buildInfo": {
+        "rustc": {
+            "version": "1.71.0-nightly",
+            "commitHash": "a2b1646c597329d0a25efa3889b66650f65de1de",
+            "commitDate": "2023-05-25",
+            "channel": "Nightly",
+            "short": "rustc 1.71.0-nightly (a2b1646c5 2023-05-25)"
+        },
+        "contractCrate": {
+            "name": "mvx-game-sc",
+            "version": "0.0.0"
+        },
+        "framework": {
+            "name": "multiversx-sc",
+            "version": "0.45.2"
+        }
+    },
+    "name": "MvxGameSc",
+    "constructor": {
+        "inputs": [
+            {
+                "name": "enabled_opt",
+                "type": "optional<bool>",
+                "multi_arg": true
+            },
+            {
+                "name": "game_start_fee_opt",
+                "type": "optional<BigUint>",
+                "multi_arg": true
+            },
+            {
+                "name": "token_id_opt",
+                "type": "optional<EgldOrEsdtTokenIdentifier>",
+                "multi_arg": true
+            }
+        ],
+        "outputs": []
+    },
+    "endpoints": [
+        {
+            "name": "createGame",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "*"
+            ],
+            "inputs": [
+                {
+                    "name": "waiting_time",
+                    "type": "u64"
+                },
+                {
+                    "name": "number_of_players_min",
+                    "type": "u64"
+                },
+                {
+                    "name": "number_of_players_max",
+                    "type": "u64"
+                },
+                {
+                    "name": "wager",
+                    "type": "BigUint"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "joinGame",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "*"
+            ],
+            "inputs": [
+                {
+                    "name": "game_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "claimBackWager",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "game_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "getTokenId",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "EgldOrEsdtTokenIdentifier"
+                }
+            ]
+        },
+        {
+            "name": "getGameStartFee",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "name": "getEnabled",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "isUserAdmin",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "user",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "getLastGameId",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "getGameSettings",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "game_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "GameSettings"
+                }
+            ]
+        },
+        {
+            "name": "getGameIdBySettings",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "game_settings",
+                    "type": "GameSettings"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "getPlayers",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "game_id",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "variadic<Address>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "getGamesPerUser",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "user",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "variadic<u64>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "sendReward",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "game_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "winners",
+                    "type": "optional<variadic<tuple<Address,u64>>>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "enableSC",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "name": "disableSC",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "name": "setTokenId",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "token_id",
+                    "type": "EgldOrEsdtTokenIdentifier"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setGameStartFee",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setAdmin",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "user",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "removeAdmin",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "user",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        }
+    ],
+    "esdtAttributes": [],
+    "hasCallback": false,
+    "types": {
+        "GameSettings": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "time_limit",
+                    "type": "u64"
+                },
+                {
+                    "name": "number_of_players_min",
+                    "type": "u64"
+                },
+                {
+                    "name": "number_of_players_max",
+                    "type": "u64"
+                },
+                {
+                    "name": "wager",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "creator",
+                    "type": "Address"
+                },
+                {
+                    "name": "status",
+                    "type": "Status"
+                }
+            ]
+        },
+        "Status": {
+            "type": "enum",
+            "variants": [
+                {
+                    "name": "Valid",
+                    "discriminant": 0
+                },
+                {
+                    "name": "Invalid",
+                    "discriminant": 1
+                }
+            ]
+        }
+    }
+}

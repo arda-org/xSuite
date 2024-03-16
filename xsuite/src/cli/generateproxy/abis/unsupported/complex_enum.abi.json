@@ -1,0 +1,116 @@
+{
+    "buildInfo": {
+        "rustc": {
+            "version": "1.76.0-nightly",
+            "commitHash": "d86d65bbc19b928387f68427fcc3a0da498d8a19",
+            "commitDate": "2023-12-10",
+            "channel": "Nightly",
+            "short": "rustc 1.76.0-nightly (d86d65bbc 2023-12-10)"
+        },
+        "contractCrate": {
+            "name": "datatypes",
+            "version": "0.0.0"
+        },
+        "framework": {
+            "name": "multiversx-sc",
+            "version": "0.47.4"
+        }
+    },
+    "name": "DataTypes",
+    "constructor": {
+        "inputs": [],
+        "outputs": []
+    },
+    "endpoints": [
+        {
+            "name": "getOtherDataTypes",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "OtherDataTypes"
+                }
+            ]
+        },
+        {
+            "name": "setOtherDataTypes",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "data",
+                    "type": "OtherDataTypes"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "OtherDataTypes"
+                }
+            ]
+        }
+    ],
+    "esdtAttributes": [],
+    "hasCallback": false,
+    "types": {
+        "ComplexEnum": {
+            "type": "enum",
+            "variants": [
+                {
+                    "name": "Default",
+                    "discriminant": 0
+                },
+                {
+                    "name": "Struct",
+                    "discriminant": 1,
+                    "fields": [
+                        {
+                            "name": "int",
+                            "type": "u16"
+                        },
+                        {
+                            "name": "another_byte",
+                            "type": "u8"
+                        },
+                        {
+                            "name": "uint_32",
+                            "type": "u32"
+                        },
+                        {
+                            "name": "uint_64",
+                            "type": "u64"
+                        }
+                    ]
+                }
+            ]
+        },
+        "OtherDataTypes": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "custom_type",
+                    "type": "SubType"
+                },
+                {
+                    "name": "complex_enum",
+                    "type": "ComplexEnum"
+                },
+                {
+                    "name": "code_metadata",
+                    "type": "CodeMetadata"
+                }
+            ]
+        },
+        "SubType": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "big_unsigned_integer",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ]
+        }
+    }
+}

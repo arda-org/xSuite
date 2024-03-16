@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import { pkgVersion } from "../_pkg";
 import { registerBuildCmd } from "./buildAction";
+import { registerGenerateProxy } from "./generateproxy/generateproxy";
 import { registerInstallRustCmd } from "./installRustCmd";
 import { registerInstallRustKeyCmd } from "./installRustKeyCmd";
 import { registerNewCmd } from "./newCmd";
@@ -22,5 +23,6 @@ export const getCommand = () => {
   registerTestScenCmd(cmd);
   registerNewWalletCmd(cmd);
   registerRequestXegldCmd(cmd);
+  registerGenerateProxy(cmd);
   return cmd;
 };

@@ -1,0 +1,216 @@
+{
+    "buildInfo": {
+        "rustc": {
+            "version": "1.71.0-nightly",
+            "commitHash": "a2b1646c597329d0a25efa3889b66650f65de1de",
+            "commitDate": "2023-05-25",
+            "channel": "Nightly",
+            "short": "rustc 1.71.0-nightly (a2b1646c5 2023-05-25)"
+        },
+        "contractCrate": {
+            "name": "digital-cash",
+            "version": "0.0.0"
+        },
+        "framework": {
+            "name": "multiversx-sc",
+            "version": "0.45.2"
+        }
+    },
+    "name": "DigitalCash",
+    "constructor": {
+        "inputs": [
+            {
+                "name": "fee",
+                "type": "BigUint"
+            }
+        ],
+        "outputs": []
+    },
+    "endpoints": [
+        {
+            "name": "fund",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "*"
+            ],
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                },
+                {
+                    "name": "valability",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "withdraw",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "claim",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                },
+                {
+                    "name": "signature",
+                    "type": "array64<u8>"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "claimFees",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "name": "depositFees",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "EGLD"
+            ],
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "forward",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                },
+                {
+                    "name": "forward_address",
+                    "type": "Address"
+                },
+                {
+                    "name": "signature",
+                    "type": "array64<u8>"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "getAmount",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                },
+                {
+                    "name": "token",
+                    "type": "EgldOrEsdtTokenIdentifier"
+                },
+                {
+                    "name": "nonce",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "name": "deposit",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "donor",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "DepositInfo"
+                }
+            ]
+        }
+    ],
+    "esdtAttributes": [],
+    "hasCallback": false,
+    "types": {
+        "DepositInfo": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "depositor_address",
+                    "type": "Address"
+                },
+                {
+                    "name": "esdt_funds",
+                    "type": "List<EsdtTokenPayment>"
+                },
+                {
+                    "name": "egld_funds",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "valability",
+                    "type": "u64"
+                },
+                {
+                    "name": "expiration_round",
+                    "type": "u64"
+                },
+                {
+                    "name": "fees",
+                    "type": "Fee"
+                }
+            ]
+        },
+        "EsdtTokenPayment": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "token_identifier",
+                    "type": "TokenIdentifier"
+                },
+                {
+                    "name": "token_nonce",
+                    "type": "u64"
+                },
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                }
+            ]
+        },
+        "Fee": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "num_token_to_transfer",
+                    "type": "u32"
+                },
+                {
+                    "name": "value",
+                    "type": "BigUint"
+                }
+            ]
+        }
+    }
+}

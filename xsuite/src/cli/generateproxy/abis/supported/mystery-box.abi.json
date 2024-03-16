@@ -1,0 +1,302 @@
+{
+    "buildInfo": {
+        "rustc": {
+            "version": "1.71.0-nightly",
+            "commitHash": "a2b1646c597329d0a25efa3889b66650f65de1de",
+            "commitDate": "2023-05-25",
+            "channel": "Nightly",
+            "short": "rustc 1.71.0-nightly (a2b1646c5 2023-05-25)"
+        },
+        "contractCrate": {
+            "name": "mystery-box",
+            "version": "0.0.1"
+        },
+        "framework": {
+            "name": "multiversx-sc",
+            "version": "0.45.2"
+        }
+    },
+    "name": "MysteryBox",
+    "constructor": {
+        "inputs": [
+            {
+                "name": "mystery_box_token_id",
+                "type": "TokenIdentifier"
+            }
+        ],
+        "outputs": []
+    },
+    "endpoints": [
+        {
+            "name": "setupMysteryBox",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "winning_rates_list",
+                    "type": "variadic<multi<RewardType,EgldOrEsdtTokenIdentifier,BigUint,bytes,u64,u64>>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "updateMysteryBoxUris",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "uris",
+                    "type": "variadic<bytes>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "createMysteryBox",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "EsdtTokenPayment"
+                }
+            ]
+        },
+        {
+            "name": "openMysteryBox",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "*"
+            ],
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "name": "getMysteryBoxTokenIdentifier",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "TokenIdentifier"
+                }
+            ]
+        },
+        {
+            "name": "getGlobalCooldownEpoch",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "reward",
+                    "type": "RewardType"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "getWinningRates",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "List<Reward>"
+                }
+            ]
+        },
+        {
+            "name": "getMysteryBoxUris",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "List<bytes>"
+                }
+            ]
+        },
+        {
+            "name": "isAdmin",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "addAdmin",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "removeAdmin",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "getAdmins",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "variadic<Address>",
+                    "multi_result": true
+                }
+            ]
+        }
+    ],
+    "events": [
+        {
+            "identifier": "create_mystery_box",
+            "inputs": [
+                {
+                    "name": "user",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "current_epoch",
+                    "type": "u64",
+                    "indexed": true
+                },
+                {
+                    "name": "payment",
+                    "type": "EsdtTokenPayment",
+                    "indexed": true
+                },
+                {
+                    "name": "reward",
+                    "type": "List<Reward>"
+                }
+            ]
+        },
+        {
+            "identifier": "open_mystery_box",
+            "inputs": [
+                {
+                    "name": "caller",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "epoch",
+                    "type": "u64",
+                    "indexed": true
+                },
+                {
+                    "name": "reward",
+                    "type": "Reward"
+                }
+            ]
+        }
+    ],
+    "esdtAttributes": [],
+    "hasCallback": false,
+    "types": {
+        "EsdtTokenPayment": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "token_identifier",
+                    "type": "TokenIdentifier"
+                },
+                {
+                    "name": "token_nonce",
+                    "type": "u64"
+                },
+                {
+                    "name": "amount",
+                    "type": "BigUint"
+                }
+            ]
+        },
+        "Reward": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "reward_type",
+                    "type": "RewardType"
+                },
+                {
+                    "name": "reward_token_id",
+                    "type": "EgldOrEsdtTokenIdentifier"
+                },
+                {
+                    "name": "value",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "description",
+                    "type": "bytes"
+                },
+                {
+                    "name": "percentage_chance",
+                    "type": "u64"
+                },
+                {
+                    "name": "epochs_cooldown",
+                    "type": "u64"
+                }
+            ]
+        },
+        "RewardType": {
+            "type": "enum",
+            "variants": [
+                {
+                    "name": "None",
+                    "discriminant": 0
+                },
+                {
+                    "name": "ExperiencePoints",
+                    "discriminant": 1
+                },
+                {
+                    "name": "MysteryBox",
+                    "discriminant": 2
+                },
+                {
+                    "name": "SFT",
+                    "discriminant": 3
+                },
+                {
+                    "name": "PercentValue",
+                    "discriminant": 4
+                },
+                {
+                    "name": "FixedValue",
+                    "discriminant": 5
+                },
+                {
+                    "name": "CustomReward",
+                    "discriminant": 6
+                }
+            ]
+        }
+    }
+}
