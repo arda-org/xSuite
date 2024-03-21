@@ -34,12 +34,16 @@ beforeAll(async () => {
     explorerUrl,
     // verbose: true,
     // debug: true,
+    waitFor: 120_000,
   });
   wallet = await world.createWallet({
     balance: 10n ** 18n,
     kvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
   }); // wallet in shard 0
   otherWallet = await world.createWallet();
+
+  // generate 20 blocks to pass an epoch so system smart contracts are enabled
+  await world.generateBlocks(20);
 
   const result = await wallet.deployContract({
     code: worldCode,
@@ -48,7 +52,7 @@ beforeAll(async () => {
     gasLimit: 10_000_000,
   });
   contract = result.contract;
-}, 60_000);
+}, 120_000);
 
 afterAll(async () => {
   await world.terminate();

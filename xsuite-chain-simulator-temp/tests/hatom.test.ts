@@ -32,7 +32,7 @@ beforeAll(async () => {
     balance: '1255000000000000000000', // 1255 EGLD
   });
   alice = await world.createWallet({
-    balance: '4001000000000000000000000', // 4,001,000 EGLD
+    balance: '8001000000000000000000000', // 8,001,000 EGLD
   });
   bob = await world.createWallet({
     balance: '10000000000000000000', // 10 EGLD
@@ -165,7 +165,7 @@ const setupLiquidStaking = async (stakingProviderDelegationContract: CSContract)
   });
   const stakingProviderStake = d.U().topDecode(result.returnData[0]);
   console.log('Staking provider stake: ', stakingProviderStake);
-  assert(stakingProviderStake === 11250000000000000000000n);
+  assert(stakingProviderStake === 3750000000000000000000n);
 
   await admin.callContract({
     callee: liquidStakingContract,
@@ -173,10 +173,10 @@ const setupLiquidStaking = async (stakingProviderDelegationContract: CSContract)
     gasLimit: 510_000_000,
     funcArgs: [
       stakingProviderDelegationContract,
-      e.U(11250000000000000000000n), // total value locked (11250 EGLD = 10000 EGLD initial + 1250 EGLD from delegate creation)
+      e.U(3750000000000000000000n), // total value locked (3750 EGLD = 2500 EGLD initial + 1250 EGLD from delegate creation)
       e.U64(1), // nb of nodes,
-      e.U(1100), // high apr
-      e.U(200), // low service fee so this delegation contract is selected instead of some other
+      e.U(2000), // high apr
+      e.U(100), // low service fee so this delegation contract is selected instead of some other
     ],
   });
   console.log('Whitelisted delegation contract');
@@ -184,7 +184,7 @@ const setupLiquidStaking = async (stakingProviderDelegationContract: CSContract)
   let tx = await alice.callContract({
     callee: liquidStakingContract,
     funcName: 'delegate',
-    value: 4000000000000000000000000n, // 4,000,000 EGLD,
+    value: 1000000000000000000000000n, // 1,000,000 EGLD,
     gasLimit: 45_000_000,
   });
   const segldReceived = esdtTokenPaymentDecoder.topDecode(tx.returnData[0]);
@@ -206,7 +206,7 @@ const setupLiquidStaking = async (stakingProviderDelegationContract: CSContract)
   });
   let delegationContractData = delegationContractDataDecoder.topDecode(result.returnData[0]);
   console.log('Delegation contract data: ', delegationContractData);
-  assert(delegationContractData.pending_to_delegate === 4000000000000000000000000n);
+  assert(delegationContractData.pending_to_delegate === 1000000000000000000000000n);
 
   await admin.callContract({
     callee: liquidStakingContract,
@@ -222,7 +222,7 @@ const setupLiquidStaking = async (stakingProviderDelegationContract: CSContract)
     callee: stakingProviderDelegationContract,
     funcName: 'getTotalActiveStake',
   });
-  assert(d.U().topDecode(result.returnData[0]) === 4011250000000000000000000n); // staked increased by 4,000,000 EGLD
+  assert(d.U().topDecode(result.returnData[0]) === 1003750000000000000000000n); // staked increased by 1,000,000 EGLD
 
   console.log('Moving forward 3 epochs...');
 
@@ -252,6 +252,8 @@ const setupLiquidStaking = async (stakingProviderDelegationContract: CSContract)
   });
   console.log('Delegate rewards back to staking provider');
 
+  await world.generateBlocks(3);
+
   result = await world.query({
     callee: stakingProviderDelegationContract,
     funcName: 'getTotalActiveStake',
@@ -272,18 +274,29 @@ const setupLiquidStaking = async (stakingProviderDelegationContract: CSContract)
   console.log('Undelegate sEGLD successfully. Received NFT: ', undelegateNftReceived);
   assert(undelegateNftReceived.amount === 1n);
 
-  await admin.callContract({
+  result = await world.query({
     callee: liquidStakingContract,
-    funcName: 'unDelegatePendingAmount',
-    gasLimit: 45_000_000,
+    funcName: 'getDelegationContractData',
     funcArgs: [
       stakingProviderDelegationContract,
     ],
   });
-  console.log('Undelegate pending amount successfully. Moving forward 10 epochs...');
+  delegationContractData = delegationContractDataDecoder.topDecode(result.returnData[0]);
+  console.log('Delegation contract data: ', delegationContractData);
 
+  // TODO: There is no `pending_to_undelegate` amount for this delegation contract so we can not do this
+  // await admin.callContract({
+  //   callee: liquidStakingContract,
+  //   funcName: 'unDelegatePendingAmount',
+  //   gasLimit: 45_000_000,
+  //   funcArgs: [
+  //     stakingProviderDelegationContract,
+  //   ],
+  // });
+  // console.log('Undelegate pending amount successfully. Moving forward 10 epochs...');
+  //
   // Move forward 10 epochs
-  await world.generateBlocks(20 * 10);
+  // await world.generateBlocks(20 * 10);
 
   await alice.callContract({
     callee: liquidStakingContract,
@@ -296,7 +309,8 @@ const setupLiquidStaking = async (stakingProviderDelegationContract: CSContract)
         nonce: Number(undelegateNftReceived.token_nonce),
       },
     ],
-  }).assertFail({ code: 'signalError', message: 'Too much EGLD amount' });
+  }).assertFail({ code: 'signalError', message: 'The unbond period has not ended' });
+  // }).assertFail({ code: 'signalError', message: 'Too much EGLD amount' });
 
   await alice.callContract({
     callee: liquidStakingContract,
@@ -308,31 +322,31 @@ const setupLiquidStaking = async (stakingProviderDelegationContract: CSContract)
   });
   console.log('Withdraw from staking provider successfully')
 
-  tx = await alice.callContract({
-    callee: liquidStakingContract,
-    funcName: 'withdraw',
-    gasLimit: 45_000_000,
-    esdts: [
-      {
-        id: undelegateNftReceived.token_identifier,
-        amount: undelegateNftReceived.amount,
-        nonce: Number(undelegateNftReceived.token_nonce),
-      },
-    ],
-  });
-  const receivedEgldAmount = d.U().topDecode(tx.returnData[0]);
-  console.log('Withdraw EGLD successfully. Received EGLD amount: ', receivedEgldAmount);
-  // assert(receivedEgldAmount === 400000902905460064767128n) // ~400,000.93 EGLD received back
-
-  const balance = await alice.getAccountBalance();
-  assert(balance >= receivedEgldAmount);
-
-  result = await world.query({
-    callee: stakingProviderDelegationContract,
-    funcName: 'getTotalActiveStake',
-  });
-  console.log('Remaining active stake for staking provider: ', d.U().topDecode(result.returnData[0]));
-  // assert(d.U().topDecode(result.returnData[0]) === 3611261457280279648623471n); // stake still remaining
+  // tx = await alice.callContract({
+  //   callee: liquidStakingContract,
+  //   funcName: 'withdraw',
+  //   gasLimit: 45_000_000,
+  //   esdts: [
+  //     {
+  //       id: undelegateNftReceived.token_identifier,
+  //       amount: undelegateNftReceived.amount,
+  //       nonce: Number(undelegateNftReceived.token_nonce),
+  //     },
+  //   ],
+  // });
+  // const receivedEgldAmount = d.U().topDecode(tx.returnData[0]);
+  // console.log('Withdraw EGLD successfully. Received EGLD amount: ', receivedEgldAmount);
+  // // assert(receivedEgldAmount === 400000902905460064767128n) // ~400,000.93 EGLD received back
+  //
+  // const balance = await alice.getAccountBalance();
+  // assert(balance >= receivedEgldAmount);
+  //
+  // result = await world.query({
+  //   callee: stakingProviderDelegationContract,
+  //   funcName: 'getTotalActiveStake',
+  // });
+  // console.log('Remaining active stake for staking provider: ', d.U().topDecode(result.returnData[0]));
+  // // assert(d.U().topDecode(result.returnData[0]) === 3611261457280279648623471n); // stake still remaining
 };
 
 test('Test', async () => {

@@ -6,14 +6,14 @@
         num-of-shards = 3
         # round-duration-in-milliseconds parameter specifies the duration of a simulated round. The timestamp between two headers will correspond to the round duration but will not reflect real-time
         round-duration-in-milliseconds = 6000
-        # rounds-per-epoch specifies the number of rounds per epoch (14400 (24 hours) - mainnet; 2400 (4 hours) - devnet; 1200 (2 hours) - testnet; 20 - 2 minutes)
+        # rounds-per-epoch specifies the number of rounds per epoch
         rounds-per-epoch = 20
         # initial-round specifies with what round the chain simulator will start
-        initial-round = 20
+        initial-round = 0
         # initial-nonce specifies with what nonce the chain simulator will start
         initial-nonce = 0
         # initial-epoch specifies with what epoch the chain simulator will start
-        initial-epoch = 1
+        initial-epoch = 0
         # mx-chain-go-repo will be used to fetch the node configs folder
         mx-chain-go-repo = "https://github.com/multiversx/mx-chain-go"
         # mx-chain-proxy-go-repo will be used to fetch the proxy configs folder

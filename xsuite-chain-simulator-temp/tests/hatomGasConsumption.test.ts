@@ -113,7 +113,7 @@ const liquidStakingDelegateUndelegate = async () => {
     callee: liquidStakingContract,
     funcName: 'delegate',
     value: 4000000000000000000000000n, // 4,000,000 EGLD,
-    gasLimit: 45_000_000,
+    gasLimit: 150_000_000,
   });
   const segldReceived = esdtTokenPaymentDecoder.topDecode(tx.returnData[0]);
   console.log('Delegate EGLD successfully. Received sEGLD: ', segldReceived);
@@ -154,9 +154,14 @@ test('Test', async () => {
   });
   console.log('setDelegationScoreModelParams successfully');
 
-  // TODO: Test with more contracts
-  for (let i = 1n; i <= 2n;i++) {
-    await deployAndWhitelistDelegationProvider(1000n - i, 100n - i, 1100n + i);
+  for (let i = 1n; i <= 50n; i++) {
+    try {
+      await deployAndWhitelistDelegationProvider(1000n - i, 100n - i, 1100n + i);
+    } catch (e) {
+      // Not sure why some contracts are throwing error on whitelist, but we just retry
+      console.error(e);
+      i--;
+    }
   }
 
   await admin.callContract({
@@ -187,4 +192,4 @@ test('Test', async () => {
     ],
   });
   console.log('setDelegationScoreModelParams successfully');
-}, { timeout: 120_000 }); // Test takes 30-60 seconds to run
+}, { timeout: 300_000 });

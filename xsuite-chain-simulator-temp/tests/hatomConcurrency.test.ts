@@ -166,7 +166,7 @@ const setupLiquidStakingDelegateUndelegate = async (stakingProviderDelegationCon
   });
   const stakingProviderStake = d.U().topDecode(result.returnData[0]);
   console.log('Staking provider stake: ', stakingProviderStake);
-  assert(stakingProviderStake === 11250000000000000000000n);
+  assert(stakingProviderStake === 3750000000000000000000n);
 
   await admin.callContract({
     callee: liquidStakingContract,
@@ -174,7 +174,7 @@ const setupLiquidStakingDelegateUndelegate = async (stakingProviderDelegationCon
     gasLimit: 510_000_000,
     funcArgs: [
       stakingProviderDelegationContract,
-      e.U(11250000000000000000000n), // total value locked (11250 EGLD = 10000 EGLD initial + 1250 EGLD from delegate creation)
+      e.U(3750000000000000000000n), // total value locked (3750 EGLD = 2500 EGLD initial + 1250 EGLD from delegate creation)
       e.U64(1), // nb of nodes,
       e.U(1100), // high apr
       e.U(200), // low service fee so this delegation contract is selected instead of some other
@@ -223,7 +223,7 @@ const setupLiquidStakingDelegateUndelegate = async (stakingProviderDelegationCon
     callee: stakingProviderDelegationContract,
     funcName: 'getTotalActiveStake',
   });
-  assert(d.U().topDecode(result.returnData[0]) === 4011250000000000000000000n); // staked increased by 4,000,000 EGLD
+  assert(d.U().topDecode(result.returnData[0]) === 4003750000000000000000000n); // staked increased by 4,000,000 EGLD
 
   tx = await alice.callContract({
     callee: liquidStakingContract,
@@ -237,6 +237,17 @@ const setupLiquidStakingDelegateUndelegate = async (stakingProviderDelegationCon
   console.log('Undelegate sEGLD successfully. Received NFT: ', undelegateNftReceived);
   assert(undelegateNftReceived.amount === 1n);
 
+  result = await world.query({
+    callee: liquidStakingContract,
+    funcName: 'getDelegationContractData',
+    funcArgs: [
+      stakingProviderDelegationContract,
+    ],
+  });
+  delegationContractData = delegationContractDataDecoder.topDecode(result.returnData[0]);
+  console.log('Delegation contract data: ', delegationContractData);
+
+  // TODO: There is no `pending_to_undelegate` amount for this delegation contract so we can not do this
   await admin.callContract({
     callee: liquidStakingContract,
     funcName: 'unDelegatePendingAmount',
