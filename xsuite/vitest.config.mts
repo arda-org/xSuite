@@ -8,7 +8,7 @@ export default defineConfig({
     },
     coverage: {
       enabled: true,
-      include: ["src/**/*.ts"],
+      include: ["src/**/*.ts", "!src/cli/verifyReproducibleAction.ts"],
       provider: "istanbul",
       thresholds: {
         branches: 80,

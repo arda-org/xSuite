@@ -16,11 +16,15 @@ export class Proxy {
     this.baseUrl = baseUrl;
   }
 
-  static fetchRaw(url: string, data?: any) {
+  static fetchRaw(url: string, data?: any, headers?: HeadersInit) {
     return fetch(
       url,
       data !== undefined
-        ? { method: "POST", body: JSON.stringify(data) }
+        ? {
+            method: "POST",
+            headers,
+            body: JSON.stringify(data),
+          }
         : undefined,
     ).then((r) => r.json());
   }
