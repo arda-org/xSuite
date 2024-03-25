@@ -1,6 +1,7 @@
 import { Command } from "commander";
 import { pkgVersion } from "../_pkg";
 import { registerBuildCmd } from "./buildAction";
+import { registerBuildReproducibleCmd } from "./buildReproducibleAction";
 import { registerInstallRustCmd } from "./installRustCmd";
 import { registerInstallRustKeyCmd } from "./installRustKeyCmd";
 import { registerNewCmd } from "./newCmd";
@@ -9,6 +10,7 @@ import { registerRequestXegldCmd } from "./requestXegldCmd";
 import { registerTestRustCmd } from "./testRustCmd";
 import { registerTestScenCmd } from "./testScenCmd";
 import { registerUninstallRustCmd } from "./uninstallRustCmd";
+import { registerVerifyReproducibleCmd } from "./verifyReproducibleAction";
 
 export const getCommand = () => {
   const cmd = new Command();
@@ -18,6 +20,8 @@ export const getCommand = () => {
   registerUninstallRustCmd(cmd);
   registerNewCmd(cmd);
   registerBuildCmd(cmd);
+  registerBuildReproducibleCmd(cmd);
+  registerVerifyReproducibleCmd(cmd);
   registerTestRustCmd(cmd);
   registerTestScenCmd(cmd);
   registerNewWalletCmd(cmd);
