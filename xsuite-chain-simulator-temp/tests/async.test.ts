@@ -21,6 +21,10 @@ beforeAll(async () => {
   deployerB = await world.createWallet({
     balance: '1000000000000000000', // 1 EGLD
   }); // shard 1
+
+  // generate 20 blocks to pass an epoch so system smart contracts are enabled
+  await world.generateBlocks(20);
+
   const resultA = await deployerA.deployContract({
     code: "file:output/world.wasm",
     codeMetadata: ['payable'],

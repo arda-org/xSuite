@@ -3,7 +3,7 @@ import { assertAccount, d, e, Proxy, CSContract, CSWallet, CSWorld, Tx } from 'x
 import { mainnetPublicProxyUrl } from 'xsuite/dist/interact/envChain';
 import { DummySigner } from 'xsuite/dist/world/signer';
 import {
-  ADMIN_ADDRESS,
+  ADMIN_ADDRESS, delegationContractDataDecoder, esdtTokenPaymentDecoder, extractContract,
   getHatomContractState,
   MAINNET_LIQUID_STAKING_CONTRACT_ADDRESS,
   SYSTEM_DELEGATION_MANAGER_ADDRESS,
@@ -65,43 +65,6 @@ afterAll(async () => {
   await world.terminate();
 }, 60_000);
 
-const extractContract = (tx): CSContract => {
-  const events = tx.tx.logs.events;
-
-  for (const event: any of events) {
-    if (event.identifier !== 'SCDeploy') {
-      continue;
-    }
-
-    const address = Buffer.from(event.topics[0], 'base64');
-
-    return world.newContract(address);
-  }
-};
-
-const esdtTokenPaymentDecoder = d.Tuple({
-  token_identifier: d.Str(),
-  token_nonce: d.U64(),
-  amount: d.U(),
-});
-
-const delegationContractDataDecoder = d.Tuple({
-  contract: d.Addr(),
-  total_value_locked: d.U(),
-  cap: d.Option(d.U()),
-  nr_nodes: d.U64(),
-  apr: d.U(),
-  service_fee: d.U(),
-  delegation_score: d.U(),
-  pending_to_delegate: d.U(),
-  total_delegated: d.U(),
-  pending_to_undelegate: d.U(),
-  total_undelegated: d.U(),
-  total_withdrawable: d.U(),
-  outdated: d.Bool(),
-  blacklisted: d.Bool(),
-});
-
 const deployDelegationProvider = async () => {
   const tx = await address.callContract({
     callee: systemDelegationContract,
@@ -113,7 +76,7 @@ const deployDelegationProvider = async () => {
       e.U(3745), // service fee
     ],
   });
-  const stakingProviderDelegationContract = extractContract(tx);
+  const stakingProviderDelegationContract = extractContract(tx, world);
   console.log('Deployed new delegation contract', stakingProviderDelegationContract.toString());
 
   const initialWallets = await world.getInitialWallets();
@@ -247,7 +210,6 @@ const setupLiquidStakingDelegateUndelegate = async (stakingProviderDelegationCon
   delegationContractData = delegationContractDataDecoder.topDecode(result.returnData[0]);
   console.log('Delegation contract data: ', delegationContractData);
 
-  // TODO: There is no `pending_to_undelegate` amount for this delegation contract so we can not do this
   await admin.callContract({
     callee: liquidStakingContract,
     funcName: 'unDelegatePendingAmount',
@@ -295,7 +257,7 @@ const setupLiquidStakingDelegateUndelegate = async (stakingProviderDelegationCon
   await world.generateBlocks(1); // Async call from `withdrawFrom` is finished; `withdraw` failed
 
   console.log('Reaching unreliable part, if it fails after here, try and re-run the test');
-  // This is NOT that reliable, sometimes the transaction is found in the Chain Simulator, sometimes not...
+  // TODO: This is NOT that reliable, sometimes the transaction is found in the Chain Simulator, sometimes not...
   await new Promise((r) => setTimeout(r, 500));
   result = await world.proxy.getTx(txHash, { withResults: true });
 
@@ -315,6 +277,8 @@ const setupLiquidStakingDelegateUndelegate = async (stakingProviderDelegationCon
 
     assert(signalErrorEvent);
   } else {
+    console.log(result);
+
     console.log('Withdraw transaction is still pending even though we waiting a while... Assertions were NOT done.');
   }
 

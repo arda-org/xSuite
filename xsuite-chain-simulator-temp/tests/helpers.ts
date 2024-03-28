@@ -1,4 +1,4 @@
-import { Proxy } from 'xsuite';
+import { CSContract, d, Proxy } from 'xsuite';
 import { mainnetPublicProxyUrl } from 'xsuite/dist/interact/envChain';
 const fs = require('fs');
 
@@ -22,3 +22,40 @@ export const getHatomContractState = async () => {
 
   return JSON.parse(fs.readFileSync(hatomStateFile));
 }
+
+export const extractContract = (tx, world): CSContract => {
+  const events = tx.tx.logs.events;
+
+  for (const event: any of events) {
+    if (event.identifier !== 'SCDeploy') {
+      continue;
+    }
+
+    const address = Buffer.from(event.topics[0], 'base64');
+
+    return world.newContract(address);
+  }
+};
+
+export const esdtTokenPaymentDecoder = d.Tuple({
+  token_identifier: d.Str(),
+  token_nonce: d.U64(),
+  amount: d.U(),
+});
+
+export const delegationContractDataDecoder = d.Tuple({
+  contract: d.Addr(),
+  total_value_locked: d.U(),
+  cap: d.Option(d.U()),
+  nr_nodes: d.U64(),
+  apr: d.U(),
+  service_fee: d.U(),
+  delegation_score: d.U(),
+  pending_to_delegate: d.U(),
+  total_delegated: d.U(),
+  pending_to_undelegate: d.U(),
+  total_undelegated: d.U(),
+  total_withdrawable: d.U(),
+  outdated: d.Bool(),
+  blacklisted: d.Bool(),
+});

@@ -3,7 +3,7 @@ import { assertAccount, d, e, Proxy, CSContract, CSWallet, CSWorld, Tx } from 'x
 import { mainnetPublicProxyUrl } from 'xsuite/dist/interact/envChain';
 import { DummySigner } from 'xsuite/dist/world/signer';
 import {
-  ADMIN_ADDRESS,
+  ADMIN_ADDRESS, delegationContractDataDecoder, esdtTokenPaymentDecoder, extractContract,
   getHatomContractState,
   MAINNET_LIQUID_STAKING_CONTRACT_ADDRESS,
   SYSTEM_DELEGATION_MANAGER_ADDRESS,
@@ -52,26 +52,6 @@ afterAll(async () => {
   await world.terminate();
 }, 60_000);
 
-const esdtTokenPaymentDecoder = d.Tuple({
-  token_identifier: d.Str(),
-  token_nonce: d.U64(),
-  amount: d.U(),
-});
-
-const extractContract = (tx): CSContract => {
-  const events = tx.tx.logs.events;
-
-  for (const event: any of events) {
-    if (event.identifier !== 'SCDeploy') {
-      continue;
-    }
-
-    const address = Buffer.from(event.topics[0], 'base64');
-
-    return world.newContract(address);
-  }
-};
-
 const deployAndWhitelistDelegationProvider = async (serviceFee: bigint, tvl: bigint, apr: bigint) => {
   const address = await world.createWallet({
     balance: '1255000000000000000000', // 1255 EGLD
@@ -88,7 +68,7 @@ const deployAndWhitelistDelegationProvider = async (serviceFee: bigint, tvl: big
       e.U(serviceFee), // service fee
     ],
   });
-  const stakingProviderDelegationContract = extractContract(tx);
+  const stakingProviderDelegationContract = extractContract(tx, world);
   console.log('Deployed new delegation contract', stakingProviderDelegationContract.toString());
 
   await admin.callContract({
@@ -105,7 +85,7 @@ const deployAndWhitelistDelegationProvider = async (serviceFee: bigint, tvl: big
   });
   console.log('Whitelisted delegation contract');
 
-  return { stakingProviderDelegationContract };
+  return stakingProviderDelegationContract;
 };
 
 const liquidStakingDelegateUndelegate = async () => {
@@ -125,10 +105,12 @@ const liquidStakingDelegateUndelegate = async () => {
     ],
   });
 
+  // TODO: This fails because another delegation contract that does not exist on this test setup is chosen,
+  // so we get the error `signalError - Delegation contract not available`
   // tx = await alice.callContract({
   //   callee: liquidStakingContract,
   //   funcName: 'unDelegate',
-  //   gasLimit: 45_000_000,
+  //   gasLimit: 150_000_000,
   //   esdts: [
   //     { id: segldReceived.token_identifier, amount: segldReceived.amount / 10n },
   //   ],
@@ -154,12 +136,14 @@ test('Test', async () => {
   });
   console.log('setDelegationScoreModelParams successfully');
 
+  // Running with 50 contracts since it will take too long to run with 100
   for (let i = 1n; i <= 50n; i++) {
     try {
-      await deployAndWhitelistDelegationProvider(1000n - i, 100n - i, 1100n + i);
+      await deployAndWhitelistDelegationProvider(200n - i, 100_000000000000000000n + i, 1100n + i);
     } catch (e) {
-      // Not sure why some contracts are throwing error on whitelist, but we just retry
-      console.error(e);
+      // TODO: Not sure why some contracts are throwing error on whitelistDelegationContract, but we just retry here
+      // since it will work for other contracts.
+      // console.error(e);
       i--;
     }
   }
@@ -167,7 +151,7 @@ test('Test', async () => {
   await admin.callContract({
     callee: liquidStakingContract,
     funcName: 'setDelegationSamplingModelParams',
-    gasLimit: 600_000_000,
+    gasLimit: 500_000_000,
     funcArgs: [
       e.U64(10_000), // maximum tolerance
       e.U64(5_000), // max service fee
@@ -181,7 +165,7 @@ test('Test', async () => {
   await admin.callContract({
     callee: liquidStakingContract,
     funcName: 'setDelegationScoreModelParams',
-    gasLimit: 600_000_000,
+    gasLimit: 500_000_000,
     funcArgs: [
       e.U32(1), // weighting providers by APR
       e.U(1), // min TVL,

@@ -1,11 +1,10 @@
 import { afterEach, beforeEach, expect, test, beforeAll, afterAll, assert } from 'vitest';
-import { assertAccount, assertHexList } from '../assert';
+import { assertAccount, assertVs } from '../assert';
 import { e } from '../data';
-import { kvsToRawKvs } from '../data/kvs';
 import { DummySigner } from './signer';
 import { isContractAddress } from './utils';
 import { CSWorld, CSContract, CSWallet } from '.';
-import { Tx } from '../proxy/proxy';
+import { Tx } from '../proxy';
 
 let world: CSWorld;
 let wallet: CSWallet;
@@ -179,7 +178,7 @@ test('CSWorld.getAccount', async () => {
 test('CSWorld.getAccountKvs', async () => {
   await wallet.setAccount({ kvs: [e.kvs.Mapper('n').Value(e.U(12))] });
   expect(await world.getAccountKvs(wallet)).toEqual(
-    kvsToRawKvs(e.kvs.Mapper('n').Value(e.U(12))),
+    e.kvs([[e.Str("n"), e.U(12)]]),
   );
 });
 
@@ -220,7 +219,7 @@ test('CSWorld.query - basic', async () => {
     funcName: 'multiply_by_n',
     funcArgs: [e.U64(10)],
   });
-  assertHexList(returnData, [e.U64(20n)]);
+  assertVs(returnData, [e.U64(20n)]);
 });
 
 test('CSWorld.query - sender', async () => {
@@ -229,7 +228,7 @@ test('CSWorld.query - sender', async () => {
     funcName: 'get_caller',
     sender: wallet,
   });
-  assertHexList(returnData, [wallet]);
+  assertVs(returnData, [wallet]);
 });
 
 test('CSWorld.query - value', async () => {
@@ -238,7 +237,7 @@ test('CSWorld.query - value', async () => {
     funcName: 'get_value',
     value: 10,
   });
-  assertHexList(returnData, [e.U(10)]);
+  assertVs(returnData, [e.U(10)]);
 });
 
 test('CSWorld.query - try to change the state', async () => {
@@ -395,7 +394,7 @@ test('CSWallet.query', async () => {
     callee: contract,
     funcName: 'get_caller',
   });
-  assertHexList(returnData, [wallet]);
+  assertVs(returnData, [wallet]);
 });
 
 test.todo('CSWallet.query - esdts', async () => {
@@ -408,7 +407,7 @@ test.todo('CSWallet.query - esdts', async () => {
     ],
   } as any);
   // remove the "as any"
-  assertHexList(returnData, [
+  assertVs(returnData, [
     e.Tuple(e.Str(fftId), e.U64(0), e.U(10)),
     e.Tuple(e.Str(sftId), e.U64(1), e.U(20)),
   ]);
@@ -456,7 +455,7 @@ test('CSWallet.getAccountBalance', async () => {
 
 test('CSWallet.getAccountKvs', async () => {
   expect(await wallet.getAccountKvs()).toEqual(
-    kvsToRawKvs(e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])),
+    e.kvs({ esdts: [{ id: fftId, amount: 10n ** 18n }] }),
   );
 });
 
@@ -514,10 +513,10 @@ test('CSContract.getAccountBalance', async () => {
 
 test('CSContract.getAccountKvs', async () => {
   expect(await contract.getAccountKvs()).toEqual(
-    kvsToRawKvs([
-      e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }]),
-      [e.Str('n'), e.U64(2)],
-    ]),
+    e.kvs({
+      esdts: [{ id: fftId, amount: 10n ** 18n }],
+      extraKvs: [[e.Str("n"), e.U64(2)]],
+    }),
   );
 });
 
@@ -648,7 +647,7 @@ test('CSWallet.callContract with return', async () => {
     funcArgs: [e.U64(10)],
     gasLimit: 10_000_000,
   });
-  assertHexList(returnData, [e.U64(20)]);
+  assertVs(returnData, [e.U64(20)]);
 });
 
 test('CSWorld.callContract - change the state', async () => {

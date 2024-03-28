@@ -5,7 +5,6 @@ import {
   Wallet,
   WalletDeployContractParams,
   World,
-  WorldExecuteTxParams,
   WorldNewOptions,
 } from './world';
 import {
@@ -16,9 +15,9 @@ import {
 } from './sworld';
 import { startChainSimulator } from './chainSimulator';
 import { Keystore, KeystoreSigner, Signer } from './signer';
-import { Account } from '../proxy/sproxy';
 import { isContractAddress } from './utils';
 import walletJson from './wallet.json';
+import { EncodableAccount } from '../data/encoding';
 
 let walletCounter = 0;
 
@@ -193,7 +192,7 @@ export class CSContract extends Contract {
   }
 }
 
-const setAccount = (proxy: CSProxy, params: Account) => {
+const setAccount = (proxy: CSProxy, params: EncodableAccount) => {
   if (params.code == null) {
     if (isContractAddress(params.address)) {
       params.code = '00';

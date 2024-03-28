@@ -1,7 +1,7 @@
 import { addressToBechAddress } from '../data/address';
-import { kvsToRawKvs, RawKvs } from '../data/kvs';
-import { BroadTx, codeMetadataToHex, Proxy, unrawTxRes } from './proxy';
-import { Account } from './sproxy';
+import { BroadTx, Proxy, unrawTxRes } from './proxy';
+import { e, eCodeMetadata, EncodableAccount } from '../data/encoding';
+import { Kvs } from '../data/kvs';
 
 export class CSProxy extends Proxy {
   stopChainSimulator: () => void;
@@ -16,12 +16,12 @@ export class CSProxy extends Proxy {
     this.verbose = verbose;
   }
 
-  static async setAccount(baseUrl: string, account: Account, autoGenerateBlocks: boolean = true, verbose: boolean = false) {
+  static async setAccount(baseUrl: string, account: EncodableAccount, autoGenerateBlocks: boolean = true, verbose: boolean = false) {
     const [previousAccount, previousKvs] = await Promise.all([
       CSProxy.getAccount(baseUrl, account.address),
       CSProxy.getAccountKvs(baseUrl, account.address),
     ]);
-    const newAccount = accountToRawAccount(account, previousAccount as any, previousKvs as RawKvs);
+    const newAccount = accountToRawAccount(account, previousAccount as any, previousKvs as Kvs);
 
     if (verbose) {
       console.log('Setting account', newAccount);
@@ -41,7 +41,7 @@ export class CSProxy extends Proxy {
     return result;
   }
 
-  setAccount(account: Account) {
+  setAccount(account: EncodableAccount) {
     return CSProxy.setAccount(this.baseUrl, account, this.autoGenerateBlocks, this.verbose);
   }
 
@@ -124,23 +124,23 @@ export class CSProxy extends Proxy {
   }
 }
 
-const accountToRawAccount = (account: Account, previousAccount: {
+const accountToRawAccount = (account: EncodableAccount, previousAccount: {
   address: string;
   nonce: number;
   balance: bigint;
   code: string | null;
   codeMetadata: string | null;
   owner: string | null;
-}, previousKvs: RawKvs) => {
+}, previousKvs: Kvs) => {
   const rawAccount: any = {
     address: addressToBechAddress(account.address),
     nonce: account.nonce,
     balance: account.balance?.toString() || '0',
-    keys: account.kvs != null ? kvsToRawKvs(account.kvs) : undefined,
+    keys: account.kvs != null ? e.kvs(account.kvs) : undefined,
     code: account.code,
     codeMetadata:
       account.codeMetadata != null
-        ? codeMetadataToHex(account.codeMetadata)
+        ? eCodeMetadata(account.codeMetadata)
         : undefined,
     ownerAddress: account.owner != null ? addressToBechAddress(account.owner) : undefined,
     developerReward: '0',
