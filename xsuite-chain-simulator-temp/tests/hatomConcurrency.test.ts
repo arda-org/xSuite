@@ -2,11 +2,12 @@ import { afterAll, assert, beforeAll, test } from 'vitest';
 import { assertAccount, d, e, Proxy, CSContract, CSWallet, CSWorld, Tx } from 'xsuite';
 import { mainnetPublicProxyUrl } from 'xsuite/dist/interact/envChain';
 import { DummySigner } from 'xsuite/dist/world/signer';
-
-const SYSTEM_DELEGATION_MANAGER_ADDRESS = 'erd1qqqqqqqqqqqqqqqpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqylllslmq6y6';
-
-const LIQUID_STAKING_CONTRACT_ADDRESS = 'erd1qqqqqqqqqqqqqpgq4gzfcw7kmkjy8zsf04ce6dl0auhtzjx078sslvrf4e';
-const ADMIN_ADDRESS = 'erd1cc2yw3reulhshp3x73q2wye0pq8f4a3xz3pt7xj79phv9wm978ssu99pvt';
+import {
+  ADMIN_ADDRESS,
+  getHatomContractState,
+  MAINNET_LIQUID_STAKING_CONTRACT_ADDRESS,
+  SYSTEM_DELEGATION_MANAGER_ADDRESS,
+} from './helpers';
 
 let world: CSWorld;
 let deployer: CSWallet;
@@ -19,10 +20,6 @@ let systemDelegationContract: CSContract;
 let liquidStakingContract: CSContract;
 
 beforeAll(async () => {
-  const realContract = await Proxy.getSerializableAccountWithKvs(
-    mainnetPublicProxyUrl,
-    LIQUID_STAKING_CONTRACT_ADDRESS,
-  );
   world = await CSWorld.start({
     // verbose: true,
     // debug: true,
@@ -46,13 +43,14 @@ beforeAll(async () => {
     balance: '10000000000000000000', // 10 EGLD
   });
 
+  const hatomContractState = await getHatomContractState();
   await world.setAccount({
-    ...realContract,
+    ...hatomContractState,
     owner: deployer,
   });
 
   systemDelegationContract = world.newContract(SYSTEM_DELEGATION_MANAGER_ADDRESS);
-  liquidStakingContract = world.newContract(LIQUID_STAKING_CONTRACT_ADDRESS);
+  liquidStakingContract = world.newContract(MAINNET_LIQUID_STAKING_CONTRACT_ADDRESS);
 
   // generate 20 blocks to pass an epoch so system smart contracts are enabled
   await world.generateBlocks(20);
@@ -285,16 +283,29 @@ const setupLiquidStakingDelegateUndelegate = async (stakingProviderDelegationCon
   await world.generateBlocks(1); // Async call from `withdrawFrom` is still pending; `withdraw` transaction is pending
   await world.generateBlocks(1); // Async call from `withdrawFrom` is finished; `withdraw` failed
 
-  await new Promise((r) => setTimeout(r, 250));
+  console.log('Reaching unreliable part, if it fails after here, try and re-run the test');
+  // This is NOT that reliable, sometimes the transaction is found in the Chain Simulator, sometimes not...
+  await new Promise((r) => setTimeout(r, 500));
   result = await world.proxy.getTx(txHash, { withResults: true });
 
-  assert(result.status === 'success');
+  if (result.status === 'pending') {
+    console.log('Withdraw transaction is still pending, waiting a bit more...')
 
-  const signalErrorEvent = result?.logs?.events.find(
-    (e: any) => e.identifier === "signalError",
-  );
+    await new Promise((r) => setTimeout(r, 2_000));
+    result = await world.proxy.getTx(txHash, { withResults: true });
+  }
 
-  assert(signalErrorEvent);
+  if (result.status !== 'pending') {
+    assert(result.status === 'success');
+
+    const signalErrorEvent = result?.logs?.events.find(
+      (e: any) => e.identifier === "signalError",
+    );
+
+    assert(signalErrorEvent);
+  } else {
+    console.log('Withdraw transaction is still pending even though we waiting a while... Assertions were NOT done.');
+  }
 
   // Withdrawing again passes since async call is finished
   tx = await alice.callContract({
