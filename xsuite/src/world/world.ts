@@ -1,32 +1,32 @@
-import { Address } from "../data/address";
-import { Optional, Prettify } from "../helpers";
+import { Address } from '../data/address';
+import { Optional, Prettify } from '../helpers';
 import {
-  devnetMinGasPrice,
+  devnetChainId,
   devnetExplorerUrl,
+  devnetMinGasPrice,
   devnetPublicProxyUrl,
-  mainnetMinGasPrice,
   mainnetChainId,
   mainnetExplorerUrl,
+  mainnetMinGasPrice,
   mainnetPublicProxyUrl,
-  testnetMinGasPrice,
-  testnetExplorerUrl,
-  testnetPublicProxyUrl,
-  devnetChainId,
   testnetChainId,
-} from "../interact/envChain";
+  testnetExplorerUrl,
+  testnetMinGasPrice,
+  testnetPublicProxyUrl,
+} from '../interact/envChain';
 import {
   CallContractTxParams,
   DeployContractTxParams,
+  Proxy,
   Query,
   TransferTxParams,
   Tx,
   TxParams,
   UpgradeContractTxParams,
-  Proxy,
-} from "../proxy/proxy";
-import { Account } from "./account";
-import { KeystoreSigner, Signer } from "./signer";
-import { readFileHex } from "./utils";
+} from '../proxy/proxy';
+import { Account } from './account';
+import { KeystoreSigner, Signer } from './signer';
+import { readFileHex } from './utils';
 
 export class World {
   chainId: string;
@@ -147,6 +147,14 @@ export class World {
 
   executeTx(params: WorldExecuteTxParams) {
     return executeTx(this.proxy, this.explorerUrl, {
+      ...params,
+      gasPrice: params.gasPrice ?? this.gasPrice,
+      chainId: this.chainId,
+    });
+  }
+
+  sendTx(params: WorldExecuteTxParams) {
+    return sendTx(this.proxy, this.explorerUrl, {
       ...params,
       gasPrice: params.gasPrice ?? this.gasPrice,
       chainId: this.chainId,
@@ -483,10 +491,7 @@ const executeTx = (
   params: ExecuteTxParams,
 ) => {
   return InteractionPromise.fromFn<ExecuteTxResult>(async () => {
-    const nonce = await proxy.getAccountNonce(params.sender);
-    const tx = new Tx({ ...params, nonce });
-    await tx.sign(params.sender);
-    const txHash = await proxy.sendTx(tx);
+    const txHash = await sendTx(proxy, baseExplorerUrl, params);
     const { hash, ..._resTx } = await proxy.getCompletedTx(txHash);
     const explorerUrl = getTxExplorerUrl(baseExplorerUrl, hash);
     // Destructuring gives an invalid type: https://github.com/microsoft/TypeScript/issues/56456
@@ -507,6 +512,18 @@ const executeTx = (
     }
     return { tx: resTx };
   });
+};
+
+const sendTx = async (
+  proxy: Proxy,
+  baseExplorerUrl: string,
+  params: ExecuteTxParams,
+) => {
+  const nonce = await proxy.getAccountNonce(params.sender);
+  const tx = new Tx({ ...params, nonce });
+  await tx.sign(params.sender);
+
+  return await proxy.sendTx(tx);
 };
 
 const deployContract = (
@@ -643,7 +660,7 @@ type CallContractParams = Omit<CallContractTxParams, "sender" | "nonce"> & {
 
 type WorldQueryParams = QueryParams;
 
-type WorldExecuteTxParams = Prettify<
+export type WorldExecuteTxParams = Prettify<
   Omit<Optional<ExecuteTxParams, "gasPrice">, "chainId">
 >;
 

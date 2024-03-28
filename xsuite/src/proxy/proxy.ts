@@ -1,4 +1,4 @@
-import { e } from "../data";
+import { e } from '../data';
 import {
   Address,
   addressToBechAddress,
@@ -56,7 +56,7 @@ export class Proxy {
 
   static getTxRaw(baseUrl: string, txHash: string, options: GetTxOptions = {}) {
     let url = `${baseUrl}/transaction/${txHash}`;
-    if (options.withResults) url += "?withResults=true";
+    if (options.withResults) url += '?withResults=true';
     return Proxy.fetchRaw(url);
   }
 
@@ -91,7 +91,7 @@ export class Proxy {
 
   static async getCompletedTxRaw(baseUrl: string, txHash: string) {
     let res = await Proxy.getTxProcessStatusRaw(baseUrl, txHash);
-    while (res.code !== "successful" || res.data.status === "pending") {
+    while (res.code !== 'successful' || res.data.status === 'pending') {
       await new Promise((r) => setTimeout(r, 1000));
       res = await Proxy.getTxProcessStatusRaw(baseUrl, txHash);
     }
@@ -125,7 +125,7 @@ export class Proxy {
     const res = unrawRes(await Proxy.queryRaw(baseUrl, query));
     return {
       ...res.data,
-      returnData: res.data.returnData.map(base64ToHex),
+      returnData: (res.data.returnData ?? []).map(base64ToHex),
     } as Record<string, any> & { returnData: string[] };
   }
 
@@ -161,7 +161,11 @@ export class Proxy {
       account.code = res.account.code;
     }
     if (res.account.codeMetadata) {
-      account.codeMetadata = base64ToHex(res.account.codeMetadata);
+      if (/[0-9]{4}/g.test(res.account.codeMetadata)) { // can be hex directly for chain simulator
+        account.codeMetadata = res.account.codeMetadata;
+      } else {
+        account.codeMetadata = base64ToHex(res.account.codeMetadata);
+      }
     }
     if (res.account.ownerAddress) {
       account.owner = res.account.ownerAddress;
@@ -266,7 +270,7 @@ export class Proxy {
 }
 
 export class Tx {
-  unsignedRawTx: Omit<RawTx, "signature">;
+  unsignedRawTx: Omit<RawTx, 'signature'>;
   signature: string | undefined;
 
   constructor(params: TxParams) {
@@ -288,7 +292,7 @@ export class Tx {
     codeMetadata,
     codeArgs,
     ...txParams
-  }: Pick<DeployContractTxParams, "code" | "codeMetadata" | "codeArgs"> & T) {
+  }: Pick<DeployContractTxParams, 'code' | 'codeMetadata' | 'codeArgs'> & T) {
     return {
       receiver: zeroBechAddress,
       data: [
@@ -309,13 +313,13 @@ export class Tx {
     ...txParams
   }: Pick<
     UpgradeContractTxParams,
-    "callee" | "code" | "codeMetadata" | "codeArgs"
+    'callee' | 'code' | 'codeMetadata' | 'codeArgs'
   > &
     T) {
     return {
       receiver: callee,
       data: [
-        "upgradeContract",
+        'upgradeContract',
         code,
         eCodeMetadata(codeMetadata),
         ...e.vs(codeArgs ?? []),
@@ -329,13 +333,13 @@ export class Tx {
     sender,
     esdts,
     ...txParams
-  }: Pick<TransferTxParams, "receiver" | "esdts"> & { sender: U } & T) {
+  }: Pick<TransferTxParams, 'receiver' | 'esdts'> & { sender: U } & T) {
     let receiver: Address;
     let data: string | undefined;
     if (esdts?.length) {
       receiver = sender;
       const dataParts: string[] = [];
-      dataParts.push("MultiESDTNFTTransfer");
+      dataParts.push('MultiESDTNFTTransfer');
       dataParts.push(addressToHexAddress(_receiver));
       dataParts.push(e.U(esdts.length).toTopHex());
       for (const esdt of esdts) {
@@ -343,7 +347,7 @@ export class Tx {
         dataParts.push(e.U(esdt.nonce ?? 0).toTopHex());
         dataParts.push(e.U(esdt.amount).toTopHex());
       }
-      data = dataParts.join("@");
+      data = dataParts.join('@');
     } else {
       receiver = _receiver;
     }
@@ -364,13 +368,13 @@ export class Tx {
     ...txParams
   }: Pick<
     CallContractTxParams,
-    "callee" | "funcName" | "funcArgs" | "esdts"
+    'callee' | 'funcName' | 'funcArgs' | 'esdts'
   > & { sender: U } & T) {
     const dataParts: string[] = [];
     let receiver: Address;
     if (esdts?.length) {
       receiver = sender;
-      dataParts.push("MultiESDTNFTTransfer");
+      dataParts.push('MultiESDTNFTTransfer');
       dataParts.push(addressToHexAddress(callee));
       dataParts.push(e.U(esdts.length).toTopHex());
       for (const esdt of esdts) {
@@ -387,7 +391,7 @@ export class Tx {
     return {
       receiver,
       sender,
-      data: dataParts.join("@"),
+      data: dataParts.join('@'),
       ...txParams,
     };
   }
@@ -395,19 +399,19 @@ export class Tx {
   async sign(signer: { sign: (data: Buffer) => Promise<Buffer> }) {
     this.signature = await signer
       .sign(Buffer.from(JSON.stringify(this.unsignedRawTx)))
-      .then((b) => b.toString("hex"));
+      .then((b) => b.toString('hex'));
   }
 
   toRawTx(): RawTx {
     if (this.signature === undefined) {
-      throw new Error("Transaction not signed.");
+      throw new Error('Transaction not signed.');
     }
     return { ...this.unsignedRawTx, signature: this.signature };
   }
 }
 
 const unrawRes = (res: any) => {
-  if (res.code === "successful") {
+  if (res.code === 'successful') {
     return res.data;
   } else {
     const resStr = JSON.stringify(res, null, 2);
@@ -415,7 +419,7 @@ const unrawRes = (res: any) => {
   }
 };
 
-const unrawTxRes = (r: any) => {
+export const unrawTxRes = (r: any) => {
   return unrawRes(r).transaction as Record<string, any>;
 };
 
@@ -427,7 +431,7 @@ const broadTxToRawTx = (tx: BroadTx): RawTx => {
 };
 
 const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
-  if ("callee" in query) {
+  if ('callee' in query) {
     query = {
       scAddress: addressToBechAddress(query.callee),
       funcName: query.funcName,
@@ -443,9 +447,9 @@ const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
 };
 
 const zeroBechAddress =
-  "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
+  'erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu';
 
-type BroadTx = Tx | RawTx;
+export type BroadTx = Tx | RawTx;
 
 type RawTx = {
   nonce: number;

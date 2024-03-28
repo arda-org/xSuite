@@ -46,8 +46,8 @@ export const assertAccount = (
   }
   if (codeMetadata !== undefined) {
     assert.strictEqual(
-      actualAccount.codeMetadata,
-      codeMetadata == null ? undefined : eCodeMetadata(codeMetadata),
+      actualAccount.codeMetadata == null ? "" : actualAccount.codeMetadata,
+      codeMetadata == null ? "" : eCodeMetadata(codeMetadata),
     );
   }
   if (owner !== undefined) {

@@ -202,29 +202,29 @@ const createContract = async (
 
 type SWorldNewOptions =
   | {
-      chainId?: undefined;
-      proxyUrl: string;
-      gasPrice?: number;
-      explorerUrl?: string;
-    }
+  chainId?: undefined;
+  proxyUrl: string;
+  gasPrice?: number;
+  explorerUrl?: string;
+}
   | WorldNewOptions;
 
-type SWorldCreateWalletParams = Prettify<Omit<EncodableAccount, "address">>;
+export type SWorldCreateWalletParams = Prettify<Omit<EncodableAccount, "address">>;
 
 type SetAccountParams = EncodableAccount;
 
-type CreateContractParams = Prettify<Omit<EncodableAccount, "address">>;
+export type CreateContractParams = Prettify<Omit<EncodableAccount, "address">>;
 
-type SWorldSetAccountParams = SetAccountParams;
+export type SWorldSetAccountParams = SetAccountParams;
 
-type SWorldCreateContractParams = CreateContractParams;
+export type SWorldCreateContractParams = CreateContractParams;
 
-type SWalletSetAccountParams = Prettify<
+export type SWalletSetAccountParams = Prettify<
   Omit<SWorldSetAccountParams, "address">
 >;
 
-type SWalletCreateContractParams = Prettify<
+export type SWalletCreateContractParams = Prettify<
   Omit<CreateContractParams, "owner">
 >;
 
-type SContractSetAccountParams = SWalletSetAccountParams;
+export type SContractSetAccountParams = SWalletSetAccountParams;

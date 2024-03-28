@@ -53,6 +53,9 @@
     "typescript": "5.4.0-beta",
     "vitest": "^1.2.2"
   },
+  "optionalDependencies": {
+    "@xsuite/chainsimulator": "workspace:*"
+  },
   "engines": {
     "node": ">=18.0.0"
   }

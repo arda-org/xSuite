@@ -30,11 +30,14 @@ jobs:
       - name: Use Golang
         uses: actions/setup-go@v4
         with:
-          go-version: 1.19
+          go-version: 1.20
           cache-dependency-path: xsuite-simulnet/src/go.sum
 
       - name: Build xsuite-simulnet
         run: pnpm build-xsuite-simulnet
+
+      - name: Build xsuite-chainsimulator
+        run: pnpm build-xsuite-chainsimulator
 
       - name: Build xsuite
         run: pnpm build-xsuite
