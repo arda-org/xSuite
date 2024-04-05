@@ -1,2 +1,1 @@
-export { assertAccount } from "./account";
-export { assertHexList } from "./hexList";
+export { assertVs, assertAccount, assertHexList } from "./assert";

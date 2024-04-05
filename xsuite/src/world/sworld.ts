@@ -1,9 +1,10 @@
+import { EncodableAccount } from "../data/encoding";
 import { Prettify } from "../helpers";
 import { SProxy } from "../proxy";
-import { Account, Block } from "../proxy/sproxy";
+import { Block } from "../proxy/sproxy";
 import { DummySigner, Signer } from "./signer";
 import { startSimulnet } from "./simulnet";
-import { isContractAddress, numberToBytesAddress } from "./utils";
+import { isContractAddress, numberToU8AAddress } from "./utils";
 import {
   World,
   Contract,
@@ -85,7 +86,7 @@ export class SWorld extends World {
 
   async createWallet(params: SWorldCreateWalletParams = {}) {
     walletCounter += 1;
-    const address = numberToBytesAddress(walletCounter, false);
+    const address = numberToU8AAddress(walletCounter, false);
     const wallet = this.newWallet(new DummySigner(address));
     await wallet.setAccount(params);
     return wallet;
@@ -176,7 +177,7 @@ export class SContract extends Contract {
   }
 }
 
-const setAccount = (proxy: SProxy, params: Account) => {
+const setAccount = (proxy: SProxy, params: EncodableAccount) => {
   if (params.code == null) {
     if (isContractAddress(params.address)) {
       params.code = "00";
@@ -193,7 +194,7 @@ const createContract = async (
   params: CreateContractParams = {},
 ) => {
   contractCounter += 1;
-  const address = numberToBytesAddress(contractCounter, true);
+  const address = numberToU8AAddress(contractCounter, true);
   const contract = new SContract({ address, proxy, baseExplorerUrl });
   await contract.setAccount(params);
   return contract;
@@ -208,11 +209,11 @@ type SWorldNewOptions =
     }
   | WorldNewOptions;
 
-type SWorldCreateWalletParams = Prettify<Omit<Account, "address">>;
+type SWorldCreateWalletParams = Prettify<Omit<EncodableAccount, "address">>;
 
-type SetAccountParams = Account;
+type SetAccountParams = EncodableAccount;
 
-type CreateContractParams = Prettify<Omit<Account, "address">>;
+type CreateContractParams = Prettify<Omit<EncodableAccount, "address">>;
 
 type SWorldSetAccountParams = SetAccountParams;
 

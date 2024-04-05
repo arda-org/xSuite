@@ -1,16 +1,12 @@
-import { Address, addressToBech32 } from "../data/address";
-import { Kvs, RawKvs, kvsToRawKvs } from "../data/kvs";
-import { CodeMetadata, codeMetadataToHex, Proxy } from "./proxy";
+import { e, EncodableAccount } from "../data/encoding";
+import { Proxy } from "./proxy";
 
 export class SProxy extends Proxy {
-  static setAccount(baseUrl: string, account: Account) {
-    return Proxy.fetch(
-      `${baseUrl}/admin/set-account`,
-      accountToRawAccount(account),
-    );
+  static setAccount(baseUrl: string, account: EncodableAccount) {
+    return Proxy.fetch(`${baseUrl}/admin/set-account`, e.account(account));
   }
 
-  setAccount(account: Account) {
+  setAccount(account: EncodableAccount) {
     return SProxy.setAccount(this.baseUrl, account);
   }
 
@@ -58,41 +54,6 @@ export class SProxy extends Proxy {
     return this.setCurrentBlockInfo(block);
   }
 }
-
-const accountToRawAccount = (account: Account): RawAccount => {
-  return {
-    address: addressToBech32(account.address),
-    nonce: account.nonce,
-    balance: account.balance?.toString(),
-    kvs: account.kvs != null ? kvsToRawKvs(account.kvs) : undefined,
-    code: account.code,
-    codeMetadata:
-      account.codeMetadata != null
-        ? codeMetadataToHex(account.codeMetadata)
-        : undefined,
-    owner: account.owner != null ? addressToBech32(account.owner) : undefined,
-  };
-};
-
-export type Account = {
-  address: Address;
-  nonce?: number;
-  balance?: number | bigint | string;
-  code?: string | null;
-  codeMetadata?: CodeMetadata | null;
-  owner?: Address | null;
-  kvs?: Kvs;
-};
-
-type RawAccount = {
-  address: string;
-  nonce?: number;
-  balance?: string;
-  code?: string | null;
-  codeMetadata?: string | null;
-  owner?: string | null;
-  kvs?: RawKvs;
-};
 
 export type Block = {
   timestamp?: number;

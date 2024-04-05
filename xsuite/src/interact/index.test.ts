@@ -1,5 +1,5 @@
 import { test, expect, afterEach } from "vitest";
-import { envChain } from "./index";
+import { envChain } from ".";
 
 afterEach(() => {
   delete process.env.CHAIN;

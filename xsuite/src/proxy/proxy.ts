@@ -1,13 +1,13 @@
 import { e } from "../data";
-import { Encodable } from "../data/Encodable";
 import {
   Address,
-  addressToAddressEncodable,
-  addressToBech32,
+  addressToBechAddress,
+  addressToHexAddress,
 } from "../data/address";
-import { Hex, broadHexToHex } from "../data/broadHex";
-import { RawKvs } from "../data/kvs";
-import { b64ToHex } from "../data/utils";
+import { BytesLike } from "../data/bytesLike";
+import { EncodableCodeMetadata, eCodeMetadata } from "../data/encoding";
+import { Kvs } from "../data/kvs";
+import { base64ToHex } from "../data/utils";
 
 export class Proxy {
   baseUrl: string;
@@ -20,10 +20,7 @@ export class Proxy {
     return fetch(
       url,
       data !== undefined
-        ? {
-            method: "POST",
-            body: JSON.stringify(data),
-          }
+        ? { method: "POST", body: JSON.stringify(data) }
         : undefined,
     ).then((r) => r.json());
   }
@@ -126,7 +123,10 @@ export class Proxy {
 
   static async query(baseUrl: string, query: BroadQuery) {
     const res = unrawRes(await Proxy.queryRaw(baseUrl, query));
-    return res.data as Record<string, any>;
+    return {
+      ...res.data,
+      returnData: res.data.returnData.map(base64ToHex),
+    } as Record<string, any> & { returnData: string[] };
   }
 
   query(query: BroadQuery) {
@@ -134,32 +134,51 @@ export class Proxy {
   }
 
   static getAccountRaw(baseUrl: string, address: Address) {
-    return Proxy.fetchRaw(`${baseUrl}/address/${addressToBech32(address)}`);
+    return Proxy.fetchRaw(
+      `${baseUrl}/address/${addressToBechAddress(address)}`,
+    );
   }
 
   getAccountRaw(address: Address) {
     return Proxy.getAccountRaw(this.baseUrl, address);
   }
 
-  static async getAccount(baseUrl: string, address: Address) {
+  static async getSerializableAccount(baseUrl: string, address: Address) {
     const res = unrawRes(await Proxy.getAccountRaw(baseUrl, address));
-    return {
-      address: res.account.address,
-      nonce: res.account.nonce,
-      balance: BigInt(res.account.balance),
-      code: res.account.code ? res.account.code : null,
-      codeMetadata: res.account.codeMetadata
-        ? b64ToHex(res.account.codeMetadata)
-        : null,
-      owner: res.account.ownerAddress ? res.account.ownerAddress : null,
-    } as {
+    const account: {
       address: string;
       nonce: number;
-      balance: bigint;
-      code: string | null;
-      codeMetadata: string | null;
-      owner: string | null;
+      balance: string;
+      code?: string | undefined;
+      codeMetadata?: string | undefined;
+      owner?: string | undefined;
+    } = {
+      address: res.account.address,
+      nonce: res.account.nonce,
+      balance: res.account.balance,
     };
+    if (res.account.code) {
+      account.code = res.account.code;
+    }
+    if (res.account.codeMetadata) {
+      account.codeMetadata = base64ToHex(res.account.codeMetadata);
+    }
+    if (res.account.ownerAddress) {
+      account.owner = res.account.ownerAddress;
+    }
+    return account;
+  }
+
+  getSerializableAccount(address: Address) {
+    return Proxy.getSerializableAccount(this.baseUrl, address);
+  }
+
+  static async getAccount(baseUrl: string, address: Address) {
+    const { balance, ...account } = await Proxy.getSerializableAccount(
+      baseUrl,
+      address,
+    );
+    return { balance: BigInt(balance), ...account };
   }
 
   getAccount(address: Address) {
@@ -168,7 +187,7 @@ export class Proxy {
 
   static getAccountNonceRaw(baseUrl: string, address: Address) {
     return Proxy.fetchRaw(
-      `${baseUrl}/address/${addressToBech32(address)}/nonce`,
+      `${baseUrl}/address/${addressToBechAddress(address)}/nonce`,
     );
   }
 
@@ -187,7 +206,7 @@ export class Proxy {
 
   static getAccountBalanceRaw(baseUrl: string, address: Address) {
     return Proxy.fetchRaw(
-      `${baseUrl}/address/${addressToBech32(address)}/balance`,
+      `${baseUrl}/address/${addressToBechAddress(address)}/balance`,
     );
   }
 
@@ -206,7 +225,7 @@ export class Proxy {
 
   static getAccountKvsRaw(baseUrl: string, address: Address) {
     return Proxy.fetchRaw(
-      `${baseUrl}/address/${addressToBech32(address)}/keys`,
+      `${baseUrl}/address/${addressToBechAddress(address)}/keys`,
     );
   }
 
@@ -216,11 +235,22 @@ export class Proxy {
 
   static async getAccountKvs(baseUrl: string, address: Address) {
     const res = unrawRes(await Proxy.getAccountKvsRaw(baseUrl, address));
-    return res.pairs as RawKvs;
+    return res.pairs as Kvs;
   }
 
   getAccountKvs(address: Address) {
     return Proxy.getAccountKvs(this.baseUrl, address);
+  }
+
+  static getSerializableAccountWithKvs(baseUrl: string, address: Address) {
+    return Promise.all([
+      Proxy.getSerializableAccount(baseUrl, address),
+      Proxy.getAccountKvs(baseUrl, address),
+    ]).then(([account, kvs]) => ({ ...account, kvs }));
+  }
+
+  getSerializableAccountWithKvs(address: Address) {
+    return Proxy.getSerializableAccountWithKvs(this.baseUrl, address);
   }
 
   static getAccountWithKvs(baseUrl: string, address: Address) {
@@ -233,17 +263,6 @@ export class Proxy {
   getAccountWithKvs(address: Address) {
     return Proxy.getAccountWithKvs(this.baseUrl, address);
   }
-
-  static getSerializableAccountWithKvs(baseUrl: string, address: Address) {
-    return Proxy.getAccountWithKvs(baseUrl, address).then((account) => ({
-      ...account,
-      balance: account.balance.toString(),
-    }));
-  }
-
-  getSerializableAccountWithKvs(address: Address) {
-    return Proxy.getSerializableAccountWithKvs(this.baseUrl, address);
-  }
 }
 
 export class Tx {
@@ -254,8 +273,8 @@ export class Tx {
     this.unsignedRawTx = {
       nonce: params.nonce,
       value: (params.value ?? 0n).toString(),
-      receiver: addressToBech32(params.receiver),
-      sender: addressToBech32(params.sender),
+      receiver: addressToBechAddress(params.receiver),
+      sender: addressToBechAddress(params.sender),
       gasPrice: params.gasPrice,
       gasLimit: params.gasLimit,
       data: params.data === undefined ? undefined : btoa(params.data),
@@ -275,8 +294,8 @@ export class Tx {
       data: [
         code,
         "0500",
-        codeMetadataToHex(codeMetadata),
-        ...(codeArgs ?? []).map(broadHexToHex),
+        eCodeMetadata(codeMetadata),
+        ...e.vs(codeArgs ?? []),
       ].join("@"),
       ...txParams,
     };
@@ -298,8 +317,8 @@ export class Tx {
       data: [
         "upgradeContract",
         code,
-        codeMetadataToHex(codeMetadata),
-        ...(codeArgs ?? []).map(broadHexToHex),
+        eCodeMetadata(codeMetadata),
+        ...e.vs(codeArgs ?? []),
       ].join("@"),
       ...txParams,
     };
@@ -317,7 +336,7 @@ export class Tx {
       receiver = sender;
       const dataParts: string[] = [];
       dataParts.push("MultiESDTNFTTransfer");
-      dataParts.push(addressToAddressEncodable(_receiver).toTopHex());
+      dataParts.push(addressToHexAddress(_receiver));
       dataParts.push(e.U(esdts.length).toTopHex());
       for (const esdt of esdts) {
         dataParts.push(e.Str(esdt.id).toTopHex());
@@ -352,7 +371,7 @@ export class Tx {
     if (esdts?.length) {
       receiver = sender;
       dataParts.push("MultiESDTNFTTransfer");
-      dataParts.push(addressToAddressEncodable(callee).toTopHex());
+      dataParts.push(addressToHexAddress(callee));
       dataParts.push(e.U(esdts.length).toTopHex());
       for (const esdt of esdts) {
         dataParts.push(e.Str(esdt.id).toTopHex());
@@ -364,7 +383,7 @@ export class Tx {
       receiver = callee;
       dataParts.push(funcName);
     }
-    dataParts.push(...(funcArgs ?? []).map(broadHexToHex));
+    dataParts.push(...e.vs(funcArgs ?? []));
     return {
       receiver,
       sender,
@@ -410,43 +429,17 @@ const broadTxToRawTx = (tx: BroadTx): RawTx => {
 const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
   if ("callee" in query) {
     query = {
-      scAddress: addressToBech32(query.callee),
+      scAddress: addressToBechAddress(query.callee),
       funcName: query.funcName,
-      args: (query.funcArgs ?? []).map(broadHexToHex),
+      args: e.vs(query.funcArgs ?? []),
       caller:
-        query.sender !== undefined ? addressToBech32(query.sender) : undefined,
+        query.sender !== undefined
+          ? addressToBechAddress(query.sender)
+          : undefined,
       value: query.value !== undefined ? query.value.toString() : undefined,
     };
   }
   return query;
-};
-
-export const codeMetadataToHex = (codeMetadata: CodeMetadata): string => {
-  if (typeof codeMetadata === "string") {
-    return codeMetadata;
-  }
-  if (Array.isArray(codeMetadata)) {
-    const bytes: number[] = [];
-    let byteZero = 0;
-    if (codeMetadata.includes("upgradeable")) {
-      byteZero |= 1;
-    }
-    if (codeMetadata.includes("readable")) {
-      byteZero |= 4;
-    }
-    let byteOne = 0;
-    if (codeMetadata.includes("payable")) {
-      byteOne |= 2;
-    }
-    if (codeMetadata.includes("payableBySc")) {
-      byteOne |= 4;
-    }
-    if (byteZero > 0 || byteOne > 0) {
-      bytes.push(byteZero, byteOne);
-    }
-    codeMetadata = e.Buffer(bytes);
-  }
-  return codeMetadata.toTopHex();
 };
 
 const zeroBechAddress =
@@ -472,7 +465,7 @@ type BroadQuery = Query | RawQuery;
 export type Query = {
   callee: Address;
   funcName: string;
-  funcArgs?: Hex[];
+  funcArgs?: BytesLike[];
   sender?: Address;
   value?: number | bigint;
 };
@@ -504,15 +497,11 @@ export type DeployContractTxParams = {
   gasPrice: number;
   gasLimit: number;
   code: string;
-  codeMetadata: CodeMetadata;
-  codeArgs?: Hex[];
+  codeMetadata: EncodableCodeMetadata;
+  codeArgs?: BytesLike[];
   chainId: string;
   version?: number;
 };
-
-export type CodeMetadata = string | Encodable | CodeProperty[];
-
-type CodeProperty = "upgradeable" | "readable" | "payable" | "payableBySc";
 
 export type UpgradeContractTxParams = {
   nonce: number;
@@ -522,8 +511,8 @@ export type UpgradeContractTxParams = {
   gasPrice: number;
   gasLimit: number;
   code: string;
-  codeMetadata: CodeMetadata;
-  codeArgs?: Hex[];
+  codeMetadata: EncodableCodeMetadata;
+  codeArgs?: BytesLike[];
   chainId: string;
   version?: number;
 };
@@ -548,7 +537,7 @@ export type CallContractTxParams = {
   gasPrice: number;
   gasLimit: number;
   funcName: string;
-  funcArgs?: Hex[];
+  funcArgs?: BytesLike[];
   esdts?: { id: string; nonce?: number; amount: number | bigint }[];
   chainId: string;
   version?: number;

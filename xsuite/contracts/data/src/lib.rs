@@ -1,6 +1,7 @@
 #![no_std]
 
 multiversx_sc::imports!();
+multiversx_sc::derive_imports!();
 
 #[multiversx_sc::contract]
 pub trait Data {
@@ -11,75 +12,60 @@ pub trait Data {
     fn upgrade(&self) {}
 
     #[endpoint]
-    fn single_add(&self, key: ManagedBuffer, value: u64) {
-        self.single(key).set(value);
-    }
-
-    #[endpoint]
-    fn single_remove(&self, key: ManagedBuffer) {
-        self.single(key).clear();
-    }
-
-    #[endpoint]
-    fn unordered_set_add(&self, key: u64, values: MultiValueEncoded<BigUint>) {
-        for value in values {
-            self.unordered_set(key).insert(value);
+    fn value_set(&self, entries: MultiValueEncoded<MultiValue2<ManagedBuffer, u64>>) {
+        for entry in entries {
+            let (key, value) = entry.into_tuple();
+            self.value(key).set(value);
         }
     }
 
     #[endpoint]
-    fn unordered_set_remove(&self, key: u64, values: MultiValueEncoded<BigUint>) {
-        for value in values {
-            self.unordered_set(key).swap_remove(&value);
+    fn vec_push(&self, entries: MultiValueEncoded<MultiValue3<u64, BigUint, ManagedVec<u64>>>) {
+        for entry in entries {
+            let (key1, key2, values) = entry.into_tuple();
+            for value in values.into_iter() {
+                self.vec(key1, key2.clone()).push(&value);
+            }
         }
     }
 
     #[endpoint]
-    fn set_add(&self, key: u64, values: MultiValueEncoded<BigUint>) {
-        for value in values {
-            self.set(key).insert(value);
+    fn unordered_set_insert(&self, entries: MultiValueEncoded<MultiValue2<u64, ManagedVec<BigUint>>>) {
+        for entry in entries {
+            let (key, values) = entry.into_tuple();
+            for value in values.into_iter() {
+                self.unordered_set(key).insert(value);
+            }
         }
     }
 
     #[endpoint]
-    fn set_remove(&self, key: u64, values: MultiValueEncoded<BigUint>) {
-        for value in values {
-            self.set(key).remove(&value);
+    fn set_insert(&self, entries: MultiValueEncoded<MultiValue2<u64, ManagedVec<BigUint>>>) {
+        for entry in entries {
+            let (key, values) = entry.into_tuple();
+            for value in values.into_iter() {
+                self.set(key).insert(value);
+            }
         }
     }
 
     #[endpoint]
-    fn map_add(&self, key: BigUint, items: MultiValueEncoded<(ManagedBuffer, u64)>) {
-        for (id, value) in items {
-            self.map(key.clone()).insert(id, value);
+    fn map_insert(&self, entries: MultiValueEncoded<MultiValue2<BigUint, ManagedVec<MapKeyValue<Self::Api>>>>) {
+        for entry in entries {
+            let (key, items) = entry.into_tuple();
+            for item in items.into_iter() {
+                self.map(key.clone()).insert(item.key, item.value);
+            }
         }
     }
 
     #[endpoint]
-    fn map_remove(&self, key: BigUint, ids: MultiValueEncoded<ManagedBuffer>) {
-        for id in ids {
-            self.map(key.clone()).remove(&id);
-        }
-    }
-
-    #[endpoint]
-    fn vec_add(&self, key1: u64, key2: BigUint, values: MultiValueEncoded<u64>) {
-        for value in values {
-            self.vec(key1, key2.clone()).push(&value);
-        }
-    }
-
-    #[endpoint]
-    fn vec_remove(&self, key1: u64, key2: BigUint, indexes: MultiValueEncoded<usize>) {
-        for index in indexes {
-            self.vec(key1, key2.clone()).swap_remove(index);
-        }
-    }
-
-    #[endpoint]
-    fn user_add(&self, key: ManagedBuffer, addresses: MultiValueEncoded<ManagedAddress>) {
-        for address in addresses {
-            self.user(key.clone()).get_or_create_user(&address);
+    fn user_create(&self, entries: MultiValueEncoded<MultiValue2<ManagedBuffer, ManagedVec<ManagedAddress>>>) {
+        for entry in entries {
+            let (key, addresses) = entry.into_tuple();
+            for address in addresses.into_iter() {
+                self.user(key.clone()).get_or_create_user(&address);
+            }
         }
     }
 
@@ -96,25 +82,27 @@ pub trait Data {
     #[endpoint]
     fn esdt_nft_create(
         &self,
-        token_identifier: TokenIdentifier,
-        amount: BigUint,
-        name: ManagedBuffer,
-        royalties: BigUint,
-        hash: ManagedBuffer,
-        attributes: ManagedBuffer,
-        uris: ManagedVec<ManagedBuffer>,
-    ) -> u64 {
-        self.send().esdt_nft_create(&token_identifier, &amount, &name, &royalties, &hash, &attributes, &uris)
+        tokens: MultiValueEncoded<MultiValue7<TokenIdentifier, BigUint, ManagedBuffer, BigUint, ManagedBuffer, ManagedBuffer, ManagedVec<ManagedBuffer>>>,
+    ) -> MultiValueEncoded<u64> {
+        let mut nonces = MultiValueEncoded::new();
+        for token in tokens {
+            let t = token.into_tuple();
+            nonces.push(self.send().esdt_nft_create(&t.0, &t.1, &t.2, &t.3, &t.4, &t.5, &t.6));
+        }
+        nonces
     }
 
     #[endpoint]
     fn esdt_nft_create_compact(
         &self,
-        token_identifier: TokenIdentifier,
-        amount: BigUint,
-        attributes: ManagedBuffer,
-    ) -> u64 {
-        self.send().esdt_nft_create_compact(&token_identifier, &amount, &attributes)
+        tokens: MultiValueEncoded<MultiValue3<TokenIdentifier, BigUint, ManagedBuffer>>,
+    ) -> MultiValueEncoded<u64> {
+        let mut nonces = MultiValueEncoded::new();
+        for token in tokens {
+            let t = token.into_tuple();
+            nonces.push(self.send().esdt_nft_create_compact(&t.0, &t.1, &t.2));
+        }
+        nonces
     }
 
     #[endpoint]
@@ -127,8 +115,11 @@ pub trait Data {
         self.send().direct_esdt(&self.blockchain().get_caller(), &token_identifier, nonce, &amount);
     }
 
-    #[storage_mapper("single")]
-    fn single(&self, key: ManagedBuffer) -> SingleValueMapper<u64>;
+    #[storage_mapper("value")]
+    fn value(&self, key: ManagedBuffer) -> SingleValueMapper<u64>;
+
+    #[storage_mapper("vec")]
+    fn vec(&self, key1: u64, key2: BigUint) -> VecMapper<u64>;
 
     #[storage_mapper("unordered_set")]
     fn unordered_set(&self, key: u64) -> UnorderedSetMapper<BigUint>;
@@ -139,9 +130,12 @@ pub trait Data {
     #[storage_mapper("map")]
     fn map(&self, key: BigUint) -> MapMapper<ManagedBuffer, u64>;
 
-    #[storage_mapper("vec")]
-    fn vec(&self, key1: u64, key2: BigUint) -> VecMapper<u64>;
-
     #[storage_mapper("user")]
     fn user(&self, key: ManagedBuffer) -> UserMapper;
+}
+
+#[derive(ManagedVecItem, TypeAbi, NestedEncode, NestedDecode, TopEncode, TopDecode)]
+struct MapKeyValue<M: ManagedTypeApi> {
+    key: ManagedBuffer<M>,
+    value: u64,
 }
