@@ -1,10 +1,7 @@
 import { PreserveDefinedness, Prettify } from "../helpers";
 import { Account } from "./account";
-import {
-  addressByteLength,
-  addressToHexAddress,
-  u8aAddressToBechAddress,
-} from "./address";
+import { addressByteLength, u8aAddressToBechAddress } from "./address";
+import { addressLikeToHexAddress } from "./addressLike";
 import { Bytes, bytesToU8A } from "./bytes";
 import {
   CodeProperty,
@@ -168,7 +165,7 @@ export const d = {
     );
     return Object.assign(decoder, {
       toHex() {
-        return decoder.then((a) => addressToHexAddress(a));
+        return decoder.then((a) => addressLikeToHexAddress(a));
       },
     });
   },
