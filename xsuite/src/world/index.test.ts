@@ -20,9 +20,10 @@ const zeroU8AAddress = new Uint8Array(32);
 const emptyAccount = {
   nonce: 0,
   balance: 0,
-  code: null,
-  codeMetadata: null,
-  owner: null,
+  code: "",
+  codeHash: "",
+  codeMetadata: "",
+  owner: "",
   kvs: {},
 };
 const explorerUrl = "http://explorer.local";
@@ -196,6 +197,8 @@ test("SWorld.setAccount", async () => {
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 1234,
     code: worldCode,
+    codeHash:
+      "d8c9ddd83e614eaefd0a0c9d4f350bc3bb6368281ff71e030fc9d3d65b6ef2ae",
     codeMetadata: ["upgradeable"],
     kvs: [[e.Str("n"), e.U64(10)]],
     owner: wallet,
@@ -433,9 +436,10 @@ test("SWallet.getAccount", async () => {
   assertAccount(await wallet.getAccount(), {
     nonce: 0,
     balance: 10n ** 18n,
-    code: null,
+    code: "",
+    codeHash: "",
     codeMetadata: ["readable"],
-    owner: null,
+    owner: "",
   });
 });
 
@@ -443,9 +447,10 @@ test("SWallet.getAccountWithKvs", async () => {
   assertAccount(await wallet.getAccountWithKvs(), {
     nonce: 0,
     balance: 10n ** 18n,
-    code: null,
+    code: "",
+    codeHash: "",
     codeMetadata: ["readable"],
-    owner: null,
+    owner: "",
     hasKvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
   });
 });
@@ -484,6 +489,8 @@ test("SContract.getAccountWithKvs", async () => {
     nonce: 0,
     balance: 10n ** 18n,
     code: worldCode,
+    codeHash:
+      "d8c9ddd83e614eaefd0a0c9d4f350bc3bb6368281ff71e030fc9d3d65b6ef2ae",
     codeMetadata: ["payable"],
     owner: wallet,
     hasKvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },

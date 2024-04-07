@@ -20,6 +20,14 @@ func (e *Executor) HandleAddress(r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	var codeHash interface{}
+	if len(account.CodeHash) != 0 {
+		codeHash = base64.StdEncoding.EncodeToString(account.CodeHash)
+	}
+	var codeMetadata interface{}
+	if len(account.CodeMetadata) != 0 {
+		codeMetadata = base64.StdEncoding.EncodeToString(account.CodeMetadata)
+	}
 	jData := map[string]interface{}{
 		"data": map[string]interface{}{
 			"account": map[string]interface{}{
@@ -27,7 +35,8 @@ func (e *Executor) HandleAddress(r *http.Request) (interface{}, error) {
 				"nonce":   			account.Nonce,
 				"balance": 			account.Balance.String(),
 				"code": 				hex.EncodeToString(account.Code),
-				"codeMetadata": base64.StdEncoding.EncodeToString(account.CodeMetadata),
+				"codeHash":     codeHash,
+				"codeMetadata": codeMetadata,
 				"ownerAddress": bechOwnerAddress,
 			},
 		},

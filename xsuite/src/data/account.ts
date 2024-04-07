@@ -5,6 +5,7 @@ export type Account = {
   nonce?: number;
   balance?: string;
   code?: string;
+  codeHash?: string;
   codeMetadata?: string;
   owner?: string;
   kvs?: Kvs;

@@ -1,4 +1,5 @@
 import { Field, Type } from "protobufjs";
+import { PreserveDefinedness, Prettify } from "../helpers";
 import { Account } from "./account";
 import { Address, addressToBechAddress, addressToU8AAddress } from "./address";
 import { Bytes, bytesToU8A } from "./bytes";
@@ -59,6 +60,7 @@ export type EncodableAccount = {
   nonce?: number | bigint;
   balance?: number | bigint | string;
   code?: string;
+  codeHash?: string;
   codeMetadata?: EncodableCodeMetadata;
   owner?: Address;
   kvs?: EncodableKvs;
@@ -218,7 +220,9 @@ export const e = {
       Esdts: (esdts: EncodableEsdt[]) => eKvsEsdts(esdts),
     },
   ),
-  account: (encodableAccount: EncodableAccount): Account => {
+  account: <T extends EncodableAccount>(
+    encodableAccount: T,
+  ): Prettify<PreserveDefinedness<T, Account>> => {
     const account: Account = {
       address: addressToBechAddress(encodableAccount.address),
     };
@@ -231,6 +235,9 @@ export const e = {
     if (encodableAccount.code !== undefined) {
       account.code = encodableAccount.code;
     }
+    if (encodableAccount.codeHash !== undefined) {
+      account.codeHash = eCodeMetadata(encodableAccount.codeHash);
+    }
     if (encodableAccount.codeMetadata !== undefined) {
       account.codeMetadata = eCodeMetadata(encodableAccount.codeMetadata);
     }
@@ -240,7 +247,7 @@ export const e = {
     if (encodableAccount.owner !== undefined) {
       account.owner = addressToBechAddress(encodableAccount.owner);
     }
-    return account;
+    return account as PreserveDefinedness<T, Account>;
   },
   /**
    * @deprecated Use `.TopBuffer` instead.
