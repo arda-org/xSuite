@@ -1,4 +1,4 @@
-import { Prettify } from "../helpers";
+import { PreserveDefinedness, Prettify } from "../helpers";
 import { Account } from "./account";
 import {
   addressByteLength,
@@ -81,6 +81,7 @@ type DecodedAccount = {
   nonce?: number;
   balance?: bigint;
   code?: string;
+  codeHash?: string;
   codeMetadata?: CodeProperty[];
   owner?: string;
   kvs?: DecodedKvs;
@@ -308,7 +309,9 @@ export const d = {
   },
   account: (params?: AccountDecoderParams) => {
     return {
-      from: (account: DecodableAccount): DecodedAccount => {
+      from: <T extends DecodableAccount>(
+        account: T,
+      ): Prettify<PreserveDefinedness<T, DecodedAccount>> => {
         const decAccount: DecodedAccount = {
           address: account.address,
         };
@@ -321,6 +324,9 @@ export const d = {
         if (account.code !== undefined) {
           decAccount.code = account.code;
         }
+        if (account.codeHash !== undefined) {
+          decAccount.codeHash = account.codeHash;
+        }
         if (account.codeMetadata !== undefined) {
           decAccount.codeMetadata = dCodeMetadata(account.codeMetadata);
         }
@@ -330,7 +336,7 @@ export const d = {
         if (account.owner !== undefined) {
           decAccount.owner = account.owner;
         }
-        return decAccount;
+        return decAccount as PreserveDefinedness<T, DecodedAccount>;
       },
     };
   },

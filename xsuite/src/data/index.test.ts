@@ -1,6 +1,6 @@
 import { expect, test, beforeAll, afterAll } from "vitest";
 import { SWorld, SContract, SWallet } from "../world";
-import { expandCode } from "../world/world";
+import { readFileHex } from "../world/utils";
 import { Account } from "./account";
 import { EncodableMapper, eKvsUnfiltered } from "./encoding";
 import { B64, d, e } from ".";
@@ -810,8 +810,11 @@ test("e.account", async () => {
       address: wallet,
       nonce: 0,
       balance: 20,
+      code: "",
+      codeHash: "",
       codeMetadata: ["readable"],
       kvs: {},
+      owner: "",
     }),
   );
   expect(complexContractState).toEqual(
@@ -819,7 +822,9 @@ test("e.account", async () => {
       address: contract,
       nonce: 0,
       balance: 10,
-      code: expandCode("file:contracts/data/output/data.wasm"),
+      code: readFileHex("contracts/data/output/data.wasm"),
+      codeHash:
+        "8a698500ab8961cab5ce309a208f30d91cb031d4e9145312acc138ff20eaeca5",
       codeMetadata: ["readable", "upgradeable"],
       kvs: complexContractState.kvs,
       owner: wallet,
@@ -830,7 +835,11 @@ test("e.account", async () => {
       address: world.sysAcc,
       nonce: 0,
       balance: 0,
+      code: "",
+      codeHash: "",
+      codeMetadata: "",
       kvs: complexSysAccState.kvs,
+      owner: "",
     }),
   );
 });
@@ -1329,14 +1338,19 @@ test("d.account", () => {
     address: wallet,
     nonce: 0,
     balance: 20n,
+    code: "",
+    codeHash: "",
     codeMetadata: ["readable"],
     kvs: {},
+    owner: "",
   });
   expect(d.account().from(complexContractState)).toEqual({
     address: contract,
     nonce: 0,
     balance: 10n,
-    code: expandCode("file:contracts/data/output/data.wasm"),
+    code: readFileHex("contracts/data/output/data.wasm"),
+    codeHash:
+      "8a698500ab8961cab5ce309a208f30d91cb031d4e9145312acc138ff20eaeca5",
     codeMetadata: ["upgradeable", "readable"],
     kvs: expect.anything(),
     owner: wallet,
@@ -1345,7 +1359,11 @@ test("d.account", () => {
     address: world.sysAcc,
     nonce: 0,
     balance: 0n,
+    code: "",
+    codeHash: "",
+    codeMetadata: [],
     kvs: expect.anything(),
+    owner: "",
   });
 });
 

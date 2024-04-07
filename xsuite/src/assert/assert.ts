@@ -22,6 +22,7 @@ export const assertAccount = (
     nonce,
     balance,
     code,
+    codeHash,
     codeMetadata,
     owner,
     kvs,
@@ -39,22 +40,16 @@ export const assertAccount = (
     assert.strictEqual(actualAccount.balance, BigInt(balance));
   }
   if (code !== undefined) {
-    assert.strictEqual(
-      actualAccount.code,
-      code == null ? undefined : expandCode(code),
-    );
+    assert.strictEqual(actualAccount.code, expandCode(code));
+  }
+  if (codeHash !== undefined) {
+    assert.strictEqual(actualAccount.codeHash, codeHash);
   }
   if (codeMetadata !== undefined) {
-    assert.strictEqual(
-      actualAccount.codeMetadata,
-      codeMetadata == null ? undefined : eCodeMetadata(codeMetadata),
-    );
+    assert.strictEqual(actualAccount.codeMetadata, eCodeMetadata(codeMetadata));
   }
   if (owner !== undefined) {
-    assert.strictEqual(
-      actualAccount.owner,
-      owner == null ? undefined : addressToBechAddress(owner),
-    );
+    assert.strictEqual(actualAccount.owner, addressToBechAddress(owner));
   }
   if (kvs !== undefined) {
     assertKvs(actualAccount.kvs ?? {}, kvs);
@@ -95,9 +90,10 @@ type ExpectedAccount = {
   address?: Address;
   nonce?: number;
   balance?: number | bigint | string;
-  code?: string | null;
-  codeMetadata?: EncodableCodeMetadata | null;
-  owner?: Address | null;
+  code?: string;
+  codeHash?: string;
+  codeMetadata?: EncodableCodeMetadata;
+  owner?: Address;
   kvs?: EncodableKvs;
   hasKvs?: EncodableKvs;
   /**

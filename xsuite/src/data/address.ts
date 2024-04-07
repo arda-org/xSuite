@@ -11,6 +11,7 @@ export const isBechAddress = (value: unknown): value is string =>
   typeof value === "string" && bech32.decodeUnsafe(value)?.prefix === HRP;
 
 export const addressToU8AAddress = (address: Address): Uint8Array => {
+  if (address === "") return new Uint8Array();
   if (isEncodable(address)) {
     address = address.toTopU8A();
   } else if (isHexAddress(address)) {
@@ -35,6 +36,7 @@ export const addressToBechAddress = (address: Address) =>
   u8aAddressToBechAddress(addressToU8AAddress(address));
 
 export const u8aAddressToBechAddress = (u8aAddress: Uint8Array): string => {
+  if (u8aAddress.length === 0) return "";
   return bech32.encode(HRP, bech32.toWords(u8aAddress));
 };
 
