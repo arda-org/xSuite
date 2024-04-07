@@ -63,13 +63,14 @@ type DecodedEsdtVariant = {
 };
 type DecodedMapper = { key: DecodedMapperKey } & DecodedMapperData;
 type DecodedMapperKey = [name: string, ...vars: any[]];
-type DecodedMapperData =
-  | { value: any }
-  | { unorderedSet: any[] }
-  | { set: [index: number, value: any][] }
-  | { map: [index: number, key: any, value: any][] }
-  | { vec: any[] }
-  | { user: any[] };
+type DecodedMapperData = {
+  value?: any;
+  unorderedSet?: any[];
+  set?: [index: number, value: any][];
+  map?: [index: number, key: any, value: any][];
+  vec?: any[];
+  user?: any[];
+};
 
 type AccountDecoderParams = KvsDecoderParams;
 type DecodableAccount = Omit<Account, "balance"> & {
