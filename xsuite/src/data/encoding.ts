@@ -398,7 +398,7 @@ const eKvsMapperSet = (
   for (let i = 0; i < data.length; i++) {
     const [index, v] = data[i];
     if (index <= 0) {
-      throw new Error("Negative id not allowed.");
+      throw new Error("Non-positive id not allowed.");
     }
     kvs.push([e.Tuple(baseKey, e.TopStr(".node_id"), v), e.U32(index)]);
     kvs.push([e.Tuple(baseKey, e.TopStr(".value"), e.U32(index)), v]);

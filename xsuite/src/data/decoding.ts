@@ -945,6 +945,7 @@ const getMapperMap = <U, V>(
       valueDecoder.fromTop(encValue),
     ]);
   }
+  map.sort((a, b) => a[0] - b[0]);
   return map;
 };
 
