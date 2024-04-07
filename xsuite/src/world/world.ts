@@ -1,4 +1,5 @@
 import { Address } from "../data/address";
+import { AddressLike } from "../data/addressLike";
 import { Optional, Prettify } from "../helpers";
 import {
   devnetMinGasPrice,
@@ -109,7 +110,7 @@ export class World {
     return this.newWallet(KeystoreSigner.fromFile_unsafe(filePath, password));
   }
 
-  newContract(address: string | Uint8Array) {
+  newContract(address: Address) {
     return new Contract({
       address,
       proxy: this.proxy,
@@ -117,27 +118,27 @@ export class World {
     });
   }
 
-  getAccountNonce(address: Address) {
+  getAccountNonce(address: AddressLike) {
     return getAccountNonce(this.proxy, address);
   }
 
-  getAccountBalance(address: Address) {
+  getAccountBalance(address: AddressLike) {
     return getAccountBalance(this.proxy, address);
   }
 
-  getAccount(address: Address) {
+  getAccount(address: AddressLike) {
     return getAccount(this.proxy, address);
   }
 
-  getAccountKvs(address: Address) {
+  getAccountKvs(address: AddressLike) {
     return getAccountKvs(this.proxy, address);
   }
 
-  getSerializableAccountWithKvs(address: Address) {
+  getSerializableAccountWithKvs(address: AddressLike) {
     return getSerializableAccountWithKvs(this.proxy, address);
   }
 
-  getAccountWithKvs(address: Address) {
+  getAccountWithKvs(address: AddressLike) {
     return getAccountWithKvs(this.proxy, address);
   }
 
@@ -307,7 +308,7 @@ export class Contract extends Account {
     proxy,
     baseExplorerUrl = "",
   }: {
-    address: string | Uint8Array;
+    address: Address;
     proxy: Proxy;
     baseExplorerUrl?: string;
   }) {
@@ -446,22 +447,22 @@ export class InteractionPromise<T> implements PromiseLike<T> {
   }
 }
 
-const getAccountNonce = (proxy: Proxy, address: Address) =>
+const getAccountNonce = (proxy: Proxy, address: AddressLike) =>
   proxy.getAccountNonce(address);
 
-const getAccountBalance = (proxy: Proxy, address: Address) =>
+const getAccountBalance = (proxy: Proxy, address: AddressLike) =>
   proxy.getAccountBalance(address);
 
-const getAccount = (proxy: Proxy, address: Address) =>
+const getAccount = (proxy: Proxy, address: AddressLike) =>
   proxy.getAccount(address);
 
-const getAccountKvs = (proxy: Proxy, address: Address) =>
+const getAccountKvs = (proxy: Proxy, address: AddressLike) =>
   proxy.getAccountKvs(address);
 
-const getSerializableAccountWithKvs = (proxy: Proxy, address: Address) =>
+const getSerializableAccountWithKvs = (proxy: Proxy, address: AddressLike) =>
   proxy.getSerializableAccountWithKvs(address);
 
-const getAccountWithKvs = (proxy: Proxy, address: Address) =>
+const getAccountWithKvs = (proxy: Proxy, address: AddressLike) =>
   proxy.getAccountWithKvs(address);
 
 const query = (proxy: Proxy, params: QueryParams) =>

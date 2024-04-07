@@ -1,12 +1,12 @@
 import fs from "node:fs";
-import { Address, addressToHexAddress } from "../data/address";
+import { AddressLike, addressLikeToHexAddress } from "../data/addressLike";
 
 export const readFileHex = (path: string) => {
   return fs.readFileSync(path, "hex");
 };
 
-export const isContractAddress = (address: Address) => {
-  return addressToHexAddress(address).startsWith("0000000000000000");
+export const isContractAddress = (address: AddressLike) => {
+  return addressLikeToHexAddress(address).startsWith("0000000000000000");
 };
 
 export const numberToU8AAddress = (

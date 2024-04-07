@@ -1,7 +1,12 @@
 import { Field, Type } from "protobufjs";
 import { PreserveDefinedness, Prettify } from "../helpers";
 import { Account } from "./account";
-import { Address, addressToBechAddress, addressToU8AAddress } from "./address";
+import { Address } from "./address";
+import {
+  AddressLike,
+  addressLikeToU8AAddress,
+  addressLikeToBechAddress,
+} from "./addressLike";
 import { Bytes, bytesToU8A } from "./bytes";
 import {
   BytesLike,
@@ -37,7 +42,7 @@ type EncodableEsdtVariant = {
   nonce: number | bigint;
   amount?: number | bigint;
   name?: string;
-  creator?: Address;
+  creator?: AddressLike;
   royalties?: number;
   hash?: Bytes;
   attrs?: BytesLike;
@@ -56,13 +61,13 @@ type EncodableMapperKeyArgs = [name: string, ...vars: Encodable[]];
 type EncodableKv = [key: BytesLike, value: BytesLike];
 
 export type EncodableAccount = {
-  address: Address;
+  address: AddressLike;
   nonce?: number | bigint;
   balance?: number | bigint | string;
   code?: string;
   codeHash?: string;
   codeMetadata?: EncodableCodeMetadata;
-  owner?: Address;
+  owner?: AddressLike;
   kvs?: EncodableKvs;
 };
 export type EncodableCodeMetadata = BytesLike | CodeProperty[];
@@ -134,8 +139,8 @@ export const e = {
   TopStr: (string: string) => {
     return newEncodable(e.Str(string).toTopU8A);
   },
-  Addr: (address: string | Uint8Array) => {
-    address = addressToU8AAddress(address);
+  Addr: (address: Address) => {
+    address = addressLikeToU8AAddress(address);
     return newEncodable(() => address);
   },
   Bool: (boolean: boolean) => e.U8(Number(boolean)),
@@ -224,7 +229,7 @@ export const e = {
     encodableAccount: T,
   ): Prettify<PreserveDefinedness<T, Account>> => {
     const account: Account = {
-      address: addressToBechAddress(encodableAccount.address),
+      address: addressLikeToBechAddress(encodableAccount.address),
     };
     if (encodableAccount.nonce !== undefined) {
       account.nonce = safeBigintToNumber(BigInt(encodableAccount.nonce));
@@ -245,7 +250,7 @@ export const e = {
       account.kvs = e.kvs(encodableAccount.kvs);
     }
     if (encodableAccount.owner !== undefined) {
-      account.owner = addressToBechAddress(encodableAccount.owner);
+      account.owner = addressLikeToBechAddress(encodableAccount.owner);
     }
     return account as PreserveDefinedness<T, Account>;
   },
@@ -493,7 +498,7 @@ const eKvsEsdt = ({ id, roles, lastNonce, ...rest }: EncodableEsdt): Kvs => {
         metadata.push(["Name", e.Str(name).toTopU8A()]);
       }
       if (creator !== undefined) {
-        metadata.push(["Creator", addressToU8AAddress(creator)]);
+        metadata.push(["Creator", addressLikeToU8AAddress(creator)]);
       }
       if (royalties !== undefined && royalties > 0) {
         metadata.push(["Royalties", royalties.toString()]);

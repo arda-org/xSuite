@@ -1,3 +1,4 @@
+import { Address, isAddress } from "../data/address";
 import { EncodableAccount } from "../data/encoding";
 import { Prettify } from "../helpers";
 import { SProxy } from "../proxy";
@@ -66,9 +67,11 @@ export class SWorld extends World {
     return SWorld.new({ proxyUrl, gasPrice, explorerUrl });
   }
 
-  newWallet(signer: Signer): SWallet {
+  newWallet(addressOrSigner: Address | Signer): SWallet {
     return new SWallet({
-      signer,
+      signer: isAddress(addressOrSigner)
+        ? new DummySigner(addressOrSigner)
+        : addressOrSigner,
       proxy: this.proxy,
       chainId: this.chainId,
       gasPrice: this.gasPrice,
@@ -76,7 +79,7 @@ export class SWorld extends World {
     });
   }
 
-  newContract(address: string | Uint8Array): SContract {
+  newContract(address: Address): SContract {
     return new SContract({
       address,
       proxy: this.proxy,
@@ -164,7 +167,7 @@ export class SContract extends Contract {
     proxy,
     baseExplorerUrl,
   }: {
-    address: string | Uint8Array;
+    address: Address;
     proxy: SProxy;
     baseExplorerUrl?: string;
   }) {

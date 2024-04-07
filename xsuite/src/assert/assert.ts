@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import { Address, addressToBechAddress } from "../data/address";
+import { AddressLike, addressLikeToBechAddress } from "../data/addressLike";
 import {
   e,
   eKvsUnfiltered,
@@ -31,7 +31,10 @@ export const assertAccount = (
   }: ExpectedAccount,
 ) => {
   if (address !== undefined) {
-    assert.strictEqual(actualAccount.address, addressToBechAddress(address));
+    assert.strictEqual(
+      actualAccount.address,
+      addressLikeToBechAddress(address),
+    );
   }
   if (nonce !== undefined) {
     assert.strictEqual(actualAccount.nonce, nonce);
@@ -49,7 +52,7 @@ export const assertAccount = (
     assert.strictEqual(actualAccount.codeMetadata, eCodeMetadata(codeMetadata));
   }
   if (owner !== undefined) {
-    assert.strictEqual(actualAccount.owner, addressToBechAddress(owner));
+    assert.strictEqual(actualAccount.owner, addressLikeToBechAddress(owner));
   }
   if (kvs !== undefined) {
     assertKvs(actualAccount.kvs ?? {}, kvs);
@@ -87,13 +90,13 @@ type ActualAccount = Partial<
 >;
 
 type ExpectedAccount = {
-  address?: Address;
+  address?: AddressLike;
   nonce?: number;
   balance?: number | bigint | string;
   code?: string;
   codeHash?: string;
   codeMetadata?: EncodableCodeMetadata;
-  owner?: Address;
+  owner?: AddressLike;
   kvs?: EncodableKvs;
   hasKvs?: EncodableKvs;
   /**
