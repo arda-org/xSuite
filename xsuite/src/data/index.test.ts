@@ -137,7 +137,7 @@ beforeAll(async () => {
       e.U64(5),
       e.List(e.U(13), e.U(14), e.U(15)),
       e.U64(6),
-      e.List(e.U(16), e.U(17), e.U(18)),
+      e.List(e.U(18), e.U(17), e.U(16)),
     ],
     gasLimit: 10_000_000,
   });
@@ -148,7 +148,7 @@ beforeAll(async () => {
       e.U(7),
       e.List(e.Tuple(e.Str("a"), e.U64(1)), e.Tuple(e.Str("b"), e.U64(2))),
       e.U(8),
-      e.List(e.Tuple(e.Str("c"), e.U64(3)), e.Tuple(e.Str("d"), e.U64(4))),
+      e.List(e.Tuple(e.Str("d"), e.U64(3)), e.Tuple(e.Str("c"), e.U64(4))),
     ],
     gasLimit: 10_000_000,
   });
@@ -682,9 +682,9 @@ test("e.kvs - complex kvs", () => {
         {
           key: ["set", e.U64(6)],
           set: [
-            [1, e.U(16)],
+            [1, e.U(18)],
             [2, e.U(17)],
-            [3, e.U(18)],
+            [3, e.U(16)],
           ],
         },
         {
@@ -697,8 +697,8 @@ test("e.kvs - complex kvs", () => {
         {
           key: ["map", e.U(8)],
           map: [
-            [1, e.Str("c"), e.U64(3)],
-            [2, e.Str("d"), e.U64(4)],
+            [1, e.Str("d"), e.U64(3)],
+            [2, e.Str("c"), e.U64(4)],
           ],
         },
         {
@@ -1259,9 +1259,9 @@ test("d.kvs", async () => {
       {
         key: ["set", 6n],
         set: [
-          [1, 16n],
+          [1, 18n],
           [2, 17n],
-          [3, 18n],
+          [3, 16n],
         ],
       },
       {
@@ -1274,8 +1274,8 @@ test("d.kvs", async () => {
       {
         key: ["map", 8n],
         map: [
-          [1, "c", 3n],
-          [2, "d", 4n],
+          [1, "d", 3n],
+          [2, "c", 4n],
         ],
       },
       {
