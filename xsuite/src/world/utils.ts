@@ -31,13 +31,6 @@ export const numberToU8AAddress = (
   return new Uint8Array(buffer);
 };
 
-const calculateMasks = (numOfShards: number) => {
-  const n = Math.ceil(Math.log2(numOfShards));
-  const mask1 = (1 << n) - 1;
-  const mask2 = (1 << (n - 1)) - 1;
-  return [mask1, mask2];
-};
-
 // https://github.com/multiversx/mx-sdk-nestjs/blob/8209a33d01dfb2a09085479444112192c8342aa9/packages/common/src/utils/address.utils.ts#L40
 export const computeShard = (hexPubKey: string): number => {
   const [maskHigh, maskLow] = calculateMasks(totalShards);
@@ -49,6 +42,13 @@ export const computeShard = (hexPubKey: string): number => {
   }
 
   return shard;
+};
+
+const calculateMasks = (numOfShards: number) => {
+  const n = Math.ceil(Math.log2(numOfShards));
+  const mask1 = (1 << n) - 1;
+  const mask2 = (1 << (n - 1)) - 1;
+  return [mask1, mask2];
 };
 
 export const totalShards = 3;
