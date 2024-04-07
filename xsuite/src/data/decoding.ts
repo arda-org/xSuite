@@ -35,7 +35,9 @@ type MapperDecoderParams = {
   | { vec: Decoder }
   | { user: true }
 );
-type MapperKeyDecoderParams = [name: string, ...varDecoders: Decoder[]];
+type MapperKeyDecoderParams =
+  | string
+  | [name: string, ...varDecoders: Decoder[]];
 type DecodableKvs = Kvs;
 type DecodedKvs = {
   esdts?: DecodedEsdt[];
@@ -714,6 +716,10 @@ const newMapperKvsDecoder = <T extends DecodedMapperData>(
 
     for (const k in consumer.remainingKvs) {
       const cons = new BytesConsumer(k);
+      mapperKeyDecoderParams =
+        typeof mapperKeyDecoderParams === "string"
+          ? [mapperKeyDecoderParams]
+          : mapperKeyDecoderParams;
       const decMapperKey = consumeSegments(cons, mapperKeyDecoderParams);
       if (decMapperKey === undefined) continue;
       const encMapperKey = u8aToHex(cons.consumed());
