@@ -1,33 +1,33 @@
 import { e, EncodableAccount } from "../data/encoding";
-import { Proxy } from "./proxy";
+import { Proxy, ProxyParams } from "./proxy";
 
 export class SProxy extends Proxy {
-  static setAccount(baseUrl: string, account: EncodableAccount) {
-    return Proxy.fetch(`${baseUrl}/admin/set-account`, e.account(account));
+  static setAccount(params: ProxyParams, account: EncodableAccount) {
+    return Proxy.fetch(params, "/admin/set-account", e.account(account));
   }
 
   setAccount(account: EncodableAccount) {
-    return SProxy.setAccount(this.baseUrl, account);
+    return SProxy.setAccount(this.params, account);
   }
 
-  static setCurrentBlockInfo(baseUrl: string, block: Block) {
-    return Proxy.fetch(`${baseUrl}/admin/set-current-block-info`, block);
+  static setCurrentBlockInfo(params: ProxyParams, block: Block) {
+    return Proxy.fetch(params, "/admin/set-current-block-info", block);
   }
 
   setCurrentBlockInfo(block: Block) {
-    return SProxy.setCurrentBlockInfo(this.baseUrl, block);
+    return SProxy.setCurrentBlockInfo(this.params, block);
   }
 
-  static setPreviousBlockInfo(baseUrl: string, block: Block) {
-    return Proxy.fetch(`${baseUrl}/admin/set-previous-block-info`, block);
+  static setPreviousBlockInfo(params: ProxyParams, block: Block) {
+    return Proxy.fetch(params, "/admin/set-previous-block-info", block);
   }
 
   setPreviousBlockInfo(block: Block) {
-    return SProxy.setPreviousBlockInfo(this.baseUrl, block);
+    return SProxy.setPreviousBlockInfo(this.params, block);
   }
 
-  static terminate(baseUrl: string) {
-    return Proxy.fetch(`${baseUrl}/admin/terminate`)
+  static terminate(params: ProxyParams) {
+    return Proxy.fetch(params, "/admin/terminate")
       .then(() => {
         //
       })
@@ -37,7 +37,7 @@ export class SProxy extends Proxy {
   }
 
   terminate() {
-    return SProxy.terminate(this.baseUrl);
+    return SProxy.terminate(this.params);
   }
 
   /**
