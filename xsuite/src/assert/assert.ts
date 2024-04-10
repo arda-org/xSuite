@@ -86,7 +86,7 @@ const assertHasKvs = (actualKvs: EncodableKvs, hasKvs: EncodableKvs) => {
 };
 
 type ActualAccount = Partial<
-  Awaited<ReturnType<typeof Proxy.getAccountWithKvs>>
+  Awaited<ReturnType<typeof Proxy.prototype.getAccountWithKvs>>
 >;
 
 type ExpectedAccount = {

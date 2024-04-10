@@ -1,50 +1,27 @@
 import { e, EncodableAccount } from "../data/encoding";
-import { Proxy, ProxyParams } from "./proxy";
+import { Proxy } from "./proxy";
 
 export class SProxy extends Proxy {
-  static setAccount(params: ProxyParams, account: EncodableAccount) {
-    return Proxy.fetch(params, "/admin/set-account", e.account(account));
-  }
-
   setAccount(account: EncodableAccount) {
-    return SProxy.setAccount(this.params, account);
-  }
-
-  static setCurrentBlockInfo(params: ProxyParams, block: Block) {
-    return Proxy.fetch(params, "/admin/set-current-block-info", block);
+    return this.fetch("/admin/set-account", e.account(account));
   }
 
   setCurrentBlockInfo(block: Block) {
-    return SProxy.setCurrentBlockInfo(this.params, block);
-  }
-
-  static setPreviousBlockInfo(params: ProxyParams, block: Block) {
-    return Proxy.fetch(params, "/admin/set-previous-block-info", block);
+    return this.fetch("/admin/set-current-block-info", block);
   }
 
   setPreviousBlockInfo(block: Block) {
-    return SProxy.setPreviousBlockInfo(this.params, block);
+    return this.fetch("/admin/set-previous-block-info", block);
   }
 
-  static terminate(params: ProxyParams) {
-    return Proxy.fetch(params, "/admin/terminate")
+  terminate() {
+    return this.fetch("/admin/terminate")
       .then(() => {
         //
       })
       .catch(() => {
         //
       });
-  }
-
-  terminate() {
-    return SProxy.terminate(this.params);
-  }
-
-  /**
-   * @deprecated Use `.setCurrentBlockInfo` instead.
-   */
-  static setCurrentBlock(baseUrl: string, block: Block) {
-    return SProxy.setCurrentBlockInfo(baseUrl, block);
   }
 
   /**

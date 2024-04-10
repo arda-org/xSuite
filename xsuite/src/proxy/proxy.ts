@@ -10,21 +10,20 @@ import { Kvs } from "../data/kvs";
 import { base64ToHex } from "../data/utils";
 
 export class Proxy {
-  params: ProxyParams;
+  proxyUrl: string;
+  headers: HeadersInit;
+  explorerUrl: string;
 
   constructor(params: ProxyParams) {
-    this.params = params;
+    params = typeof params === "string" ? { proxyUrl: params } : params;
+    this.proxyUrl = params.proxyUrl;
+    this.headers = params.headers ?? {};
+    this.explorerUrl = params.explorerUrl ?? "";
   }
 
-  static fetchRaw(params: ProxyParams, path: string, data?: any) {
-    let baseUrl: string;
-    const init: RequestInit = {};
-    if (typeof params === "string") {
-      baseUrl = params;
-    } else {
-      baseUrl = params.baseUrl;
-      init.headers = params.headers;
-    }
+  fetchRaw(path: string, data?: any) {
+    const baseUrl = this.proxyUrl;
+    const init: RequestInit = { headers: this.headers };
     if (data !== undefined) {
       init.method = "POST";
       init.body = JSON.stringify(data);
@@ -32,139 +31,90 @@ export class Proxy {
     return fetch(`${baseUrl}${path}`, init).then((r) => r.json());
   }
 
-  fetchRaw(path: string, data?: any) {
-    return Proxy.fetchRaw(this.params, path, data);
-  }
-
-  static async fetch(params: ProxyParams, path: string, data?: any) {
-    return unrawRes(await Proxy.fetchRaw(params, path, data));
-  }
-
-  fetch(path: string, data?: any) {
-    return Proxy.fetch(this.params, path, data);
-  }
-
-  static sendTxRaw(params: ProxyParams, tx: BroadTx) {
-    return Proxy.fetchRaw(params, "/transaction/send", broadTxToRawTx(tx));
+  async fetch(path: string, data?: any) {
+    return unrawRes(await this.fetchRaw(path, data));
   }
 
   sendTxRaw(tx: BroadTx) {
-    return Proxy.sendTxRaw(this.params, tx);
+    return this.fetchRaw("/transaction/send", broadTxToRawTx(tx));
   }
 
-  static async sendTx(params: ProxyParams, tx: BroadTx) {
-    const res = unrawRes(await Proxy.sendTxRaw(params, tx));
+  async sendTx(tx: BroadTx) {
+    const res = unrawRes(await this.sendTxRaw(tx));
     return res.txHash as string;
   }
 
-  sendTx(tx: BroadTx) {
-    return Proxy.sendTx(this.params, tx);
-  }
-
-  static getTxRaw(
-    params: ProxyParams,
-    txHash: string,
-    options: GetTxOptions = {},
-  ) {
+  getTxRaw(txHash: string, options: GetTxOptions = {}) {
     let path = `/transaction/${txHash}`;
     if (options.withResults) path += "?withResults=true";
-    return Proxy.fetchRaw(params, path);
+    return this.fetchRaw(path);
   }
 
-  getTxRaw(txHash: string, options?: GetTxOptions) {
-    return Proxy.getTxRaw(this.params, txHash, options);
-  }
-
-  static async getTx(
-    params: ProxyParams,
-    txHash: string,
-    options?: GetTxOptions,
-  ) {
-    return unrawTxRes(await Proxy.getTxRaw(params, txHash, options));
-  }
-
-  getTx(txHash: string, options?: GetTxOptions) {
-    return Proxy.getTx(this.params, txHash, options);
-  }
-
-  static async getTxProcessStatusRaw(params: ProxyParams, txHash: string) {
-    return Proxy.fetchRaw(params, `/transaction/${txHash}/process-status`);
+  async getTx(txHash: string, options?: GetTxOptions) {
+    return unrawTxRes(await this.getTxRaw(txHash, options));
   }
 
   getTxProcessStatusRaw(txHash: string) {
-    return Proxy.getTxProcessStatusRaw(this.params, txHash);
+    return this.fetchRaw(`/transaction/${txHash}/process-status`);
   }
 
-  static async getTxProcessStatus(params: ProxyParams, txHash: string) {
-    const res = unrawRes(await Proxy.getTxProcessStatusRaw(params, txHash));
+  async getTxProcessStatus(txHash: string) {
+    const res = unrawRes(await this.getTxProcessStatusRaw(txHash));
     return res.status as string;
   }
 
-  getTxProcessStatus(txHash: string) {
-    return Proxy.getTxProcessStatus(this.params, txHash);
-  }
-
-  static async getCompletedTxRaw(params: ProxyParams, txHash: string) {
-    let res = await Proxy.getTxProcessStatusRaw(params, txHash);
+  async getCompletedTxRaw(txHash: string) {
+    let res = await this.getTxProcessStatusRaw(txHash);
     while (res.code !== "successful" || res.data.status === "pending") {
       await new Promise((r) => setTimeout(r, 1000));
-      res = await Proxy.getTxProcessStatusRaw(params, txHash);
+      res = await this.getTxProcessStatusRaw(txHash);
     }
-    return await Proxy.getTxRaw(params, txHash, { withResults: true });
+    return await this.getTxRaw(txHash, { withResults: true });
   }
 
-  getCompletedTxRaw(txHash: string) {
-    return Proxy.getCompletedTxRaw(this.params, txHash);
-  }
-
-  static async getCompletedTx(params: ProxyParams, txHash: string) {
-    return unrawTxRes(await Proxy.getCompletedTxRaw(params, txHash));
-  }
-
-  getCompletedTx(txHash: string) {
-    return Proxy.getCompletedTx(this.params, txHash);
-  }
-
-  static queryRaw(params: ProxyParams, query: BroadQuery) {
-    return Proxy.fetchRaw(
-      params,
-      "/vm-values/query",
-      broadQueryToRawQuery(query),
+  async getCompletedTx(txHash: string) {
+    const { hash, ..._res } = unrawTxRes(await this.getCompletedTxRaw(txHash));
+    const explorerUrl = `${this.explorerUrl}/transactions/${hash}`;
+    // Destructuring gives an invalid type: https://github.com/microsoft/TypeScript/issues/56456
+    const res = Object.assign({ explorerUrl, hash }, _res);
+    if (res.status !== "success") {
+      throw new TxError("errorStatus", res.status, res);
+    }
+    if (res.executionReceipt?.returnCode) {
+      const { returnCode, returnMessage } = res.executionReceipt;
+      throw new TxError(returnCode, returnMessage, res);
+    }
+    const signalErrorEvent = res?.logs?.events.find(
+      (e: any) => e.identifier === "signalError",
     );
+    if (signalErrorEvent) {
+      const error = atob(signalErrorEvent.topics[1]);
+      throw new TxError("signalError", error, res);
+    }
+    return res as Record<string, any> & { hash: string; explorerUrl: string };
   }
 
   queryRaw(query: BroadQuery) {
-    return Proxy.queryRaw(this.params, query);
+    return this.fetchRaw("/vm-values/query", broadQueryToRawQuery(query));
   }
 
-  static async query(params: ProxyParams, query: BroadQuery) {
-    const res = unrawRes(await Proxy.queryRaw(params, query));
+  async query(query: BroadQuery) {
+    const { data } = unrawRes(await this.queryRaw(query));
+    if (![0, "ok"].includes(data.returnCode)) {
+      throw new QueryError(data.returnCode, data.returnMessage, data);
+    }
     return {
-      ...res.data,
-      returnData: res.data.returnData.map(base64ToHex),
+      ...data,
+      returnData: data.returnData.map(base64ToHex),
     } as Record<string, any> & { returnData: string[] };
   }
 
-  query(query: BroadQuery) {
-    return Proxy.query(this.params, query);
-  }
-
-  static getAccountRaw(params: ProxyParams, address: AddressLike) {
-    return Proxy.fetchRaw(
-      params,
-      `/address/${addressLikeToBechAddress(address)}`,
-    );
-  }
-
   getAccountRaw(address: AddressLike) {
-    return Proxy.getAccountRaw(this.params, address);
+    return this.fetchRaw(`/address/${addressLikeToBechAddress(address)}`);
   }
 
-  static async getSerializableAccount(
-    params: ProxyParams,
-    address: AddressLike,
-  ) {
-    const res = unrawRes(await Proxy.getAccountRaw(params, address));
+  async getSerializableAccount(address: AddressLike) {
+    const res = unrawRes(await this.getAccountRaw(address));
     return {
       address: res.account.address,
       nonce: res.account.nonce,
@@ -184,105 +134,52 @@ export class Proxy {
     };
   }
 
-  getSerializableAccount(address: AddressLike) {
-    return Proxy.getSerializableAccount(this.params, address);
-  }
-
-  static async getAccount(params: ProxyParams, address: AddressLike) {
-    const { balance, ...account } = await Proxy.getSerializableAccount(
-      params,
-      address,
-    );
+  async getAccount(address: AddressLike) {
+    const { balance, ...account } = await this.getSerializableAccount(address);
     return { balance: BigInt(balance), ...account };
   }
 
-  getAccount(address: AddressLike) {
-    return Proxy.getAccount(this.params, address);
-  }
-
-  static getAccountNonceRaw(params: ProxyParams, address: AddressLike) {
-    return Proxy.fetchRaw(
-      params,
-      `/address/${addressLikeToBechAddress(address)}/nonce`,
-    );
-  }
-
   getAccountNonceRaw(address: AddressLike) {
-    return Proxy.getAccountNonceRaw(this.params, address);
+    return this.fetchRaw(`/address/${addressLikeToBechAddress(address)}/nonce`);
   }
 
-  static async getAccountNonce(params: ProxyParams, address: AddressLike) {
-    const res = unrawRes(await Proxy.getAccountNonceRaw(params, address));
+  async getAccountNonce(address: AddressLike) {
+    const res = unrawRes(await this.getAccountNonceRaw(address));
     return res.nonce as number;
   }
 
-  getAccountNonce(address: AddressLike) {
-    return Proxy.getAccountNonce(this.params, address);
-  }
-
-  static getAccountBalanceRaw(params: ProxyParams, address: AddressLike) {
-    return Proxy.fetchRaw(
-      params,
+  getAccountBalanceRaw(address: AddressLike) {
+    return this.fetchRaw(
       `/address/${addressLikeToBechAddress(address)}/balance`,
     );
   }
 
-  getAccountBalanceRaw(address: AddressLike) {
-    return Proxy.getAccountBalanceRaw(this.params, address);
-  }
-
-  static async getAccountBalance(params: ProxyParams, address: AddressLike) {
-    const res = unrawRes(await Proxy.getAccountBalanceRaw(params, address));
+  async getAccountBalance(address: AddressLike) {
+    const res = unrawRes(await this.getAccountBalanceRaw(address));
     return BigInt(res.balance);
   }
 
-  getAccountBalance(address: AddressLike) {
-    return Proxy.getAccountBalance(this.params, address);
-  }
-
-  static getAccountKvsRaw(params: ProxyParams, address: AddressLike) {
-    return Proxy.fetchRaw(
-      params,
-      `/address/${addressLikeToBechAddress(address)}/keys`,
-    );
-  }
-
   getAccountKvsRaw(address: AddressLike) {
-    return Proxy.getAccountKvsRaw(this.params, address);
+    return this.fetchRaw(`/address/${addressLikeToBechAddress(address)}/keys`);
   }
 
-  static async getAccountKvs(params: ProxyParams, address: AddressLike) {
-    const res = unrawRes(await Proxy.getAccountKvsRaw(params, address));
+  async getAccountKvs(address: AddressLike) {
+    const res = unrawRes(await this.getAccountKvsRaw(address));
     return res.pairs as Kvs;
   }
 
-  getAccountKvs(address: AddressLike) {
-    return Proxy.getAccountKvs(this.params, address);
-  }
-
-  static getSerializableAccountWithKvs(
-    params: ProxyParams,
-    address: AddressLike,
-  ) {
-    return Promise.all([
-      Proxy.getSerializableAccount(params, address),
-      Proxy.getAccountKvs(params, address),
-    ]).then(([account, kvs]) => ({ ...account, kvs }));
-  }
-
   getSerializableAccountWithKvs(address: AddressLike) {
-    return Proxy.getSerializableAccountWithKvs(this.params, address);
-  }
-
-  static getAccountWithKvs(params: ProxyParams, address: AddressLike) {
     return Promise.all([
-      Proxy.getAccount(params, address),
-      Proxy.getAccountKvs(params, address),
+      this.getSerializableAccount(address),
+      this.getAccountKvs(address),
     ]).then(([account, kvs]) => ({ ...account, kvs }));
   }
 
   getAccountWithKvs(address: AddressLike) {
-    return Proxy.getAccountWithKvs(this.params, address);
+    return Promise.all([
+      this.getAccount(address),
+      this.getAccountKvs(address),
+    ]).then(([account, kvs]) => ({ ...account, kvs }));
   }
 }
 
@@ -427,6 +324,41 @@ export class Tx {
   }
 }
 
+export class InteractionError extends Error {
+  interaction: string;
+  code: number | string;
+  msg: string;
+  result: any;
+
+  constructor(
+    interaction: string,
+    code: number | string,
+    message: string,
+    result: any,
+  ) {
+    super(
+      `${interaction} failed: ${code} - ${message} - Result:\n` +
+        JSON.stringify(result, null, 2),
+    );
+    this.interaction = interaction;
+    this.code = code;
+    this.msg = message;
+    this.result = result;
+  }
+}
+
+class TxError extends InteractionError {
+  constructor(code: number | string, message: string, result: any) {
+    super("Transaction", code, message, result);
+  }
+}
+
+class QueryError extends InteractionError {
+  constructor(code: number | string, message: string, result: any) {
+    super("Query", code, message, result);
+  }
+}
+
 const unrawRes = (res: any) => {
   if (res.code === "successful") {
     return res.data;
@@ -466,7 +398,9 @@ const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
 const zeroBechAddress =
   "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
 
-export type ProxyParams = string | { baseUrl: string; headers?: HeadersInit };
+export type ProxyParams =
+  | string
+  | { proxyUrl: string; headers?: HeadersInit; explorerUrl?: string };
 
 type BroadTx = Tx | RawTx;
 
