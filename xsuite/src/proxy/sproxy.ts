@@ -14,16 +14,6 @@ export class SProxy extends Proxy {
     return this.fetch("/admin/set-previous-block-info", block);
   }
 
-  terminate() {
-    return this.fetch("/admin/terminate")
-      .then(() => {
-        //
-      })
-      .catch(() => {
-        //
-      });
-  }
-
   /**
    * @deprecated Use `.setCurrentBlockInfo` instead.
    */

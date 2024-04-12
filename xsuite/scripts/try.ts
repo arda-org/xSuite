@@ -9,7 +9,7 @@ const main = async () => {
     value: 100,
     gasLimit: 100_000,
   });
-  await world.terminate();
+  world.terminate();
 };
 
 main();
