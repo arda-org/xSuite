@@ -1,3 +1,4 @@
+import { ChildProcess } from "node:child_process";
 import { Address, isAddress } from "../data/address";
 import { EncodableAccount } from "../data/encoding";
 import { Prettify } from "../helpers";
@@ -20,30 +21,36 @@ let contractCounter = 0;
 
 export class SWorld extends World {
   proxy: SProxy;
+  server?: ChildProcess;
   sysAcc: SContract;
 
   constructor({
     proxy,
     gasPrice,
     explorerUrl,
+    server,
   }: {
     proxy: SProxy;
     gasPrice: number;
     explorerUrl?: string;
+    server?: ChildProcess;
   }) {
     super({ chainId: "S", proxy, gasPrice, explorerUrl });
     this.proxy = proxy;
+    this.server = server;
     this.sysAcc = this.newContract(new Uint8Array(32).fill(255));
   }
 
-  static new({ chainId, proxyUrl, gasPrice, explorerUrl }: SWorldNewOptions) {
-    if (chainId !== undefined) {
+  static new(options: SWorldNewOptions) {
+    if (options.chainId !== undefined) {
       throw new Error("chainId is not undefined.");
     }
+    const { proxyUrl, gasPrice, explorerUrl, server } = options;
     return new SWorld({
       proxy: new SProxy({ proxyUrl, explorerUrl }),
       gasPrice: gasPrice ?? 0,
       explorerUrl,
+      server,
     });
   }
 
@@ -63,8 +70,8 @@ export class SWorld extends World {
     gasPrice,
     explorerUrl,
   }: { gasPrice?: number; explorerUrl?: string } = {}): Promise<SWorld> {
-    const proxyUrl = await startSimulnet();
-    return SWorld.new({ proxyUrl, gasPrice, explorerUrl });
+    const { server, proxyUrl } = await startSimulnet();
+    return SWorld.new({ proxyUrl, gasPrice, explorerUrl, server });
   }
 
   newWallet(addressOrSigner: Address | Signer): SWallet {
@@ -110,7 +117,7 @@ export class SWorld extends World {
   }
 
   terminate() {
-    return this.proxy.terminate();
+    return this.server?.kill();
   }
 }
 
@@ -189,6 +196,7 @@ type SWorldNewOptions =
       proxyUrl: string;
       gasPrice?: number;
       explorerUrl?: string;
+      server?: ChildProcess;
     }
   | WorldNewOptions;
 

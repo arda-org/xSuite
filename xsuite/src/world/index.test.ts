@@ -47,7 +47,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await world.terminate();
+  world.terminate();
 });
 
 test("SWorld.proxy.getAccountNonce on empty bech address", async () => {

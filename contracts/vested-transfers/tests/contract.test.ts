@@ -41,7 +41,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await world.terminate();
+  world.terminate();
 });
 
 test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Claim.", async () => {

@@ -168,7 +168,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await world.terminate();
+  world.terminate();
 });
 
 /* Encoding */

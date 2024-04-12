@@ -117,13 +117,6 @@ func (e *Executor) HandleAdminSetPreviousBlockInfo(r *http.Request) (interface{}
 	return jData, nil
 }
 
-func (e *Executor) HandleAdminTerminate() (interface{}, error) {
-	jData := map[string]interface{}{
-		"code": "successful",
-	}
-	return jData, nil
-}
-
 type RawAccount struct {
 	Address 			string
 	Nonce 				uint64
