@@ -1,5 +1,5 @@
 import { ChildProcess } from "node:child_process";
-import { Address, isAddress } from "../data/address";
+import { AddressLike, isAddressLike } from "../data/addressLike";
 import { EncodableAccount } from "../data/encoding";
 import { Prettify } from "../helpers";
 import { SProxy } from "../proxy";
@@ -7,7 +7,11 @@ import { Block } from "../proxy/sproxy";
 import { killChildProcess } from "./childProcesses";
 import { DummySigner, Signer } from "./signer";
 import { startSimulnet } from "./simulnet";
-import { isContractAddress, numberToU8AAddress } from "./utils";
+import {
+  generateContractU8AAddress,
+  generateWalletU8AAddress,
+  isContractAddress,
+} from "./utils";
 import {
   World,
   Contract,
@@ -16,9 +20,6 @@ import {
   WalletDeployContractParams,
   WorldNewOptions,
 } from "./world";
-
-let walletCounter = 0;
-let contractCounter = 0;
 
 export class SWorld extends World {
   proxy: SProxy;
@@ -75,9 +76,9 @@ export class SWorld extends World {
     return SWorld.new({ proxyUrl, gasPrice, explorerUrl, server });
   }
 
-  newWallet(addressOrSigner: Address | Signer): SWallet {
+  newWallet(addressOrSigner: AddressLike | Signer): SWallet {
     return new SWallet({
-      signer: isAddress(addressOrSigner)
+      signer: isAddressLike(addressOrSigner)
         ? new DummySigner(addressOrSigner)
         : addressOrSigner,
       proxy: this.proxy,
@@ -86,27 +87,25 @@ export class SWorld extends World {
     });
   }
 
-  newContract(address: Address): SContract {
+  newContract(address: AddressLike): SContract {
     return new SContract({
       address,
       proxy: this.proxy,
     });
   }
 
-  async createWallet(params: SWorldCreateWalletParams = {}) {
-    walletCounter += 1;
-    const address = numberToU8AAddress(walletCounter, false);
-    const wallet = this.newWallet(new DummySigner(address));
-    await wallet.setAccount(params);
-    return wallet;
+  async createWallet({ address, ...params }: SWorldCreateAccountParams = {}) {
+    address ??= generateWalletU8AAddress();
+    await setAccount(this.proxy, { address, ...params });
+    return this.newWallet(new DummySigner(address));
+  }
+
+  createContract(params?: SWorldCreateAccountParams) {
+    return createContract(this.proxy, params);
   }
 
   setAccount(params: SWorldSetAccountParams) {
     return setAccount(this.proxy, params);
-  }
-
-  createContract(params?: SWorldCreateContractParams) {
-    return createContract(this.proxy, params);
   }
 
   setCurrentBlockInfo(block: Block) {
@@ -141,7 +140,7 @@ export class SWallet extends Wallet {
     this.proxy = proxy;
   }
 
-  setAccount(params: SWalletSetAccountParams) {
+  setAccount(params: SAccountSetAccountParams) {
     return setAccount(this.proxy, { ...params, address: this });
   }
 
@@ -160,17 +159,17 @@ export class SWallet extends Wallet {
 export class SContract extends Contract {
   proxy: SProxy;
 
-  constructor({ address, proxy }: { address: Address; proxy: SProxy }) {
+  constructor({ address, proxy }: { address: AddressLike; proxy: SProxy }) {
     super({ address, proxy });
     this.proxy = proxy;
   }
 
-  setAccount(params: SContractSetAccountParams) {
+  setAccount(params: SAccountSetAccountParams) {
     return setAccount(this.proxy, { ...params, address: this });
   }
 }
 
-const setAccount = (proxy: SProxy, params: EncodableAccount) => {
+const setAccount = async (proxy: SProxy, params: EncodableAccount) => {
   if (params.code == null) {
     if (isContractAddress(params.address)) {
       params.code = "00";
@@ -178,18 +177,16 @@ const setAccount = (proxy: SProxy, params: EncodableAccount) => {
   } else {
     params.code = expandCode(params.code);
   }
-  return proxy.setAccount(params);
+  await proxy.setAccount(params);
 };
 
 const createContract = async (
   proxy: SProxy,
-  params: CreateContractParams = {},
+  { address, ...params }: SWorldCreateAccountParams = {},
 ) => {
-  contractCounter += 1;
-  const address = numberToU8AAddress(contractCounter, true);
-  const contract = new SContract({ address, proxy });
-  await contract.setAccount(params);
-  return contract;
+  address ??= generateContractU8AAddress();
+  await setAccount(proxy, { address, ...params });
+  return new SContract({ address, proxy });
 };
 
 type SWorldNewOptions =
@@ -202,22 +199,14 @@ type SWorldNewOptions =
     }
   | WorldNewOptions;
 
-type SWorldCreateWalletParams = Prettify<Omit<EncodableAccount, "address">>;
+type SWorldCreateAccountParams = Prettify<Partial<EncodableAccount>>;
 
-type SetAccountParams = EncodableAccount;
+type SWorldSetAccountParams = EncodableAccount;
 
-type CreateContractParams = Prettify<Omit<EncodableAccount, "address">>;
-
-type SWorldSetAccountParams = SetAccountParams;
-
-type SWorldCreateContractParams = CreateContractParams;
-
-type SWalletSetAccountParams = Prettify<
+type SAccountSetAccountParams = Prettify<
   Omit<SWorldSetAccountParams, "address">
 >;
 
 type SWalletCreateContractParams = Prettify<
-  Omit<CreateContractParams, "owner">
+  Omit<SWorldCreateAccountParams, "owner">
 >;
-
-type SContractSetAccountParams = SWalletSetAccountParams;

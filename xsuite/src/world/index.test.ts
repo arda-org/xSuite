@@ -3,7 +3,11 @@ import { assertAccount, assertVs } from "../assert";
 import { e } from "../data";
 import { childProcesses } from "./childProcesses";
 import { DummySigner } from "./signer";
-import { isContractAddress } from "./utils";
+import {
+  generateContractU8AAddress,
+  generateWalletU8AAddress,
+  isContractAddress,
+} from "./utils";
 import { SWorld, SContract, SWallet } from ".";
 
 let world: SWorld;
@@ -131,9 +135,15 @@ test("SWorld.createWallet - empty wallet", async () => {
   assertAccount(await wallet.getAccountWithKvs(), {});
 });
 
-test("SWorld.createWallet - non empty wallet", async () => {
+test("SWorld.createWallet - with balance", async () => {
   const wallet = await world.createWallet({ balance: 10n });
   assertAccount(await wallet.getAccountWithKvs(), { balance: 10n });
+});
+
+test("SWorld.createWallet - with address & balance", async () => {
+  const address = generateWalletU8AAddress();
+  const wallet = await world.createWallet({ address, balance: 10n });
+  assertAccount(await wallet.getAccountWithKvs(), { address, balance: 10n });
 });
 
 test("SWorld.createContract - empty contract", async () => {
@@ -143,9 +153,18 @@ test("SWorld.createContract - empty contract", async () => {
   assertAccount(await contract.getAccountWithKvs(), { code: "00" });
 });
 
-test("SWorld.createContract - file:", async () => {
+test("SWorld.createContract - with file:", async () => {
   const contract = await world.createContract({ code: worldCode });
   assertAccount(await contract.getAccountWithKvs(), { code: worldCode });
+});
+
+test("SWorld.createContract - with address & file:", async () => {
+  const address = generateContractU8AAddress();
+  const contract = await world.createContract({ address, code: worldCode });
+  assertAccount(await contract.getAccountWithKvs(), {
+    address,
+    code: worldCode,
+  });
 });
 
 test("SWorld.getAccountNonce", async () => {

@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { addressByteLength } from "../data/address";
 import { AddressLike, addressLikeToHexAddress } from "../data/addressLike";
 
 export const readFileHex = (path: string) => {
@@ -31,6 +32,22 @@ export const numberToU8AAddress = (
   return new Uint8Array(buffer);
 };
 
+const contractAddressLeftShift = 8;
+
+export const generateWalletU8AAddress = () => {
+  walletCounter += 1;
+  return numberToU8AAddress(walletCounter, false);
+};
+
+let walletCounter = 0;
+
+export const generateContractU8AAddress = () => {
+  contractCounter += 1;
+  return numberToU8AAddress(contractCounter, true);
+};
+
+let contractCounter = 0;
+
 // https://github.com/multiversx/mx-sdk-nestjs/blob/8209a33d01dfb2a09085479444112192c8342aa9/packages/common/src/utils/address.utils.ts#L40
 export const computeShard = (hexPubKey: string): number => {
   const [maskHigh, maskLow] = calculateMasks(totalShards);
@@ -52,6 +69,3 @@ const calculateMasks = (numOfShards: number) => {
 };
 
 export const totalShards = 3;
-
-const addressByteLength = 32;
-const contractAddressLeftShift = 8;
