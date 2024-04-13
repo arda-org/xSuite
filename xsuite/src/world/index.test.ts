@@ -123,26 +123,23 @@ test("SWorld.newContract", async () => {
   expect(wallet.toTopU8A()).toEqual(zeroU8AAddress);
 });
 
-test("SWorld.createWallet", async () => {
+test("SWorld.createWallet - empty wallet", async () => {
   const wallet = await world.createWallet();
   expect(wallet.explorerUrl).toEqual(`${explorerUrl}/accounts/${wallet}`);
+  expect(isContractAddress(wallet)).toEqual(false);
   assertAccount(await wallet.getAccountWithKvs(), {});
 });
 
-test("SWorld.createWallet - is wallet address", async () => {
-  const wallet = await world.createWallet();
-  expect(isContractAddress(wallet)).toEqual(false);
+test("SWorld.createWallet - non empty wallet", async () => {
+  const wallet = await world.createWallet({ balance: 10n });
+  assertAccount(await wallet.getAccountWithKvs(), { balance: 10n });
 });
 
-test("SWorld.createContract", async () => {
+test("SWorld.createContract - empty contract", async () => {
   const contract = await world.createContract();
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
-  assertAccount(await contract.getAccountWithKvs(), { code: "00" });
-});
-
-test("SWorld.createContract - is contract address", async () => {
-  const contract = await world.createContract();
   expect(isContractAddress(contract)).toEqual(true);
+  assertAccount(await contract.getAccountWithKvs(), { code: "00" });
 });
 
 test("SWorld.createContract - file:", async () => {
@@ -258,6 +255,16 @@ test("SWorld.query - value", async () => {
     value: 10,
   });
   assertVs(returnData, [e.U(10)]);
+});
+
+test("SWorld.query.assertFail - Correct parameters", async () => {
+  await world
+    .query({
+      callee: contract,
+      funcName: "require_positive",
+      funcArgs: [e.U64(0)],
+    })
+    .assertFail({ code: 4, message: "Amount is not positive." });
 });
 
 test("SWorld.executeTx", async () => {
@@ -408,16 +415,6 @@ test("SWallet.callContract failure", async () => {
   });
 });
 
-test("SWorld.query.assertFail - Correct parameters", async () => {
-  await world
-    .query({
-      callee: contract,
-      funcName: "require_positive",
-      funcArgs: [e.U64(0)],
-    })
-    .assertFail({ code: 4, message: "Amount is not positive." });
-});
-
 test("SWallet.getAccountNonce", async () => {
   expect(await wallet.getAccountNonce()).toEqual(0);
 });
@@ -453,11 +450,6 @@ test("SWallet.getAccountWithKvs", async () => {
     owner: "",
     hasKvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
   });
-});
-
-test("SWorld.createWallet", async () => {
-  const wallet = await world.createWallet({ balance: 10n });
-  assertAccount(await wallet.getAccountWithKvs(), { balance: 10n });
 });
 
 test("SContract.getAccountNonce", async () => {
