@@ -3,12 +3,12 @@ import { assertAccount, assertVs } from "../assert";
 import { e } from "../data";
 import { childProcesses } from "./childProcesses";
 import { DummySigner } from "./signer";
+import { SWorld, SContract, SWallet } from "./sworld";
 import {
   generateContractU8AAddress,
   generateWalletU8AAddress,
   isContractAddress,
 } from "./utils";
-import { SWorld, SContract, SWallet } from ".";
 
 let world: SWorld;
 let wallet: SWallet;
@@ -444,7 +444,7 @@ test("SWallet.callContract failure", async () => {
     message: expect.stringMatching(
       /^Query failed: 1 - invalid function \(not found\) - Result:\n\{\n {2}"executionLogs": "(.*)",/,
     ),
-    stack: expect.stringMatching(/src\/world\/index\.test\.ts:[0-9]+:[0-9]+/),
+    stack: expect.stringMatching(/src\/world\/sworld\.test\.ts:[0-9]+:[0-9]+/),
   });
 });
 
@@ -614,7 +614,7 @@ test("SWallet.callContract failure", async () => {
     message: expect.stringMatching(
       /^Transaction failed: 1 - invalid function \(not found\) - Result:\n\{\n {2}"explorerUrl": "(.*)",\n {2}"hash": "(.*)",\n {2}"executionLogs": "(.*)",/,
     ),
-    stack: expect.stringMatching(/src\/world\/index\.test\.ts:[0-9]+:[0-9]+/),
+    stack: expect.stringMatching(/src\/world\/sworld\.test\.ts:[0-9]+:[0-9]+/),
   });
 });
 
