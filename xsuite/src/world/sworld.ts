@@ -6,7 +6,7 @@ import { SProxy } from "../proxy";
 import { Block } from "../proxy/sproxy";
 import { killChildProcess } from "./childProcesses";
 import { DummySigner, Signer } from "./signer";
-import { startSimulnet } from "./simulnet";
+import { startSproxyBin } from "./sproxyBin";
 import {
   generateContractU8AAddress,
   generateWalletU8AAddress,
@@ -72,7 +72,7 @@ export class SWorld extends World {
     gasPrice,
     explorerUrl,
   }: { gasPrice?: number; explorerUrl?: string } = {}): Promise<SWorld> {
-    const { server, proxyUrl } = await startSimulnet();
+    const { server, proxyUrl } = await startSproxyBin();
     return SWorld.new({ proxyUrl, gasPrice, explorerUrl, server });
   }
 
