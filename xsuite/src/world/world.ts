@@ -1,4 +1,3 @@
-import { Address } from "../data/address";
 import { AddressLike } from "../data/addressLike";
 import { Optional, Prettify } from "../helpers";
 import {
@@ -110,7 +109,7 @@ export class World {
     return this.newWallet(KeystoreSigner.fromFile_unsafe(filePath, password));
   }
 
-  newContract(address: Address) {
+  newContract(address: AddressLike) {
     return new Contract({ address, proxy: this.proxy });
   }
 
@@ -294,7 +293,7 @@ export class Contract extends Account {
   proxy: Proxy;
   explorerUrl: string;
 
-  constructor({ address, proxy }: { address: Address; proxy: Proxy }) {
+  constructor({ address, proxy }: { address: AddressLike; proxy: Proxy }) {
     super(address);
     this.proxy = proxy;
     this.explorerUrl = getAccountExplorerUrl(

@@ -3,12 +3,16 @@ import {
   Address,
   addressByteLength,
   HRP,
+  isAddress,
   u8aAddressToBechAddress,
 } from "./address";
 import { Encodable, isEncodable } from "./encoding";
 import { hexToU8A, u8aToHex } from "./utils";
 
 export type AddressLike = Address | Encodable;
+
+export const isAddressLike = (value: unknown): value is AddressLike =>
+  isAddress(value) || isEncodable(value);
 
 export const addressLikeToU8AAddress = (
   addressLike: AddressLike,
