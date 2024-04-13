@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, expect, test } from "vitest";
 import { assertAccount, assertVs } from "../assert";
 import { e } from "../data";
+import { childProcesses } from "./childProcesses";
 import { DummySigner } from "./signer";
 import { isContractAddress } from "./utils";
 import { SWorld, SContract, SWallet } from ".";
@@ -349,6 +350,14 @@ test("SWorld.callContract", async () => {
   assertAccount(await contract.getAccountWithKvs(), {
     balance: 10n ** 18n + 10n ** 17n,
   });
+});
+
+test("SWorld.terminate", () => {
+  expect(childProcesses.size).toEqual(1);
+  const childProcess = [...childProcesses][0];
+  world.terminate();
+  expect(childProcesses.size).toEqual(0);
+  expect(childProcess.killed);
 });
 
 test("SWallet.query", async () => {

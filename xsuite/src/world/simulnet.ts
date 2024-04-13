@@ -1,11 +1,12 @@
-import { ChildProcess, spawn } from "node:child_process";
+import { ChildProcess } from "node:child_process";
 import { getSproxyBinPath } from "@xsuite/simulnet";
+import { spawnChildProcess } from "./childProcesses";
 
 export const startSimulnet = async (): Promise<{
   server: ChildProcess;
   proxyUrl: string;
 }> => {
-  const server = spawn(getSproxyBinPath());
+  const server = spawnChildProcess(getSproxyBinPath());
 
   server.stderr.on("data", (data: Buffer) => {
     throw new Error(data.toString());

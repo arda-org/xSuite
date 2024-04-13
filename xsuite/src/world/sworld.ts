@@ -4,6 +4,7 @@ import { EncodableAccount } from "../data/encoding";
 import { Prettify } from "../helpers";
 import { SProxy } from "../proxy";
 import { Block } from "../proxy/sproxy";
+import { killChildProcess } from "./childProcesses";
 import { DummySigner, Signer } from "./signer";
 import { startSimulnet } from "./simulnet";
 import { isContractAddress, numberToU8AAddress } from "./utils";
@@ -117,7 +118,8 @@ export class SWorld extends World {
   }
 
   terminate() {
-    return this.server?.kill();
+    if (!this.server) throw new Error("No server defined.");
+    killChildProcess(this.server);
   }
 }
 
