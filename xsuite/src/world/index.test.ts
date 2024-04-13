@@ -153,6 +153,11 @@ test("SWorld.createContract - empty contract", async () => {
   assertAccount(await contract.getAccountWithKvs(), { code: "00" });
 });
 
+test("SWorld.createContract - with balance", async () => {
+  const contract = await world.createContract({ balance: 10n });
+  assertAccount(await contract.getAccountWithKvs(), { balance: 10n });
+});
+
 test("SWorld.createContract - with file:", async () => {
   const contract = await world.createContract({ code: worldCode });
   assertAccount(await contract.getAccountWithKvs(), { code: worldCode });
@@ -480,48 +485,6 @@ test("SWallet.getAccountWithKvs", async () => {
   });
 });
 
-test("SContract.getAccountNonce", async () => {
-  expect(await contract.getAccountNonce()).toEqual(0);
-});
-
-test("SContract.getAccountBalance", async () => {
-  expect(await contract.getAccountBalance()).toEqual(10n ** 18n);
-});
-
-test("SContract.getAccountKvs", async () => {
-  expect(await contract.getAccountKvs()).toEqual(
-    e.kvs({
-      esdts: [{ id: fftId, amount: 10n ** 18n }],
-      extraKvs: [[e.Str("n"), e.U64(2)]],
-    }),
-  );
-});
-
-test("SContract.getAccount", async () => {
-  assertAccount(await contract.getAccount(), {
-    nonce: 0,
-    balance: 10n ** 18n,
-  });
-});
-
-test("SContract.getAccountWithKvs", async () => {
-  assertAccount(await contract.getAccountWithKvs(), {
-    nonce: 0,
-    balance: 10n ** 18n,
-    code: worldCode,
-    codeHash:
-      "d8c9ddd83e614eaefd0a0c9d4f350bc3bb6368281ff71e030fc9d3d65b6ef2ae",
-    codeMetadata: ["payable"],
-    owner: wallet,
-    hasKvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
-  });
-});
-
-test("SContract.createContract", async () => {
-  const contract = await world.createContract({ balance: 10n });
-  assertAccount(await contract.getAccountWithKvs(), { balance: 10n });
-});
-
 test("SWallet.executeTx", async () => {
   const { tx } = await wallet.executeTx({
     receiver: otherWallet,
@@ -625,7 +588,7 @@ test("SWallet.callContract with return", async () => {
   assertVs(returnData, [e.U64(20)]);
 });
 
-test("SWorld.callContract - change the state", async () => {
+test("SWallet.callContract - change the state", async () => {
   await wallet.callContract({
     callee: contract,
     funcName: "set_n",
@@ -707,4 +670,41 @@ test("SWallet.callContract.assertFail - Transaction not failing", async () => {
       })
       .assertFail(),
   ).rejects.toThrow("No failure.");
+});
+
+test("SContract.getAccountNonce", async () => {
+  expect(await contract.getAccountNonce()).toEqual(0);
+});
+
+test("SContract.getAccountBalance", async () => {
+  expect(await contract.getAccountBalance()).toEqual(10n ** 18n);
+});
+
+test("SContract.getAccountKvs", async () => {
+  expect(await contract.getAccountKvs()).toEqual(
+    e.kvs({
+      esdts: [{ id: fftId, amount: 10n ** 18n }],
+      extraKvs: [[e.Str("n"), e.U64(2)]],
+    }),
+  );
+});
+
+test("SContract.getAccount", async () => {
+  assertAccount(await contract.getAccount(), {
+    nonce: 0,
+    balance: 10n ** 18n,
+  });
+});
+
+test("SContract.getAccountWithKvs", async () => {
+  assertAccount(await contract.getAccountWithKvs(), {
+    nonce: 0,
+    balance: 10n ** 18n,
+    code: worldCode,
+    codeHash:
+      "d8c9ddd83e614eaefd0a0c9d4f350bc3bb6368281ff71e030fc9d3d65b6ef2ae",
+    codeMetadata: ["payable"],
+    owner: wallet,
+    hasKvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
+  });
 });
