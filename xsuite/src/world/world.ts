@@ -1,4 +1,4 @@
-import { Address } from "../data/address";
+import { AddressLike } from "../data/addressLike";
 import { Optional, Prettify } from "../helpers";
 import {
   devnetMinGasPrice,
@@ -23,6 +23,7 @@ import {
   TxParams,
   UpgradeContractTxParams,
   Proxy,
+  InteractionError,
 } from "../proxy/proxy";
 import { Account } from "./account";
 import { KeystoreSigner, Signer } from "./signer";
@@ -73,7 +74,7 @@ export class World {
     }
     return new World({
       chainId,
-      proxy: new Proxy(proxyUrl),
+      proxy: new Proxy({ proxyUrl, explorerUrl }),
       gasPrice,
       explorerUrl,
     });
@@ -97,7 +98,6 @@ export class World {
       proxy: this.proxy,
       chainId: this.chainId,
       gasPrice: this.gasPrice,
-      baseExplorerUrl: this.explorerUrl,
     });
   }
 
@@ -109,35 +109,31 @@ export class World {
     return this.newWallet(KeystoreSigner.fromFile_unsafe(filePath, password));
   }
 
-  newContract(address: string | Uint8Array) {
-    return new Contract({
-      address,
-      proxy: this.proxy,
-      baseExplorerUrl: this.explorerUrl,
-    });
+  newContract(address: AddressLike) {
+    return new Contract({ address, proxy: this.proxy });
   }
 
-  getAccountNonce(address: Address) {
+  getAccountNonce(address: AddressLike) {
     return getAccountNonce(this.proxy, address);
   }
 
-  getAccountBalance(address: Address) {
+  getAccountBalance(address: AddressLike) {
     return getAccountBalance(this.proxy, address);
   }
 
-  getAccount(address: Address) {
+  getAccount(address: AddressLike) {
     return getAccount(this.proxy, address);
   }
 
-  getAccountKvs(address: Address) {
+  getAccountKvs(address: AddressLike) {
     return getAccountKvs(this.proxy, address);
   }
 
-  getSerializableAccountWithKvs(address: Address) {
+  getSerializableAccountWithKvs(address: AddressLike) {
     return getSerializableAccountWithKvs(this.proxy, address);
   }
 
-  getAccountWithKvs(address: Address) {
+  getAccountWithKvs(address: AddressLike) {
     return getAccountWithKvs(this.proxy, address);
   }
 
@@ -146,7 +142,7 @@ export class World {
   }
 
   executeTx(params: WorldExecuteTxParams) {
-    return executeTx(this.proxy, this.explorerUrl, {
+    return executeTx(this.proxy, {
       ...params,
       gasPrice: params.gasPrice ?? this.gasPrice,
       chainId: this.chainId,
@@ -154,7 +150,7 @@ export class World {
   }
 
   deployContract(params: WorldDeployContractParams) {
-    return deployContract(this.proxy, this.explorerUrl, {
+    return deployContract(this.proxy, {
       ...params,
       gasPrice: params.gasPrice ?? this.gasPrice,
       chainId: this.chainId,
@@ -162,7 +158,7 @@ export class World {
   }
 
   upgradeContract(params: WorldUpgradeContractParams) {
-    return upgradeContract(this.proxy, this.explorerUrl, {
+    return upgradeContract(this.proxy, {
       ...params,
       gasPrice: params.gasPrice ?? this.gasPrice,
       chainId: this.chainId,
@@ -170,7 +166,7 @@ export class World {
   }
 
   transfer(params: WorldTransferParams) {
-    return transfer(this.proxy, this.explorerUrl, {
+    return transfer(this.proxy, {
       ...params,
       gasPrice: params.gasPrice ?? this.gasPrice,
       chainId: this.chainId,
@@ -178,7 +174,7 @@ export class World {
   }
 
   callContract(params: WorldCallContractParams) {
-    return callContract(this.proxy, this.explorerUrl, {
+    return callContract(this.proxy, {
       ...params,
       gasPrice: params.gasPrice ?? this.gasPrice,
       chainId: this.chainId,
@@ -192,29 +188,25 @@ export class Wallet extends Signer {
   chainId: string;
   gasPrice: number;
   explorerUrl: string;
-  baseExplorerUrl: string;
 
   constructor({
     signer,
     proxy,
     chainId,
     gasPrice,
-    baseExplorerUrl = "",
   }: {
     signer: Signer;
     proxy: Proxy;
     chainId: string;
     gasPrice: number;
-    baseExplorerUrl?: string;
   }) {
     super(signer.toTopU8A());
     this.signer = signer;
     this.proxy = proxy;
     this.chainId = chainId;
     this.gasPrice = gasPrice;
-    this.baseExplorerUrl = baseExplorerUrl;
     this.explorerUrl = getAccountExplorerUrl(
-      this.baseExplorerUrl,
+      this.proxy.explorerUrl,
       this.toString(),
     );
   }
@@ -252,7 +244,7 @@ export class Wallet extends Signer {
   }
 
   executeTx(params: WalletExecuteTxParams) {
-    return executeTx(this.proxy, this.baseExplorerUrl, {
+    return executeTx(this.proxy, {
       ...params,
       gasPrice: params.gasPrice ?? this.gasPrice,
       sender: this,
@@ -261,7 +253,7 @@ export class Wallet extends Signer {
   }
 
   deployContract(params: WalletDeployContractParams) {
-    return deployContract(this.proxy, this.baseExplorerUrl, {
+    return deployContract(this.proxy, {
       ...params,
       gasPrice: params.gasPrice ?? this.gasPrice,
       sender: this,
@@ -270,7 +262,7 @@ export class Wallet extends Signer {
   }
 
   upgradeContract(params: WalletUpgradeContractParams) {
-    return upgradeContract(this.proxy, this.baseExplorerUrl, {
+    return upgradeContract(this.proxy, {
       ...params,
       gasPrice: params.gasPrice ?? this.gasPrice,
       sender: this,
@@ -279,7 +271,7 @@ export class Wallet extends Signer {
   }
 
   transfer(params: WalletTransferParams) {
-    return transfer(this.proxy, this.baseExplorerUrl, {
+    return transfer(this.proxy, {
       ...params,
       gasPrice: params.gasPrice ?? this.gasPrice,
       sender: this,
@@ -288,7 +280,7 @@ export class Wallet extends Signer {
   }
 
   callContract(params: WalletCallContractParams) {
-    return callContract(this.proxy, this.baseExplorerUrl, {
+    return callContract(this.proxy, {
       ...params,
       gasPrice: params.gasPrice ?? this.gasPrice,
       sender: this,
@@ -300,22 +292,12 @@ export class Wallet extends Signer {
 export class Contract extends Account {
   proxy: Proxy;
   explorerUrl: string;
-  baseExplorerUrl: string;
 
-  constructor({
-    address,
-    proxy,
-    baseExplorerUrl = "",
-  }: {
-    address: string | Uint8Array;
-    proxy: Proxy;
-    baseExplorerUrl?: string;
-  }) {
+  constructor({ address, proxy }: { address: AddressLike; proxy: Proxy }) {
     super(address);
     this.proxy = proxy;
-    this.baseExplorerUrl = baseExplorerUrl;
     this.explorerUrl = getAccountExplorerUrl(
-      this.baseExplorerUrl,
+      this.proxy.explorerUrl,
       this.toString(),
     );
   }
@@ -342,41 +324,6 @@ export class Contract extends Account {
 
   getAccountWithKvs() {
     return getAccountWithKvs(this.proxy, this);
-  }
-}
-
-class InteractionError extends Error {
-  interaction: string;
-  code: number | string;
-  msg: string;
-  result: any;
-
-  constructor(
-    interaction: string,
-    code: number | string,
-    message: string,
-    result: any,
-  ) {
-    super(
-      `${interaction} failed: ${code} - ${message} - Result:\n` +
-        JSON.stringify(result, null, 2),
-    );
-    this.interaction = interaction;
-    this.code = code;
-    this.msg = message;
-    this.result = result;
-  }
-}
-
-class TxError extends InteractionError {
-  constructor(code: number | string, message: string, result: any) {
-    super("Transaction", code, message, result);
-  }
-}
-
-class QueryError extends InteractionError {
-  constructor(code: number | string, message: string, result: any) {
-    super("Query", code, message, result);
   }
 }
 
@@ -446,79 +393,45 @@ export class InteractionPromise<T> implements PromiseLike<T> {
   }
 }
 
-const getAccountNonce = (proxy: Proxy, address: Address) =>
+const getAccountNonce = (proxy: Proxy, address: AddressLike) =>
   proxy.getAccountNonce(address);
 
-const getAccountBalance = (proxy: Proxy, address: Address) =>
+const getAccountBalance = (proxy: Proxy, address: AddressLike) =>
   proxy.getAccountBalance(address);
 
-const getAccount = (proxy: Proxy, address: Address) =>
+const getAccount = (proxy: Proxy, address: AddressLike) =>
   proxy.getAccount(address);
 
-const getAccountKvs = (proxy: Proxy, address: Address) =>
+const getAccountKvs = (proxy: Proxy, address: AddressLike) =>
   proxy.getAccountKvs(address);
 
-const getSerializableAccountWithKvs = (proxy: Proxy, address: Address) =>
+const getSerializableAccountWithKvs = (proxy: Proxy, address: AddressLike) =>
   proxy.getSerializableAccountWithKvs(address);
 
-const getAccountWithKvs = (proxy: Proxy, address: Address) =>
+const getAccountWithKvs = (proxy: Proxy, address: AddressLike) =>
   proxy.getAccountWithKvs(address);
 
 const query = (proxy: Proxy, params: QueryParams) =>
   InteractionPromise.fromFn<QueryResult>(async () => {
     const resQuery = await proxy.query(params);
-    if (![0, "ok"].includes(resQuery.returnCode)) {
-      throw new QueryError(
-        resQuery.returnCode,
-        resQuery.returnMessage,
-        resQuery,
-      );
-    }
-    return { query: resQuery, returnData: resQuery.returnData };
+    return { query: resQuery, returnData: resQuery.returnData! };
   });
 
-const executeTx = (
-  proxy: Proxy,
-  baseExplorerUrl: string,
-  params: ExecuteTxParams,
-) => {
+const executeTx = (proxy: Proxy, params: ExecuteTxParams) => {
   return InteractionPromise.fromFn<ExecuteTxResult>(async () => {
     const nonce = await proxy.getAccountNonce(params.sender);
     const tx = new Tx({ ...params, nonce });
     await tx.sign(params.sender);
     const txHash = await proxy.sendTx(tx);
-    const { hash, ..._resTx } = await proxy.getCompletedTx(txHash);
-    const explorerUrl = getTxExplorerUrl(baseExplorerUrl, hash);
-    // Destructuring gives an invalid type: https://github.com/microsoft/TypeScript/issues/56456
-    const resTx = Object.assign({ explorerUrl, hash }, _resTx);
-    if (resTx.status !== "success") {
-      throw new TxError("errorStatus", resTx.status, resTx);
-    }
-    if (resTx.executionReceipt?.returnCode) {
-      const { returnCode, returnMessage } = resTx.executionReceipt;
-      throw new TxError(returnCode, returnMessage, resTx);
-    }
-    const signalErrorEvent = resTx?.logs?.events.find(
-      (e: any) => e.identifier === "signalError",
-    );
-    if (signalErrorEvent) {
-      const error = atob(signalErrorEvent.topics[1]);
-      throw new TxError("signalError", error, resTx);
-    }
-    return { tx: resTx };
+    return { tx: await proxy.getCompletedTx(txHash) };
   });
 };
 
-const deployContract = (
-  proxy: Proxy,
-  baseExplorerUrl: string,
-  params: DeployContractParams,
-) =>
+const deployContract = (proxy: Proxy, params: DeployContractParams) =>
   InteractionPromise.fromFn<DeployContractResult>(async () => {
     params.code = expandCode(params.code);
     const txResult = await executeTx(
       proxy,
-      baseExplorerUrl,
       Tx.getParamsToDeployContract(params),
     );
     const address = txResult.tx.logs.events.find(
@@ -527,57 +440,36 @@ const deployContract = (
     const contract = new Contract({
       address,
       proxy,
-      baseExplorerUrl,
     });
     const returnData = getTxReturnData(txResult.tx);
     return { ...txResult, address, contract, returnData };
   });
 
-const upgradeContract = (
-  proxy: Proxy,
-  baseExplorerUrl: string,
-  params: UpgradeContractParams,
-) =>
+const upgradeContract = (proxy: Proxy, params: UpgradeContractParams) =>
   InteractionPromise.fromFn<CallContractResult>(async () => {
     params.code = expandCode(params.code);
     const txResult = await executeTx(
       proxy,
-      baseExplorerUrl,
       Tx.getParamsToUpgradeContract(params),
     );
     const returnData = getTxReturnData(txResult.tx);
     return { ...txResult, returnData };
   });
 
-const transfer = (
-  proxy: Proxy,
-  baseExplorerUrl: string,
-  params: TransferParams,
-) =>
+const transfer = (proxy: Proxy, params: TransferParams) =>
   InteractionPromise.fromFn<ExecuteTxResult>(async () => {
-    return executeTx(proxy, baseExplorerUrl, Tx.getParamsToTransfer(params));
+    return executeTx(proxy, Tx.getParamsToTransfer(params));
   });
 
-const callContract = (
-  proxy: Proxy,
-  baseExplorerUrl: string,
-  params: CallContractParams,
-) =>
+const callContract = (proxy: Proxy, params: CallContractParams) =>
   InteractionPromise.fromFn<CallContractResult>(async () => {
-    const txResult = await executeTx(
-      proxy,
-      baseExplorerUrl,
-      Tx.getParamsToCallContract(params),
-    );
+    const txResult = await executeTx(proxy, Tx.getParamsToCallContract(params));
     const returnData = getTxReturnData(txResult.tx);
     return { ...txResult, returnData };
   });
 
 const getAccountExplorerUrl = (baseExplorerUrl: string, address: string) =>
   `${baseExplorerUrl}/accounts/${address}`;
-
-const getTxExplorerUrl = (baseExplorerUrl: string, txHash: string) =>
-  `${baseExplorerUrl}/transactions/${txHash}`;
 
 const getTxReturnData = (tx: any): string[] => {
   const writeLogEvent = tx?.logs?.events.find(

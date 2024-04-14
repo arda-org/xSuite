@@ -16,7 +16,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await world.terminate();
+  world.terminate();
 });
 
 test("Test", async () => {

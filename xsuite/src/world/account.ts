@@ -1,13 +1,14 @@
-import { addressToU8AAddress, u8aAddressToBechAddress } from "../data/address";
+import { u8aAddressToBechAddress } from "../data/address";
+import { AddressLike, addressLikeToU8AAddress } from "../data/addressLike";
 import { Encodable } from "../data/encoding";
 
 export class Account extends Encodable {
   $$typeof = Symbol.for("jest.asymmetricMatcher");
   u8a: Uint8Array;
 
-  constructor(address: string | Uint8Array) {
+  constructor(address: AddressLike) {
     super();
-    this.u8a = addressToU8AAddress(address);
+    this.u8a = addressLikeToU8AAddress(address);
   }
 
   toTopU8A(): Uint8Array {

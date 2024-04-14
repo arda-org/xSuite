@@ -91,7 +91,7 @@ beforeEach(async () => {
 });
 
 afterEach(async () => {
-  await world.terminate();
+  world.terminate();
 });
 
 test("Test", async () => {
@@ -141,9 +141,7 @@ import { envChain, World } from "xsuite";
 import data from "./data.json";
 
 const world = World.new({
-  proxyUrl: envChain.publicProxyUrl(),
   chainId: envChain.id(),
-  gasPrice: 1000000000,
 });
 
 const loadWallet = () => world.newWalletFromFile("wallet.json");
