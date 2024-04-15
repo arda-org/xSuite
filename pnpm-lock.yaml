@@ -183,27 +183,6 @@ importers:
         specifier: ^1.2.2
         version: 1.2.2(@types/node@20.11.16)
 
-  xsuite-chain-simulator-temp:
-    devDependencies:
-      '@multiversx/sdk-wallet':
-        specifier: ^4.2.0
-        version: 4.2.0
-      '@xsuite/chainsimulator':
-        specifier: workspace:*
-        version: link:../xsuite-chainsimulator
-      tsx:
-        specifier: ^4.7.0
-        version: 4.7.0
-      typescript:
-        specifier: ^5.3.3
-        version: 5.3.3
-      vitest:
-        specifier: ^1.1.3
-        version: 1.2.2(@types/node@20.11.16)
-      xsuite:
-        specifier: workspace:*
-        version: link:../xsuite
-
   xsuite-chainsimulator:
     devDependencies:
       run-script-os:

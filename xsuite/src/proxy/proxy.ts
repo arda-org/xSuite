@@ -370,7 +370,7 @@ const unrawRes = (res: any) => {
   }
 };
 
-export const unrawTxRes = (r: any) => {
+const unrawTxRes = (r: any) => {
   return unrawRes(r).transaction as Record<string, any>;
 };
 

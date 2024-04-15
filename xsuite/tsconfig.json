@@ -8,8 +8,7 @@
     "rootDir": "src",
     "skipLibCheck": true,
     "strict": true,
-    "target": "esnext",
-    "resolveJsonModule": true
+    "target": "esnext"
   },
   "include": ["*.d.ts", "src/"],
   "exclude": ["node_modules"]

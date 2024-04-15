@@ -1,4 +1,4 @@
-import { BroadTx, Proxy, ProxyParams, unrawTxRes } from './proxy';
+import { BroadTx, Proxy, ProxyParams } from './proxy';
 import { e, eCodeMetadata, EncodableAccount } from '../data/encoding';
 import { Kvs } from '../data/kvs';
 import { addressLikeToBechAddress } from '../data/addressLike';

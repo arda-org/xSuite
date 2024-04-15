@@ -24,6 +24,7 @@ export const startChainSimulator = (
       [
         '--server-port', port.toString(),
         '--config', `${chainSimulatorConfigFolder}/config.toml`,
+        '--node-override-config', `${chainSimulatorConfigFolder}/nodeOverride.toml`,
         '--node-configs', `${chainSimulatorConfigFolder}/node/config`,
         '--proxy-configs', `${chainSimulatorConfigFolder}/proxy/config`,
       ],

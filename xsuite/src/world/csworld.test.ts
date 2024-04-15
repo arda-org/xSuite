@@ -1,8 +1,8 @@
-import { afterEach, beforeEach, expect, test, beforeAll, afterAll, assert } from 'vitest';
+import { beforeEach, expect, test, beforeAll, afterAll, assert } from 'vitest';
 import { assertAccount, assertVs } from '../assert';
 import { e } from '../data';
 import { DummySigner } from './signer';
-import { isContractAddress } from './utils';
+import { generateContractU8AAddress, generateWalletU8AAddress, isContractAddress } from './utils';
 import { CSWorld, CSContract, CSWallet } from '.';
 import { Tx } from '../proxy';
 
@@ -32,8 +32,8 @@ const explorerUrl = 'http://explorer.local';
 beforeAll(async () => {
   world = await CSWorld.start({
     explorerUrl,
-    // verbose: true,
-    // debug: true,
+    verbose: true,
+    debug: true,
     waitFor: 120_000,
   });
   wallet = await world.createWallet({
@@ -45,13 +45,23 @@ beforeAll(async () => {
   // generate 20 blocks to pass an epoch so system smart contracts are enabled
   await world.generateBlocks(20);
 
-  const result = await wallet.deployContract({
+  contract = await wallet.createContract({
+    balance: 10n ** 18n,
     code: worldCode,
-    codeMetadata: ['payable'],
-    codeArgs: [e.U64(1)],
-    gasLimit: 10_000_000,
+    codeMetadata: ["payable"],
+    kvs: {
+      esdts: [{ id: fftId, amount: 10n ** 18n }],
+      mappers: [{ key: "n", value: e.U64(2) }],
+    },
   });
-  contract = result.contract;
+
+  // const result = await wallet.deployContract({
+  //   code: worldCode,
+  //   codeMetadata: ['payable'],
+  //   codeArgs: [e.U64(1)],
+  //   gasLimit: 10_000_000,
+  // });
+  // contract = result.contract;
 }, 120_000);
 
 afterAll(async () => {
@@ -150,15 +160,48 @@ test('CSWorld.newContract', async () => {
   expect(wallet.toTopBytes()).toEqual(new Uint8Array(32));
 });
 
-test('CSWorld.createWallet', async () => {
+test("CSWorld.createWallet - empty wallet", async () => {
   const wallet = await world.createWallet();
   expect(wallet.explorerUrl).toEqual(`${explorerUrl}/accounts/${wallet}`);
+  expect(isContractAddress(wallet)).toEqual(false);
   assertAccount(await wallet.getAccountWithKvs(), {});
 });
 
-test('CSWorld.createWallet - is wallet address', async () => {
-  const wallet = await world.createWallet();
-  expect(isContractAddress(wallet)).toEqual(false);
+test("CSWorld.createWallet - with balance", async () => {
+  const wallet = await world.createWallet({ balance: 10n });
+  assertAccount(await wallet.getAccountWithKvs(), { balance: 10n });
+});
+
+test("CSWorld.createWallet - with address & balance", async () => {
+  const address = generateWalletU8AAddress();
+  const wallet = await world.createWallet({ address, balance: 10n });
+  assertAccount(await wallet.getAccountWithKvs(), { address, balance: 10n });
+});
+
+test("CSWorld.createContract - empty contract", async () => {
+  const contract = await world.createContract();
+  expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
+  expect(isContractAddress(contract)).toEqual(true);
+  assertAccount(await contract.getAccountWithKvs(), { code: "00" });
+});
+
+test("CSWorld.createContract - with balance", async () => {
+  const contract = await world.createContract({ balance: 10n });
+  assertAccount(await contract.getAccountWithKvs(), { balance: 10n });
+});
+
+test("CSWorld.createContract - with file:", async () => {
+  const contract = await world.createContract({ code: worldCode });
+  assertAccount(await contract.getAccountWithKvs(), { code: worldCode });
+});
+
+test("CSWorld.createContract - with address & file:", async () => {
+  const address = generateContractU8AAddress();
+  const contract = await world.createContract({ address, code: worldCode });
+  assertAccount(await contract.getAccountWithKvs(), {
+    address,
+    code: worldCode,
+  });
 });
 
 test('CSWorld.getAccountNonce', async () => {

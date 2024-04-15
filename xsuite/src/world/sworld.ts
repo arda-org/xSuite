@@ -180,7 +180,7 @@ const setAccount = async (proxy: SProxy, params: EncodableAccount) => {
   await proxy.setAccount(params);
 };
 
-const createContract = async (
+export const createContract = async (
   proxy: SProxy,
   { address, ...params }: SWorldCreateAccountParams = {},
 ) => {
@@ -207,6 +207,6 @@ export type SAccountSetAccountParams = Prettify<
   Omit<SWorldSetAccountParams, "address">
 >;
 
-type SWalletCreateContractParams = Prettify<
+export type SWalletCreateContractParams = Prettify<
   Omit<SWorldCreateAccountParams, "owner">
 >;

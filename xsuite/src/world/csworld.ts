@@ -2,17 +2,15 @@ import { CSProxy } from '../proxy';
 import { Contract, expandCode, Wallet, WalletDeployContractParams, World, WorldNewOptions } from './world';
 import {
   SAccountSetAccountParams,
+  SWalletCreateContractParams,
   SWorldCreateAccountParams,
   SWorldSetAccountParams,
 } from './sworld';
 import { startChainSimulator } from './chainSimulator';
-import { Keystore, KeystoreSigner, Signer } from './signer';
-import { isContractAddress } from './utils';
-import walletJson from './wallet.json';
+import { DummySigner, Signer } from './signer';
+import { generateContractU8AAddress, generateWalletU8AAddress, isContractAddress } from './utils';
 import { EncodableAccount } from '../data/encoding';
 import { AddressLike } from '../data/addressLike';
-
-let walletCounter = 0;
 
 export class CSWorld extends World {
   proxy: CSProxy;
@@ -106,14 +104,14 @@ export class CSWorld extends World {
     });
   }
 
-  // TODO:
   async createWallet({ address, ...params }: SWorldCreateAccountParams = {}) {
-    walletCounter += 1;
-    // Even though the signature is not checked for chain simulator, we still seem to need real address format for the chain validator
-    const keystore = new KeystoreSigner(new Keystore(walletJson, ''), walletCounter);
-    const wallet = this.newWallet(keystore);
-    await wallet.setAccount(params);
-    return wallet;
+    address ??= generateWalletU8AAddress();
+    await setAccount(this.proxy, { address, ...params });
+    return this.newWallet(new DummySigner(address));
+  }
+
+  createContract(params?: SWorldCreateAccountParams) {
+    return createContract(this.proxy, params);
   }
 
   setAccount(params: SWorldSetAccountParams) {
@@ -155,6 +153,10 @@ export class CSWallet extends Wallet {
     return setAccount(this.proxy, { ...params, address: this });
   }
 
+  createContract(params?: SWalletCreateContractParams) {
+    return createContract(this.proxy, { ...params, owner: this });
+  }
+
   deployContract(params: WalletDeployContractParams) {
     return super.deployContract(params).then((data) => ({
       ...data,
@@ -194,6 +196,15 @@ const setAccount = (proxy: CSProxy, params: EncodableAccount) => {
     params.code = expandCode(params.code);
   }
   return proxy.setAccount(params);
+};
+
+export const createContract = async (
+  proxy: CSProxy,
+  { address, ...params }: SWorldCreateAccountParams = {},
+) => {
+  address ??= generateContractU8AAddress();
+  await setAccount(proxy, { address, ...params });
+  return new CSContract({ address, proxy });
 };
 
 type CSWorldNewOptions =
