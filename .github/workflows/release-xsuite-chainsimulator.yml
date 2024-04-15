@@ -44,9 +44,9 @@ jobs:
         os: [macos-12, ubuntu-20.04]
         include:
           - os: ubuntu-20.04
-            binary: chainsimulator-linux-amd64
+            binary: csproxy-linux-amd64
           - os: macos-12
-            binary: chainsimulator-darwin-amd64
+            binary: csproxy-darwin-amd64
 
     runs-on: ${{ matrix.os }}
 
@@ -61,7 +61,7 @@ jobs:
           path: xsuite-chainsimulator/bin
 
       - name: Add execute permissions
-        run: chmod +x xsuite-chainsimulator/bin/chainsimulator-*
+        run: chmod +x xsuite-chainsimulator/bin/csproxy-*
 
       - name: Test
         run: |
@@ -93,7 +93,7 @@ jobs:
           path: xsuite-chainsimulator/bin
 
       - name: Add execute permissions
-        run: chmod +x xsuite-chainsimulator/bin/chainsimulator-*
+        run: chmod +x xsuite-chainsimulator/bin/csproxy-*
 
       - name: Use Node.js & pnpm
         uses: ./.github/actions/node-pnpm

@@ -5,12 +5,14 @@ import { addressLikeToBechAddress } from '../data/addressLike';
 
 export class CSProxy extends Proxy {
   autoGenerateBlocks: boolean;
+  waitCompletedTimeout: number;
   verbose: boolean;
 
   constructor(params: CSProxyParams) {
     super(params);
 
     this.autoGenerateBlocks = params.autoGenerateBlocks;
+    this.waitCompletedTimeout = params.waitCompletedTimeout ?? 250;
     this.verbose = params.verbose;
   }
 
@@ -33,7 +35,7 @@ export class CSProxy extends Proxy {
     if (this.autoGenerateBlocks) {
       await result;
 
-      await this.generateBlocks();
+      await this.generateBlock();
     }
 
     return result;
@@ -49,7 +51,7 @@ export class CSProxy extends Proxy {
     if (this.autoGenerateBlocks) {
       await result;
 
-      await this.generateBlocks();
+      await this.generateBlock();
     }
 
     return result;
@@ -62,10 +64,10 @@ export class CSProxy extends Proxy {
 
     while (!res || res.code !== 'successful' || res.data.status === 'pending') {
       // We need delay since cross shard changes might not have been processed immediately
-      await new Promise((r) => setTimeout(r, 250));
+      await new Promise((r) => setTimeout(r, this.waitCompletedTimeout));
 
       if (res && res.data && res.data.status === 'pending') {
-        await this.generateBlocks();
+        await this.generateBlock();
       }
 
       res = await this.getTxProcessStatusRaw(txHash);
@@ -89,8 +91,16 @@ export class CSProxy extends Proxy {
     return super.getCompletedTx(txHash);
   }
 
-  generateBlocks(numBlocks: number = 1) {
+  generateBlocks(numBlocks: number) {
     return this.fetch(`/simulator/generate-blocks/${numBlocks}`, {});
+  }
+
+  generateBlock() {
+    return this.generateBlocks(1);
+  }
+
+  generateBlocksUntilEpochReached(epoch: number) {
+    return this.fetch(`/simulator/generate-blocks-until-epoch-reached/${epoch}`, {});
   }
 
   getInitialWallets() {
@@ -148,5 +158,6 @@ export type CSProxyParams = {
   proxyUrl: string;
   explorerUrl?: string;
   autoGenerateBlocks: boolean;
+  waitCompletedTimeout?: number;
   verbose: boolean;
 };

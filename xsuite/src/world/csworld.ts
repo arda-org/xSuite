@@ -40,13 +40,21 @@ export class CSWorld extends World {
     if (options.chainId !== undefined) {
       throw new Error('chainId is not undefined.');
     }
-    const { proxyUrl, gasPrice, explorerUrl, server, verbose } = options;
+    const {
+      proxyUrl,
+      gasPrice,
+      explorerUrl,
+      server,
+      waitCompletedTimeout,
+      verbose
+    } = options;
     return new CSWorld({
       proxy: new CSProxy(
         {
           proxyUrl,
           explorerUrl,
           autoGenerateBlocks: options.autoGenerateBlocks ?? true,
+          waitCompletedTimeout,
           verbose: options.verbose ?? false,
         },
       ),
@@ -123,8 +131,16 @@ export class CSWorld extends World {
     return setAccount(this.proxy, params);
   }
 
-  generateBlocks(numBlocks: number = 1) {
+  generateBlocks(numBlocks: number) {
     return this.proxy.generateBlocks(numBlocks);
+  }
+
+  generateBlock() {
+    return this.proxy.generateBlock();
+  }
+
+  generateBlocksUntilEpochReached(epoch: number) {
+    return this.proxy.generateBlocksUntilEpochReached(epoch);
   }
 
   getInitialWallets() {
@@ -132,7 +148,7 @@ export class CSWorld extends World {
   }
 
   terminate() {
-    if (!this.server) throw new Error("No server defined.");
+    if (!this.server) throw new Error('No server defined.');
     killChildProcess(this.server);
   }
 }
@@ -221,6 +237,7 @@ type CSWorldNewOptions =
   explorerUrl?: string;
   server?: ChildProcess;
   autoGenerateBlocks?: boolean;
+  waitCompletedTimeout?: number;
   verbose?: boolean;
 }
   | WorldNewOptions;
@@ -228,9 +245,9 @@ type CSWorldNewOptions =
 export type CSWorldCreateAccountParams = Prettify<Partial<EncodableAccount>>;
 
 type CSAccountSetAccountParams = Prettify<
-  Omit<EncodableAccount, "address">
+  Omit<EncodableAccount, 'address'>
 >;
 
 type CSWalletCreateContractParams = Prettify<
-  Omit<CSWorldCreateAccountParams, "owner">
+  Omit<CSWorldCreateAccountParams, 'owner'>
 >;

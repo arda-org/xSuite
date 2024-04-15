@@ -6,7 +6,7 @@
     "build": "run-script-os",
     "build:linux": "PLATFORM=linux ./build-chainsimulator.sh",
     "build:darwin": "PLATFORM=darwin ./build-chainsimulator.sh",
-    "postinstall": "chmod -f +x ./bin/chainsimulator-* || true"
+    "postinstall": "chmod -f +x ./bin/csproxy-* || true"
   },
   "files": [
     "bin",

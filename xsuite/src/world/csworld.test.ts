@@ -42,8 +42,8 @@ beforeAll(async () => {
   }); // wallet in shard 0
   otherWallet = await world.createWallet();
 
-  // generate 20 blocks to pass an epoch so system smart contracts are enabled
-  await world.generateBlocks(20);
+  // pass an epoch so system smart contracts are enabled
+  await world.generateBlocksUntilEpochReached(1);
 
   contract = await wallet.createContract({
     balance: 10n ** 18n,
@@ -336,7 +336,7 @@ test('CSWorld.sendTx', async () => {
   }
 
   // After generating 1 block, transaction is pending
-  await world.generateBlocks(1);
+  await world.generateBlock();
   let result = await world.proxy.getTx(txHash, { withResults: true });
 
   expect(result.status === 'pending');
