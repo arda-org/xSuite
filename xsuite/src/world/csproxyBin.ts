@@ -1,11 +1,15 @@
-import { spawn } from 'node:child_process';
+import { ChildProcess } from 'node:child_process';
+import { spawnChildProcess } from './childProcesses';
 
-export const startChainSimulator = (
+export const startCSproxyBin = (
   port: number = 8085,
   debug: boolean = false,
   waitFor: number = 30_000,
-  configFolder?: string
-): Promise<[string, () => void]> => {
+  configFolder?: string,
+): Promise<{
+  server: ChildProcess;
+  proxyUrl: string;
+}> => {
   let chainSimulator: any;
   try {
     chainSimulator = require('@xsuite/chainsimulator');
@@ -19,7 +23,7 @@ export const startChainSimulator = (
   const chainSimulatorConfigFolder = configFolder || chainSimulator.getChainSimulatorDefaultConfigFolder();
 
   return new Promise((resolve, reject) => {
-    const server = spawn(
+    const server = spawnChildProcess(
       `${chainSimulatorBinPath}`,
       [
         '--server-port', port.toString(),
@@ -46,9 +50,7 @@ export const startChainSimulator = (
       if (match) {
         clearTimeout(timeout);
 
-        setTimeout(() => resolve([`http://localhost:${port}`, () => {
-          server.kill();
-        }]), 250);
+        setTimeout(() => resolve({ server, proxyUrl: `http://localhost:${port}` }), 250);
       }
     });
 

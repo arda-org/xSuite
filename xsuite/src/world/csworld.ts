@@ -1,36 +1,37 @@
+import { ChildProcess } from 'node:child_process';
 import { CSProxy } from '../proxy';
 import { Contract, expandCode, Wallet, WalletDeployContractParams, World, WorldNewOptions } from './world';
-import {
-  SAccountSetAccountParams,
-  SWalletCreateContractParams,
-  SWorldCreateAccountParams,
-  SWorldSetAccountParams,
-} from './sworld';
-import { startChainSimulator } from './chainSimulator';
+import { startCSproxyBin } from './csproxyBin';
 import { DummySigner, Signer } from './signer';
 import { generateContractU8AAddress, generateWalletU8AAddress, isContractAddress } from './utils';
 import { EncodableAccount } from '../data/encoding';
 import { AddressLike } from '../data/addressLike';
+import { killChildProcess } from './childProcesses';
+import { Prettify } from '../helpers';
 
 export class CSWorld extends World {
   proxy: CSProxy;
+  server?: ChildProcess;
   sysAcc: CSContract;
   verbose: boolean;
 
   constructor({
     proxy,
     gasPrice,
-    explorerUrl = "",
+    explorerUrl,
+    server,
     verbose,
   }: {
     proxy: CSProxy;
     gasPrice: number;
     explorerUrl?: string;
+    server?: ChildProcess;
     verbose?: boolean;
   }) {
     super({ chainId: 'chain', proxy, gasPrice, explorerUrl });
 
     this.proxy = proxy;
+    this.server = server;
     this.sysAcc = this.newContract(new Uint8Array(32).fill(255));
     this.verbose = verbose ?? false;
   }
@@ -39,16 +40,20 @@ export class CSWorld extends World {
     if (options.chainId !== undefined) {
       throw new Error('chainId is not undefined.');
     }
+    const { proxyUrl, gasPrice, explorerUrl, server, verbose } = options;
     return new CSWorld({
       proxy: new CSProxy(
-        { proxyUrl: options.proxyUrl, explorerUrl: options.explorerUrl, },
-        options.stopChainSimulator,
-        options.autoGenerateBlocks ?? true,
-        options.verbose ?? false,
+        {
+          proxyUrl,
+          explorerUrl,
+          autoGenerateBlocks: options.autoGenerateBlocks ?? true,
+          verbose: options.verbose ?? false,
+        },
       ),
-      gasPrice: options.gasPrice ?? 1000000000,
-      explorerUrl: options.explorerUrl,
-      verbose: options.verbose,
+      gasPrice: gasPrice ?? 1000000000,
+      explorerUrl,
+      server,
+      verbose,
     });
   }
 
@@ -83,8 +88,8 @@ export class CSWorld extends World {
     configFolder?: string,
     debug?: boolean,
   } = {}): Promise<CSWorld> {
-    const [proxyUrl, stopChainSimulator] = await startChainSimulator(port, debug, waitFor, configFolder);
-    return CSWorld.new({ proxyUrl, stopChainSimulator, gasPrice, explorerUrl, autoGenerateBlocks, verbose });
+    const { server, proxyUrl } = await startCSproxyBin(port, debug, waitFor, configFolder);
+    return CSWorld.new({ proxyUrl, gasPrice, explorerUrl, server, autoGenerateBlocks, verbose });
   }
 
   // TODO:
@@ -104,17 +109,17 @@ export class CSWorld extends World {
     });
   }
 
-  async createWallet({ address, ...params }: SWorldCreateAccountParams = {}) {
+  async createWallet({ address, ...params }: CSWorldCreateAccountParams = {}) {
     address ??= generateWalletU8AAddress();
     await setAccount(this.proxy, { address, ...params });
     return this.newWallet(new DummySigner(address));
   }
 
-  createContract(params?: SWorldCreateAccountParams) {
+  createContract(params?: CSWorldCreateAccountParams) {
     return createContract(this.proxy, params);
   }
 
-  setAccount(params: SWorldSetAccountParams) {
+  setAccount(params: EncodableAccount) {
     return setAccount(this.proxy, params);
   }
 
@@ -127,7 +132,8 @@ export class CSWorld extends World {
   }
 
   terminate() {
-    return this.proxy.terminate();
+    if (!this.server) throw new Error("No server defined.");
+    killChildProcess(this.server);
   }
 }
 
@@ -149,11 +155,11 @@ export class CSWallet extends Wallet {
     this.proxy = proxy;
   }
 
-  setAccount(params: SAccountSetAccountParams) {
+  setAccount(params: CSAccountSetAccountParams) {
     return setAccount(this.proxy, { ...params, address: this });
   }
 
-  createContract(params?: SWalletCreateContractParams) {
+  createContract(params?: CSWalletCreateContractParams) {
     return createContract(this.proxy, { ...params, owner: this });
   }
 
@@ -182,7 +188,7 @@ export class CSContract extends Contract {
     this.proxy = proxy;
   }
 
-  setAccount(params: SAccountSetAccountParams) {
+  setAccount(params: CSAccountSetAccountParams) {
     return setAccount(this.proxy, { ...params, address: this });
   }
 }
@@ -200,7 +206,7 @@ const setAccount = (proxy: CSProxy, params: EncodableAccount) => {
 
 export const createContract = async (
   proxy: CSProxy,
-  { address, ...params }: SWorldCreateAccountParams = {},
+  { address, ...params }: CSWorldCreateAccountParams = {},
 ) => {
   address ??= generateContractU8AAddress();
   await setAccount(proxy, { address, ...params });
@@ -211,10 +217,20 @@ type CSWorldNewOptions =
   | {
   chainId?: undefined;
   proxyUrl: string;
-  stopChainSimulator: () => void;
   gasPrice?: number;
   explorerUrl?: string;
+  server?: ChildProcess;
   autoGenerateBlocks?: boolean;
   verbose?: boolean;
 }
   | WorldNewOptions;
+
+export type CSWorldCreateAccountParams = Prettify<Partial<EncodableAccount>>;
+
+type CSAccountSetAccountParams = Prettify<
+  Omit<EncodableAccount, "address">
+>;
+
+type CSWalletCreateContractParams = Prettify<
+  Omit<CSWorldCreateAccountParams, "owner">
+>;

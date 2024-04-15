@@ -1,19 +1,17 @@
-import { BroadTx, Proxy, ProxyParams } from './proxy';
+import { BroadTx, Proxy } from './proxy';
 import { e, eCodeMetadata, EncodableAccount } from '../data/encoding';
 import { Kvs } from '../data/kvs';
 import { addressLikeToBechAddress } from '../data/addressLike';
 
 export class CSProxy extends Proxy {
-  stopChainSimulator: () => void;
   autoGenerateBlocks: boolean;
   verbose: boolean;
 
-  constructor(baseUrl: ProxyParams, stopChainSimulator: () => void, autoGenerateBlocks: boolean = true, verbose: boolean = false) {
-    super(baseUrl);
+  constructor(params: CSProxyParams) {
+    super(params);
 
-    this.stopChainSimulator = stopChainSimulator;
-    this.autoGenerateBlocks = autoGenerateBlocks;
-    this.verbose = verbose;
+    this.autoGenerateBlocks = params.autoGenerateBlocks;
+    this.verbose = params.verbose;
   }
 
   async setAccount(account: EncodableAccount) {
@@ -98,10 +96,6 @@ export class CSProxy extends Proxy {
   getInitialWallets() {
     return this.fetch(`/simulator/initial-wallets`);
   }
-
-  terminate() {
-    this.stopChainSimulator();
-  }
 }
 
 const accountToRawAccount = (account: EncodableAccount, previousAccount: {
@@ -148,4 +142,11 @@ const accountToRawAccount = (account: EncodableAccount, previousAccount: {
     ...previousAccount,
     ...rawAccount,
   };
+};
+
+export type CSProxyParams = {
+  proxyUrl: string;
+  explorerUrl?: string;
+  autoGenerateBlocks: boolean;
+  verbose: boolean;
 };

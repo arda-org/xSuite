@@ -32,8 +32,8 @@ const explorerUrl = 'http://explorer.local';
 beforeAll(async () => {
   world = await CSWorld.start({
     explorerUrl,
-    verbose: true,
-    debug: true,
+    // verbose: true,
+    // debug: true,
     waitFor: 120_000,
   });
   wallet = await world.createWallet({
@@ -64,8 +64,8 @@ beforeAll(async () => {
   // contract = result.contract;
 }, 120_000);
 
-afterAll(async () => {
-  await world.terminate();
+afterAll(() => {
+  world.terminate();
 }, 60_000);
 
 beforeEach(async () => {
