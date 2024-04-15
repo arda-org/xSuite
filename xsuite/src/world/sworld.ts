@@ -1,10 +1,17 @@
+import { ChildProcess } from "node:child_process";
+import { AddressLike, isAddressLike } from "../data/addressLike";
 import { EncodableAccount } from "../data/encoding";
 import { Prettify } from "../helpers";
 import { SProxy } from "../proxy";
 import { Block } from "../proxy/sproxy";
+import { killChildProcess } from "./childProcesses";
 import { DummySigner, Signer } from "./signer";
-import { startSimulnet } from "./simulnet";
-import { isContractAddress, numberToU8AAddress } from "./utils";
+import { startSproxyBin } from "./sproxyBin";
+import {
+  generateContractU8AAddress,
+  generateWalletU8AAddress,
+  isContractAddress,
+} from "./utils";
 import {
   World,
   Contract,
@@ -14,24 +21,25 @@ import {
   WorldNewOptions,
 } from "./world";
 
-let walletCounter = 0;
-let contractCounter = 0;
-
 export class SWorld extends World {
   proxy: SProxy;
+  server?: ChildProcess;
   sysAcc: SContract;
 
   constructor({
     proxy,
     gasPrice,
     explorerUrl,
+    server,
   }: {
     proxy: SProxy;
     gasPrice: number;
     explorerUrl?: string;
+    server?: ChildProcess;
   }) {
     super({ chainId: "S", proxy, gasPrice, explorerUrl });
     this.proxy = proxy;
+    this.server = server;
     this.sysAcc = this.newContract(new Uint8Array(32).fill(255));
   }
 
@@ -39,10 +47,12 @@ export class SWorld extends World {
     if (options.chainId !== undefined) {
       throw new Error("chainId is not undefined.");
     }
+    const { proxyUrl, gasPrice, explorerUrl, server } = options;
     return new SWorld({
-      proxy: new SProxy(options.proxyUrl),
-      gasPrice: options.gasPrice ?? 0,
-      explorerUrl: options.explorerUrl,
+      proxy: new SProxy({ proxyUrl, explorerUrl }),
+      gasPrice: gasPrice ?? 0,
+      explorerUrl,
+      server,
     });
   }
 
@@ -62,42 +72,40 @@ export class SWorld extends World {
     gasPrice,
     explorerUrl,
   }: { gasPrice?: number; explorerUrl?: string } = {}): Promise<SWorld> {
-    const proxyUrl = await startSimulnet();
-    return SWorld.new({ proxyUrl, gasPrice, explorerUrl });
+    const { server, proxyUrl } = await startSproxyBin();
+    return SWorld.new({ proxyUrl, gasPrice, explorerUrl, server });
   }
 
-  newWallet(signer: Signer): SWallet {
+  newWallet(addressOrSigner: AddressLike | Signer): SWallet {
     return new SWallet({
-      signer,
+      signer: isAddressLike(addressOrSigner)
+        ? new DummySigner(addressOrSigner)
+        : addressOrSigner,
       proxy: this.proxy,
       chainId: this.chainId,
       gasPrice: this.gasPrice,
-      baseExplorerUrl: this.explorerUrl,
     });
   }
 
-  newContract(address: string | Uint8Array): SContract {
+  newContract(address: AddressLike): SContract {
     return new SContract({
       address,
       proxy: this.proxy,
-      baseExplorerUrl: this.explorerUrl,
     });
   }
 
-  async createWallet(params: SWorldCreateWalletParams = {}) {
-    walletCounter += 1;
-    const address = numberToU8AAddress(walletCounter, false);
-    const wallet = this.newWallet(new DummySigner(address));
-    await wallet.setAccount(params);
-    return wallet;
+  async createWallet({ address, ...params }: SWorldCreateAccountParams = {}) {
+    address ??= generateWalletU8AAddress();
+    await setAccount(this.proxy, { address, ...params });
+    return this.newWallet(new DummySigner(address));
+  }
+
+  createContract(params?: SWorldCreateAccountParams) {
+    return createContract(this.proxy, params);
   }
 
   setAccount(params: SWorldSetAccountParams) {
     return setAccount(this.proxy, params);
-  }
-
-  createContract(params?: SWorldCreateContractParams) {
-    return createContract(this.proxy, this.explorerUrl, params);
   }
 
   setCurrentBlockInfo(block: Block) {
@@ -109,7 +117,8 @@ export class SWorld extends World {
   }
 
   terminate() {
-    return this.proxy.terminate();
+    if (!this.server) throw new Error("No server defined.");
+    killChildProcess(this.server);
   }
 }
 
@@ -121,37 +130,28 @@ export class SWallet extends Wallet {
     proxy,
     chainId,
     gasPrice,
-    baseExplorerUrl,
   }: {
     signer: Signer;
     proxy: SProxy;
     chainId: string;
     gasPrice: number;
-    baseExplorerUrl?: string;
   }) {
-    super({ signer, proxy, chainId, gasPrice, baseExplorerUrl });
+    super({ signer, proxy, chainId, gasPrice });
     this.proxy = proxy;
   }
 
-  setAccount(params: SWalletSetAccountParams) {
+  setAccount(params: SAccountSetAccountParams) {
     return setAccount(this.proxy, { ...params, address: this });
   }
 
   createContract(params?: SWalletCreateContractParams) {
-    return createContract(this.proxy, this.baseExplorerUrl, {
-      ...params,
-      owner: this,
-    });
+    return createContract(this.proxy, { ...params, owner: this });
   }
 
   deployContract(params: WalletDeployContractParams) {
     return super.deployContract(params).then((data) => ({
       ...data,
-      contract: new SContract({
-        address: data.address,
-        proxy: this.proxy,
-        baseExplorerUrl: this.baseExplorerUrl,
-      }),
+      contract: new SContract({ address: data.address, proxy: this.proxy }),
     }));
   }
 }
@@ -159,25 +159,17 @@ export class SWallet extends Wallet {
 export class SContract extends Contract {
   proxy: SProxy;
 
-  constructor({
-    address,
-    proxy,
-    baseExplorerUrl,
-  }: {
-    address: string | Uint8Array;
-    proxy: SProxy;
-    baseExplorerUrl?: string;
-  }) {
-    super({ address, proxy, baseExplorerUrl });
+  constructor({ address, proxy }: { address: AddressLike; proxy: SProxy }) {
+    super({ address, proxy });
     this.proxy = proxy;
   }
 
-  setAccount(params: SContractSetAccountParams) {
+  setAccount(params: SAccountSetAccountParams) {
     return setAccount(this.proxy, { ...params, address: this });
   }
 }
 
-const setAccount = (proxy: SProxy, params: EncodableAccount) => {
+const setAccount = async (proxy: SProxy, params: EncodableAccount) => {
   if (params.code == null) {
     if (isContractAddress(params.address)) {
       params.code = "00";
@@ -185,46 +177,36 @@ const setAccount = (proxy: SProxy, params: EncodableAccount) => {
   } else {
     params.code = expandCode(params.code);
   }
-  return proxy.setAccount(params);
+  await proxy.setAccount(params);
 };
 
 const createContract = async (
   proxy: SProxy,
-  baseExplorerUrl?: string,
-  params: CreateContractParams = {},
+  { address, ...params }: SWorldCreateAccountParams = {},
 ) => {
-  contractCounter += 1;
-  const address = numberToU8AAddress(contractCounter, true);
-  const contract = new SContract({ address, proxy, baseExplorerUrl });
-  await contract.setAccount(params);
-  return contract;
+  address ??= generateContractU8AAddress();
+  await setAccount(proxy, { address, ...params });
+  return new SContract({ address, proxy });
 };
 
 type SWorldNewOptions =
   | {
-  chainId?: undefined;
-  proxyUrl: string;
-  gasPrice?: number;
-  explorerUrl?: string;
-}
+      chainId?: undefined;
+      proxyUrl: string;
+      gasPrice?: number;
+      explorerUrl?: string;
+      server?: ChildProcess;
+    }
   | WorldNewOptions;
 
-export type SWorldCreateWalletParams = Prettify<Omit<EncodableAccount, "address">>;
+export type SWorldCreateAccountParams = Prettify<Partial<EncodableAccount>>;
 
-type SetAccountParams = EncodableAccount;
+export type SWorldSetAccountParams = EncodableAccount;
 
-export type CreateContractParams = Prettify<Omit<EncodableAccount, "address">>;
-
-export type SWorldSetAccountParams = SetAccountParams;
-
-export type SWorldCreateContractParams = CreateContractParams;
-
-export type SWalletSetAccountParams = Prettify<
+export type SAccountSetAccountParams = Prettify<
   Omit<SWorldSetAccountParams, "address">
 >;
 
-export type SWalletCreateContractParams = Prettify<
-  Omit<CreateContractParams, "owner">
+type SWalletCreateContractParams = Prettify<
+  Omit<SWorldCreateAccountParams, "owner">
 >;
-
-export type SContractSetAccountParams = SWalletSetAccountParams;

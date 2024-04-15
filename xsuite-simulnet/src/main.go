@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"os"
 
 	"github.com/go-chi/chi"
 )
@@ -77,10 +76,6 @@ func main() {
 	router.Post("/admin/set-previous-block-info", func(w http.ResponseWriter, r *http.Request) {
 		resBody, err := executor.HandleAdminSetPreviousBlockInfo(r)
 		respond(w, resBody, err)
-	})
-
-	router.Get("/admin/terminate", func(w http.ResponseWriter, r *http.Request) {
-		os.Exit(0)
 	})
 
 	fmt.Printf("Server running on http://%s\n", listener.Addr().String())

@@ -1,16 +1,8 @@
 import { CSProxy } from '../proxy';
+import { Contract, expandCode, Wallet, WalletDeployContractParams, World, WorldNewOptions } from './world';
 import {
-  Contract,
-  expandCode,
-  Wallet,
-  WalletDeployContractParams,
-  World,
-  WorldNewOptions,
-} from './world';
-import {
-  SContractSetAccountParams,
-  SWalletSetAccountParams,
-  SWorldCreateWalletParams,
+  SAccountSetAccountParams,
+  SWorldCreateAccountParams,
   SWorldSetAccountParams,
 } from './sworld';
 import { startChainSimulator } from './chainSimulator';
@@ -18,6 +10,7 @@ import { Keystore, KeystoreSigner, Signer } from './signer';
 import { isContractAddress } from './utils';
 import walletJson from './wallet.json';
 import { EncodableAccount } from '../data/encoding';
+import { AddressLike } from '../data/addressLike';
 
 let walletCounter = 0;
 
@@ -29,7 +22,7 @@ export class CSWorld extends World {
   constructor({
     proxy,
     gasPrice,
-    explorerUrl,
+    explorerUrl = "",
     verbose,
   }: {
     proxy: CSProxy;
@@ -49,7 +42,12 @@ export class CSWorld extends World {
       throw new Error('chainId is not undefined.');
     }
     return new CSWorld({
-      proxy: new CSProxy(options.proxyUrl, options.stopChainSimulator, options.autoGenerateBlocks ?? true, options.verbose ?? false),
+      proxy: new CSProxy(
+        { proxyUrl: options.proxyUrl, explorerUrl: options.explorerUrl, },
+        options.stopChainSimulator,
+        options.autoGenerateBlocks ?? true,
+        options.verbose ?? false,
+      ),
       gasPrice: options.gasPrice ?? 1000000000,
       explorerUrl: options.explorerUrl,
       verbose: options.verbose,
@@ -91,13 +89,13 @@ export class CSWorld extends World {
     return CSWorld.new({ proxyUrl, stopChainSimulator, gasPrice, explorerUrl, autoGenerateBlocks, verbose });
   }
 
+  // TODO:
   newWallet(signer: Signer): CSWallet {
     return new CSWallet({
       signer,
       proxy: this.proxy,
       chainId: this.chainId,
       gasPrice: this.gasPrice,
-      baseExplorerUrl: this.explorerUrl,
     });
   }
 
@@ -105,11 +103,11 @@ export class CSWorld extends World {
     return new CSContract({
       address,
       proxy: this.proxy,
-      baseExplorerUrl: this.explorerUrl,
     });
   }
 
-  async createWallet(params: SWorldCreateWalletParams = {}) {
+  // TODO:
+  async createWallet({ address, ...params }: SWorldCreateAccountParams = {}) {
     walletCounter += 1;
     // Even though the signature is not checked for chain simulator, we still seem to need real address format for the chain validator
     const keystore = new KeystoreSigner(new Keystore(walletJson, ''), walletCounter);
@@ -143,19 +141,17 @@ export class CSWallet extends Wallet {
     proxy,
     chainId,
     gasPrice,
-    baseExplorerUrl,
   }: {
     signer: Signer;
     proxy: CSProxy;
     chainId: string;
     gasPrice: number;
-    baseExplorerUrl?: string;
   }) {
-    super({ signer, proxy, chainId, gasPrice, baseExplorerUrl });
+    super({ signer, proxy, chainId, gasPrice });
     this.proxy = proxy;
   }
 
-  setAccount(params: SWalletSetAccountParams) {
+  setAccount(params: SAccountSetAccountParams) {
     return setAccount(this.proxy, { ...params, address: this });
   }
 
@@ -165,7 +161,6 @@ export class CSWallet extends Wallet {
       contract: new CSContract({
         address: data.address,
         proxy: this.proxy,
-        baseExplorerUrl: this.baseExplorerUrl,
       }),
     }));
   }
@@ -177,17 +172,15 @@ export class CSContract extends Contract {
   constructor({
     address,
     proxy,
-    baseExplorerUrl,
   }: {
-    address: string | Uint8Array;
+    address: AddressLike;
     proxy: CSProxy;
-    baseExplorerUrl?: string;
   }) {
-    super({ address, proxy, baseExplorerUrl });
+    super({ address, proxy });
     this.proxy = proxy;
   }
 
-  setAccount(params: SContractSetAccountParams) {
+  setAccount(params: SAccountSetAccountParams) {
     return setAccount(this.proxy, { ...params, address: this });
   }
 }

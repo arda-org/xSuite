@@ -1,10 +1,7 @@
-import { Prettify } from "../helpers";
+import { PreserveDefinedness, Prettify } from "../helpers";
 import { Account } from "./account";
-import {
-  addressByteLength,
-  addressToHexAddress,
-  u8aAddressToBechAddress,
-} from "./address";
+import { addressByteLength, u8aAddressToBechAddress } from "./address";
+import { addressLikeToHexAddress } from "./addressLike";
 import { Bytes, bytesToU8A } from "./bytes";
 import {
   CodeProperty,
@@ -38,7 +35,9 @@ type MapperDecoderParams = {
   | { vec: Decoder }
   | { user: true }
 );
-type MapperKeyDecoderParams = [name: string, ...varDecoders: Decoder[]];
+type MapperKeyDecoderParams =
+  | string
+  | [name: string, ...varDecoders: Decoder[]];
 type DecodableKvs = Kvs;
 type DecodedKvs = {
   esdts?: DecodedEsdt[];
@@ -64,13 +63,14 @@ type DecodedEsdtVariant = {
 };
 type DecodedMapper = { key: DecodedMapperKey } & DecodedMapperData;
 type DecodedMapperKey = [name: string, ...vars: any[]];
-type DecodedMapperData =
-  | { value: any }
-  | { unorderedSet: any[] }
-  | { set: [index: number, value: any][] }
-  | { map: [index: number, key: any, value: any][] }
-  | { vec: any[] }
-  | { user: any[] };
+type DecodedMapperData = {
+  value?: any;
+  unorderedSet?: any[];
+  set?: [index: number, value: any][];
+  map?: [index: number, key: any, value: any][];
+  vec?: any[];
+  user?: any[];
+};
 
 type AccountDecoderParams = KvsDecoderParams;
 type DecodableAccount = Omit<Account, "balance"> & {
@@ -81,6 +81,7 @@ type DecodedAccount = {
   nonce?: number;
   balance?: bigint;
   code?: string;
+  codeHash?: string;
   codeMetadata?: CodeProperty[];
   owner?: string;
   kvs?: DecodedKvs;
@@ -167,7 +168,7 @@ export const d = {
     );
     return Object.assign(decoder, {
       toHex() {
-        return decoder.then((a) => addressToHexAddress(a));
+        return decoder.then((a) => addressLikeToHexAddress(a));
       },
     });
   },
@@ -308,7 +309,9 @@ export const d = {
   },
   account: (params?: AccountDecoderParams) => {
     return {
-      from: (account: DecodableAccount): DecodedAccount => {
+      from: <T extends DecodableAccount>(
+        account: T,
+      ): Prettify<PreserveDefinedness<T, DecodedAccount>> => {
         const decAccount: DecodedAccount = {
           address: account.address,
         };
@@ -321,6 +324,9 @@ export const d = {
         if (account.code !== undefined) {
           decAccount.code = account.code;
         }
+        if (account.codeHash !== undefined) {
+          decAccount.codeHash = account.codeHash;
+        }
         if (account.codeMetadata !== undefined) {
           decAccount.codeMetadata = dCodeMetadata(account.codeMetadata);
         }
@@ -330,7 +336,7 @@ export const d = {
         if (account.owner !== undefined) {
           decAccount.owner = account.owner;
         }
-        return decAccount;
+        return decAccount as PreserveDefinedness<T, DecodedAccount>;
       },
     };
   },
@@ -711,6 +717,10 @@ const newMapperKvsDecoder = <T extends DecodedMapperData>(
 
     for (const k in consumer.remainingKvs) {
       const cons = new BytesConsumer(k);
+      mapperKeyDecoderParams =
+        typeof mapperKeyDecoderParams === "string"
+          ? [mapperKeyDecoderParams]
+          : mapperKeyDecoderParams;
       const decMapperKey = consumeSegments(cons, mapperKeyDecoderParams);
       if (decMapperKey === undefined) continue;
       const encMapperKey = u8aToHex(cons.consumed());
@@ -942,6 +952,7 @@ const getMapperMap = <U, V>(
       valueDecoder.fromTop(encValue),
     ]);
   }
+  map.sort((a, b) => a[0] - b[0]);
   return map;
 };
 

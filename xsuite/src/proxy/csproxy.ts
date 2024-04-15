@@ -1,14 +1,14 @@
-import { addressToBechAddress } from '../data/address';
-import { BroadTx, Proxy, unrawTxRes } from './proxy';
+import { BroadTx, Proxy, ProxyParams, unrawTxRes } from './proxy';
 import { e, eCodeMetadata, EncodableAccount } from '../data/encoding';
 import { Kvs } from '../data/kvs';
+import { addressLikeToBechAddress } from '../data/addressLike';
 
 export class CSProxy extends Proxy {
   stopChainSimulator: () => void;
   autoGenerateBlocks: boolean;
   verbose: boolean;
 
-  constructor(baseUrl: string, stopChainSimulator: () => void, autoGenerateBlocks: boolean = true, verbose: boolean = false) {
+  constructor(baseUrl: ProxyParams, stopChainSimulator: () => void, autoGenerateBlocks: boolean = true, verbose: boolean = false) {
     super(baseUrl);
 
     this.stopChainSimulator = stopChainSimulator;
@@ -16,33 +16,29 @@ export class CSProxy extends Proxy {
     this.verbose = verbose;
   }
 
-  static async setAccount(baseUrl: string, account: EncodableAccount, autoGenerateBlocks: boolean = true, verbose: boolean = false) {
+  async setAccount(account: EncodableAccount) {
     const [previousAccount, previousKvs] = await Promise.all([
-      CSProxy.getAccount(baseUrl, account.address),
-      CSProxy.getAccountKvs(baseUrl, account.address),
+      this.getAccount(account.address),
+      this.getAccountKvs(account.address),
     ]);
     const newAccount = accountToRawAccount(account, previousAccount as any, previousKvs as Kvs);
 
-    if (verbose) {
+    if (this.verbose) {
       console.log('Setting account', newAccount);
     }
 
-    const result = Proxy.fetch(
-      `${baseUrl}/simulator/set-state`,
+    const result = this.fetch(
+      `/simulator/set-state`,
       [newAccount],
     );
 
-    if (autoGenerateBlocks) {
+    if (this.autoGenerateBlocks) {
       await result;
 
-      await CSProxy.generateBlocks(baseUrl);
+      await this.generateBlocks();
     }
 
     return result;
-  }
-
-  setAccount(account: EncodableAccount) {
-    return CSProxy.setAccount(this.baseUrl, account, this.autoGenerateBlocks, this.verbose);
   }
 
   async sendTx(tx: BroadTx) {
@@ -61,8 +57,8 @@ export class CSProxy extends Proxy {
     return result;
   }
 
-  static async getCompletedTxRaw(baseUrl: string, txHash: string) {
-    let res = await Proxy.getTxProcessStatusRaw(baseUrl, txHash);
+  async getCompletedTxRaw(txHash: string) {
+    let res = await this.getTxProcessStatusRaw(txHash);
 
     let retries = 0;
 
@@ -71,24 +67,20 @@ export class CSProxy extends Proxy {
       await new Promise((r) => setTimeout(r, 250));
 
       if (res && res.data && res.data.status === 'pending') {
-        await CSProxy.generateBlocks(baseUrl);
+        await this.generateBlocks();
       }
 
-      res = await CSProxy.getTxProcessStatusRaw(baseUrl, txHash);
+      res = await this.getTxProcessStatusRaw(txHash);
 
       retries++;
 
       // Prevent too many retries in case something does not work as expected
       if (retries > 10) {
-        break;
+        throw new Error(`Transaction ${txHash} could not be completed`);
       }
     }
 
-    return await Proxy.getTxRaw(baseUrl, txHash, { withResults: true });
-  }
-
-  static async getCompletedTx(baseUrl: string, txHash: string) {
-    return unrawTxRes(await CSProxy.getCompletedTxRaw(baseUrl, txHash));
+    return await this.getTxRaw(txHash, { withResults: true });
   }
 
   async getCompletedTx(txHash: string) {
@@ -96,31 +88,19 @@ export class CSProxy extends Proxy {
       console.log('Get completed tx', txHash);
     }
 
-    return CSProxy.getCompletedTx(this.baseUrl, txHash);
-  }
-
-  static generateBlocks(baseUrl: string, numBlocks: number = 1) {
-    return Proxy.fetch(`${baseUrl}/simulator/generate-blocks/${numBlocks}`, {});
+    return super.getCompletedTx(txHash);
   }
 
   generateBlocks(numBlocks: number = 1) {
-    return CSProxy.generateBlocks(this.baseUrl, numBlocks);
-  }
-
-  static getInitialWallets(baseUrl: string) {
-    return Proxy.fetch(`${baseUrl}/simulator/initial-wallets`);
+    return this.fetch(`/simulator/generate-blocks/${numBlocks}`, {});
   }
 
   getInitialWallets() {
-    return CSProxy.getInitialWallets(this.baseUrl);
-  }
-
-  static async terminate(stopChainSimulator: () => void) {
-    await stopChainSimulator();
+    return this.fetch(`/simulator/initial-wallets`);
   }
 
   terminate() {
-    return CSProxy.terminate(this.stopChainSimulator);
+    this.stopChainSimulator();
   }
 }
 
@@ -133,7 +113,7 @@ const accountToRawAccount = (account: EncodableAccount, previousAccount: {
   owner: string | null;
 }, previousKvs: Kvs) => {
   const rawAccount: any = {
-    address: addressToBechAddress(account.address),
+    address: addressLikeToBechAddress(account.address),
     nonce: account.nonce,
     balance: account.balance?.toString() || '0',
     keys: account.kvs != null ? e.kvs(account.kvs) : undefined,
@@ -142,7 +122,7 @@ const accountToRawAccount = (account: EncodableAccount, previousAccount: {
       account.codeMetadata != null
         ? eCodeMetadata(account.codeMetadata)
         : undefined,
-    ownerAddress: account.owner != null ? addressToBechAddress(account.owner) : undefined,
+    ownerAddress: account.owner != null ? addressLikeToBechAddress(account.owner) : undefined,
     developerReward: '0',
   };
 

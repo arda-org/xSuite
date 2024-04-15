@@ -21,9 +21,10 @@ const zeroBytesAddress = new Uint8Array(32);
 const emptyAccount = {
   nonce: 0,
   balance: 0,
-  code: null,
-  codeMetadata: '',
-  owner: null,
+  code: "",
+  codeHash: "",
+  codeMetadata: "",
+  owner: "",
   kvs: {},
 };
 const explorerUrl = 'http://explorer.local';
@@ -421,7 +422,7 @@ test('CSWallet.callContract failure', async () => {
     }),
   ).rejects.toMatchObject({
     message: expect.stringMatching(
-      /^Query failed: function not found - invalid function \(not found\) - Result:\n\{\n {2}"returnData": \[],/,
+      /^Query failed: function not found - invalid function \(not found\) - Result:\n\{\n {2}"returnData": null,/,
     ),
     stack: expect.stringMatching(/src\/world\/csworld\.test\.ts:[0-9]+:[0-9]+/),
   });
@@ -467,9 +468,10 @@ test('CSWallet.getAccount', async () => {
   assertAccount(await wallet.getAccount(), {
     nonce: 0,
     balance: 10n ** 18n,
-    code: null,
+    code: "",
+    codeHash: "",
     codeMetadata: [],
-    owner: null,
+    owner: "",
   });
 
   // Preserve old account nonce since these tests are ran on shared chain simulator
@@ -486,9 +488,10 @@ test('CSWallet.getAccountWithKvs', async () => {
   assertAccount(await wallet.getAccountWithKvs(), {
     nonce: 0,
     balance: 10n ** 18n,
-    code: null,
+    code: "",
+    codeHash: "",
     codeMetadata: [],
-    owner: null,
+    owner: "",
     hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
   });
 
@@ -582,6 +585,7 @@ test('CSWallet.deployContract & upgradeContract', async () => {
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
+  expect(isContractAddress(contract)).toEqual(true);
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
   assertAccount(await contract.getAccountWithKvs(), {
     code: worldCode,

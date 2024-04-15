@@ -1,5 +1,13 @@
 import { expectTypeOf, test } from "vitest";
-import { d } from ".";
+import { e, d } from ".";
+
+test("e.account - keep definedness", () => {
+  expectTypeOf(e.account({ address: "", nonce: 0, balance: 0 })).toEqualTypeOf<{
+    address: string;
+    nonce: number;
+    balance: string;
+  }>();
+});
 
 test("d.Tuple.fromTop - {}", () => {
   // eslint-disable-next-line @typescript-eslint/ban-types
@@ -27,4 +35,11 @@ test("d.vs.from - [d.Str, d.U]", () => {
   expectTypeOf(d.vs([d.Str(), d.U()]).from([])).toEqualTypeOf<
     [string, bigint]
   >();
+});
+
+test("d.account.from - keep definedness", () => {
+  expectTypeOf(d.account().from({ address: "", balance: "0" })).toEqualTypeOf<{
+    address: string;
+    balance: bigint;
+  }>();
 });

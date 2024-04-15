@@ -1,271 +1,187 @@
 import { e } from '../data';
 import {
-  Address,
-  addressToBechAddress,
-  addressToHexAddress,
-} from "../data/address";
+  AddressLike,
+  addressLikeToBechAddress,
+  addressLikeToHexAddress,
+} from "../data/addressLike";
 import { BytesLike } from "../data/bytesLike";
 import { EncodableCodeMetadata, eCodeMetadata } from "../data/encoding";
 import { Kvs } from "../data/kvs";
 import { base64ToHex } from "../data/utils";
 
 export class Proxy {
-  baseUrl: string;
+  proxyUrl: string;
+  headers: HeadersInit;
+  explorerUrl: string;
 
-  constructor(baseUrl: string) {
-    this.baseUrl = baseUrl;
-  }
-
-  static fetchRaw(url: string, data?: any) {
-    return fetch(
-      url,
-      data !== undefined
-        ? { method: "POST", body: JSON.stringify(data) }
-        : undefined,
-    ).then((r) => r.json());
+  constructor(params: ProxyParams) {
+    params = typeof params === "string" ? { proxyUrl: params } : params;
+    this.proxyUrl = params.proxyUrl;
+    this.headers = params.headers ?? {};
+    this.explorerUrl = params.explorerUrl ?? "";
   }
 
   fetchRaw(path: string, data?: any) {
-    return Proxy.fetchRaw(`${this.baseUrl}${path}`, data);
+    const baseUrl = this.proxyUrl;
+    const init: RequestInit = { headers: this.headers };
+    if (data !== undefined) {
+      init.method = "POST";
+      init.body = JSON.stringify(data);
+    }
+    return fetch(`${baseUrl}${path}`, init).then((r) => r.json());
   }
 
-  static async fetch(url: string, data?: any) {
-    return unrawRes(await Proxy.fetchRaw(url, data));
-  }
-
-  fetch(path: string, data?: any) {
-    return Proxy.fetch(`${this.baseUrl}${path}`, data);
-  }
-
-  static sendTxRaw(baseUrl: string, tx: BroadTx) {
-    return Proxy.fetchRaw(`${baseUrl}/transaction/send`, broadTxToRawTx(tx));
+  async fetch(path: string, data?: any) {
+    return unrawRes(await this.fetchRaw(path, data));
   }
 
   sendTxRaw(tx: BroadTx) {
-    return Proxy.sendTxRaw(this.baseUrl, tx);
+    return this.fetchRaw("/transaction/send", broadTxToRawTx(tx));
   }
 
-  static async sendTx(baseUrl: string, tx: BroadTx) {
-    const res = unrawRes(await Proxy.sendTxRaw(baseUrl, tx));
+  async sendTx(tx: BroadTx) {
+    const res = unrawRes(await this.sendTxRaw(tx));
     return res.txHash as string;
   }
 
-  sendTx(tx: BroadTx) {
-    return Proxy.sendTx(this.baseUrl, tx);
+  getTxRaw(txHash: string, options: GetTxOptions = {}) {
+    let path = `/transaction/${txHash}`;
+    if (options.withResults) path += "?withResults=true";
+    return this.fetchRaw(path);
   }
 
-  static getTxRaw(baseUrl: string, txHash: string, options: GetTxOptions = {}) {
-    let url = `${baseUrl}/transaction/${txHash}`;
-    if (options.withResults) url += '?withResults=true';
-    return Proxy.fetchRaw(url);
-  }
-
-  getTxRaw(txHash: string, options?: GetTxOptions) {
-    return Proxy.getTxRaw(this.baseUrl, txHash, options);
-  }
-
-  static async getTx(baseUrl: string, txHash: string, options?: GetTxOptions) {
-    return unrawTxRes(await Proxy.getTxRaw(baseUrl, txHash, options));
-  }
-
-  getTx(txHash: string, options?: GetTxOptions) {
-    return Proxy.getTx(this.baseUrl, txHash, options);
-  }
-
-  static async getTxProcessStatusRaw(baseUrl: string, txHash: string) {
-    return Proxy.fetchRaw(`${baseUrl}/transaction/${txHash}/process-status`);
+  async getTx(txHash: string, options?: GetTxOptions) {
+    return unrawTxRes(await this.getTxRaw(txHash, options));
   }
 
   getTxProcessStatusRaw(txHash: string) {
-    return Proxy.getTxProcessStatusRaw(this.baseUrl, txHash);
+    return this.fetchRaw(`/transaction/${txHash}/process-status`);
   }
 
-  static async getTxProcessStatus(baseUrl: string, txHash: string) {
-    const res = unrawRes(await Proxy.getTxProcessStatusRaw(baseUrl, txHash));
+  async getTxProcessStatus(txHash: string) {
+    const res = unrawRes(await this.getTxProcessStatusRaw(txHash));
     return res.status as string;
   }
 
-  getTxProcessStatus(txHash: string) {
-    return Proxy.getTxProcessStatus(this.baseUrl, txHash);
-  }
-
-  static async getCompletedTxRaw(baseUrl: string, txHash: string) {
-    let res = await Proxy.getTxProcessStatusRaw(baseUrl, txHash);
-    while (res.code !== 'successful' || res.data.status === 'pending') {
+  async getCompletedTxRaw(txHash: string) {
+    let res = await this.getTxProcessStatusRaw(txHash);
+    while (res.code !== "successful" || res.data.status === "pending") {
       await new Promise((r) => setTimeout(r, 1000));
-      res = await Proxy.getTxProcessStatusRaw(baseUrl, txHash);
+      res = await this.getTxProcessStatusRaw(txHash);
     }
-    return await Proxy.getTxRaw(baseUrl, txHash, { withResults: true });
+    return await this.getTxRaw(txHash, { withResults: true });
   }
 
-  getCompletedTxRaw(txHash: string) {
-    return Proxy.getCompletedTxRaw(this.baseUrl, txHash);
-  }
-
-  static async getCompletedTx(baseUrl: string, txHash: string) {
-    return unrawTxRes(await Proxy.getCompletedTxRaw(baseUrl, txHash));
-  }
-
-  getCompletedTx(txHash: string) {
-    return Proxy.getCompletedTx(this.baseUrl, txHash);
-  }
-
-  static queryRaw(baseUrl: string, query: BroadQuery) {
-    return Proxy.fetchRaw(
-      `${baseUrl}/vm-values/query`,
-      broadQueryToRawQuery(query),
+  async getCompletedTx(txHash: string) {
+    const { hash, ..._res } = unrawTxRes(await this.getCompletedTxRaw(txHash));
+    const explorerUrl = `${this.explorerUrl}/transactions/${hash}`;
+    // Destructuring gives an invalid type: https://github.com/microsoft/TypeScript/issues/56456
+    const res = Object.assign({ explorerUrl, hash }, _res);
+    if (res.status !== "success") {
+      throw new TxError("errorStatus", res.status, res);
+    }
+    if (res.executionReceipt?.returnCode) {
+      const { returnCode, returnMessage } = res.executionReceipt;
+      throw new TxError(returnCode, returnMessage, res);
+    }
+    const signalErrorEvent = res?.logs?.events.find(
+      (e: any) => e.identifier === "signalError",
     );
+    if (signalErrorEvent) {
+      const error = atob(signalErrorEvent.topics[1]);
+      throw new TxError("signalError", error, res);
+    }
+    return res as Record<string, any> & { hash: string; explorerUrl: string };
   }
 
   queryRaw(query: BroadQuery) {
-    return Proxy.queryRaw(this.baseUrl, query);
+    return this.fetchRaw("/vm-values/query", broadQueryToRawQuery(query));
   }
 
-  static async query(baseUrl: string, query: BroadQuery) {
-    const res = unrawRes(await Proxy.queryRaw(baseUrl, query));
+  async query(query: BroadQuery) {
+    const { data } = unrawRes(await this.queryRaw(query));
+    if (![0, "ok"].includes(data.returnCode)) {
+      throw new QueryError(data.returnCode, data.returnMessage, data);
+    }
     return {
-      ...res.data,
-      returnData: (res.data.returnData ?? []).map(base64ToHex),
+      ...data,
+      returnData: data.returnData.map(base64ToHex),
     } as Record<string, any> & { returnData: string[] };
   }
 
-  query(query: BroadQuery) {
-    return Proxy.query(this.baseUrl, query);
+  getAccountRaw(address: AddressLike) {
+    return this.fetchRaw(`/address/${addressLikeToBechAddress(address)}`);
   }
 
-  static getAccountRaw(baseUrl: string, address: Address) {
-    return Proxy.fetchRaw(
-      `${baseUrl}/address/${addressToBechAddress(address)}`,
-    );
-  }
-
-  getAccountRaw(address: Address) {
-    return Proxy.getAccountRaw(this.baseUrl, address);
-  }
-
-  static async getSerializableAccount(baseUrl: string, address: Address) {
-    const res = unrawRes(await Proxy.getAccountRaw(baseUrl, address));
-    const account: {
-      address: string;
-      nonce: number;
-      balance: string;
-      code?: string | undefined;
-      codeMetadata?: string | undefined;
-      owner?: string | undefined;
-    } = {
+  async getSerializableAccount(address: AddressLike) {
+    const res = unrawRes(await this.getAccountRaw(address));
+    return {
       address: res.account.address,
       nonce: res.account.nonce,
       balance: res.account.balance,
+      code: res.account.code,
+      codeHash: base64ToHex(res.account.codeHash ?? ""),
+      codeMetadata: /[0-9]{4}/g.test(res.account.codeMetadata)
+        ? res.account.codeMetadata
+        : base64ToHex(res.account.codeMetadata ?? ""),
+      owner: res.account.ownerAddress,
+    } as {
+      address: string;
+      nonce: number;
+      balance: string;
+      code: string;
+      codeMetadata: string;
+      codeHash: string;
+      owner: string;
     };
-    if (res.account.code) {
-      account.code = res.account.code;
-    }
-    if (res.account.codeMetadata) {
-      if (/[0-9]{4}/g.test(res.account.codeMetadata)) { // can be hex directly for chain simulator
-        account.codeMetadata = res.account.codeMetadata;
-      } else {
-        account.codeMetadata = base64ToHex(res.account.codeMetadata);
-      }
-    }
-    if (res.account.ownerAddress) {
-      account.owner = res.account.ownerAddress;
-    }
-    return account;
   }
 
-  getSerializableAccount(address: Address) {
-    return Proxy.getSerializableAccount(this.baseUrl, address);
-  }
-
-  static async getAccount(baseUrl: string, address: Address) {
-    const { balance, ...account } = await Proxy.getSerializableAccount(
-      baseUrl,
-      address,
-    );
+  async getAccount(address: AddressLike) {
+    const { balance, ...account } = await this.getSerializableAccount(address);
     return { balance: BigInt(balance), ...account };
   }
 
-  getAccount(address: Address) {
-    return Proxy.getAccount(this.baseUrl, address);
+  getAccountNonceRaw(address: AddressLike) {
+    return this.fetchRaw(`/address/${addressLikeToBechAddress(address)}/nonce`);
   }
 
-  static getAccountNonceRaw(baseUrl: string, address: Address) {
-    return Proxy.fetchRaw(
-      `${baseUrl}/address/${addressToBechAddress(address)}/nonce`,
-    );
-  }
-
-  getAccountNonceRaw(address: Address) {
-    return Proxy.getAccountNonceRaw(this.baseUrl, address);
-  }
-
-  static async getAccountNonce(baseUrl: string, address: Address) {
-    const res = unrawRes(await Proxy.getAccountNonceRaw(baseUrl, address));
+  async getAccountNonce(address: AddressLike) {
+    const res = unrawRes(await this.getAccountNonceRaw(address));
     return res.nonce as number;
   }
 
-  getAccountNonce(address: Address) {
-    return Proxy.getAccountNonce(this.baseUrl, address);
-  }
-
-  static getAccountBalanceRaw(baseUrl: string, address: Address) {
-    return Proxy.fetchRaw(
-      `${baseUrl}/address/${addressToBechAddress(address)}/balance`,
+  getAccountBalanceRaw(address: AddressLike) {
+    return this.fetchRaw(
+      `/address/${addressLikeToBechAddress(address)}/balance`,
     );
   }
 
-  getAccountBalanceRaw(address: Address) {
-    return Proxy.getAccountBalanceRaw(this.baseUrl, address);
-  }
-
-  static async getAccountBalance(baseUrl: string, address: Address) {
-    const res = unrawRes(await Proxy.getAccountBalanceRaw(baseUrl, address));
+  async getAccountBalance(address: AddressLike) {
+    const res = unrawRes(await this.getAccountBalanceRaw(address));
     return BigInt(res.balance);
   }
 
-  getAccountBalance(address: Address) {
-    return Proxy.getAccountBalance(this.baseUrl, address);
+  getAccountKvsRaw(address: AddressLike) {
+    return this.fetchRaw(`/address/${addressLikeToBechAddress(address)}/keys`);
   }
 
-  static getAccountKvsRaw(baseUrl: string, address: Address) {
-    return Proxy.fetchRaw(
-      `${baseUrl}/address/${addressToBechAddress(address)}/keys`,
-    );
-  }
-
-  getAccountKvsRaw(address: Address) {
-    return Proxy.getAccountKvsRaw(this.baseUrl, address);
-  }
-
-  static async getAccountKvs(baseUrl: string, address: Address) {
-    const res = unrawRes(await Proxy.getAccountKvsRaw(baseUrl, address));
+  async getAccountKvs(address: AddressLike) {
+    const res = unrawRes(await this.getAccountKvsRaw(address));
     return res.pairs as Kvs;
   }
 
-  getAccountKvs(address: Address) {
-    return Proxy.getAccountKvs(this.baseUrl, address);
-  }
-
-  static getSerializableAccountWithKvs(baseUrl: string, address: Address) {
+  getSerializableAccountWithKvs(address: AddressLike) {
     return Promise.all([
-      Proxy.getSerializableAccount(baseUrl, address),
-      Proxy.getAccountKvs(baseUrl, address),
+      this.getSerializableAccount(address),
+      this.getAccountKvs(address),
     ]).then(([account, kvs]) => ({ ...account, kvs }));
   }
 
-  getSerializableAccountWithKvs(address: Address) {
-    return Proxy.getSerializableAccountWithKvs(this.baseUrl, address);
-  }
-
-  static getAccountWithKvs(baseUrl: string, address: Address) {
+  getAccountWithKvs(address: AddressLike) {
     return Promise.all([
-      Proxy.getAccount(baseUrl, address),
-      Proxy.getAccountKvs(baseUrl, address),
+      this.getAccount(address),
+      this.getAccountKvs(address),
     ]).then(([account, kvs]) => ({ ...account, kvs }));
-  }
-
-  getAccountWithKvs(address: Address) {
-    return Proxy.getAccountWithKvs(this.baseUrl, address);
   }
 }
 
@@ -277,8 +193,8 @@ export class Tx {
     this.unsignedRawTx = {
       nonce: params.nonce,
       value: (params.value ?? 0n).toString(),
-      receiver: addressToBechAddress(params.receiver),
-      sender: addressToBechAddress(params.sender),
+      receiver: addressLikeToBechAddress(params.receiver),
+      sender: addressLikeToBechAddress(params.sender),
       gasPrice: params.gasPrice,
       gasLimit: params.gasLimit,
       data: params.data === undefined ? undefined : btoa(params.data),
@@ -328,19 +244,19 @@ export class Tx {
     };
   }
 
-  static getParamsToTransfer<T, U extends Address>({
+  static getParamsToTransfer<T, U extends AddressLike>({
     receiver: _receiver,
     sender,
     esdts,
     ...txParams
-  }: Pick<TransferTxParams, 'receiver' | 'esdts'> & { sender: U } & T) {
-    let receiver: Address;
+  }: Pick<TransferTxParams, "receiver" | "esdts"> & { sender: U } & T) {
+    let receiver: AddressLike;
     let data: string | undefined;
     if (esdts?.length) {
       receiver = sender;
       const dataParts: string[] = [];
-      dataParts.push('MultiESDTNFTTransfer');
-      dataParts.push(addressToHexAddress(_receiver));
+      dataParts.push("MultiESDTNFTTransfer");
+      dataParts.push(addressLikeToHexAddress(_receiver));
       dataParts.push(e.U(esdts.length).toTopHex());
       for (const esdt of esdts) {
         dataParts.push(e.Str(esdt.id).toTopHex());
@@ -359,7 +275,7 @@ export class Tx {
     };
   }
 
-  static getParamsToCallContract<T, U extends Address>({
+  static getParamsToCallContract<T, U extends AddressLike>({
     callee,
     sender,
     funcName,
@@ -371,11 +287,11 @@ export class Tx {
     'callee' | 'funcName' | 'funcArgs' | 'esdts'
   > & { sender: U } & T) {
     const dataParts: string[] = [];
-    let receiver: Address;
+    let receiver: AddressLike;
     if (esdts?.length) {
       receiver = sender;
-      dataParts.push('MultiESDTNFTTransfer');
-      dataParts.push(addressToHexAddress(callee));
+      dataParts.push("MultiESDTNFTTransfer");
+      dataParts.push(addressLikeToHexAddress(callee));
       dataParts.push(e.U(esdts.length).toTopHex());
       for (const esdt of esdts) {
         dataParts.push(e.Str(esdt.id).toTopHex());
@@ -410,6 +326,41 @@ export class Tx {
   }
 }
 
+export class InteractionError extends Error {
+  interaction: string;
+  code: number | string;
+  msg: string;
+  result: any;
+
+  constructor(
+    interaction: string,
+    code: number | string,
+    message: string,
+    result: any,
+  ) {
+    super(
+      `${interaction} failed: ${code} - ${message} - Result:\n` +
+        JSON.stringify(result, null, 2),
+    );
+    this.interaction = interaction;
+    this.code = code;
+    this.msg = message;
+    this.result = result;
+  }
+}
+
+class TxError extends InteractionError {
+  constructor(code: number | string, message: string, result: any) {
+    super("Transaction", code, message, result);
+  }
+}
+
+class QueryError extends InteractionError {
+  constructor(code: number | string, message: string, result: any) {
+    super("Query", code, message, result);
+  }
+}
+
 const unrawRes = (res: any) => {
   if (res.code === 'successful') {
     return res.data;
@@ -433,12 +384,12 @@ const broadTxToRawTx = (tx: BroadTx): RawTx => {
 const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
   if ('callee' in query) {
     query = {
-      scAddress: addressToBechAddress(query.callee),
+      scAddress: addressLikeToBechAddress(query.callee),
       funcName: query.funcName,
       args: e.vs(query.funcArgs ?? []),
       caller:
         query.sender !== undefined
-          ? addressToBechAddress(query.sender)
+          ? addressLikeToBechAddress(query.sender)
           : undefined,
       value: query.value !== undefined ? query.value.toString() : undefined,
     };
@@ -448,6 +399,10 @@ const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
 
 const zeroBechAddress =
   'erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu';
+
+export type ProxyParams =
+  | string
+  | { proxyUrl: string; headers?: HeadersInit; explorerUrl?: string };
 
 export type BroadTx = Tx | RawTx;
 
@@ -467,10 +422,10 @@ type RawTx = {
 type BroadQuery = Query | RawQuery;
 
 export type Query = {
-  callee: Address;
+  callee: AddressLike;
   funcName: string;
   funcArgs?: BytesLike[];
-  sender?: Address;
+  sender?: AddressLike;
   value?: number | bigint;
 };
 
@@ -485,8 +440,8 @@ type RawQuery = {
 export type TxParams = {
   nonce: number;
   value?: number | bigint;
-  receiver: Address;
-  sender: Address;
+  receiver: AddressLike;
+  sender: AddressLike;
   gasPrice: number;
   gasLimit: number;
   data?: string;
@@ -497,7 +452,7 @@ export type TxParams = {
 export type DeployContractTxParams = {
   nonce: number;
   value?: number | bigint;
-  sender: Address;
+  sender: AddressLike;
   gasPrice: number;
   gasLimit: number;
   code: string;
@@ -510,8 +465,8 @@ export type DeployContractTxParams = {
 export type UpgradeContractTxParams = {
   nonce: number;
   value?: number | bigint;
-  callee: Address;
-  sender: Address;
+  callee: AddressLike;
+  sender: AddressLike;
   gasPrice: number;
   gasLimit: number;
   code: string;
@@ -524,8 +479,8 @@ export type UpgradeContractTxParams = {
 export type TransferTxParams = {
   nonce: number;
   value?: number | bigint;
-  receiver: Address;
-  sender: Address;
+  receiver: AddressLike;
+  sender: AddressLike;
   gasPrice: number;
   gasLimit: number;
   esdts?: { id: string; nonce?: number; amount: number | bigint }[];
@@ -536,8 +491,8 @@ export type TransferTxParams = {
 export type CallContractTxParams = {
   nonce: number;
   value?: number | bigint;
-  callee: Address;
-  sender: Address;
+  callee: AddressLike;
+  sender: AddressLike;
   gasPrice: number;
   gasLimit: number;
   funcName: string;
