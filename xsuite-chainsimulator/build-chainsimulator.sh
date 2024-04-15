@@ -1,6 +1,6 @@
 #!/bin/sh
 
-REPOSRC="git@github.com:multiversx/mx-chain-simulator-go.git"
+REPOSRC="https://github.com/multiversx/mx-chain-simulator-go.git"
 REPOVERSION="v1.7.4"
 LOCALREPO_VC_DIR="mx-chain-simulator-go/.git"
 

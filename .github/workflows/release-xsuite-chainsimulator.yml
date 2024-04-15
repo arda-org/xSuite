@@ -65,7 +65,7 @@ jobs:
 
       - name: Test
         run: |
-          ./xsuite-chainsimulator/bin/${{ matrix.binary }} --config xsuite-chainsimulator/config/config.toml --node-configs xsuite-chainsimulator/config/node/config --proxy-configs xsuite-chainsimulator/config/proxy/config &
+          ./xsuite-chainsimulator/bin/${{ matrix.binary }} --config xsuite-chainsimulator/config/config.toml --node-override-config xsuite-chainsimulator/config/nodeOverride.toml --node-configs xsuite-chainsimulator/config/node/config --proxy-configs xsuite-chainsimulator/config/proxy/config &
           SERVER_PID=$!
           sleep 2
           if kill -0 $SERVER_PID 2>/dev/null; then

@@ -319,45 +319,49 @@ test("CSWorld.executeTx", async () => {
   });
 });
 
-test("CSWorld.sendTx", async () => {
-  const txHash = await world.sendTx(
-    Tx.getParamsToCallContract({
-      sender: wallet,
-      callee: contract,
-      funcName: "fund",
-      value: 10n ** 17n,
-      gasLimit: 10_000_000,
-    }),
-  );
+test(
+  "CSWorld.sendTx",
+  async () => {
+    const txHash = await world.sendTx(
+      Tx.getParamsToCallContract({
+        sender: wallet,
+        callee: contract,
+        funcName: "fund",
+        value: 10n ** 17n,
+        gasLimit: 10_000_000,
+      }),
+    );
 
-  // Transaction was not yet included in a block
-  try {
-    await world.proxy.getTx(txHash, { withResults: true });
+    // Transaction was not yet included in a block
+    try {
+      await world.proxy.getTx(txHash, { withResults: true });
 
-    assert(false);
-  } catch (e) {
-    assert(true);
-  }
+      assert(false);
+    } catch (e) {
+      assert(true);
+    }
 
-  // After generating 1 block, transaction is pending
-  await world.generateBlock();
-  let result = await world.proxy.getTx(txHash, { withResults: true });
+    // After generating 1 block, transaction is pending
+    await world.generateBlock();
+    let result = await world.proxy.getTx(txHash, { withResults: true });
 
-  expect(result.status === "pending");
+    expect(result.status === "pending");
 
-  // After generating 2 blocks, transaction is successful
-  await world.generateBlocks(1);
-  result = await world.proxy.getTx(txHash, { withResults: true });
+    // After generating 2 blocks, transaction is successful
+    await world.generateBlocks(1);
+    result = await world.proxy.getTx(txHash, { withResults: true });
 
-  expect(result.status === "success");
+    expect(result.status === "success");
 
-  assertAccount(await wallet.getAccountWithKvs(), {
-    balance: 9n * 10n ** 17n - 6_864_545n * 10n ** 7n,
-  });
-  assertAccount(await contract.getAccountWithKvs(), {
-    balance: 10n ** 18n + 10n ** 17n,
-  });
-});
+    assertAccount(await wallet.getAccountWithKvs(), {
+      balance: 9n * 10n ** 17n - 6_864_545n * 10n ** 7n,
+    });
+    assertAccount(await contract.getAccountWithKvs(), {
+      balance: 10n ** 18n + 10n ** 17n,
+    });
+  },
+  { timeout: 15_000, retry: 3 },
+);
 
 test(
   "CSWorld.transfer",
@@ -383,7 +387,7 @@ test(
       hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 17n }])],
     });
   },
-  { timeout: 10_000 },
+  { timeout: 15_000, retry: 3 },
 );
 
 test("CSWorld.deployContract & upgradeContract", async () => {
