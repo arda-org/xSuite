@@ -1,4 +1,4 @@
-import { e } from '../data';
+import { e } from "../data";
 import {
   AddressLike,
   addressLikeToBechAddress,
@@ -186,7 +186,7 @@ export class Proxy {
 }
 
 export class Tx {
-  unsignedRawTx: Omit<RawTx, 'signature'>;
+  unsignedRawTx: Omit<RawTx, "signature">;
   signature: string | undefined;
 
   constructor(params: TxParams) {
@@ -208,7 +208,7 @@ export class Tx {
     codeMetadata,
     codeArgs,
     ...txParams
-  }: Pick<DeployContractTxParams, 'code' | 'codeMetadata' | 'codeArgs'> & T) {
+  }: Pick<DeployContractTxParams, "code" | "codeMetadata" | "codeArgs"> & T) {
     return {
       receiver: zeroBechAddress,
       data: [
@@ -229,13 +229,13 @@ export class Tx {
     ...txParams
   }: Pick<
     UpgradeContractTxParams,
-    'callee' | 'code' | 'codeMetadata' | 'codeArgs'
+    "callee" | "code" | "codeMetadata" | "codeArgs"
   > &
     T) {
     return {
       receiver: callee,
       data: [
-        'upgradeContract',
+        "upgradeContract",
         code,
         eCodeMetadata(codeMetadata),
         ...e.vs(codeArgs ?? []),
@@ -263,7 +263,7 @@ export class Tx {
         dataParts.push(e.U(esdt.nonce ?? 0).toTopHex());
         dataParts.push(e.U(esdt.amount).toTopHex());
       }
-      data = dataParts.join('@');
+      data = dataParts.join("@");
     } else {
       receiver = _receiver;
     }
@@ -284,7 +284,7 @@ export class Tx {
     ...txParams
   }: Pick<
     CallContractTxParams,
-    'callee' | 'funcName' | 'funcArgs' | 'esdts'
+    "callee" | "funcName" | "funcArgs" | "esdts"
   > & { sender: U } & T) {
     const dataParts: string[] = [];
     let receiver: AddressLike;
@@ -307,7 +307,7 @@ export class Tx {
     return {
       receiver,
       sender,
-      data: dataParts.join('@'),
+      data: dataParts.join("@"),
       ...txParams,
     };
   }
@@ -315,12 +315,12 @@ export class Tx {
   async sign(signer: { sign: (data: Buffer) => Promise<Buffer> }) {
     this.signature = await signer
       .sign(Buffer.from(JSON.stringify(this.unsignedRawTx)))
-      .then((b) => b.toString('hex'));
+      .then((b) => b.toString("hex"));
   }
 
   toRawTx(): RawTx {
     if (this.signature === undefined) {
-      throw new Error('Transaction not signed.');
+      throw new Error("Transaction not signed.");
     }
     return { ...this.unsignedRawTx, signature: this.signature };
   }
@@ -362,7 +362,7 @@ class QueryError extends InteractionError {
 }
 
 const unrawRes = (res: any) => {
-  if (res.code === 'successful') {
+  if (res.code === "successful") {
     return res.data;
   } else {
     const resStr = JSON.stringify(res, null, 2);
@@ -382,7 +382,7 @@ const broadTxToRawTx = (tx: BroadTx): RawTx => {
 };
 
 const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
-  if ('callee' in query) {
+  if ("callee" in query) {
     query = {
       scAddress: addressLikeToBechAddress(query.callee),
       funcName: query.funcName,
@@ -398,7 +398,7 @@ const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
 };
 
 const zeroBechAddress =
-  'erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu';
+  "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
 
 export type ProxyParams =
   | string

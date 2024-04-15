@@ -1,5 +1,5 @@
-import { AddressLike } from '../data/addressLike';
-import { Optional, Prettify } from '../helpers';
+import { AddressLike } from "../data/addressLike";
+import { Optional, Prettify } from "../helpers";
 import {
   devnetChainId,
   devnetExplorerUrl,
@@ -13,7 +13,7 @@ import {
   testnetExplorerUrl,
   testnetMinGasPrice,
   testnetPublicProxyUrl,
-} from '../interact/envChain';
+} from "../interact/envChain";
 import {
   CallContractTxParams,
   DeployContractTxParams,
@@ -24,10 +24,10 @@ import {
   Tx,
   TxParams,
   UpgradeContractTxParams,
-} from '../proxy/proxy';
-import { Account } from './account';
-import { KeystoreSigner, Signer } from './signer';
-import { readFileHex } from './utils';
+} from "../proxy/proxy";
+import { Account } from "./account";
+import { KeystoreSigner, Signer } from "./signer";
+import { readFileHex } from "./utils";
 
 export class World {
   chainId: string;

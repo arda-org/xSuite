@@ -1,13 +1,24 @@
-import { ChildProcess } from 'node:child_process';
-import { CSProxy } from '../proxy';
-import { Contract, expandCode, Wallet, WalletDeployContractParams, World, WorldNewOptions } from './world';
-import { startCSproxyBin } from './csproxyBin';
-import { DummySigner, Signer } from './signer';
-import { generateContractU8AAddress, generateWalletU8AAddress, isContractAddress } from './utils';
-import { EncodableAccount } from '../data/encoding';
-import { AddressLike } from '../data/addressLike';
-import { killChildProcess } from './childProcesses';
-import { Prettify } from '../helpers';
+import { ChildProcess } from "node:child_process";
+import { AddressLike } from "../data/addressLike";
+import { EncodableAccount } from "../data/encoding";
+import { Prettify } from "../helpers";
+import { CSProxy } from "../proxy";
+import { killChildProcess } from "./childProcesses";
+import { startCSproxyBin } from "./csproxyBin";
+import { DummySigner, Signer } from "./signer";
+import {
+  generateContractU8AAddress,
+  generateWalletU8AAddress,
+  isContractAddress,
+} from "./utils";
+import {
+  Contract,
+  expandCode,
+  Wallet,
+  WalletDeployContractParams,
+  World,
+  WorldNewOptions,
+} from "./world";
 
 export class CSWorld extends World {
   proxy: CSProxy;
@@ -28,7 +39,7 @@ export class CSWorld extends World {
     server?: ChildProcess;
     verbose?: boolean;
   }) {
-    super({ chainId: 'chain', proxy, gasPrice, explorerUrl });
+    super({ chainId: "chain", proxy, gasPrice, explorerUrl });
 
     this.proxy = proxy;
     this.server = server;
@@ -38,7 +49,7 @@ export class CSWorld extends World {
 
   static new(options: CSWorldNewOptions) {
     if (options.chainId !== undefined) {
-      throw new Error('chainId is not undefined.');
+      throw new Error("chainId is not undefined.");
     }
     const {
       proxyUrl,
@@ -46,18 +57,16 @@ export class CSWorld extends World {
       explorerUrl,
       server,
       waitCompletedTimeout,
-      verbose
+      verbose,
     } = options;
     return new CSWorld({
-      proxy: new CSProxy(
-        {
-          proxyUrl,
-          explorerUrl,
-          autoGenerateBlocks: options.autoGenerateBlocks ?? true,
-          waitCompletedTimeout,
-          verbose: options.verbose ?? false,
-        },
-      ),
+      proxy: new CSProxy({
+        proxyUrl,
+        explorerUrl,
+        autoGenerateBlocks: options.autoGenerateBlocks ?? true,
+        waitCompletedTimeout,
+        verbose: options.verbose ?? false,
+      }),
       gasPrice: gasPrice ?? 1000000000,
       explorerUrl,
       server,
@@ -66,15 +75,15 @@ export class CSWorld extends World {
   }
 
   static newDevnet(): World {
-    throw new Error('newDevnet is not implemented.');
+    throw new Error("newDevnet is not implemented.");
   }
 
   static newTestnet(): World {
-    throw new Error('newTestnet is not implemented.');
+    throw new Error("newTestnet is not implemented.");
   }
 
   static newMainnet(): World {
-    throw new Error('newMainnet is not implemented.');
+    throw new Error("newMainnet is not implemented.");
   }
 
   static async start({
@@ -90,14 +99,26 @@ export class CSWorld extends World {
     port?: number;
     gasPrice?: number;
     explorerUrl?: string;
-    autoGenerateBlocks?: boolean,
-    verbose?: boolean,
-    waitFor?: number,
-    configFolder?: string,
-    debug?: boolean,
+    autoGenerateBlocks?: boolean;
+    verbose?: boolean;
+    waitFor?: number;
+    configFolder?: string;
+    debug?: boolean;
   } = {}): Promise<CSWorld> {
-    const { server, proxyUrl } = await startCSproxyBin(port, debug, waitFor, configFolder);
-    return CSWorld.new({ proxyUrl, gasPrice, explorerUrl, server, autoGenerateBlocks, verbose });
+    const { server, proxyUrl } = await startCSproxyBin(
+      port,
+      debug,
+      waitFor,
+      configFolder,
+    );
+    return CSWorld.new({
+      proxyUrl,
+      gasPrice,
+      explorerUrl,
+      server,
+      autoGenerateBlocks,
+      verbose,
+    });
   }
 
   // TODO:
@@ -148,7 +169,7 @@ export class CSWorld extends World {
   }
 
   terminate() {
-    if (!this.server) throw new Error('No server defined.');
+    if (!this.server) throw new Error("No server defined.");
     killChildProcess(this.server);
   }
 }
@@ -193,13 +214,7 @@ export class CSWallet extends Wallet {
 export class CSContract extends Contract {
   proxy: CSProxy;
 
-  constructor({
-    address,
-    proxy,
-  }: {
-    address: AddressLike;
-    proxy: CSProxy;
-  }) {
+  constructor({ address, proxy }: { address: AddressLike; proxy: CSProxy }) {
     super({ address, proxy });
     this.proxy = proxy;
   }
@@ -212,7 +227,7 @@ export class CSContract extends Contract {
 const setAccount = (proxy: CSProxy, params: EncodableAccount) => {
   if (params.code == null) {
     if (isContractAddress(params.address)) {
-      params.code = '00';
+      params.code = "00";
     }
   } else {
     params.code = expandCode(params.code);
@@ -231,23 +246,21 @@ export const createContract = async (
 
 type CSWorldNewOptions =
   | {
-  chainId?: undefined;
-  proxyUrl: string;
-  gasPrice?: number;
-  explorerUrl?: string;
-  server?: ChildProcess;
-  autoGenerateBlocks?: boolean;
-  waitCompletedTimeout?: number;
-  verbose?: boolean;
-}
+      chainId?: undefined;
+      proxyUrl: string;
+      gasPrice?: number;
+      explorerUrl?: string;
+      server?: ChildProcess;
+      autoGenerateBlocks?: boolean;
+      waitCompletedTimeout?: number;
+      verbose?: boolean;
+    }
   | WorldNewOptions;
 
 export type CSWorldCreateAccountParams = Prettify<Partial<EncodableAccount>>;
 
-type CSAccountSetAccountParams = Prettify<
-  Omit<EncodableAccount, 'address'>
->;
+type CSAccountSetAccountParams = Prettify<Omit<EncodableAccount, "address">>;
 
 type CSWalletCreateContractParams = Prettify<
-  Omit<CSWorldCreateAccountParams, 'owner'>
+  Omit<CSWorldCreateAccountParams, "owner">
 >;

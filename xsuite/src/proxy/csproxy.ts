@@ -1,7 +1,7 @@
-import { BroadTx, Proxy } from './proxy';
-import { e, eCodeMetadata, EncodableAccount } from '../data/encoding';
-import { Kvs } from '../data/kvs';
-import { addressLikeToBechAddress } from '../data/addressLike';
+import { addressLikeToBechAddress } from "../data/addressLike";
+import { e, eCodeMetadata, EncodableAccount } from "../data/encoding";
+import { Kvs } from "../data/kvs";
+import { BroadTx, Proxy } from "./proxy";
 
 export class CSProxy extends Proxy {
   autoGenerateBlocks: boolean;
@@ -21,16 +21,17 @@ export class CSProxy extends Proxy {
       this.getAccount(account.address),
       this.getAccountKvs(account.address),
     ]);
-    const newAccount = accountToRawAccount(account, previousAccount as any, previousKvs as Kvs);
+    const newAccount = accountToRawAccount(
+      account,
+      previousAccount as any,
+      previousKvs as Kvs,
+    );
 
     if (this.verbose) {
-      console.log('Setting account', newAccount);
+      console.log("Setting account", newAccount);
     }
 
-    const result = this.fetch(
-      `/simulator/set-state`,
-      [newAccount],
-    );
+    const result = this.fetch("/simulator/set-state", [newAccount]);
 
     if (this.autoGenerateBlocks) {
       await result;
@@ -43,7 +44,7 @@ export class CSProxy extends Proxy {
 
   async sendTx(tx: BroadTx) {
     if (this.verbose) {
-      console.log('Sending transaction', tx);
+      console.log("Sending transaction", tx);
     }
 
     const result = super.sendTx(tx);
@@ -62,11 +63,11 @@ export class CSProxy extends Proxy {
 
     let retries = 0;
 
-    while (!res || res.code !== 'successful' || res.data.status === 'pending') {
+    while (!res || res.code !== "successful" || res.data.status === "pending") {
       // We need delay since cross shard changes might not have been processed immediately
       await new Promise((r) => setTimeout(r, this.waitCompletedTimeout));
 
-      if (res && res.data && res.data.status === 'pending') {
+      if (res && res.data && res.data.status === "pending") {
         await this.generateBlock();
       }
 
@@ -85,7 +86,7 @@ export class CSProxy extends Proxy {
 
   async getCompletedTx(txHash: string) {
     if (this.verbose) {
-      console.log('Get completed tx', txHash);
+      console.log("Get completed tx", txHash);
     }
 
     return super.getCompletedTx(txHash);
@@ -100,48 +101,60 @@ export class CSProxy extends Proxy {
   }
 
   generateBlocksUntilEpochReached(epoch: number) {
-    return this.fetch(`/simulator/generate-blocks-until-epoch-reached/${epoch}`, {});
+    return this.fetch(
+      `/simulator/generate-blocks-until-epoch-reached/${epoch}`,
+      {},
+    );
   }
 
   getInitialWallets() {
-    return this.fetch(`/simulator/initial-wallets`);
+    return this.fetch("/simulator/initial-wallets");
   }
 }
 
-const accountToRawAccount = (account: EncodableAccount, previousAccount: {
-  address: string;
-  nonce: number;
-  balance: bigint;
-  code: string | null;
-  codeMetadata: string | null;
-  owner: string | null;
-}, previousKvs: Kvs) => {
+const accountToRawAccount = (
+  account: EncodableAccount,
+  previousAccount: {
+    address: string;
+    nonce: number;
+    balance: bigint;
+    code: string | null;
+    codeMetadata: string | null;
+    owner: string | null;
+  },
+  previousKvs: Kvs,
+) => {
   const rawAccount: any = {
     address: addressLikeToBechAddress(account.address),
     nonce: account.nonce,
-    balance: account.balance?.toString() || '0',
+    balance: account.balance?.toString() || "0",
     keys: account.kvs != null ? e.kvs(account.kvs) : undefined,
     code: account.code,
     codeMetadata:
       account.codeMetadata != null
         ? eCodeMetadata(account.codeMetadata)
         : undefined,
-    ownerAddress: account.owner != null ? addressLikeToBechAddress(account.owner) : undefined,
-    developerReward: '0',
+    ownerAddress:
+      account.owner != null
+        ? addressLikeToBechAddress(account.owner)
+        : undefined,
+    developerReward: "0",
   };
 
   if (rawAccount.keys !== undefined && Object.keys(previousKvs).length) {
     for (const key in previousKvs) {
       if (!(key in rawAccount.keys)) {
-        rawAccount.keys[key] = '';
+        rawAccount.keys[key] = "";
       }
     }
   }
 
-  Object.keys(rawAccount).forEach(key => rawAccount[key] === undefined ? delete rawAccount[key] : {});
+  Object.keys(rawAccount).forEach((key) =>
+    rawAccount[key] === undefined ? delete rawAccount[key] : {},
+  );
 
   // Preserve properties which need to have default values on initial account creation
-  if (previousAccount.code && rawAccount.code === '00') {
+  if (previousAccount.code && rawAccount.code === "00") {
     rawAccount.code = previousAccount.code;
   }
   if (previousAccount.balance > 0n && !account.balance?.toString()) {
