@@ -43,7 +43,7 @@ beforeEach(async () => {
   contract = await wallet.createContract({
     balance: 10n ** 18n,
     code: worldCode,
-    codeMetadata: ["payable"],
+    codeMetadata: ["readable"],
     kvs: {
       esdts: [{ id: fftId, amount: 10n ** 18n }],
       mappers: [{ key: "n", value: e.U64(2) }],
@@ -332,11 +332,11 @@ test("SWorld.transfer", async () => {
   });
 });
 
-test("SWorld.deployContract & upgradeContract", async () => {
+test("SWorld.deployContract", async () => {
   const { contract } = await world.deployContract({
     sender: wallet,
     code: worldCode,
-    codeMetadata: ["readable", "payable", "payableBySc", "upgradeable"],
+    codeMetadata: ["readable"],
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
@@ -344,18 +344,28 @@ test("SWorld.deployContract & upgradeContract", async () => {
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
   assertAccount(await contract.getAccountWithKvs(), {
     code: worldCode,
+    codeMetadata: ["readable"],
     hasKvs: [[e.Str("n"), e.U64(1)]],
+  });
+});
+
+test("SWorld.upgradeContract", async () => {
+  await contract.setAccount({
+    code: worldCode,
+    codeMetadata: ["upgradeable"],
+    owner: wallet,
   });
   await world.upgradeContract({
     sender: wallet,
     callee: contract,
     code: worldCode,
-    codeMetadata: "0000",
+    codeMetadata: ["readable"],
     codeArgs: [e.U64(2)],
     gasLimit: 10_000_000,
   });
   assertAccount(await contract.getAccountWithKvs(), {
     code: worldCode,
+    codeMetadata: ["readable"],
     hasKvs: [[e.Str("n"), e.U64(2)]],
   });
 });
@@ -522,10 +532,10 @@ test("SWallet.transfer", async () => {
   });
 });
 
-test("SWallet.deployContract & upgradeContract", async () => {
+test("SWallet.deployContract", async () => {
   const { contract } = await wallet.deployContract({
     code: worldCode,
-    codeMetadata: ["readable", "payable", "payableBySc", "upgradeable"],
+    codeMetadata: ["readable"],
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
@@ -533,17 +543,27 @@ test("SWallet.deployContract & upgradeContract", async () => {
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
   assertAccount(await contract.getAccountWithKvs(), {
     code: worldCode,
+    codeMetadata: ["readable"],
     hasKvs: [[e.Str("n"), e.U64(1)]],
+  });
+});
+
+test("SWallet.upgradeContract", async () => {
+  await contract.setAccount({
+    code: worldCode,
+    codeMetadata: ["upgradeable"],
+    owner: wallet,
   });
   await wallet.upgradeContract({
     callee: contract,
     code: worldCode,
-    codeMetadata: "0000",
+    codeMetadata: ["readable"],
     codeArgs: [e.U64(2)],
     gasLimit: 10_000_000,
   });
   assertAccount(await contract.getAccountWithKvs(), {
     code: worldCode,
+    codeMetadata: ["readable"],
     hasKvs: [[e.Str("n"), e.U64(2)]],
   });
 });
@@ -703,7 +723,7 @@ test("SContract.getAccountWithKvs", async () => {
     code: worldCode,
     codeHash:
       "d8c9ddd83e614eaefd0a0c9d4f350bc3bb6368281ff71e030fc9d3d65b6ef2ae",
-    codeMetadata: ["payable"],
+    codeMetadata: ["readable"],
     owner: wallet,
     hasKvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
   });
