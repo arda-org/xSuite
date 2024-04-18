@@ -4,7 +4,7 @@ import { EncodableAccount } from "../data/encoding";
 import { Prettify } from "../helpers";
 import { CSProxy } from "../proxy";
 import { killChildProcess } from "./childProcesses";
-import { startCSproxyBin } from "./csproxyBin";
+import { startCsproxyBin } from "./csproxyBin";
 import { DummySigner, Signer } from "./signer";
 import {
   generateContractU8AAddress,
@@ -105,7 +105,7 @@ export class CSWorld extends World {
     configFolder?: string;
     debug?: boolean;
   } = {}): Promise<CSWorld> {
-    const { server, proxyUrl } = await startCSproxyBin(
+    const { server, proxyUrl } = await startCsproxyBin(
       port,
       debug,
       waitFor,

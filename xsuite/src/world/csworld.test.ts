@@ -8,7 +8,7 @@ import {
   generateWalletU8AAddress,
   isContractAddress,
 } from "./utils";
-import { CSWorld, CSContract, CSWallet } from ".";
+import { CSWorld, CSContract, CSWallet } from "./csworld";
 
 let world: CSWorld;
 let wallet: CSWallet;
@@ -36,41 +36,30 @@ const explorerUrl = "http://explorer.local";
 beforeAll(async () => {
   world = await CSWorld.start({
     explorerUrl,
-    // verbose: true,
-    // debug: true,
-    waitFor: 120_000,
   });
   wallet = await world.createWallet({
     balance: 10n ** 18n,
     kvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
-  }); // wallet in shard 0
+  });
   otherWallet = await world.createWallet();
 
-  // pass an epoch so system smart contracts are enabled
+  // smart contract deploys are enabled only from epoch 1 currently
   await world.generateBlocksUntilEpochReached(1);
 
   contract = await wallet.createContract({
     balance: 10n ** 18n,
     code: worldCode,
-    codeMetadata: ["payable"],
+    codeMetadata: ["readable"],
     kvs: {
       esdts: [{ id: fftId, amount: 10n ** 18n }],
       mappers: [{ key: "n", value: e.U64(2) }],
     },
   });
-
-  // const result = await wallet.deployContract({
-  //   code: worldCode,
-  //   codeMetadata: ['payable'],
-  //   codeArgs: [e.U64(1)],
-  //   gasLimit: 10_000_000,
-  // });
-  // contract = result.contract;
-}, 120_000);
+});
 
 afterAll(() => {
   world.terminate();
-}, 60_000);
+});
 
 beforeEach(async () => {
   await wallet.setAccount({
@@ -83,7 +72,7 @@ beforeEach(async () => {
   });
   await contract.setAccount({
     balance: 10n ** 18n,
-    codeMetadata: ["payable"],
+    codeMetadata: ["readable"],
     kvs: [
       e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }]),
       [e.Str("n"), e.U64(2)],
@@ -593,7 +582,7 @@ test("CSContract.getAccountWithKvs", async () => {
     nonce: 0,
     balance: 10n ** 18n,
     code: worldCode,
-    codeMetadata: ["payable"],
+    codeMetadata: ["readable"],
     owner: wallet,
     hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
   });

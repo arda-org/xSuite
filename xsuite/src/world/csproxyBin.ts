@@ -1,7 +1,7 @@
 import { ChildProcess } from "node:child_process";
 import { spawnChildProcess } from "./childProcesses";
 
-export const startCSproxyBin = (
+export const startCsproxyBin = (
   port: number = 8085,
   debug: boolean = false,
   waitFor: number = 30_000,
