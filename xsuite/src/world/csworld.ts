@@ -1,5 +1,5 @@
 import { ChildProcess } from "node:child_process";
-import { AddressLike } from "../data/addressLike";
+import { AddressLike, isAddressLike } from "../data/addressLike";
 import { EncodableAccount } from "../data/encoding";
 import { Prettify } from "../helpers";
 import { CSProxy } from "../proxy";
@@ -24,53 +24,41 @@ export class CSWorld extends World {
   proxy: CSProxy;
   server?: ChildProcess;
   sysAcc: CSContract;
-  verbose: boolean;
 
   constructor({
     proxy,
     gasPrice,
     explorerUrl,
     server,
-    verbose,
   }: {
     proxy: CSProxy;
     gasPrice: number;
     explorerUrl?: string;
     server?: ChildProcess;
-    verbose?: boolean;
   }) {
     super({ chainId: "chain", proxy, gasPrice, explorerUrl });
 
     this.proxy = proxy;
     this.server = server;
     this.sysAcc = this.newContract(new Uint8Array(32).fill(255));
-    this.verbose = verbose ?? false;
   }
 
   static new(options: CSWorldNewOptions) {
     if (options.chainId !== undefined) {
       throw new Error("chainId is not undefined.");
     }
-    const {
-      proxyUrl,
-      gasPrice,
-      explorerUrl,
-      server,
-      waitCompletedTimeout,
-      verbose,
-    } = options;
+    const { proxyUrl, gasPrice, explorerUrl, server, waitCompletedTimeout } =
+      options;
     return new CSWorld({
       proxy: new CSProxy({
         proxyUrl,
         explorerUrl,
         autoGenerateBlocks: options.autoGenerateBlocks ?? true,
         waitCompletedTimeout,
-        verbose: options.verbose ?? false,
       }),
       gasPrice: gasPrice ?? 1000000000,
       explorerUrl,
       server,
-      verbose,
     });
   }
 
@@ -87,29 +75,24 @@ export class CSWorld extends World {
   }
 
   static async start({
-    port,
     gasPrice,
     explorerUrl,
     autoGenerateBlocks,
-    verbose,
-    waitFor,
-    configFolder,
+    configFilePath,
+    nodeOverrideFilePath,
     debug,
   }: {
-    port?: number;
     gasPrice?: number;
     explorerUrl?: string;
     autoGenerateBlocks?: boolean;
-    verbose?: boolean;
-    waitFor?: number;
-    configFolder?: string;
+    configFilePath?: string;
+    nodeOverrideFilePath?: string;
     debug?: boolean;
   } = {}): Promise<CSWorld> {
     const { server, proxyUrl } = await startCsproxyBin(
-      port,
       debug,
-      waitFor,
-      configFolder,
+      configFilePath,
+      nodeOverrideFilePath,
     );
     return CSWorld.new({
       proxyUrl,
@@ -117,14 +100,14 @@ export class CSWorld extends World {
       explorerUrl,
       server,
       autoGenerateBlocks,
-      verbose,
     });
   }
 
-  // TODO:
-  newWallet(signer: Signer): CSWallet {
+  newWallet(addressOrSigner: AddressLike | Signer): CSWallet {
     return new CSWallet({
-      signer,
+      signer: isAddressLike(addressOrSigner)
+        ? new DummySigner(addressOrSigner)
+        : addressOrSigner,
       proxy: this.proxy,
       chainId: this.chainId,
       gasPrice: this.gasPrice,
@@ -253,7 +236,6 @@ type CSWorldNewOptions =
       server?: ChildProcess;
       autoGenerateBlocks?: boolean;
       waitCompletedTimeout?: number;
-      verbose?: boolean;
     }
   | WorldNewOptions;
 

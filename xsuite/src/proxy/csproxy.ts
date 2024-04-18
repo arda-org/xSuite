@@ -6,14 +6,12 @@ import { BroadTx, Proxy } from "./proxy";
 export class CSProxy extends Proxy {
   autoGenerateBlocks: boolean;
   waitCompletedTimeout: number;
-  verbose: boolean;
 
   constructor(params: CSProxyParams) {
     super(params);
 
     this.autoGenerateBlocks = params.autoGenerateBlocks;
     this.waitCompletedTimeout = params.waitCompletedTimeout ?? 250;
-    this.verbose = params.verbose;
   }
 
   async setAccount(account: EncodableAccount) {
@@ -27,10 +25,6 @@ export class CSProxy extends Proxy {
       previousKvs as Kvs,
     );
 
-    if (this.verbose) {
-      console.log("Setting account", newAccount);
-    }
-
     const result = this.fetch("/simulator/set-state", [newAccount]);
 
     if (this.autoGenerateBlocks) {
@@ -43,10 +37,6 @@ export class CSProxy extends Proxy {
   }
 
   async sendTx(tx: BroadTx) {
-    if (this.verbose) {
-      console.log("Sending transaction", tx);
-    }
-
     const result = super.sendTx(tx);
 
     if (this.autoGenerateBlocks) {
@@ -85,10 +75,6 @@ export class CSProxy extends Proxy {
   }
 
   async getCompletedTx(txHash: string) {
-    if (this.verbose) {
-      console.log("Get completed tx", txHash);
-    }
-
     return super.getCompletedTx(txHash);
   }
 
@@ -172,5 +158,4 @@ export type CSProxyParams = {
   explorerUrl?: string;
   autoGenerateBlocks: boolean;
   waitCompletedTimeout?: number;
-  verbose: boolean;
 };

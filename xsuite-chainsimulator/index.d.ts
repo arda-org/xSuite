@@ -1,2 +1,2 @@
-export declare function getChainSimulatorBinPath(): string;
-export declare function getChainSimulatorDefaultConfigPath(): string;
+export declare function getCsproxyBinPath(): string;
+export declare function getCsproxyDefaultConfigPath(): string;

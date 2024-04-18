@@ -1,74 +1,63 @@
 import { ChildProcess } from "node:child_process";
+import {
+  getCsproxyBinPath,
+  getCsproxyDefaultConfigPath,
+} from "@xsuite/chainsimulator";
 import { spawnChildProcess } from "./childProcesses";
 
-export const startCsproxyBin = (
-  port: number = 8085,
+export const startCsproxyBin = async (
   debug: boolean = false,
-  waitFor: number = 30_000,
-  configFolder?: string,
+  configFilePath?: string,
+  nodeOverrideFilePath?: string,
 ): Promise<{
   server: ChildProcess;
   proxyUrl: string;
 }> => {
-  let chainSimulator: any;
-  try {
-    chainSimulator = require("@xsuite/chainsimulator");
-  } catch (e) {
-    throw new Error(
-      "Trying to use @xsuite/chainsimulator without the required package installed. Run `npm install @xsuite/chainsimulator` to fix this",
-    );
-  }
+  const csproxyBinPath = getCsproxyBinPath();
+  const csproxyConfigFolder = getCsproxyDefaultConfigPath();
 
-  const chainSimulatorBinPath = chainSimulator.getChainSimulatorBinPath();
-  const chainSimulatorConfigFolder =
-    configFolder || chainSimulator.getChainSimulatorDefaultConfigFolder();
+  const server = spawnChildProcess(`${csproxyBinPath}`, [
+    "--server-port",
+    "0",
+    "--config",
+    configFilePath || `${csproxyConfigFolder}/config.toml`,
+    "--node-override-config",
+    nodeOverrideFilePath || `${csproxyConfigFolder}/nodeOverride.toml`,
+    "--node-configs",
+    `${csproxyConfigFolder}/node/config`,
+    "--proxy-configs",
+    `${csproxyConfigFolder}/proxy/config`,
+  ]);
 
-  return new Promise((resolve, reject) => {
-    const server = spawnChildProcess(`${chainSimulatorBinPath}`, [
-      "--server-port",
-      port.toString(),
-      "--config",
-      `${chainSimulatorConfigFolder}/config.toml`,
-      "--node-override-config",
-      `${chainSimulatorConfigFolder}/nodeOverride.toml`,
-      "--node-configs",
-      `${chainSimulatorConfigFolder}/node/config`,
-      "--proxy-configs",
-      `${chainSimulatorConfigFolder}/proxy/config`,
-    ]);
+  server.stderr.on("data", (data: Buffer) => {
+    throw new Error(data.toString());
+  });
 
-    const timeout = setTimeout(
-      () => reject(new Error("Chain Simulator failed starting.")),
-      waitFor,
-    );
+  server.on("error", (error) => {
+    throw error;
+  });
 
-    if (debug) {
-      console.log("Starting chain simulator...");
-    }
-
-    server.stdout.on("data", (data) => {
+  const proxyUrl = await new Promise<string>((resolve, reject) => {
+    server.stdout.on("data", (data: Buffer) => {
       if (debug) {
         console.log(data.toString());
       }
 
-      const activeRegex = /shard 4294967295 regular nodes/;
-      const match = data.toString().match(activeRegex);
+      const timeout = setTimeout(
+        () => reject(new Error("Chain Simulator failed starting.")),
+        10_000,
+      );
+
+      const addressRegex =
+        /chain simulator's is accessible through the URL ([\w\d.:]+)/;
+      const match = data.toString().match(addressRegex);
       if (match) {
         clearTimeout(timeout);
 
-        setTimeout(
-          () => resolve({ server, proxyUrl: `http://localhost:${port}` }),
-          250,
-        );
+        resolve(`http://${match[1]}`);
       }
     });
-
-    server.stderr.on("data", (data: Buffer) => {
-      throw new Error(data.toString());
-    });
-
-    server.on("error", (error) => {
-      throw error;
-    });
   });
+
+  return { server, proxyUrl };
 };

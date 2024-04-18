@@ -36,6 +36,7 @@
     "@multiversx/sdk-native-auth-client": "1.0.5",
     "@multiversx/sdk-wallet": "4.2.0",
     "@xsuite/simulnet": "workspace:*",
+    "@xsuite/chainsimulator": "workspace:*",
     "bech32": "2.0.0",
     "chalk": "4.1.2",
     "commander": "12.0.0",
@@ -52,9 +53,6 @@
     "tsx": "4.7.0",
     "typescript": "5.4.0-beta",
     "vitest": "^1.2.2"
-  },
-  "optionalDependencies": {
-    "@xsuite/chainsimulator": "workspace:*"
   },
   "engines": {
     "node": ">=18.0.0"

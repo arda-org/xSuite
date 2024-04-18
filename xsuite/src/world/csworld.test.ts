@@ -2,13 +2,13 @@ import { beforeEach, expect, test, beforeAll, afterAll, assert } from "vitest";
 import { assertAccount, assertVs } from "../assert";
 import { e } from "../data";
 import { Tx } from "../proxy";
+import { CSWorld, CSContract, CSWallet } from "./csworld";
 import { DummySigner } from "./signer";
 import {
   generateContractU8AAddress,
   generateWalletU8AAddress,
   isContractAddress,
 } from "./utils";
-import { CSWorld, CSContract, CSWallet } from "./csworld";
 
 let world: CSWorld;
 let wallet: CSWallet;
@@ -42,9 +42,6 @@ beforeAll(async () => {
     kvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
   });
   otherWallet = await world.createWallet();
-
-  // smart contract deploys are enabled only from epoch 1 currently
-  await world.generateBlocksUntilEpochReached(1);
 
   contract = await wallet.createContract({
     balance: 10n ** 18n,
