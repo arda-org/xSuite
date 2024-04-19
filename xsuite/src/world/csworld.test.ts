@@ -43,6 +43,9 @@ beforeAll(async () => {
   });
   otherWallet = await world.createWallet();
 
+  // Pass an epoch so everything in Chain Simulator is enabled
+  await world.generateBlocksUntilEpochReached(1);
+
   contract = await wallet.createContract({
     balance: 10n ** 18n,
     code: worldCode,
