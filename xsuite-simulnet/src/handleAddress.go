@@ -16,7 +16,12 @@ func (e *Executor) HandleAddress(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 	account := e.getAccount(address)
-	bechOwnerAddress, err := bech32Encode(account.OwnerAddress)
+	var bechOwnerAddress string
+	if len(account.OwnerAddress) > 0 {
+		bechOwnerAddress, err = bech32Encode(account.OwnerAddress)
+	} else {
+		bechOwnerAddress = ""
+	}
 	if err != nil {
 		return nil, err
 	}
