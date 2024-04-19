@@ -45,14 +45,14 @@ func (e *Executor) HandleAdminSetAccount(r *http.Request) (interface{}, error) {
 			}
 		}
 	}
-	if rawAccount.Code != nil {
+	if rawAccount.Code != nil && *rawAccount.Code != "" {
 		worldAccount.Code, err = hex.DecodeString(*rawAccount.Code)
 		if err != nil {
 			return nil, err
 		}
+		worldAccount.IsSmartContract = true
 	}
-	worldAccount.IsSmartContract = rawAccount.Code != nil
-	if rawAccount.CodeMetadata != nil {
+	if rawAccount.CodeMetadata != nil && *rawAccount.CodeMetadata != "" {
 		worldAccount.CodeMetadata, err = hex.DecodeString(*rawAccount.CodeMetadata)
 		if err != nil {
 			return nil, err
@@ -60,7 +60,7 @@ func (e *Executor) HandleAdminSetAccount(r *http.Request) (interface{}, error) {
 	} else if !worldAccount.IsSmartContract {
 		worldAccount.CodeMetadata = (&vmcommon.CodeMetadata{ Readable: true }).ToBytes();
 	}
-	if rawAccount.Owner != nil {
+	if rawAccount.Owner != nil && *rawAccount.Owner != "" {
 		worldAccount.OwnerAddress, err = bech32Decode(*rawAccount.Owner)
 	}
 	if err != nil {
