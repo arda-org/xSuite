@@ -495,6 +495,13 @@ test("SWallet.getAccountWithKvs", async () => {
   });
 });
 
+test("SWallet.setAccount - SWallet.getAccountWithKvs", async () => {
+  const before = await wallet.getAccountWithKvs();
+  await wallet.setAccount(before);
+  const after = await wallet.getAccountWithKvs();
+  expect(after).toEqual(before);
+});
+
 test("SWallet.executeTx", async () => {
   const { tx } = await wallet.executeTx({
     receiver: otherWallet,
@@ -727,4 +734,11 @@ test("SContract.getAccountWithKvs", async () => {
     owner: wallet,
     hasKvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
   });
+});
+
+test("SContract.setAccount - SContract.getAccountWithKvs", async () => {
+  const before = await contract.getAccountWithKvs();
+  await contract.setAccount(before);
+  const after = await contract.getAccountWithKvs();
+  expect(after).toEqual(before);
 });

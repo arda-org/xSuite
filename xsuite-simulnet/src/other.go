@@ -63,9 +63,6 @@ func uint64ToBytesAddress(n uint64, isContract bool) []byte {
 }
 
 func bech32Decode(input string) ([]byte, error) {
-	if input == "" {
-		return nil, nil
-	}
 	bpc, _ := pc.NewBech32PubkeyConverter(addressByteLength, core.DefaultAddressPrefix)
 	res, err := bpc.Decode(input)
 	if err != nil {
@@ -75,9 +72,6 @@ func bech32Decode(input string) ([]byte, error) {
 }
 
 func bech32Encode(input []byte) (string, error) {
-	if len(input) == 0 {
-		return "", nil
-	}
 	bpc, _ := pc.NewBech32PubkeyConverter(addressByteLength, core.DefaultAddressPrefix)
 	res, err := bpc.Encode(input)
 	if err != nil {
