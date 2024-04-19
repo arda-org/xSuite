@@ -15,15 +15,8 @@ export class CSProxy extends Proxy {
   }
 
   async setAccount(account: EncodableAccount) {
-    const [previousAccount, previousKvs] = await Promise.all([
-      this.getAccount(account.address),
-      this.getAccountKvs(account.address),
-    ]);
-    const newAccount = accountToRawAccount(
-      account,
-      previousAccount as any,
-      previousKvs as Kvs,
-    );
+    const previousKvs = await this.getAccountKvs(account.address);
+    const newAccount = accountToRawAccount(account, previousKvs);
 
     const result = this.fetch("/simulator/set-state", [newAccount]);
 
@@ -41,6 +34,8 @@ export class CSProxy extends Proxy {
 
     if (this.autoGenerateBlocks) {
       await result;
+
+      await new Promise((r) => setTimeout(r, this.waitCompletedTimeout));
 
       await this.generateBlock();
     }
@@ -98,36 +93,26 @@ export class CSProxy extends Proxy {
   }
 }
 
-const accountToRawAccount = (
-  account: EncodableAccount,
-  previousAccount: {
-    address: string;
-    nonce: number;
-    balance: bigint;
-    code: string | null;
-    codeMetadata: string | null;
-    owner: string | null;
-  },
-  previousKvs: Kvs,
-) => {
+const accountToRawAccount = (account: EncodableAccount, previousKvs: Kvs) => {
   const rawAccount: any = {
     address: addressLikeToBechAddress(account.address),
     nonce: account.nonce,
     balance: account.balance?.toString() || "0",
-    keys: account.kvs != null ? e.kvs(account.kvs) : undefined,
     code: account.code,
-    codeMetadata:
-      account.codeMetadata != null
-        ? eCodeMetadata(account.codeMetadata)
-        : undefined,
-    ownerAddress:
-      account.owner != null
-        ? addressLikeToBechAddress(account.owner)
-        : undefined,
+    codeHash: account.codeHash ? eCodeMetadata(account.codeHash) : "",
+    codeMetadata: account.codeMetadata
+      ? Buffer.from(eCodeMetadata(account.codeMetadata), "hex").toString(
+          "base64",
+        )
+      : "",
+    keys: account.kvs ? e.kvs(account.kvs) : {},
+    ownerAddress: account.owner ? addressLikeToBechAddress(account.owner) : "",
     developerReward: "0",
   };
 
-  if (rawAccount.keys !== undefined && Object.keys(previousKvs).length) {
+  // When setting state, chain simulator appends the keys to the previous ones instead of overwriting all,
+  // hence we need to set an empty value for the previous keys that no longer exist
+  if (Object.keys(previousKvs).length) {
     for (const key in previousKvs) {
       if (!(key in rawAccount.keys)) {
         rawAccount.keys[key] = "";
@@ -135,22 +120,7 @@ const accountToRawAccount = (
     }
   }
 
-  Object.keys(rawAccount).forEach((key) =>
-    rawAccount[key] === undefined ? delete rawAccount[key] : {},
-  );
-
-  // Preserve properties which need to have default values on initial account creation
-  if (previousAccount.code && rawAccount.code === "00") {
-    rawAccount.code = previousAccount.code;
-  }
-  if (previousAccount.balance > 0n && !account.balance?.toString()) {
-    rawAccount.balance = previousAccount.balance.toString();
-  }
-
-  return {
-    ...previousAccount,
-    ...rawAccount,
-  };
+  return rawAccount;
 };
 
 export type CSProxyParams = {

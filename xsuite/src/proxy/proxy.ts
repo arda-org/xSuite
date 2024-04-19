@@ -115,15 +115,14 @@ export class Proxy {
 
   async getSerializableAccount(address: AddressLike) {
     const res = unrawRes(await this.getAccountRaw(address));
+
     return {
       address: res.account.address,
       nonce: res.account.nonce,
       balance: res.account.balance,
       code: res.account.code,
       codeHash: base64ToHex(res.account.codeHash ?? ""),
-      codeMetadata: /[0-9]{4}/g.test(res.account.codeMetadata)
-        ? res.account.codeMetadata
-        : base64ToHex(res.account.codeMetadata ?? ""),
+      codeMetadata: base64ToHex(res.account.codeMetadata ?? ""),
       owner: res.account.ownerAddress,
     } as {
       address: string;

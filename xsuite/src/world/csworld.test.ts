@@ -59,21 +59,23 @@ afterAll(() => {
 });
 
 beforeEach(async () => {
-  await wallet.setAccount({
+  // Reset accounts to initial state before each test
+  wallet = await world.createWallet({
     balance: 10n ** 18n,
     kvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
   });
-  await otherWallet.setAccount({
-    balance: 0,
-    kvs: [],
-  });
+  otherWallet = await world.createWallet();
+
   await contract.setAccount({
+    owner: wallet,
+    nonce: 0,
     balance: 10n ** 18n,
+    code: worldCode,
     codeMetadata: ["readable"],
-    kvs: [
-      e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }]),
-      [e.Str("n"), e.U64(2)],
-    ],
+    kvs: {
+      esdts: [{ id: fftId, amount: 10n ** 18n }],
+      mappers: [{ key: "n", value: e.U64(2) }],
+    },
   });
 });
 
@@ -384,6 +386,7 @@ test("CSWorld.deployContract & upgradeContract", async () => {
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
+  expect(isContractAddress(contract)).toEqual(true);
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
   assertAccount(await contract.getAccountWithKvs(), {
     code: worldCode,
@@ -483,15 +486,7 @@ test("CSWorld.query.assertFail - Correct parameters", async () => {
 });
 
 test("CSWallet.getAccountNonce", async () => {
-  const oldNonce = await wallet.getAccountNonce();
-
-  await wallet.setAccount({ nonce: 0 });
   expect(await wallet.getAccountNonce()).toEqual(0);
-
-  // Preserve old account nonce since these tests are ran on shared chain simulator
-  await wallet.setAccount({
-    nonce: oldNonce,
-  });
 });
 
 test("CSWallet.getAccountBalance", async () => {
@@ -505,10 +500,6 @@ test("CSWallet.getAccountKvs", async () => {
 });
 
 test("CSWallet.getAccount", async () => {
-  const oldNonce = await wallet.getAccountNonce();
-
-  await wallet.setAccount({ nonce: 0 });
-
   assertAccount(await wallet.getAccount(), {
     nonce: 0,
     balance: 10n ** 18n,
@@ -517,31 +508,18 @@ test("CSWallet.getAccount", async () => {
     codeMetadata: [],
     owner: "",
   });
-
-  // Preserve old account nonce since these tests are ran on shared chain simulator
-  await wallet.setAccount({
-    nonce: oldNonce,
-  });
 });
 
 test("CSWallet.getAccountWithKvs", async () => {
-  const oldNonce = await wallet.getAccountNonce();
-
-  await wallet.setAccount({ nonce: 0 });
-
-  assertAccount(await wallet.getAccountWithKvs(), {
+  const account = await wallet.getAccountWithKvs();
+  assertAccount(account, {
     nonce: 0,
     balance: 10n ** 18n,
     code: "",
     codeHash: "",
     codeMetadata: [],
     owner: "",
-    hasKvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
-  });
-
-  // Preserve old account nonce since these tests are ran on shared chain simulator
-  await wallet.setAccount({
-    nonce: oldNonce,
+    hasKvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
   });
 });
 
@@ -653,6 +631,10 @@ test("CSWallet.deployContract & upgradeContract", async () => {
 });
 
 test("CSWallet.deployContract - is contract address", async () => {
+  wallet = await world.createWallet({
+    balance: 10n ** 18n,
+    kvs: [e.kvs.Esdts([{ id: fftId, amount: 10n ** 18n }])],
+  });
   const { contract } = await wallet.deployContract({
     code: worldCode,
     codeMetadata: [],

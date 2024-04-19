@@ -4,8 +4,8 @@
   "license": "MIT",
   "scripts": {
     "build": "run-script-os",
-    "build:linux": "PLATFORM=linux ./build-chainsimulator.sh",
-    "build:darwin": "PLATFORM=darwin ./build-chainsimulator.sh",
+    "build:linux": "BINARY=csproxy-linux-amd64 ./build-chainsimulator.sh",
+    "build:darwin": "BINARY=csproxy-darwin-amd64 ./build-chainsimulator.sh",
     "postinstall": "chmod -f +x ./bin/csproxy-* || true"
   },
   "files": [
