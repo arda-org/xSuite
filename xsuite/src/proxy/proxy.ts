@@ -115,7 +115,6 @@ export class Proxy {
 
   async getSerializableAccount(address: AddressLike) {
     const res = unrawRes(await this.getAccountRaw(address));
-
     return {
       address: res.account.address,
       nonce: res.account.nonce,
