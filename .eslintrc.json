@@ -21,8 +21,12 @@
   "globals": {
     "process": true
   },
+  "env": {
+    "node": true
+  },
   "rules": {
     "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-var-requires": "off",
     "import/no-duplicates": "error",
     "import/order": [
       "error",
@@ -46,5 +50,5 @@
     "prettier/prettier": "error",
     "curly": ["error", "multi-line"]
   },
-  "ignorePatterns": ["**/*.js", "xsuite/*.d.ts", "xsuite/dist/"]
+  "ignorePatterns": ["xsuite/dist/"]
 }
