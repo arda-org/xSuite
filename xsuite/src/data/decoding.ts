@@ -628,7 +628,7 @@ class BytesConsumer {
 
   consumeExact(size: number): Uint8Array {
     if (size > this.remainingLength()) {
-      throw new Error("No enough byte to read.");
+      throw new Error("No remaining byte to read.");
     }
     const result = this.#u8a.slice(this.#offset, this.#offset + size);
     this.#offset += size;
