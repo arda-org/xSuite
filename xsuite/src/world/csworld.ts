@@ -155,6 +155,30 @@ export class CSWorld extends World {
     if (!this.server) throw new Error("No server defined.");
     killChildProcess(this.server);
   }
+
+  getAccountNonce(address: AddressLike, shardId: number = undefined) {
+    return this.proxy.getAccountNonce(address, shardId);
+  }
+
+  getAccountBalance(address: AddressLike, shardId: number = undefined) {
+    return this.proxy.getAccountBalance(address, shardId);
+  }
+
+  getAccount(address: AddressLike, shardId: number = undefined) {
+    return this.proxy.getAccount(address, shardId);
+  }
+
+  getAccountKvs(address: AddressLike, shardId: number = undefined) {
+    return this.proxy.getAccountKvs(address, shardId);
+  }
+
+  getSerializableAccountWithKvs(address: AddressLike, shardId: number = undefined) {
+    return this.proxy.getSerializableAccountWithKvs(address, shardId);
+  }
+
+  getAccountWithKvs(address: AddressLike, shardId: number = undefined) {
+    return this.proxy.getAccountWithKvs(address, shardId);
+  }
 }
 
 export class CSWallet extends Wallet {

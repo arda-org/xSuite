@@ -1,7 +1,8 @@
-import { addressLikeToBechAddress } from "../data/addressLike";
-import { e, eCodeMetadata, EncodableAccount } from "../data/encoding";
-import { Kvs } from "../data/kvs";
-import { BroadTx, Proxy } from "./proxy";
+import { AddressLike, addressLikeToBechAddress } from '../data/addressLike';
+import { e, eCodeMetadata, EncodableAccount } from '../data/encoding';
+import { BroadTx, Proxy, unrawRes } from './proxy';
+import { base64ToHex } from '../data/utils';
+import { Kvs } from '../data/kvs';
 
 export class CSProxy extends Proxy {
   autoGenerateBlocks: boolean;
@@ -15,10 +16,23 @@ export class CSProxy extends Proxy {
   }
 
   async setAccount(account: EncodableAccount) {
-    const previousKvs = await this.getAccountKvs(account.address);
-    const newAccount = accountToRawAccount(account, previousKvs);
+    const previousAccount = await this.getAccount(account.address);
+    const newAccount = accountToRawAccount(account);
 
-    const result = this.fetch("/simulator/set-state", [newAccount]);
+    let result;
+    // TODO: Temporary check for non-existent account
+    if (
+      previousAccount.balance === 0n
+      && previousAccount.nonce === 0
+      && previousAccount.code === ''
+      && previousAccount.codeHash === ''
+      && previousAccount.codeMetadata === ''
+      && previousAccount.owner == ''
+    ) {
+      result = this.fetch('/simulator/set-state', [newAccount]);
+    } else {
+      result = this.fetch('/simulator/set-state-overwrite', [newAccount]);
+    }
 
     if (this.autoGenerateBlocks) {
       await result;
@@ -48,11 +62,11 @@ export class CSProxy extends Proxy {
 
     let retries = 0;
 
-    while (!res || res.code !== "successful" || res.data.status === "pending") {
+    while (!res || res.code !== 'successful' || res.data.status === 'pending') {
       // We need delay since cross shard changes might not have been processed immediately
       await new Promise((r) => setTimeout(r, this.waitCompletedTimeout));
 
-      if (res && res.data && res.data.status === "pending") {
+      if (res && res.data && res.data.status === 'pending') {
         await this.generateBlock();
       }
 
@@ -89,38 +103,99 @@ export class CSProxy extends Proxy {
   }
 
   getInitialWallets() {
-    return this.fetch("/simulator/initial-wallets");
+    return this.fetch('/simulator/initial-wallets');
+  }
+
+  getAccountRaw(address: AddressLike, shardId: number = undefined) {
+    return this.fetchRaw(`/address/${addressLikeToBechAddress(address)}` + (shardId ? `?forced-shard-id=${shardId}` : ''));
+  }
+
+  async getSerializableAccount(address: AddressLike, shardId: number = undefined) {
+    const res = unrawRes(await this.getAccountRaw(address, shardId));
+    return {
+      address: res.account.address,
+      nonce: res.account.nonce,
+      balance: res.account.balance,
+      code: res.account.code,
+      codeHash: base64ToHex(res.account.codeHash ?? ""),
+      codeMetadata: base64ToHex(res.account.codeMetadata ?? ""),
+      owner: res.account.ownerAddress,
+    } as {
+      address: string;
+      nonce: number;
+      balance: string;
+      code: string;
+      codeMetadata: string;
+      codeHash: string;
+      owner: string;
+    };
+  }
+
+  async getAccount(address: AddressLike, shardId: number = undefined) {
+    const { balance, ...account } = await this.getSerializableAccount(address, shardId);
+    return { balance: BigInt(balance), ...account };
+  }
+
+  getAccountNonceRaw(address: AddressLike, shardId: number = undefined) {
+    return this.fetchRaw(`/address/${addressLikeToBechAddress(address)}/nonce` + (shardId ? `?forced-shard-id=${shardId}` : ''));
+  }
+
+  async getAccountNonce(address: AddressLike, shardId: number = undefined) {
+    const res = unrawRes(await this.getAccountNonceRaw(address, shardId));
+    return res.nonce as number;
+  }
+
+  getAccountBalanceRaw(address: AddressLike, shardId: number = undefined) {
+    return this.fetchRaw(
+      `/address/${addressLikeToBechAddress(address)}/balance` + (shardId ? `?forced-shard-id=${shardId}` : ''),
+    );
+  }
+
+  async getAccountBalance(address: AddressLike, shardId: number = undefined) {
+    const res = unrawRes(await this.getAccountBalanceRaw(address, shardId));
+    return BigInt(res.balance);
+  }
+
+  getAccountKvsRaw(address: AddressLike, shardId: number = undefined) {
+    return this.fetchRaw(`/address/${addressLikeToBechAddress(address)}/keys` + (shardId ? `?forced-shard-id=${shardId}` : ''));
+  }
+
+  async getAccountKvs(address: AddressLike, shardId: number = undefined) {
+    const res = unrawRes(await this.getAccountKvsRaw(address, shardId));
+    return res.pairs as Kvs;
+  }
+
+  getSerializableAccountWithKvs(address: AddressLike, shardId: number = undefined) {
+    return Promise.all([
+      this.getSerializableAccount(address, shardId),
+      this.getAccountKvs(address, shardId),
+    ]).then(([account, kvs]) => ({ ...account, kvs }));
+  }
+
+  getAccountWithKvs(address: AddressLike, shardId: number = undefined) {
+    return Promise.all([
+      this.getAccount(address, shardId),
+      this.getAccountKvs(address, shardId),
+    ]).then(([account, kvs]) => ({ ...account, kvs }));
   }
 }
 
-const accountToRawAccount = (account: EncodableAccount, previousKvs: Kvs) => {
-  const rawAccount: any = {
+const accountToRawAccount = (account: EncodableAccount) => {
+  return {
     address: addressLikeToBechAddress(account.address),
     nonce: account.nonce,
-    balance: account.balance?.toString() || "0",
+    balance: account.balance?.toString() || '0',
     code: account.code,
-    codeHash: account.codeHash ? eCodeMetadata(account.codeHash) : "",
+    codeHash: account.codeHash ? eCodeMetadata(account.codeHash) : '',
     codeMetadata: account.codeMetadata
-      ? Buffer.from(eCodeMetadata(account.codeMetadata), "hex").toString(
-          "base64",
-        )
-      : "",
+      ? Buffer.from(eCodeMetadata(account.codeMetadata), 'hex').toString(
+        'base64',
+      )
+      : '',
     keys: account.kvs ? e.kvs(account.kvs) : {},
-    ownerAddress: account.owner ? addressLikeToBechAddress(account.owner) : "",
-    developerReward: "0",
+    ownerAddress: account.owner ? addressLikeToBechAddress(account.owner) : '',
+    developerReward: '0',
   };
-
-  // When setting state, chain simulator appends the keys to the previous ones instead of overwriting all,
-  // hence we need to set an empty value for the previous keys that no longer exist
-  if (Object.keys(previousKvs).length) {
-    for (const key in previousKvs) {
-      if (!(key in rawAccount.keys)) {
-        rawAccount.keys[key] = "";
-      }
-    }
-  }
-
-  return rawAccount;
 };
 
 export type CSProxyParams = {

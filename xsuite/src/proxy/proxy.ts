@@ -359,7 +359,7 @@ class QueryError extends InteractionError {
   }
 }
 
-const unrawRes = (res: any) => {
+export const unrawRes = (res: any) => {
   if (res.code === "successful") {
     return res.data;
   } else {
