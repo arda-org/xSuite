@@ -1,5 +1,5 @@
 import {
-  CopyIcon,
+  AddIcon,
   ArrowDownIcon,
   ArrowBackIcon,
   ArrowForwardIcon,
@@ -16,15 +16,40 @@ import {
   extendTheme,
   Heading,
 } from "@chakra-ui/react";
-import React, { useEffect, useMemo, useState } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  Dispatch,
+  SetStateAction,
+  useRef,
+  useState,
+} from "react";
 import { e, d, B64 } from "xsuite/data";
 
 export default function Convert() {
-  const [converterStates, setConverterStates] = useState<ConverterState[]>([]);
+  const [converterStates, setConverterStates] = useLocalStorage<
+    ConverterState[]
+  >("converterStates", []);
 
+  if (converterStates === undefined) return undefined;
+
+  return (
+    <_Convert
+      converterStates={converterStates}
+      onChangeConverterStates={setConverterStates}
+    />
+  );
+}
+
+const _Convert = ({
+  converterStates,
+  onChangeConverterStates,
+}: {
+  converterStates: ConverterState[];
+  onChangeConverterStates: (converterStates: ConverterState[]) => any;
+}) => {
   const addConverter = (state: Omit<ConverterState, "id">) => {
-    newConverterId += 1;
-    setConverterStates([...converterStates, { ...state, id: newConverterId }]);
+    onChangeConverterStates([...converterStates, { ...state, id: genId() }]);
   };
 
   const changeConverter = (
@@ -34,18 +59,14 @@ export default function Convert() {
     const dupStates = [...converterStates];
     const i = dupStates.findIndex((s) => s.id === id);
     dupStates.splice(i, 1, { ...dupStates[i], ...state });
-    setConverterStates(dupStates);
+    onChangeConverterStates(dupStates);
   };
 
   const duplicateConverter = (id: number) => {
-    newConverterId += 1;
     const dupStates = [...converterStates];
     const i = dupStates.findIndex((s) => s.id === id);
-    dupStates.splice(i + 1, 0, {
-      ...dupStates[i],
-      id: newConverterId,
-    });
-    setConverterStates(dupStates);
+    dupStates.splice(i + 1, 0, { ...dupStates[i], id: genId() });
+    onChangeConverterStates(dupStates);
   };
 
   const moveLeftConverter = (id: number) => {
@@ -54,7 +75,7 @@ export default function Convert() {
     if (i > 0) {
       const element = dupStates.splice(i, 1)[0];
       dupStates.splice(i - 1, 0, element);
-      setConverterStates(dupStates);
+      onChangeConverterStates(dupStates);
     }
   };
 
@@ -64,7 +85,7 @@ export default function Convert() {
     if (i < dupStates.length) {
       const element = dupStates.splice(i, 1)[0];
       dupStates.splice(i + 1, 0, element);
-      setConverterStates(dupStates);
+      onChangeConverterStates(dupStates);
     }
   };
 
@@ -72,16 +93,18 @@ export default function Convert() {
     const dupStates = [...converterStates];
     const i = dupStates.findIndex((s) => s.id === id);
     dupStates.splice(i, 1);
-    setConverterStates(dupStates);
+    onChangeConverterStates(dupStates);
   };
 
   useEffect(() => {
-    addConverter({
-      inputType: "string",
-      inputValue: "",
-      outputType: "hex",
-    });
-  }, []);
+    if (converterStates.length === 0) {
+      addConverter({
+        inputType: "string",
+        inputValue: "",
+        outputType: "hex",
+      });
+    }
+  }, [converterStates]);
 
   return (
     <ChakraProvider
@@ -115,7 +138,7 @@ export default function Convert() {
       </Box>
     </ChakraProvider>
   );
-}
+};
 
 const ConverterBox = ({
   state: { inputType, inputValue, outputType },
@@ -160,7 +183,7 @@ const ConverterBox = ({
           size="sm"
           variant="ghost"
           aria-label="Duplicate"
-          icon={<CopyIcon />}
+          icon={<AddIcon />}
           onClick={onDuplicate}
         />
         <IconButton
@@ -259,6 +282,40 @@ const ConverterBox = ({
   );
 };
 
+function useLocalStorage<T>(
+  key: string,
+  defaultValue: T,
+): [T | undefined, Dispatch<SetStateAction<T | undefined>>] {
+  const isMounted = useRef(false);
+  const [value, setValue] = useState<T>();
+
+  useEffect(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      if (item) {
+        setValue(JSON.parse(item));
+      } else {
+        setValue(defaultValue);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+    return () => {
+      isMounted.current = false;
+    };
+  }, [key]);
+
+  useEffect(() => {
+    if (isMounted.current) {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } else {
+      isMounted.current = true;
+    }
+  }, [key, value]);
+
+  return [value, setValue];
+}
+
 const convert = (
   inputType: DataType,
   inputValue: string,
@@ -298,7 +355,7 @@ const convert = (
   }
 };
 
-let newConverterId = 1;
+const genId = () => Math.random();
 
 const dataTypes = {
   hex: "Hex",

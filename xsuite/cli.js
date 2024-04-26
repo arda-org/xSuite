@@ -1,2 +1,2 @@
 #!/usr/bin/env node
-module.exports = require('./dist/cli')
+module.exports = require("./dist/cli");
