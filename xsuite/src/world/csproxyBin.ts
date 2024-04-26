@@ -27,7 +27,7 @@ export const startCsproxyBin = async (
     `${csproxyConfigFolder}/node/config`,
     "--proxy-configs",
     `${csproxyConfigFolder}/proxy/config`,
-    "--skip-configs-download"
+    "--skip-configs-download",
   ]);
 
   server.stderr.on("data", (data: Buffer) => {

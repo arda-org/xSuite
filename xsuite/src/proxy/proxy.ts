@@ -13,12 +13,14 @@ export class Proxy {
   proxyUrl: string;
   headers: HeadersInit;
   explorerUrl: string;
+  txCompletionPauseMs: number;
 
   constructor(params: ProxyParams) {
     params = typeof params === "string" ? { proxyUrl: params } : params;
     this.proxyUrl = params.proxyUrl;
     this.headers = params.headers ?? {};
     this.explorerUrl = params.explorerUrl ?? "";
+    this.txCompletionPauseMs = params.txCompletionPauseMs ?? 1000;
   }
 
   fetchRaw(path: string, data?: any) {
@@ -400,7 +402,12 @@ const zeroBechAddress =
 
 export type ProxyParams =
   | string
-  | { proxyUrl: string; headers?: HeadersInit; explorerUrl?: string };
+  | {
+      proxyUrl: string;
+      headers?: HeadersInit;
+      explorerUrl?: string;
+      txCompletionPauseMs?: number;
+    };
 
 export type BroadTx = Tx | RawTx;
 

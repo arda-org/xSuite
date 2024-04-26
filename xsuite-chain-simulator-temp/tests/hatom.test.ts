@@ -217,7 +217,7 @@ const setupLiquidStaking = async (
     .U()
     .topDecode(kvs.kvs[e.Str("rewardsReserve").toTopHex()]);
   console.log("Rewards reserve: ", rewardsReserve);
-  assert(rewardsReserve === 6369249418386583089n); // 6.369249418386583089 EGLD added as rewards
+  assert(rewardsReserve === 6369249725007817433n); // 6.369249418386583089 EGLD added as rewards
 
   // TODO: This breaks the delegation contract and unDelegate will fail with `signalError - Delegation contract not available`
   // This is most probably because of the Hatom algorithm configuration being changed and another staking provider

@@ -1,38 +1,23 @@
-import { AddressLike, addressLikeToBechAddress } from '../data/addressLike';
-import { e, eCodeMetadata, EncodableAccount } from '../data/encoding';
-import { BroadTx, Proxy, unrawRes } from './proxy';
-import { base64ToHex } from '../data/utils';
-import { Kvs } from '../data/kvs';
+import { AddressLike, addressLikeToBechAddress } from "../data/addressLike";
+import { e, eCodeMetadata, EncodableAccount } from "../data/encoding";
+import { Kvs } from "../data/kvs";
+import { base64ToHex } from "../data/utils";
+import { BroadTx, Proxy, unrawRes } from "./proxy";
 
 export class CSProxy extends Proxy {
   autoGenerateBlocks: boolean;
-  waitCompletedTimeout: number;
 
   constructor(params: CSProxyParams) {
     super(params);
 
     this.autoGenerateBlocks = params.autoGenerateBlocks;
-    this.waitCompletedTimeout = params.waitCompletedTimeout ?? 250;
+    this.txCompletionPauseMs = params.txCompletionPauseMs ?? 250;
   }
 
   async setAccount(account: EncodableAccount) {
-    const previousAccount = await this.getAccount(account.address);
     const newAccount = accountToRawAccount(account);
 
-    let result;
-    // TODO: Temporary check for non-existent account
-    if (
-      previousAccount.balance === 0n
-      && previousAccount.nonce === 0
-      && previousAccount.code === ''
-      && previousAccount.codeHash === ''
-      && previousAccount.codeMetadata === ''
-      && previousAccount.owner == ''
-    ) {
-      result = this.fetch('/simulator/set-state', [newAccount]);
-    } else {
-      result = this.fetch('/simulator/set-state-overwrite', [newAccount]);
-    }
+    const result = this.fetch("/simulator/set-state-overwrite", [newAccount]);
 
     if (this.autoGenerateBlocks) {
       await result;
@@ -49,7 +34,7 @@ export class CSProxy extends Proxy {
     if (this.autoGenerateBlocks) {
       await result;
 
-      await new Promise((r) => setTimeout(r, this.waitCompletedTimeout));
+      await new Promise((r) => setTimeout(r, this.txCompletionPauseMs));
 
       await this.generateBlock();
     }
@@ -62,11 +47,11 @@ export class CSProxy extends Proxy {
 
     let retries = 0;
 
-    while (!res || res.code !== 'successful' || res.data.status === 'pending') {
+    while (!res || res.code !== "successful" || res.data.status === "pending") {
       // We need delay since cross shard changes might not have been processed immediately
-      await new Promise((r) => setTimeout(r, this.waitCompletedTimeout));
+      await new Promise((r) => setTimeout(r, this.txCompletionPauseMs));
 
-      if (res && res.data && res.data.status === 'pending') {
+      if (res && res.data && res.data.status === "pending") {
         await this.generateBlock();
       }
 
@@ -81,10 +66,6 @@ export class CSProxy extends Proxy {
     }
 
     return await this.getTxRaw(txHash, { withResults: true });
-  }
-
-  async getCompletedTx(txHash: string) {
-    return super.getCompletedTx(txHash);
   }
 
   generateBlocks(numBlocks: number) {
@@ -103,14 +84,20 @@ export class CSProxy extends Proxy {
   }
 
   getInitialWallets() {
-    return this.fetch('/simulator/initial-wallets');
+    return this.fetch("/simulator/initial-wallets");
   }
 
-  getAccountRaw(address: AddressLike, shardId: number = undefined) {
-    return this.fetchRaw(`/address/${addressLikeToBechAddress(address)}` + (shardId ? `?forced-shard-id=${shardId}` : ''));
+  getAccountRaw(address: AddressLike, shardId: number | undefined = undefined) {
+    return this.fetchRaw(
+      `/address/${addressLikeToBechAddress(address)}` +
+        (shardId !== undefined ? `?forced-shard-id=${shardId}` : ""),
+    );
   }
 
-  async getSerializableAccount(address: AddressLike, shardId: number = undefined) {
+  async getSerializableAccount(
+    address: AddressLike,
+    shardId: number | undefined = undefined,
+  ) {
     const res = unrawRes(await this.getAccountRaw(address, shardId));
     return {
       address: res.account.address,
@@ -131,48 +118,85 @@ export class CSProxy extends Proxy {
     };
   }
 
-  async getAccount(address: AddressLike, shardId: number = undefined) {
-    const { balance, ...account } = await this.getSerializableAccount(address, shardId);
+  async getAccount(
+    address: AddressLike,
+    shardId: number | undefined = undefined,
+  ) {
+    const { balance, ...account } = await this.getSerializableAccount(
+      address,
+      shardId,
+    );
     return { balance: BigInt(balance), ...account };
   }
 
-  getAccountNonceRaw(address: AddressLike, shardId: number = undefined) {
-    return this.fetchRaw(`/address/${addressLikeToBechAddress(address)}/nonce` + (shardId ? `?forced-shard-id=${shardId}` : ''));
+  getAccountNonceRaw(
+    address: AddressLike,
+    shardId: number | undefined = undefined,
+  ) {
+    return this.fetchRaw(
+      `/address/${addressLikeToBechAddress(address)}/nonce` +
+        (shardId !== undefined ? `?forced-shard-id=${shardId}` : ""),
+    );
   }
 
-  async getAccountNonce(address: AddressLike, shardId: number = undefined) {
+  async getAccountNonce(
+    address: AddressLike,
+    shardId: number | undefined = undefined,
+  ) {
     const res = unrawRes(await this.getAccountNonceRaw(address, shardId));
     return res.nonce as number;
   }
 
-  getAccountBalanceRaw(address: AddressLike, shardId: number = undefined) {
+  getAccountBalanceRaw(
+    address: AddressLike,
+    shardId: number | undefined = undefined,
+  ) {
     return this.fetchRaw(
-      `/address/${addressLikeToBechAddress(address)}/balance` + (shardId ? `?forced-shard-id=${shardId}` : ''),
+      `/address/${addressLikeToBechAddress(address)}/balance` +
+        (shardId !== undefined ? `?forced-shard-id=${shardId}` : ""),
     );
   }
 
-  async getAccountBalance(address: AddressLike, shardId: number = undefined) {
+  async getAccountBalance(
+    address: AddressLike,
+    shardId: number | undefined = undefined,
+  ) {
     const res = unrawRes(await this.getAccountBalanceRaw(address, shardId));
     return BigInt(res.balance);
   }
 
-  getAccountKvsRaw(address: AddressLike, shardId: number = undefined) {
-    return this.fetchRaw(`/address/${addressLikeToBechAddress(address)}/keys` + (shardId ? `?forced-shard-id=${shardId}` : ''));
+  getAccountKvsRaw(
+    address: AddressLike,
+    shardId: number | undefined = undefined,
+  ) {
+    return this.fetchRaw(
+      `/address/${addressLikeToBechAddress(address)}/keys` +
+        (shardId !== undefined ? `?forced-shard-id=${shardId}` : ""),
+    );
   }
 
-  async getAccountKvs(address: AddressLike, shardId: number = undefined) {
+  async getAccountKvs(
+    address: AddressLike,
+    shardId: number | undefined = undefined,
+  ) {
     const res = unrawRes(await this.getAccountKvsRaw(address, shardId));
     return res.pairs as Kvs;
   }
 
-  getSerializableAccountWithKvs(address: AddressLike, shardId: number = undefined) {
+  getSerializableAccountWithKvs(
+    address: AddressLike,
+    shardId: number | undefined = undefined,
+  ) {
     return Promise.all([
       this.getSerializableAccount(address, shardId),
       this.getAccountKvs(address, shardId),
     ]).then(([account, kvs]) => ({ ...account, kvs }));
   }
 
-  getAccountWithKvs(address: AddressLike, shardId: number = undefined) {
+  getAccountWithKvs(
+    address: AddressLike,
+    shardId: number | undefined = undefined,
+  ) {
     return Promise.all([
       this.getAccount(address, shardId),
       this.getAccountKvs(address, shardId),
@@ -184,17 +208,17 @@ const accountToRawAccount = (account: EncodableAccount) => {
   return {
     address: addressLikeToBechAddress(account.address),
     nonce: account.nonce,
-    balance: account.balance?.toString() || '0',
+    balance: account.balance?.toString() || "0",
     code: account.code,
-    codeHash: account.codeHash ? eCodeMetadata(account.codeHash) : '',
+    codeHash: account.codeHash ? eCodeMetadata(account.codeHash) : "",
     codeMetadata: account.codeMetadata
-      ? Buffer.from(eCodeMetadata(account.codeMetadata), 'hex').toString(
-        'base64',
-      )
-      : '',
+      ? Buffer.from(eCodeMetadata(account.codeMetadata), "hex").toString(
+          "base64",
+        )
+      : "",
     keys: account.kvs ? e.kvs(account.kvs) : {},
-    ownerAddress: account.owner ? addressLikeToBechAddress(account.owner) : '',
-    developerReward: '0',
+    ownerAddress: account.owner ? addressLikeToBechAddress(account.owner) : "",
+    developerReward: "0",
   };
 };
 
@@ -202,5 +226,5 @@ export type CSProxyParams = {
   proxyUrl: string;
   explorerUrl?: string;
   autoGenerateBlocks: boolean;
-  waitCompletedTimeout?: number;
+  txCompletionPauseMs?: number;
 };

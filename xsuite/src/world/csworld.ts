@@ -54,7 +54,7 @@ export class CSWorld extends World {
         proxyUrl,
         explorerUrl,
         autoGenerateBlocks: options.autoGenerateBlocks ?? true,
-        waitCompletedTimeout,
+        txCompletionPauseMs: waitCompletedTimeout,
       }),
       gasPrice: gasPrice ?? 1000000000,
       explorerUrl,
@@ -156,27 +156,39 @@ export class CSWorld extends World {
     killChildProcess(this.server);
   }
 
-  getAccountNonce(address: AddressLike, shardId: number = undefined) {
+  getAccountNonce(
+    address: AddressLike,
+    shardId: number | undefined = undefined,
+  ) {
     return this.proxy.getAccountNonce(address, shardId);
   }
 
-  getAccountBalance(address: AddressLike, shardId: number = undefined) {
+  getAccountBalance(
+    address: AddressLike,
+    shardId: number | undefined = undefined,
+  ) {
     return this.proxy.getAccountBalance(address, shardId);
   }
 
-  getAccount(address: AddressLike, shardId: number = undefined) {
+  getAccount(address: AddressLike, shardId: number | undefined = undefined) {
     return this.proxy.getAccount(address, shardId);
   }
 
-  getAccountKvs(address: AddressLike, shardId: number = undefined) {
+  getAccountKvs(address: AddressLike, shardId: number | undefined = undefined) {
     return this.proxy.getAccountKvs(address, shardId);
   }
 
-  getSerializableAccountWithKvs(address: AddressLike, shardId: number = undefined) {
+  getSerializableAccountWithKvs(
+    address: AddressLike,
+    shardId: number | undefined = undefined,
+  ) {
     return this.proxy.getSerializableAccountWithKvs(address, shardId);
   }
 
-  getAccountWithKvs(address: AddressLike, shardId: number = undefined) {
+  getAccountWithKvs(
+    address: AddressLike,
+    shardId: number | undefined = undefined,
+  ) {
     return this.proxy.getAccountWithKvs(address, shardId);
   }
 }
