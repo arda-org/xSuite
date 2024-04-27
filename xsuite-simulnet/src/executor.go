@@ -8,6 +8,8 @@ import (
 
 type Executor struct {
 	scenexec    					*executor.ScenarioExecutor
+	numberOfTxsToKeep			int
+	hashesOfTxsToKeep		  []string
 	txResps								map[string]interface{}
 	txProcessStatusResps  map[string]interface{}
 	txCounter							uint64
@@ -23,6 +25,8 @@ func NewExecutor() (*Executor, error) {
 	}
 	e := Executor{
 		scenexec: scenexec,
+		numberOfTxsToKeep: 20,
+		hashesOfTxsToKeep: []string{},
 		txResps: map[string]interface{}{},
 		txProcessStatusResps: map[string]interface{}{},
 		txCounter: 0,
