@@ -115,23 +115,7 @@ export class Proxy {
 
   async getSerializableAccount(address: AddressLike) {
     const res = unrawRes(await this.getAccountRaw(address));
-    return {
-      address: res.account.address,
-      nonce: res.account.nonce,
-      balance: res.account.balance,
-      code: res.account.code,
-      codeHash: base64ToHex(res.account.codeHash ?? ""),
-      codeMetadata: base64ToHex(res.account.codeMetadata ?? ""),
-      owner: res.account.ownerAddress,
-    } as {
-      address: string;
-      nonce: number;
-      balance: string;
-      code: string;
-      codeMetadata: string;
-      codeHash: string;
-      owner: string;
-    };
+    return getSerializableAccount(res.account);
   }
 
   async getAccount(address: AddressLike) {
@@ -359,7 +343,7 @@ class QueryError extends InteractionError {
   }
 }
 
-const unrawRes = (res: any) => {
+export const unrawRes = (res: any) => {
   if (res.code === "successful") {
     return res.data;
   } else {
@@ -393,6 +377,28 @@ const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
     };
   }
   return query;
+};
+
+export const getSerializableAccount = (rawAccount: any) => {
+  return {
+    address: rawAccount.address,
+    nonce: rawAccount.nonce,
+    balance: rawAccount.balance,
+    code: rawAccount.code,
+    codeHash: base64ToHex(rawAccount.codeHash ?? ""),
+    codeMetadata: base64ToHex(rawAccount.codeMetadata ?? ""),
+    owner: rawAccount.ownerAddress,
+    kvs: rawAccount.pairs ?? {},
+  } as {
+    address: string;
+    nonce: number;
+    balance: string;
+    code: string;
+    codeMetadata: string;
+    codeHash: string;
+    owner: string;
+    kvs: Kvs;
+  };
 };
 
 const zeroBechAddress =

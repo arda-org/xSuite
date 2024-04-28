@@ -9,6 +9,7 @@ import {
   generateWalletU8AAddress,
   isContractAddress,
 } from "./utils";
+import { expandCode } from "./world";
 
 let world: SWorld;
 let wallet: SWallet;
@@ -37,7 +38,9 @@ beforeEach(async () => {
   world = await SWorld.start({ explorerUrl });
   wallet = await world.createWallet({
     balance: 10n ** 18n,
-    kvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
+    kvs: {
+      esdts: [{ id: fftId, amount: 10n ** 18n }],
+    },
   });
   otherWallet = await world.createWallet();
   contract = await wallet.createContract({
@@ -204,6 +207,82 @@ test("SWorld.getAccountWithKvs", async () => {
     nonce: 10,
     balance: 1234,
     kvs: [[e.Str("n"), e.U(12)]],
+  });
+});
+
+test("SWorld.getAllSerializableAccountsWithKvs", async () => {
+  expect(await world.getAllSerializableAccountsWithKvs()).toEqual([
+    e.account({
+      address: contract,
+      balance: 10n ** 18n,
+      code: expandCode(worldCode),
+      codeHash:
+        "d8c9ddd83e614eaefd0a0c9d4f350bc3bb6368281ff71e030fc9d3d65b6ef2ae",
+      codeMetadata: ["readable"],
+      kvs: {
+        esdts: [{ id: fftId, amount: 10n ** 18n }],
+        mappers: [{ key: "n", value: e.U64(2) }],
+      },
+      nonce: 0,
+      owner: wallet,
+    }),
+    e.account({
+      address: wallet,
+      balance: 10n ** 18n,
+      code: "",
+      codeHash: "",
+      codeMetadata: ["readable"],
+      kvs: {
+        esdts: [{ id: fftId, amount: 10n ** 18n }],
+      },
+      nonce: 0,
+      owner: "",
+    }),
+    e.account({
+      address: "erd1qyqqqqpmqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqc3scyn",
+      balance: "0",
+      code: "",
+      codeHash: "",
+      codeMetadata: ["readable"],
+      kvs: {},
+      nonce: 0,
+      owner: "",
+    }),
+  ]);
+});
+
+test("SWorld.setAccounts", async () => {
+  await world.setAccounts([
+    {
+      address: wallet,
+      balance: 10n ** 19n,
+      kvs: {
+        esdts: [{ id: fftId, amount: 10n ** 19n }],
+      },
+    },
+    {
+      address: contract,
+      balance: 1234,
+      code: expandCode(worldCode),
+      codeMetadata: ["upgradeable"],
+      kvs: [[e.Str("n"), e.U64(10)]],
+      owner: wallet,
+    },
+  ]);
+  assertAccount(await wallet.getAccountWithKvs(), {
+    address: wallet,
+    balance: 10n ** 19n,
+    kvs: {
+      esdts: [{ id: fftId, amount: 10n ** 19n }],
+    },
+  });
+  assertAccount(await contract.getAccountWithKvs(), {
+    address: contract,
+    balance: 1234,
+    code: worldCode,
+    codeMetadata: ["upgradeable"],
+    kvs: [[e.Str("n"), e.U64(10)]],
+    owner: wallet,
   });
 });
 

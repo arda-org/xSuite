@@ -104,6 +104,14 @@ export class SWorld extends World {
     return createContract(this.proxy, params);
   }
 
+  getAllSerializableAccountsWithKvs() {
+    return this.proxy.getAllSerializableAccountsWithKvs();
+  }
+
+  setAccounts(params: SWorldSetAccountsParams) {
+    return setAccounts(this.proxy, params);
+  }
+
   setAccount(params: SWorldSetAccountParams) {
     return setAccount(this.proxy, params);
   }
@@ -169,15 +177,21 @@ export class SContract extends Contract {
   }
 }
 
-const setAccount = async (proxy: SProxy, params: EncodableAccount) => {
-  if (params.code == null) {
-    if (isContractAddress(params.address)) {
-      params.code = "00";
+const setAccounts = async (proxy: SProxy, params: EncodableAccount[]) => {
+  for (const _params of params) {
+    if (_params.code == null) {
+      if (isContractAddress(_params.address)) {
+        _params.code = "00";
+      }
+    } else {
+      _params.code = expandCode(_params.code);
     }
-  } else {
-    params.code = expandCode(params.code);
   }
-  await proxy.setAccount(params);
+  await proxy.setAccounts(params);
+};
+
+const setAccount = async (proxy: SProxy, params: EncodableAccount) => {
+  return setAccounts(proxy, [params]);
 };
 
 const createContract = async (
@@ -200,6 +214,8 @@ type SWorldNewOptions =
   | WorldNewOptions;
 
 type SWorldCreateAccountParams = Prettify<Partial<EncodableAccount>>;
+
+type SWorldSetAccountsParams = EncodableAccount[];
 
 type SWorldSetAccountParams = EncodableAccount;
 
