@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi"
-	worldmock "github.com/multiversx/mx-chain-scenario-go/worldmock"
+	"github.com/multiversx/mx-chain-scenario-go/worldmock"
 )
 
 func (e *Executor) HandleAddress(r *http.Request) (interface{}, error) {
@@ -15,35 +15,14 @@ func (e *Executor) HandleAddress(r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	account := e.getAccount(address)
-	var bechOwnerAddress string
-	if len(account.OwnerAddress) > 0 {
-		bechOwnerAddress, err = bech32Encode(account.OwnerAddress)
-	} else {
-		bechOwnerAddress = ""
-	}
+	worldAccount := e.getWorldAccount(address)
+	accountData, err := e.getAccountData(worldAccount, false)
 	if err != nil {
 		return nil, err
 	}
-	var codeHash interface{}
-	if len(account.CodeHash) != 0 {
-		codeHash = base64.StdEncoding.EncodeToString(account.CodeHash)
-	}
-	var codeMetadata interface{}
-	if len(account.CodeMetadata) != 0 {
-		codeMetadata = base64.StdEncoding.EncodeToString(account.CodeMetadata)
-	}
 	jData := map[string]interface{}{
 		"data": map[string]interface{}{
-			"account": map[string]interface{}{
-				"address": 			bechAddress,
-				"nonce":   			account.Nonce,
-				"balance": 			account.Balance.String(),
-				"code": 				hex.EncodeToString(account.Code),
-				"codeHash":     codeHash,
-				"codeMetadata": codeMetadata,
-				"ownerAddress": bechOwnerAddress,
-			},
+			"account": accountData,
 		},
 		"code": "successful",
 	}
@@ -56,10 +35,10 @@ func (e *Executor) HandleAddressNonce(r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	account := e.getAccount(address)
+	worldAccount := e.getWorldAccount(address)
 	jData := map[string]interface{}{
 		"data": map[string]interface{}{
-			"nonce": account.Nonce,
+			"nonce": worldAccount.Nonce,
 		},
 		"code": "successful",
 	}
@@ -72,10 +51,10 @@ func (e *Executor) HandleAddressBalance(r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	account := e.getAccount(address)
+	worldAccount := e.getWorldAccount(address)
 	jData := map[string]interface{}{
 		"data": map[string]interface{}{
-			"balance": account.Balance.String(),
+			"balance": worldAccount.Balance.String(),
 		},
 		"code": "successful",
 	}
@@ -88,26 +67,68 @@ func (e *Executor) HandleAddressKeys(r *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	account := e.getAccount(address)
-	jPairs := map[string]string{}
-	for k, v := range account.Storage {
-		if len(v) > 0 {
-			jPairs[hex.EncodeToString([]byte(k))] = hex.EncodeToString(v)
-		}
-	}
+	worldAccount := e.getWorldAccount(address)
+	accountKeysData := e.getAccountKvsData(worldAccount)
 	jData := map[string]interface{}{
 		"data": map[string]interface{}{
-			"pairs": jPairs,
+			"pairs": accountKeysData,
 		},
 		"code": "successful",
 	}
 	return jData, nil
 }
 
-func (e *Executor) getAccount(address []byte) *worldmock.Account {
+func (e *Executor) getWorldAccount(address []byte) *worldmock.Account {
 	account, ok := e.scenexec.World.AcctMap[string(address)]
 	if ok {
 		return account
 	}
 	return e.scenexec.World.AcctMap.CreateAccount(address, e.scenexec.World)
+}
+
+func (e *Executor) getAccountData(worldAccount *worldmock.Account, withKvs bool) (interface{}, error) {
+	bechAddress, err := bech32Encode(worldAccount.Address)
+	if err != nil {
+		return nil, err
+	}
+	var bechOwnerAddress string
+	if len(worldAccount.OwnerAddress) > 0 {
+		bechOwnerAddress, err = bech32Encode(worldAccount.OwnerAddress)
+	} else {
+		bechOwnerAddress = ""
+	}
+	if err != nil {
+		return nil, err
+	}
+	var codeHash interface{}
+	if len(worldAccount.CodeHash) != 0 {
+		codeHash = base64.StdEncoding.EncodeToString(worldAccount.CodeHash)
+	}
+	var codeMetadata interface{}
+	if len(worldAccount.CodeMetadata) != 0 {
+		codeMetadata = base64.StdEncoding.EncodeToString(worldAccount.CodeMetadata)
+	}
+	data := map[string]interface{}{
+		"address": 			bechAddress,
+		"nonce":   			worldAccount.Nonce,
+		"balance": 			worldAccount.Balance.String(),
+		"code": 				hex.EncodeToString(worldAccount.Code),
+		"codeHash":     codeHash,
+		"codeMetadata": codeMetadata,
+		"ownerAddress": bechOwnerAddress,
+	}
+	if withKvs {
+		data["pairs"] = e.getAccountKvsData(worldAccount)
+	}
+	return data, nil
+}
+
+func (e *Executor) getAccountKvsData(worldAccount *worldmock.Account) interface{} {
+	data := map[string]string{}
+	for k, v := range worldAccount.Storage {
+		if len(v) > 0 {
+			data[hex.EncodeToString([]byte(k))] = hex.EncodeToString(v)
+		}
+	}
+	return data
 }
