@@ -5,7 +5,7 @@ import {
   ADMIN_ADDRESS,
   esdtTokenPaymentDecoder,
   extractContract,
-  getHatomContractState,
+  getHatomLSContractState,
   MAINNET_LIQUID_STAKING_CONTRACT_ADDRESS,
   SYSTEM_DELEGATION_MANAGER_ADDRESS,
 } from "./helpers";
@@ -39,7 +39,7 @@ beforeAll(async () => {
     balance: "10000000000000000000", // 10 EGLD
   });
 
-  const hatomContractState = await getHatomContractState();
+  const hatomContractState = await getHatomLSContractState();
   await world.setAccount({
     ...hatomContractState,
     owner: deployer,

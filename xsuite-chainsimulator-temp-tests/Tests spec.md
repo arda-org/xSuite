@@ -1,20 +1,20 @@
-**Test 1: Hatom whole user flow against true blockchain**
+**Test 1: Hatom whole flow**
 
-1. Owner calls `whitelistDelegationContract` to whitelist a provider address `provider`
-2. Alice calls `delegate` (this pre-delegates her EGLD, and selects `provider` as the provider where EGLD will be delegated).
-3. Bob calls `delegatePendingAmount` with right `provider`
-4. We move forward 1 epoch
-5. Bob calls `claimRewardsFrom` with arg `provider`
-6. Move forward 3 blocks (to wait for callback of claim)
-7. Bob calls "delegateRewards" (this selects a `provider` and delegates rewards there)
-8. Move forward 3 blocks.
-9. Alice calls `undelegate`. This pre-delegates her EGLD, and selects a `provider`. Also Alice gets an Undelegate NFT representing the undelegation information (unbond time, EGLD amount, etc.)
-10. Bob calls "undelegate_pending_amount" with right `provider`
-11. Move forward 10 epochs
-12. Alice calls `withdraw`. This fails.
-13. Alice calls `withdrawFrom` with right provider `provider`.
-14. Move forward 3 blocks.
-15. Alice calls `withdraw`. This succeeds and she gets back EGLD, more than initially deposited.
+1. The admin calls `whitelistDelegationContract` to whitelist a delegation contract `D`.
+2. Alice calls `delegate` that pre-delegates her EGLD to `D`.
+3. The admin calls `delegatePendingAmount` with the argument `D`.
+4. The blockchain advances by 1 epoch.
+5. The admin calls `claimRewardsFrom` with the argument `D`.
+6. The blockchain advances by 3 blocks (the time for the callback to terminate).
+7. The admin calls `delegateRewards` that delegates rewards to `D`.
+8. The blockchain advances by 3 blocks (the time for the callback to terminate).
+9. Alice calls `undelegate` that pre-undelegates her EGLD from `D`.
+10. The admin calls `unDelegatePendingAmount` from `D`.
+11. The blockchain advances by 10 epochs.
+12. Alice calls `withdraw` and it fails.
+13. Alice calls `withdrawFrom` with the argument `D`.
+14. The blockchain advances by 3 blocks (the time for the callback to terminate).
+15. Alice calls `withdraw` and it succeeds. She gets back more EGLD than initially deposited.
 
 **Test 2: Hatom cross-shard calls concurrency**
 

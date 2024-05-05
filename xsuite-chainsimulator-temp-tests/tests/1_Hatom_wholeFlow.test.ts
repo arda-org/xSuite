@@ -1,279 +1,212 @@
-import { afterAll, assert, beforeAll, test } from "vitest";
-import { assertAccount, d, e, CSContract, CSWallet, CSWorld } from "xsuite";
-import { DummySigner } from "xsuite/dist/world/signer";
+import { afterAll, beforeAll, expect, test } from "vitest";
+import { d, e, CSWorld } from "xsuite";
 import {
   ADMIN_ADDRESS,
   delegationContractDataDecoder,
-  esdtTokenPaymentDecoder,
-  extractContract,
-  getHatomContractState,
-  MAINNET_LIQUID_STAKING_CONTRACT_ADDRESS,
+  egldUnit,
+  hslrId,
+  loadHatomLSContractState,
+  segldId,
   SYSTEM_DELEGATION_MANAGER_ADDRESS,
 } from "./helpers";
 
 let world: CSWorld;
-let deployer: CSWallet;
-let address: CSWallet;
-let alice: CSWallet;
-let admin: CSWallet;
-
-let systemDelegationContract: CSContract;
-let liquidStakingContract: CSContract;
 
 beforeAll(async () => {
-  world = await CSWorld.start({
-    // debug: true,
-  });
-
-  // Wallets always need EGLD balance to pay for fees
-  deployer = await world.createWallet({
-    balance: "1000000000000000000", // 1 EGLD
-  });
-  address = await world.createWallet({
-    balance: "1255000000000000000000", // 1255 EGLD
-  });
-  await world.setAccount({
-    address: "erd1lh08nq6j75s39vtgn2gtzed8p62nr77my8h3wyhdcv7xjql7gn9szasf5c",
-    balance: "4001000000000000000000000", // 4,001,000 EGLD
-  });
-  alice = world.newWallet(
-    "erd1lh08nq6j75s39vtgn2gtzed8p62nr77my8h3wyhdcv7xjql7gn9szasf5c",
-  ); // shard 1, same as hatom contract
-  admin = await world.newWallet(new DummySigner(ADMIN_ADDRESS));
-  await admin.setAccount({
-    balance: "10000000000000000000", // 10 EGLD
-  });
-
-  const hatomContractState = await getHatomContractState();
-  await world.setAccount({
-    ...hatomContractState,
-    owner: deployer,
-  });
-
-  systemDelegationContract = world.newContract(
-    SYSTEM_DELEGATION_MANAGER_ADDRESS,
-  );
-  liquidStakingContract = world.newContract(
-    MAINNET_LIQUID_STAKING_CONTRACT_ADDRESS,
-  );
-
-  // generate 20 blocks to pass an epoch so system smart contracts are enabled
-  await world.generateBlocksUntilEpochReached(1);
-}, 30_000);
+  world = await CSWorld.start();
+});
 
 afterAll(async () => {
-  // Having this here so we can access the chain simulator endpoints outside of tests
-  // await new Promise((resolve, reject) => {
-  //   setTimeout(() => resolve(), 60_000);
-  // });
+  world.terminate();
+});
 
-  await world.terminate();
-}, 60_000);
+const createDelegationContract = async () => {
+  const delegationOwner = await world.createWallet({
+    balance: egldUnit + 1250n * egldUnit,
+  });
 
-const deployDelegationProvider = async () => {
-  const tx = await address.callContract({
-    callee: systemDelegationContract,
+  await world.generateBlocksUntilEpochReached(1); // TODO: test should work without this
+
+  const res = await delegationOwner.callContract({
+    callee: SYSTEM_DELEGATION_MANAGER_ADDRESS,
     funcName: "createNewDelegationContract",
     gasLimit: 65_000_000,
-    value: 1250000000000000000000n, // 1250 EGLD
+    value: 1250n * egldUnit,
     funcArgs: [
       e.U(0), // delegation cap
-      e.U(3745), // service fee
+      e.U(0), // service fee
     ],
   });
-  const stakingProviderDelegationContract = extractContract(tx, world);
-  console.log(
-    "Deployed new delegation contract",
-    stakingProviderDelegationContract.toString(),
-  );
+  const delegationContract = world.newContract(res.returnData[0]);
+  console.log("Deployed delegation contract");
 
   const initialWallets = await world.getInitialWallets();
-  const initialAddressWithStake = initialWallets.stakeWallets[0].address.bech32;
-  const initialAddressWithStakeWallet = world.newWallet(
-    new DummySigner(initialAddressWithStake),
+  const initialStakeWallet = world.newWallet(
+    initialWallets.stakeWallets[0].address.bech32,
   );
-  console.log("Initial address with stake", initialAddressWithStake);
 
-  await address.callContract({
-    callee: stakingProviderDelegationContract,
+  await delegationOwner.callContract({
+    callee: delegationContract,
     funcName: "whitelistForMerge",
     gasLimit: 65_000_000,
-    funcArgs: [initialAddressWithStakeWallet],
+    funcArgs: [initialStakeWallet],
   });
-  console.log("Whitelisted initial address with stake for merge");
+  console.log("Whitelisted initial stake wallet for merge");
 
-  await initialAddressWithStakeWallet.callContract({
-    callee: systemDelegationContract,
+  await initialStakeWallet.callContract({
+    callee: SYSTEM_DELEGATION_MANAGER_ADDRESS,
     funcName: "mergeValidatorToDelegationWithWhitelist",
     gasLimit: 510_000_000,
-    funcArgs: [stakingProviderDelegationContract],
+    funcArgs: [delegationContract],
   });
-  console.log(
-    "Merged validator with delegation contract. Moving forward 1 epoch...",
-  );
+  console.log("Merged validator with delegation contract");
 
-  // generate 20 blocks to pass an epoch and some rewards will be distributed
-  await world.generateBlocks(20);
-
-  await address.callContract({
-    callee: stakingProviderDelegationContract,
-    funcName: "claimRewards",
-    gasLimit: 510_000_000,
-  });
-
-  assertAccount(await address.getAccountWithKvs(), {
-    balance: 6130739863191303141n, // 5 EGLD remaining initially - fees + rewards
-  });
-
-  return { stakingProviderDelegationContract };
+  return delegationContract;
 };
 
-const setupLiquidStaking = async (
-  stakingProviderDelegationContract: CSContract,
-) => {
+test("Test", async () => {
+  const delegationContract = await createDelegationContract();
+  const alice = await world.createWallet({
+    address: "erd1lh08nq6j75s39vtgn2gtzed8p62nr77my8h3wyhdcv7xjql7gn9szasf5c", // TODO: should have option to generate automatically in shard 1
+    balance: egldUnit + 4_000_000n * egldUnit, // TODO: why number this big?
+  });
+  const admin = await world.createWallet({
+    address: ADMIN_ADDRESS,
+    balance: egldUnit,
+  });
+  const contract = await world.createContract(loadHatomLSContractState());
+
   let result = await world.query({
-    callee: stakingProviderDelegationContract,
+    callee: delegationContract,
     funcName: "getTotalActiveStake",
   });
-  const stakingProviderStake = d.U().topDecode(result.returnData[0]);
-  console.log("Staking provider stake: ", stakingProviderStake);
-  assert(stakingProviderStake === 3750000000000000000000n);
+  const delegationStake = d.U().fromTop(result.returnData[0]);
+  expect(delegationStake).toEqual(3750n * egldUnit);
 
   await admin.callContract({
-    callee: liquidStakingContract,
+    callee: contract,
     funcName: "whitelistDelegationContract",
     gasLimit: 510_000_000,
     funcArgs: [
-      stakingProviderDelegationContract,
-      e.U(3750000000000000000000n), // total value locked (3750 EGLD = 2500 EGLD initial + 1250 EGLD from delegate creation)
+      delegationContract,
+      e.U(delegationStake), // total stake
       e.U64(1), // nb of nodes,
-      e.U(1100), // high apr
-      e.U(200), // low service fee so this delegation contract is selected instead of some other
+      e.U(1100), // high apr so this delegation contract is selected instead of some other
+      e.U(0), // service fee
     ],
   });
   console.log("Whitelisted delegation contract");
 
-  let tx = await alice.callContract({
-    callee: liquidStakingContract,
+  await alice.callContract({
+    callee: contract,
     funcName: "delegate",
-    value: 4000000000000000000000000n, // 4,000,000 EGLD,
+    value: 4_000_000n * egldUnit,
     gasLimit: 45_000_000,
   });
-  const segldReceived = esdtTokenPaymentDecoder.topDecode(tx.returnData[0]);
-  console.log("Delegate EGLD successfully. Received sEGLD: ", segldReceived);
-  assertAccount(await alice.getAccountWithKvs(), {
-    kvs: [
-      e.kvs.Esdts([
-        { id: segldReceived.token_identifier, amount: segldReceived.amount },
-      ]),
-    ],
+  console.log("Delegated EGLD");
+  const segldAmount = 3817949520866688250869751n;
+  expect(d.account().from(await alice.getAccountWithKvs())).toMatchObject({
+    kvs: {
+      esdts: [{ id: segldId, amount: segldAmount }],
+    },
   });
 
   result = await world.query({
-    callee: liquidStakingContract,
+    callee: contract,
     funcName: "getDelegationContractData",
-    funcArgs: [stakingProviderDelegationContract],
+    funcArgs: [delegationContract],
   });
-  let delegationContractData = delegationContractDataDecoder.topDecode(
+  let delegationContractData = delegationContractDataDecoder.fromTop(
     result.returnData[0],
   );
-  console.log("Delegation contract data: ", delegationContractData);
-  assert(
-    delegationContractData.pending_to_delegate === 4000000000000000000000000n,
+  expect(delegationContractData.pending_to_delegate).toEqual(
+    4_000_000n * egldUnit,
   );
 
   await admin.callContract({
-    callee: liquidStakingContract,
+    callee: contract,
     funcName: "delegatePendingAmount",
     gasLimit: 45_000_000,
-    funcArgs: [stakingProviderDelegationContract],
+    funcArgs: [delegationContract],
   });
-  console.log(
-    "Delegated pending amount: ",
-    delegationContractData.pending_to_delegate,
-  );
+  console.log("Delegated pending amount");
 
   result = await world.query({
-    callee: stakingProviderDelegationContract,
+    callee: delegationContract,
     funcName: "getTotalActiveStake",
   });
-  assert(d.U().topDecode(result.returnData[0]) === 4003750000000000000000000n); // staked increased by 4,000,000 EGLD
+  expect(d.U().fromTop(result.returnData[0])).toEqual(4_003_750n * egldUnit); // staked increased by 4,000,000 EGLD
 
   console.log("Moving forward 3 epochs...");
-
   // Move forward 3 epochs (to have enough rewards so they can be claimed)
-  await world.generateBlocks(20 * 3);
+  await world.generateBlocks(20 * 3); // TODO: move the epochs directly
 
   await admin.callContract({
-    callee: liquidStakingContract,
+    callee: contract,
     funcName: "claimRewardsFrom",
     gasLimit: 45_000_000,
-    funcArgs: [stakingProviderDelegationContract],
+    funcArgs: [delegationContract],
   });
-  console.log("Successfully claimed rewards from staking provider");
-
-  const kvs = await liquidStakingContract.getAccountWithKvs();
-  const rewardsReserve = d
-    .U()
-    .topDecode(kvs.kvs[e.Str("rewardsReserve").toTopHex()]);
-  console.log("Rewards reserve: ", rewardsReserve);
-  assert(rewardsReserve === 6369249725007817433n); // 6.369249418386583089 EGLD added as rewards
-
-  // TODO: This breaks the delegation contract and unDelegate will fail with `signalError - Delegation contract not available`
-  // This is most probably because of the Hatom algorithm configuration being changed and another staking provider
-  // is selected if we run this.
-  // await admin.callContract({
-  //   callee: liquidStakingContract,
-  //   funcName: 'delegateRewards',
-  //   gasLimit: 45_000_000,
-  // });
-  // console.log('Delegate rewards back to staking provider');
-  //
-  // await world.generateBlocks(3);
-  //
-  // result = await world.query({
-  //   callee: stakingProviderDelegationContract,
-  //   funcName: 'getTotalActiveStake',
-  // });
-  // const totalActiveStake = d.U().topDecode(result.returnData[0]);
-  // console.log('New total active stake: ', totalActiveStake);
-  // assert(totalActiveStake === 4003756369249418386583089n); // staked increased by rewards reserve amount
-
-  tx = await alice.callContract({
-    callee: liquidStakingContract,
-    funcName: "unDelegate",
-    gasLimit: 45_000_000,
-    esdts: [
-      {
-        id: segldReceived.token_identifier,
-        amount: segldReceived.amount / 10n,
-      },
-    ],
-  });
-  const undelegateNftReceived = esdtTokenPaymentDecoder.topDecode(
-    tx.returnData[0],
-  );
-  console.log(
-    "Undelegate sEGLD successfully. Received NFT: ",
-    undelegateNftReceived,
-  );
-  assert(undelegateNftReceived.amount === 1n);
+  console.log("Claimed rewards from staking provider");
 
   result = await world.query({
-    callee: liquidStakingContract,
-    funcName: "getDelegationContractData",
-    funcArgs: [stakingProviderDelegationContract],
+    callee: contract,
+    funcName: "getRewardsReserve",
   });
-  delegationContractData = delegationContractDataDecoder.topDecode(
+  expect(d.U().fromTop(result.returnData[0])).toEqual(9978146349127131213n);
+
+  const tx2 = await admin.callContract({
+    callee: contract,
+    funcName: "delegateRewards",
+    gasLimit: 45_000_000,
+  });
+  console.log("Delegated rewards");
+  console.log(JSON.stringify(tx2));
+  // TODO: transaction doesn't seem to be successfully completed
+
+  await world.generateBlocks(3); // TODO: delete once debugged
+
+  result = await world.query({
+    callee: delegationContract,
+    funcName: "getTotalActiveStake",
+  });
+  const totalActiveStake = d.U().fromTop(result.returnData[0]);
+  console.log("New total active stake: ", totalActiveStake);
+  expect(totalActiveStake).toEqual(4003756369249418386583089n); // staked increased by rewards reserve amount // TODO: issue
+
+  await alice.callContract({
+    callee: contract,
+    funcName: "unDelegate",
+    gasLimit: 45_000_000,
+    esdts: [{ id: segldId, amount: segldAmount / 10n }],
+  });
+  console.log("Undelegate sEGLD successfully");
+  const hslrNonce = 5405;
+  const hslrAmount = 1n;
+  expect(d.account().from(await alice.getAccountWithKvs())).toMatchObject({
+    kvs: {
+      esdts: [
+        { id: hslrId, variants: [{ nonce: hslrNonce, amount: hslrAmount }] },
+        { id: segldId, amount: segldAmount - segldAmount / 10n },
+      ],
+    },
+  });
+
+  result = await world.query({
+    callee: contract,
+    funcName: "getDelegationContractData",
+    funcArgs: [delegationContract],
+  });
+  delegationContractData = delegationContractDataDecoder.fromTop(
     result.returnData[0],
   );
   console.log("Delegation contract data: ", delegationContractData);
 
   await admin.callContract({
-    callee: liquidStakingContract,
+    callee: contract,
     funcName: "unDelegatePendingAmount",
     gasLimit: 45_000_000,
-    funcArgs: [stakingProviderDelegationContract],
+    funcArgs: [delegationContract],
   });
   console.log(
     "Undelegate pending amount successfully. Moving forward 10 epochs...",
@@ -282,71 +215,50 @@ const setupLiquidStaking = async (
   // Move forward 10 epochs + 5 blocks so unbonding period passes
   // The extra 5 blocks are needed for the following `withdraw` to work correctly
   // and not fail with `The unbond period has not ended` error, not sure why exactly
-  await world.generateBlocks(20 * 10 + 5);
+  await world.generateBlocks(20 * 10 + 5); // TODO: move the epochs directly
 
   await alice
     .callContract({
-      callee: liquidStakingContract,
+      callee: contract,
       funcName: "withdraw",
       gasLimit: 45_000_000,
-      esdts: [
-        {
-          id: undelegateNftReceived.token_identifier,
-          amount: undelegateNftReceived.amount,
-          nonce: Number(undelegateNftReceived.token_nonce),
-        },
-      ],
+      esdts: [{ id: hslrId, nonce: hslrNonce, amount: hslrAmount }],
     })
     .assertFail({ code: "signalError", message: "Too much EGLD amount" });
 
   await alice.callContract({
-    callee: liquidStakingContract,
+    callee: contract,
     funcName: "withdrawFrom",
     gasLimit: 45_000_000,
-    funcArgs: [stakingProviderDelegationContract],
+    funcArgs: [delegationContract],
   });
   console.log("Withdraw from staking provider successfully");
 
-  tx = await alice.callContract({
-    callee: liquidStakingContract,
+  const tx = await alice.callContract({
+    callee: contract,
     funcName: "withdraw",
     gasLimit: 45_000_000,
-    esdts: [
-      {
-        id: undelegateNftReceived.token_identifier,
-        amount: undelegateNftReceived.amount,
-        nonce: Number(undelegateNftReceived.token_nonce),
-      },
-    ],
+    esdts: [{ id: hslrId, nonce: hslrNonce, amount: hslrAmount }],
   });
-  const receivedEgldAmount = d.U().topDecode(tx.returnData[0]);
+  const receivedEgldAmount = d.U().fromTop(tx.returnData[0]);
   console.log(
     "Withdraw EGLD successfully. Received EGLD amount: ",
     receivedEgldAmount,
   );
-  assert(receivedEgldAmount === 399999999999999999999999n); // ~300,999.99 EGLD received back
+  expect(receivedEgldAmount).toEqual(399999999999999999999999n); // ~399,999.99 EGLD received back
 
   const balance = await alice.getAccountBalance();
-  assert(balance >= receivedEgldAmount);
+  expect(balance).toBeGreaterThan(receivedEgldAmount);
 
   result = await world.query({
-    callee: stakingProviderDelegationContract,
+    callee: delegationContract,
     funcName: "getTotalActiveStake",
   });
   console.log(
     "Remaining active stake for staking provider: ",
-    d.U().topDecode(result.returnData[0]),
+    d.U().fromTop(result.returnData[0]),
   );
-  assert(d.U().topDecode(result.returnData[0]) === 3603750000000000000000001n);
-};
-
-test(
-  "Test",
-  async () => {
-    const { stakingProviderDelegationContract } =
-      await deployDelegationProvider();
-
-    await setupLiquidStaking(stakingProviderDelegationContract);
-  },
-  { timeout: 60_000 },
-); // Test takes 30-60 seconds to run
+  expect(d.U().fromTop(result.returnData[0])).toEqual(
+    3603750000000000000000001n,
+  );
+}, 60_000); // Test takes 30-60 seconds to run

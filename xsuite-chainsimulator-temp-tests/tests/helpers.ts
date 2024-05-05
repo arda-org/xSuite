@@ -1,10 +1,9 @@
-import fs = require("fs");
-import { CSContract, d, Proxy } from "xsuite";
+import fs from "node:fs";
+import { CSContract, Proxy, d } from "xsuite";
 import { mainnetPublicProxyUrl } from "xsuite/dist/interact/envChain";
 
 export const SYSTEM_DELEGATION_MANAGER_ADDRESS =
   "erd1qqqqqqqqqqqqqqqpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqylllslmq6y6";
-
 export const MAINNET_LIQUID_STAKING_CONTRACT_ADDRESS =
   "erd1qqqqqqqqqqqqqpgq4gzfcw7kmkjy8zsf04ce6dl0auhtzjx078sslvrf4e";
 export const ADMIN_ADDRESS =
@@ -12,7 +11,13 @@ export const ADMIN_ADDRESS =
 
 const hatomStateFile = "./tests/hatomState.json";
 
-export const getHatomContractState = async () => {
+export const egldUnit = 10n ** 18n;
+
+export const segldId = "SEGLD-3ad2d0";
+export const hslrId = "HLSR-374950";
+
+// TODO: decouple downloading and loading. Script to download
+export const getHatomLSContractState = async () => {
   if (!fs.existsSync(hatomStateFile)) {
     console.log("file does not exist");
     const realContract = await new Proxy(
@@ -21,14 +26,16 @@ export const getHatomContractState = async () => {
 
     fs.writeFileSync(hatomStateFile, JSON.stringify(realContract));
   }
-
-  return JSON.parse(fs.readFileSync(hatomStateFile));
+  return loadHatomLSContractState();
 };
+
+export const loadHatomLSContractState = () =>
+  JSON.parse(fs.readFileSync(hatomStateFile, "utf-8"));
 
 export const extractContract = (tx, world): CSContract => {
   const events = tx.tx.logs.events;
 
-  for (const event: any of events) {
+  for (const event of events) {
     if (event.identifier !== "SCDeploy") {
       continue;
     }
