@@ -1,6 +1,5 @@
 import { afterAll, assert, beforeAll, test } from "vitest";
 import { assertAccount, d, e, CSContract, CSWallet, CSWorld, Tx } from "xsuite";
-import { DummySigner } from "xsuite/dist/world/signer";
 import {
   ADMIN_ADDRESS,
   delegationContractDataDecoder,
@@ -90,7 +89,7 @@ const deployDelegationProvider = async () => {
   const initialWallets = await world.getInitialWallets();
   const initialAddressWithStake = initialWallets.stakeWallets[0].address.bech32;
   const initialAddressWithStakeWallet = world.newWallet(
-    new DummySigner(initialAddressWithStake),
+    initialAddressWithStake,
   );
   console.log("Initial address with stake", initialAddressWithStake);
 

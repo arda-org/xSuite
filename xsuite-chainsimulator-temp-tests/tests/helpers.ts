@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import { CSContract, Proxy, d } from "xsuite";
-import { mainnetPublicProxyUrl } from "xsuite/dist/interact/envChain";
 
 export const SYSTEM_DELEGATION_MANAGER_ADDRESS =
   "erd1qqqqqqqqqqqqqqqpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqylllslmq6y6";
@@ -21,7 +20,7 @@ export const getHatomLSContractState = async () => {
   if (!fs.existsSync(hatomStateFile)) {
     console.log("file does not exist");
     const realContract = await new Proxy(
-      mainnetPublicProxyUrl,
+      "https://gateway.multiversx.com",
     ).getSerializableAccountWithKvs(MAINNET_LIQUID_STAKING_CONTRACT_ADDRESS);
 
     fs.writeFileSync(hatomStateFile, JSON.stringify(realContract));

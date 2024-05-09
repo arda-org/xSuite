@@ -1,6 +1,5 @@
 import { afterAll, beforeAll, test } from "vitest";
 import { assertAccount, CSContract, CSWallet, CSWorld, e } from "xsuite";
-import { DummySigner } from "xsuite/dist/world/signer";
 import {
   ADMIN_ADDRESS,
   esdtTokenPaymentDecoder,
@@ -34,7 +33,7 @@ beforeAll(async () => {
   alice = world.newWallet(
     "erd1lh08nq6j75s39vtgn2gtzed8p62nr77my8h3wyhdcv7xjql7gn9szasf5c",
   ); // shard 1, same as hatom contract
-  admin = await world.newWallet(new DummySigner(ADMIN_ADDRESS));
+  admin = await world.newWallet(ADMIN_ADDRESS);
   await admin.setAccount({
     balance: "10000000000000000000", // 10 EGLD
   });

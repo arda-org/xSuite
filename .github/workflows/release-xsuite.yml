@@ -14,9 +14,9 @@ jobs:
       - name: Use Node.js & pnpm
         uses: ./.github/actions/node-pnpm
         with:
-          node-version: 18
+          node-version: 20
           node-registry-url: "https://registry.npmjs.org"
-          pnpm-version: 8
+          pnpm-version: 9
 
       - name: Build xsuite
         run: pnpm build-xsuite

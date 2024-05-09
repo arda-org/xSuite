@@ -32,8 +32,8 @@ jobs:
       - name: Use Node.js & pnpm
         uses: ./.github/actions/node-pnpm
         with:
-          node-version: 18
-          pnpm-version: 8
+          node-version: 20
+          pnpm-version: 9
 
       - name: Build xsuite
         run: pnpm build-xsuite
