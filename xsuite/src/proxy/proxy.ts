@@ -68,7 +68,7 @@ export class Proxy {
   async getCompletedTxRaw(txHash: string) {
     let res = await this.getTxProcessStatusRaw(txHash);
     while (res.code !== "successful" || res.data.status === "pending") {
-      await new Promise((r) => setTimeout(r, 1000));
+      await new Promise((r) => setTimeout(r, this.txCompletionPauseMs));
       res = await this.getTxProcessStatusRaw(txHash);
     }
     return await this.getTxRaw(txHash, { withResults: true });

@@ -44,17 +44,10 @@ export const startCsproxyBin = async (
         console.log(data.toString());
       }
 
-      const timeout = setTimeout(
-        () => reject(new Error("Chain Simulator failed starting.")),
-        10_000,
-      );
-
       const addressRegex =
         /chain simulator's is accessible through the URL ([\w\d.:]+)/;
       const match = data.toString().match(addressRegex);
       if (match) {
-        clearTimeout(timeout);
-
         resolve(`http://${match[1]}`);
       }
     });

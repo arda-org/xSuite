@@ -4,8 +4,8 @@
   "license": "MIT",
   "scripts": {
     "build": "run-script-os",
-    "build:linux": "BINARY=csproxy-linux-amd64 ./build-chainsimulator.sh",
-    "build:darwin": "BINARY=csproxy-darwin-amd64 ./build-chainsimulator.sh",
+    "build:linux": "./build-chainsimulator.sh csproxy-linux-amd64 \"-extldflags '-Wl,-rpath,\\$ORIGIN'\"",
+    "build:darwin": "./build-chainsimulator.sh csproxy-darwin-amd64 \"-extldflags '-Wl,-rpath,@loader_path'\"",
     "postinstall": "chmod -f +x ./bin/csproxy-* || true"
   },
   "files": [

@@ -45,8 +45,6 @@ export class CSProxy extends Proxy {
   async getCompletedTxRaw(txHash: string) {
     let res = await this.getTxProcessStatusRaw(txHash);
 
-    let retries = 0;
-
     while (!res || res.code !== "successful" || res.data.status === "pending") {
       // We need delay since cross shard changes might not have been processed immediately
       await new Promise((r) => setTimeout(r, this.txCompletionPauseMs));
@@ -56,13 +54,6 @@ export class CSProxy extends Proxy {
       }
 
       res = await this.getTxProcessStatusRaw(txHash);
-
-      retries++;
-
-      // Prevent too many retries in case something does not work as expected
-      if (retries > 10) {
-        throw new Error(`Transaction ${txHash} could not be completed`);
-      }
     }
 
     return await this.getTxRaw(txHash, { withResults: true });
