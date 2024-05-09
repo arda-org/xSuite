@@ -26,6 +26,7 @@ const createDelegationContract = async () => {
   });
 
   await world.generateBlocksUntilEpochReached(1); // TODO: test should work without this
+  // Seems like some things still don't work being enabled on epoch 0
 
   const res = await delegationOwner.callContract({
     callee: SYSTEM_DELEGATION_MANAGER_ADDRESS,
@@ -138,7 +139,7 @@ test("Test", async () => {
   expect(d.U().fromTop(result.returnData[0])).toEqual(4_003_750n * egldUnit); // staked increased by 4,000,000 EGLD
 
   console.log("Moving forward 3 epochs...");
-  // Move forward 3 epochs (to have enough rewards so they can be claimed)
+  // Move forward 3 epochs (to have enough rewards so they can be claimed & delegated)
   await world.generateBlocks(20 * 3); // TODO: move the epochs directly
 
   await admin.callContract({
@@ -153,18 +154,27 @@ test("Test", async () => {
     callee: contract,
     funcName: "getRewardsReserve",
   });
-  expect(d.U().fromTop(result.returnData[0])).toEqual(9978146349127131213n);
+  const rewardsAmount = 9978146349127131213n;
+  expect(d.U().fromTop(result.returnData[0])).toEqual(rewardsAmount);
 
   const tx2 = await admin.callContract({
     callee: contract,
     funcName: "delegateRewards",
     gasLimit: 45_000_000,
   });
-  console.log("Delegated rewards");
+  console.log("Delegated rewards", tx2);
   console.log(JSON.stringify(tx2));
-  // TODO: transaction doesn't seem to be successfully completed
-
-  await world.generateBlocks(3); // TODO: delete once debugged
+  // TODO: If transaction has an error in an Async Call, the full logs will not appear immediately for some reason and
+  // we need to wait extra blocks. However if the Async Call is successfully completed, then the full logs will appear
+  // The transaction is not fully completed here, even though the gateway reports the status as `success`, not all
+  // logs are yet available.
+  // await world.generateBlocks(3);
+  //
+  // All logs are available here even in case of Async Call error
+  // const txResult = await world.proxy.getTx(tx2.tx.hash, { withResults: true });
+  //
+  // console.log('Transaction result after waiting');
+  // console.log(JSON.stringify(txResult));
 
   result = await world.query({
     callee: delegationContract,
@@ -172,7 +182,7 @@ test("Test", async () => {
   });
   const totalActiveStake = d.U().fromTop(result.returnData[0]);
   console.log("New total active stake: ", totalActiveStake);
-  expect(totalActiveStake).toEqual(4003756369249418386583089n); // staked increased by rewards reserve amount // TODO: issue
+  expect(totalActiveStake).toEqual(4_003_750n * egldUnit + rewardsAmount); // staked increased by rewards reserve amount
 
   await alice.callContract({
     callee: contract,
@@ -245,7 +255,7 @@ test("Test", async () => {
     "Withdraw EGLD successfully. Received EGLD amount: ",
     receivedEgldAmount,
   );
-  expect(receivedEgldAmount).toEqual(399999999999999999999999n); // ~399,999.99 EGLD received back
+  expect(receivedEgldAmount).toEqual(400000736213615074473001n); // ~400,000.73 EGLD received back, more than initially delegated
 
   const balance = await alice.getAccountBalance();
   expect(balance).toBeGreaterThan(receivedEgldAmount);
@@ -259,6 +269,6 @@ test("Test", async () => {
     d.U().fromTop(result.returnData[0]),
   );
   expect(d.U().fromTop(result.returnData[0])).toEqual(
-    3603750000000000000000001n,
+    3603759241932734052658212n,
   );
 }, 60_000); // Test takes 30-60 seconds to run

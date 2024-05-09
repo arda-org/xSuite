@@ -38,7 +38,7 @@ export const startCsproxyBin = async (
     throw error;
   });
 
-  const proxyUrl = await new Promise<string>((resolve, reject) => {
+  const proxyUrl = await new Promise<string>((resolve) => {
     server.stdout.on("data", (data: Buffer) => {
       if (debug) {
         console.log(data.toString());

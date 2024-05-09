@@ -100,4 +100,5 @@ OverridableConfigTomlValues = [
     { File = "enableEpochs.toml", Path = "EnableEpochs.FixGasRemainingForSaveKeyValueBuiltinFunctionEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.CurrentRandomnessOnSortingEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.AlwaysMergeContextsInEEIEnableEpoch", Value = "0" },
+    { File = "systemSmartContractsConfig.toml", Path = "DelegationManagerSystemSCConfig.MinStakeAmount", Value = "1000000000000000000" }, # 1 EGLD
 ]
