@@ -238,6 +238,13 @@ func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
 		},
 		"code": "successful",
 	}
+	e.hashesOfTxsToKeep = append(e.hashesOfTxsToKeep, txHash)
+	if len(e.hashesOfTxsToKeep) > e.numberOfTxsToKeep {
+		firstTxHash := e.hashesOfTxsToKeep[0]
+		delete(e.txResps, firstTxHash)
+		delete(e.txProcessStatusResps, firstTxHash)
+		e.hashesOfTxsToKeep = e.hashesOfTxsToKeep[1:]
+	}
 	jOutput := map[string]interface{}{
 		"data": map[string]interface{}{
 			"txHash": txHash,
@@ -270,7 +277,7 @@ func (e *Executor) HandleTransaction(r *http.Request) (interface{}, error) {
 
 func (e *Executor) HandleTransactionProcessStatus(r *http.Request) (interface{}, error) {
 	txHash := chi.URLParam(r, "txHash")
-	res := e.txResps[txHash]
+	res := e.txProcessStatusResps[txHash]
 	return res, nil
 }
 
