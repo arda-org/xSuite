@@ -1,4 +1,5 @@
 import { test, expect } from "vitest";
+import { fullBechAddress, zeroBechAddress } from "../data/address";
 import { assertAccount, assertVs, assertHexList } from ".";
 
 test("assertVs - matching", () => {
@@ -12,22 +13,22 @@ test("assertVs - not matching", () => {
 test("assertAccount - matching", () => {
   assertAccount(
     {
-      address: "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu",
+      address: zeroBechAddress,
       balance: 10n,
       code: "010203",
       codeMetadata: "0400",
-      owner: "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu",
+      owner: zeroBechAddress,
       kvs: {
         "01": "01",
         "02": "02",
       },
     },
     {
-      address: "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu",
+      address: zeroBechAddress,
       balance: 10n,
       code: "010203",
       codeMetadata: ["readable"],
-      owner: "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu",
+      owner: zeroBechAddress,
       kvs: [
         ["01", "01"],
         ["02", "02"],
@@ -43,16 +44,7 @@ test("assertAccount - matching", () => {
 
 test("assertAccount - not matching - address", () => {
   expect(() =>
-    assertAccount(
-      {
-        address:
-          "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu",
-      },
-      {
-        address:
-          "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hd",
-      },
-    ),
+    assertAccount({ address: zeroBechAddress }, { address: fullBechAddress }),
   ).toThrow();
 });
 
@@ -72,14 +64,7 @@ test("assertAccount - not matching - codeMetadata", () => {
 
 test("assertAccount - not matching - owner", () => {
   expect(() =>
-    assertAccount(
-      {
-        owner: "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu",
-      },
-      {
-        owner: "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hd",
-      },
-    ),
+    assertAccount({ owner: zeroBechAddress }, { owner: fullBechAddress }),
   ).toThrow();
 });
 

@@ -1,4 +1,5 @@
 import { ChildProcess } from "node:child_process";
+import { fullU8AAddress } from "../data/address";
 import { AddressLike, isAddressLike } from "../data/addressLike";
 import { EncodableAccount } from "../data/encoding";
 import { Prettify } from "../helpers";
@@ -40,7 +41,7 @@ export class SWorld extends World {
     super({ chainId: "S", proxy, gasPrice, explorerUrl });
     this.proxy = proxy;
     this.server = server;
-    this.sysAcc = this.newContract(new Uint8Array(32).fill(255));
+    this.sysAcc = this.newContract(fullU8AAddress);
   }
 
   static new(options: SWorldNewOptions) {
