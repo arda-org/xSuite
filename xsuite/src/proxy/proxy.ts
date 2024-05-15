@@ -1,4 +1,5 @@
 import { e } from "../data";
+import { zeroBechAddress } from "../data/address";
 import {
   AddressLike,
   addressLikeToBechAddress,
@@ -402,9 +403,6 @@ export const getSerializableAccount = (rawAccount: any) => {
     kvs: Kvs;
   };
 };
-
-const zeroBechAddress =
-  "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
 
 export type ProxyParams =
   | string

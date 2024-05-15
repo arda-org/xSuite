@@ -13,3 +13,16 @@ export const u8aAddressToBechAddress = (u8aAddress: Uint8Array): string => {
 export const addressByteLength = 32;
 
 export const HRP = "erd";
+
+export const zeroBechAddress =
+  "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
+
+export const zeroHexAddress =
+  "0000000000000000000000000000000000000000000000000000000000000000";
+
+export const zeroU8AAddress = new Uint8Array(32).fill(0);
+
+export const fullBechAddress =
+  "erd1lllllllllllllllllllllllllllllllllllllllllllllllllllsckry7t";
+
+export const fullU8AAddress = new Uint8Array(32).fill(255);
