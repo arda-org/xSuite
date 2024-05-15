@@ -2,16 +2,11 @@ import { expect, test, beforeAll, afterAll } from "vitest";
 import { SWorld, SContract, SWallet } from "../world";
 import { readFileHex } from "../world/utils";
 import { Account } from "./account";
+import { zeroBechAddress, zeroHexAddress, zeroU8AAddress } from "./address";
 import { EncodableMapper, eKvsUnfiltered } from "./encoding";
 import { B64, d, e } from ".";
 
 /* Data and helpers for tests */
-
-const zeroBechAddress =
-  "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
-const zeroHexAddress =
-  "0000000000000000000000000000000000000000000000000000000000000000";
-const zeroU8AAddress = new Uint8Array(32);
 
 const vs = ["0102", "0304", "0506", "0a"];
 let world: SWorld;

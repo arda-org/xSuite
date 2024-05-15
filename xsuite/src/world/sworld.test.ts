@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, expect, test } from "vitest";
 import { assertAccount, assertVs } from "../assert";
 import { e } from "../data";
+import {
+  zeroBechAddress,
+  zeroHexAddress,
+  zeroU8AAddress,
+} from "../data/address";
 import { childProcesses } from "./childProcesses";
 import { DummySigner } from "./signer";
 import { SWorld, SContract, SWallet } from "./sworld";
@@ -18,11 +23,6 @@ let contract: SContract;
 const fftId = "FFT-abcdef";
 const sftId = "SFT-abcdef";
 const worldCode = "file:contracts/world/output/world.wasm";
-const zeroBechAddress =
-  "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
-const zeroHexAddress =
-  "0000000000000000000000000000000000000000000000000000000000000000";
-const zeroU8AAddress = new Uint8Array(32);
 const emptyAccount = {
   nonce: 0,
   balance: 0,
