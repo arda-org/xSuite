@@ -2,7 +2,7 @@ import { EncodableAccount } from "../data/encoding";
 import { getSerializableAccount, Proxy, unrawRes } from "./proxy";
 import { accountToSettableAccount } from "./utils";
 
-export class SProxy extends Proxy {
+export class LSProxy extends Proxy {
   getAllAccountsRaw() {
     return this.fetchRaw("/admin/get-all-accounts");
   }

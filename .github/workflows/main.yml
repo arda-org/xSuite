@@ -31,10 +31,10 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: 1.19
-          cache-dependency-path: xsuite-simulnet/src/go.sum
+          cache-dependency-path: xsuite-lightsimulnet/src/go.sum
 
-      - name: Build xsuite-simulnet
-        run: pnpm build-xsuite-simulnet
+      - name: Build xsuite-lightsimulnet
+        run: pnpm build-xsuite-lightsimulnet
 
       - name: Build xsuite-chainsimulator
         run: pnpm build-xsuite-chainsimulator

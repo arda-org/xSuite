@@ -12,6 +12,9 @@ import { CSWorld, CSContract, CSWallet } from "./csworld";
 import { DummySigner } from "./signer";
 import { generateU8AAddress } from "./utils";
 
+// TODO: mettre à jour sans WithKvs et ajouter WithoutKvs
+// TODO: aussi comparer au fichier lsworld
+
 let world: CSWorld;
 let wallet: CSWallet;
 let otherWallet: CSWallet;

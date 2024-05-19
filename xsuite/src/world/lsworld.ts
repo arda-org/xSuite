@@ -3,11 +3,11 @@ import { fullU8AAddress } from "../data/address";
 import { AddressLike, isAddressLike } from "../data/addressLike";
 import { EncodableAccount } from "../data/encoding";
 import { Prettify } from "../helpers";
-import { SProxy } from "../proxy";
-import { Block } from "../proxy/sproxy";
+import { LSProxy } from "../proxy";
+import { Block } from "../proxy/lsproxy";
 import { killChildProcess } from "./childProcesses";
+import { startLsproxyBin } from "./lsproxyBin";
 import { DummySigner, Signer } from "./signer";
-import { startSproxyBin } from "./sproxyBin";
 import { generateU8AAddress } from "./utils";
 import {
   World,
@@ -19,10 +19,10 @@ import {
   WorldDeployContractParams,
 } from "./world";
 
-export class SWorld extends World {
-  proxy: SProxy;
+export class LSWorld extends World {
+  proxy: LSProxy;
   server?: ChildProcess;
-  sysAcc: SContract;
+  sysAcc: LSContract;
 
   constructor({
     proxy,
@@ -30,7 +30,7 @@ export class SWorld extends World {
     explorerUrl,
     server,
   }: {
-    proxy: SProxy;
+    proxy: LSProxy;
     gasPrice: number;
     explorerUrl?: string;
     server?: ChildProcess;
@@ -41,13 +41,13 @@ export class SWorld extends World {
     this.sysAcc = this.newContract(fullU8AAddress);
   }
 
-  static new(options: SWorldNewOptions) {
+  static new(options: LSWorldNewOptions) {
     if (options.chainId !== undefined) {
       throw new Error("chainId is not undefined.");
     }
     const { proxyUrl, gasPrice, explorerUrl, server } = options;
-    return new SWorld({
-      proxy: new SProxy({ proxyUrl, explorerUrl }),
+    return new LSWorld({
+      proxy: new LSProxy({ proxyUrl, explorerUrl }),
       gasPrice: gasPrice ?? 0,
       explorerUrl,
       server,
@@ -69,13 +69,13 @@ export class SWorld extends World {
   static async start({
     gasPrice,
     explorerUrl,
-  }: { gasPrice?: number; explorerUrl?: string } = {}): Promise<SWorld> {
-    const { server, proxyUrl } = await startSproxyBin();
-    return SWorld.new({ proxyUrl, gasPrice, explorerUrl, server });
+  }: { gasPrice?: number; explorerUrl?: string } = {}): Promise<LSWorld> {
+    const { server, proxyUrl } = await startLsproxyBin();
+    return LSWorld.new({ proxyUrl, gasPrice, explorerUrl, server });
   }
 
-  newWallet(addressOrSigner: AddressLike | Signer): SWallet {
-    return new SWallet({
+  newWallet(addressOrSigner: AddressLike | Signer): LSWallet {
+    return new LSWallet({
       signer: isAddressLike(addressOrSigner)
         ? new DummySigner(addressOrSigner)
         : addressOrSigner,
@@ -83,11 +83,11 @@ export class SWorld extends World {
     });
   }
 
-  newContract(address: AddressLike): SContract {
-    return new SContract({ address, world: this });
+  newContract(address: AddressLike): LSContract {
+    return new LSContract({ address, world: this });
   }
 
-  async createWallet({ address, ...params }: SWorldCreateAccountParams = {}) {
+  async createWallet({ address, ...params }: LSWorldCreateAccountParams = {}) {
     if (
       address === undefined ||
       (typeof address === "object" && "shard" in address)
@@ -98,7 +98,10 @@ export class SWorld extends World {
     return this.newWallet(new DummySigner(address));
   }
 
-  async createContract({ address, ...params }: SWorldCreateAccountParams = {}) {
+  async createContract({
+    address,
+    ...params
+  }: LSWorldCreateAccountParams = {}) {
     if (
       address === undefined ||
       (typeof address === "object" && "shard" in address)
@@ -106,14 +109,14 @@ export class SWorld extends World {
       address = generateU8AAddress({ type: "contract", shard: address?.shard });
     }
     await this.setAccount({ address, ...params });
-    return new SContract({ address, world: this });
+    return new LSContract({ address, world: this });
   }
 
   getAllSerializableAccounts() {
     return this.proxy.getAllSerializableAccounts();
   }
 
-  async setAccounts(params: SWorldSetAccountsParams) {
+  async setAccounts(params: LSWorldSetAccountsParams) {
     for (const _params of params) {
       if (_params.code !== undefined) {
         _params.code = expandCode(_params.code);
@@ -122,7 +125,7 @@ export class SWorld extends World {
     return await this.proxy.setAccounts(params);
   }
 
-  setAccount(params: SWorldSetAccountParams) {
+  setAccount(params: LSWorldSetAccountParams) {
     return this.setAccounts([params]);
   }
 
@@ -137,7 +140,7 @@ export class SWorld extends World {
   deployContract(params: WorldDeployContractParams) {
     return super.deployContract(params).then((data) => ({
       ...data,
-      contract: new SContract({ address: data.address, world: this }),
+      contract: new LSContract({ address: data.address, world: this }),
     }));
   }
 
@@ -154,19 +157,19 @@ export class SWorld extends World {
   }
 }
 
-export class SWallet extends Wallet {
-  world: SWorld;
+export class LSWallet extends Wallet {
+  world: LSWorld;
 
-  constructor({ signer, world }: { signer: Signer; world: SWorld }) {
+  constructor({ signer, world }: { signer: Signer; world: LSWorld }) {
     super({ signer, world });
     this.world = world;
   }
 
-  setAccount(params: SAccountSetAccountParams) {
+  setAccount(params: LSAccountSetAccountParams) {
     return this.world.setAccount({ ...params, address: this });
   }
 
-  createContract(params?: SWalletCreateContractParams) {
+  createContract(params?: LSWalletCreateContractParams) {
     return this.world.createContract({ ...params, owner: this });
   }
 
@@ -175,20 +178,20 @@ export class SWallet extends Wallet {
   }
 }
 
-export class SContract extends Contract {
-  world: SWorld;
+export class LSContract extends Contract {
+  world: LSWorld;
 
-  constructor({ address, world }: { address: AddressLike; world: SWorld }) {
+  constructor({ address, world }: { address: AddressLike; world: LSWorld }) {
     super({ address, world });
     this.world = world;
   }
 
-  setAccount(params: SAccountSetAccountParams) {
+  setAccount(params: LSAccountSetAccountParams) {
     return this.world.setAccount({ ...params, address: this });
   }
 }
 
-type SWorldNewOptions =
+type LSWorldNewOptions =
   | {
       chainId?: undefined;
       proxyUrl: string;
@@ -198,7 +201,7 @@ type SWorldNewOptions =
     }
   | WorldNewOptions;
 
-type SWorldCreateAccountParams = Prettify<
+type LSWorldCreateAccountParams = Prettify<
   Partial<
     Omit<EncodableAccount, "address"> & {
       address: AddressLike | { shard: number };
@@ -206,14 +209,14 @@ type SWorldCreateAccountParams = Prettify<
   >
 >;
 
-type SWorldSetAccountsParams = EncodableAccount[];
+type LSWorldSetAccountsParams = EncodableAccount[];
 
-type SWorldSetAccountParams = EncodableAccount;
+type LSWorldSetAccountParams = EncodableAccount;
 
-type SAccountSetAccountParams = Prettify<
-  Omit<SWorldSetAccountParams, "address">
+type LSAccountSetAccountParams = Prettify<
+  Omit<LSWorldSetAccountParams, "address">
 >;
 
-type SWalletCreateContractParams = Prettify<
-  Omit<SWorldCreateAccountParams, "owner">
+type LSWalletCreateContractParams = Prettify<
+  Omit<LSWorldCreateAccountParams, "owner">
 >;

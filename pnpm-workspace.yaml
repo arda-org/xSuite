@@ -1,7 +1,7 @@
 packages:
   - "docs"
   - "xsuite"
-  - "xsuite-simulnet"
+  - "xsuite-lightsimulnet"
   - "xsuite-chainsimulator"
-  - "contracts/*"
   - "xsuite-chainsimulator-temp-tests"
+  - "contracts/*"

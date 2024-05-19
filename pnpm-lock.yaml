@@ -135,9 +135,9 @@ importers:
       '@xsuite/chainsimulator':
         specifier: workspace:*
         version: link:../xsuite-chainsimulator
-      '@xsuite/simulnet':
+      '@xsuite/light-simulnet':
         specifier: workspace:*
-        version: link:../xsuite-simulnet
+        version: link:../xsuite-lightsimulnet
       bech32:
         specifier: 2.0.0
         version: 2.0.0
@@ -203,7 +203,7 @@ importers:
         specifier: workspace:*
         version: link:../xsuite
 
-  xsuite-simulnet:
+  xsuite-lightsimulnet:
     devDependencies:
       run-script-os:
         specifier: 1.1.6

@@ -1,3 +1,3 @@
 export { Proxy, Tx } from "./proxy";
-export { SProxy } from "./sproxy";
+export { LSProxy } from "./lsproxy";
 export { CSProxy } from "./csproxy";
