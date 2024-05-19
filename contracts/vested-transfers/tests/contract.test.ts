@@ -1,7 +1,7 @@
 import { test, beforeEach, afterEach } from "vitest";
 import {
   assertAccount,
-  assertHexList,
+  assertVs,
   e,
   LSWorld,
   LSWallet,
@@ -60,14 +60,14 @@ test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Cl
     value: 10_000,
     gasLimit: 10_000_000,
   });
-  assertHexList(result1.returnData, [e.U64(1)]);
-  assertAccount(await sender1.getAccountWithKvs(), {
+  assertVs(result1.returnData, [e.U64(1)]);
+  assertAccount(await sender1.getAccount(), {
     balance: 90_000,
   });
-  assertAccount(await receiver1.getAccountWithKvs(), {
+  assertAccount(await receiver1.getAccount(), {
     balance: 0,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: 10_000,
     kvs: {
       mappers: [
@@ -104,13 +104,13 @@ test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Cl
     funcArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
-  assertAccount(await sender1.getAccountWithKvs(), {
+  assertAccount(await sender1.getAccount(), {
     balance: 90_000,
   });
-  assertAccount(await receiver1.getAccountWithKvs(), {
+  assertAccount(await receiver1.getAccount(), {
     balance: 0,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: 10_000,
     kvs: {
       mappers: [
@@ -147,13 +147,13 @@ test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Cl
     funcArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
-  assertAccount(await sender1.getAccountWithKvs(), {
+  assertAccount(await sender1.getAccount(), {
     balance: 90_000,
   });
-  assertAccount(await receiver1.getAccountWithKvs(), {
+  assertAccount(await receiver1.getAccount(), {
     balance: 0,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: 10_000,
     kvs: {
       mappers: [
@@ -193,13 +193,13 @@ test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Cl
     funcArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
-  assertAccount(await sender1.getAccountWithKvs(), {
+  assertAccount(await sender1.getAccount(), {
     balance: 90_000,
   });
-  assertAccount(await receiver1.getAccountWithKvs(), {
+  assertAccount(await receiver1.getAccount(), {
     balance: 0,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: 10_000,
     kvs: {
       mappers: [
@@ -219,13 +219,13 @@ test("EGLD transfer vested over epochs 5, 10, 15. Execute at epochs 4, 5, 15. Cl
     funcArgs: [e.Tuple(e.Str(egldId), e.U64(0))],
     gasLimit: 10_000_000,
   });
-  assertAccount(await sender1.getAccountWithKvs(), {
+  assertAccount(await sender1.getAccount(), {
     balance: 90_000,
   });
-  assertAccount(await receiver1.getAccountWithKvs(), {
+  assertAccount(await receiver1.getAccount(), {
     balance: 10_000,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: 0,
     kvs: { mappers: [{ key: "max_transfer_index", value: e.U64(1) }] },
   });
@@ -247,14 +247,14 @@ test("SFT transfer vested over epochs 5, 10, 15. Execute at epoch 20. Claim.", a
     esdts: [{ id: sftId, nonce: 1, amount: 10_000 }],
     gasLimit: 10_000_000,
   });
-  assertHexList(result1.returnData, [e.U64(1)]);
-  assertAccount(await sender1.getAccountWithKvs(), {
+  assertVs(result1.returnData, [e.U64(1)]);
+  assertAccount(await sender1.getAccount(), {
     hasKvs: { esdts: [{ id: sftId, nonce: 1, amount: 90_000 }] },
   });
-  assertAccount(await receiver1.getAccountWithKvs(), {
+  assertAccount(await receiver1.getAccount(), {
     hasKvs: { esdts: [{ id: sftId, nonce: 1, amount: 0 }] },
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     kvs: {
       esdts: [{ id: sftId, nonce: 1, amount: 10_000 }],
       mappers: [
@@ -291,13 +291,13 @@ test("SFT transfer vested over epochs 5, 10, 15. Execute at epoch 20. Claim.", a
     funcArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
-  assertAccount(await sender1.getAccountWithKvs(), {
+  assertAccount(await sender1.getAccount(), {
     hasKvs: { esdts: [{ id: sftId, nonce: 1, amount: 90_000 }] },
   });
-  assertAccount(await receiver1.getAccountWithKvs(), {
+  assertAccount(await receiver1.getAccount(), {
     hasKvs: { esdts: [{ id: sftId, nonce: 1, amount: 0 }] },
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     kvs: {
       esdts: [{ id: sftId, nonce: 1, amount: 10_000 }],
       mappers: [
@@ -317,13 +317,13 @@ test("SFT transfer vested over epochs 5, 10, 15. Execute at epoch 20. Claim.", a
     funcArgs: [e.Tuple(e.Str(sftId), e.U64(1))],
     gasLimit: 10_000_000,
   });
-  assertAccount(await sender1.getAccountWithKvs(), {
+  assertAccount(await sender1.getAccount(), {
     hasKvs: { esdts: [{ id: sftId, nonce: 1, amount: 90_000 }] },
   });
-  assertAccount(await receiver1.getAccountWithKvs(), {
+  assertAccount(await receiver1.getAccount(), {
     hasKvs: { esdts: [{ id: sftId, nonce: 1, amount: 10_000 }] },
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: 0,
     kvs: { mappers: [{ key: "max_transfer_index", value: e.U64(1) }] },
   });
@@ -341,13 +341,13 @@ test("EGLD transfer vested over epochs 5, 10. Cancelled at epoch 7. Claim.", asy
     value: 10_000,
     gasLimit: 10_000_000,
   });
-  assertAccount(await sender1.getAccountWithKvs(), {
+  assertAccount(await sender1.getAccount(), {
     balance: 90_000,
   });
-  assertAccount(await receiver1.getAccountWithKvs(), {
+  assertAccount(await receiver1.getAccount(), {
     balance: 0,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: 10_000,
     kvs: {
       mappers: [
@@ -383,13 +383,13 @@ test("EGLD transfer vested over epochs 5, 10. Cancelled at epoch 7. Claim.", asy
     funcArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
-  assertAccount(await sender1.getAccountWithKvs(), {
+  assertAccount(await sender1.getAccount(), {
     balance: 90_000,
   });
-  assertAccount(await receiver1.getAccountWithKvs(), {
+  assertAccount(await receiver1.getAccount(), {
     balance: 0,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: 10_000,
     kvs: {
       mappers: [
@@ -419,13 +419,13 @@ test("EGLD transfer vested over epochs 5, 10. Cancelled at epoch 7. Claim.", asy
     funcArgs: [e.Tuple(e.Str(egldId), e.U64(0))],
     gasLimit: 10_000_000,
   });
-  assertAccount(await sender1.getAccountWithKvs(), {
+  assertAccount(await sender1.getAccount(), {
     balance: 97_000,
   });
-  assertAccount(await receiver1.getAccountWithKvs(), {
+  assertAccount(await receiver1.getAccount(), {
     balance: 3_000,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: 0,
     kvs: { mappers: [{ key: "max_transfer_index", value: e.U64(1) }] },
   });
@@ -443,10 +443,10 @@ test("EGLD transfer to oneself over epochs 5, 10. Cancelled at epoch 7. Claim.",
     value: 10_000,
     gasLimit: 10_000_000,
   });
-  assertAccount(await sender1.getAccountWithKvs(), {
+  assertAccount(await sender1.getAccount(), {
     balance: 90_000,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: 10_000,
     kvs: {
       mappers: [
@@ -482,10 +482,10 @@ test("EGLD transfer to oneself over epochs 5, 10. Cancelled at epoch 7. Claim.",
     funcArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
-  assertAccount(await sender1.getAccountWithKvs(), {
+  assertAccount(await sender1.getAccount(), {
     balance: 90_000,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: 10_000,
     kvs: {
       mappers: [
@@ -505,10 +505,10 @@ test("EGLD transfer to oneself over epochs 5, 10. Cancelled at epoch 7. Claim.",
     funcArgs: [e.Tuple(e.Str(egldId), e.U64(0))],
     gasLimit: 10_000_000,
   });
-  assertAccount(await sender1.getAccountWithKvs(), {
+  assertAccount(await sender1.getAccount(), {
     balance: 100_000,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: 0,
     kvs: { mappers: [{ key: "max_transfer_index", value: e.U64(1) }] },
   });
@@ -620,23 +620,23 @@ test("Multiple transfers.", async () => {
   });
 
   // Asserts
-  assertAccount(await sender1.getAccountWithKvs(), {
+  assertAccount(await sender1.getAccount(), {
     balance: 97_000,
     kvs: { esdts: [{ id: sftId, nonce: 1, amount: 85_000 }] },
   });
-  assertAccount(await sender2.getAccountWithKvs(), {
+  assertAccount(await sender2.getAccount(), {
     balance: 85_000,
     kvs: { esdts: [{ id: sftId, nonce: 1, amount: 96_000 }] },
   });
-  assertAccount(await receiver1.getAccountWithKvs(), {
+  assertAccount(await receiver1.getAccount(), {
     balance: 3_000,
     kvs: { esdts: [{ id: sftId, nonce: 1, amount: 4_000 }] },
   });
-  assertAccount(await receiver2.getAccountWithKvs(), {
+  assertAccount(await receiver2.getAccount(), {
     balance: 15_000,
     kvs: { esdts: [{ id: sftId, nonce: 1, amount: 15_000 }] },
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: 0,
     kvs: { mappers: [{ key: "max_transfer_index", value: e.U64(4) }] },
   });
@@ -671,7 +671,7 @@ test("getTransfers", async () => {
     callee: contract,
     funcName: "getTransfers",
   });
-  assertHexList(result.returnData, [
+  assertVs(result.returnData, [
     e.Tuple(
       e.U64(1),
       e.Tuple(
@@ -738,7 +738,7 @@ test("getAddressBalances", async () => {
     funcName: "getAddressBalances",
     funcArgs: [sender1],
   });
-  assertHexList(result1.returnData, [
+  assertVs(result1.returnData, [
     e.Tuple(e.Str(egldId), e.U64(0), e.U(7_000)),
     e.Tuple(e.Str(sftId), e.U64(1), e.U(7_000)),
   ]);
@@ -747,7 +747,7 @@ test("getAddressBalances", async () => {
     funcName: "getAddressBalances",
     funcArgs: [receiver1],
   });
-  assertHexList(result2.returnData, [
+  assertVs(result2.returnData, [
     e.Tuple(e.Str(egldId), e.U64(0), e.U(3_000)),
     e.Tuple(e.Str(sftId), e.U64(1), e.U(3_000)),
   ]);
@@ -798,7 +798,7 @@ test("Too many milestones.", async () => {
     value: limit * 1_000,
     gasLimit: 10_000_000,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: limit * 1_000,
     hasKvs: {
       mappers: [

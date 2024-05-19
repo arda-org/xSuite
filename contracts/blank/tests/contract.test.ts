@@ -20,7 +20,7 @@ afterEach(async () => {
 });
 
 test("Test", async () => {
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: 0n,
     kvs: [],
   });

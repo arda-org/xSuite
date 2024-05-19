@@ -6,7 +6,7 @@ export class LSProxy extends Proxy {
     return this.fetchRaw("/admin/get-all-accounts");
   }
 
-  async getAllSerializableAccountsWithKvs() {
+  async getAllSerializableAccounts() {
     const res = unrawRes(await this.getAllAccountsRaw());
     return (res.accounts as any[]).map(getSerializableAccount);
   }
@@ -28,6 +28,13 @@ export class LSProxy extends Proxy {
 
   setPreviousBlockInfo(block: Block) {
     return this.fetch("/admin/set-previous-block-info", block);
+  }
+
+  /**
+   * @deprecated Use `.getAllSerializableAccounts` instead.
+   */
+  getAllSerializableAccountsWithKvs() {
+    return this.getAllSerializableAccounts();
   }
 
   /**

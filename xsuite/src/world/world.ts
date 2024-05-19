@@ -121,20 +121,20 @@ export class World {
     return getAccountBalance(this.proxy, address);
   }
 
-  getAccount(address: AddressLike) {
-    return getAccount(this.proxy, address);
-  }
-
   getAccountKvs(address: AddressLike) {
     return getAccountKvs(this.proxy, address);
   }
 
-  getSerializableAccountWithKvs(address: AddressLike) {
-    return getSerializableAccountWithKvs(this.proxy, address);
+  getSerializableAccount(address: AddressLike) {
+    return getSerializableAccount(this.proxy, address);
   }
 
-  getAccountWithKvs(address: AddressLike) {
-    return getAccountWithKvs(this.proxy, address);
+  getAccountWithoutKvs(address: AddressLike) {
+    return getAccountWithoutKvs(this.proxy, address);
+  }
+
+  getAccount(address: AddressLike) {
+    return getAccount(this.proxy, address);
   }
 
   query(params: WorldQueryParams) {
@@ -180,6 +180,20 @@ export class World {
       chainId: this.chainId,
     });
   }
+
+  /**
+   * @deprecated Use `.getSerializableAccount` instead.
+   */
+  getSerializableAccountWithKvs(address: AddressLike) {
+    return this.getSerializableAccount(address);
+  }
+
+  /**
+   * @deprecated Use `.getAccount` instead.
+   */
+  getAccountWithKvs(address: AddressLike) {
+    return this.getAccount(address);
+  }
 }
 
 export class Wallet extends Signer {
@@ -223,20 +237,20 @@ export class Wallet extends Signer {
     return getAccountBalance(this.proxy, this);
   }
 
-  getAccount() {
-    return getAccount(this.proxy, this);
-  }
-
   getAccountKvs() {
     return getAccountKvs(this.proxy, this);
   }
 
-  getSerializableAccountWithKvs() {
-    return getSerializableAccountWithKvs(this.proxy, this);
+  getSerializableAccount() {
+    return getSerializableAccount(this.proxy, this);
   }
 
-  getAccountWithKvs() {
-    return getAccountWithKvs(this.proxy, this);
+  getAccountWithoutKvs() {
+    return getAccountWithoutKvs(this.proxy, this);
+  }
+
+  getAccount() {
+    return getAccount(this.proxy, this);
   }
 
   query(params: WalletQueryParams) {
@@ -287,6 +301,20 @@ export class Wallet extends Signer {
       chainId: this.chainId,
     });
   }
+
+  /**
+   * @deprecated Use `.getSerializableAccount` instead.
+   */
+  getSerializableAccountWithKvs() {
+    return this.getSerializableAccount();
+  }
+
+  /**
+   * @deprecated Use `.getAccount` instead.
+   */
+  getAccountWithKvs() {
+    return this.getAccount();
+  }
 }
 
 export class Contract extends Account {
@@ -310,20 +338,34 @@ export class Contract extends Account {
     return getAccountBalance(this.proxy, this);
   }
 
-  getAccount() {
-    return getAccount(this.proxy, this);
-  }
-
   getAccountKvs() {
     return getAccountKvs(this.proxy, this);
   }
 
-  getSerializableAccountWithKvs() {
-    return getSerializableAccountWithKvs(this.proxy, this);
+  getSerializableAccount() {
+    return getSerializableAccount(this.proxy, this);
   }
 
+  getAccountWithoutKvs() {
+    return getAccountWithoutKvs(this.proxy, this);
+  }
+
+  getAccount() {
+    return getAccount(this.proxy, this);
+  }
+
+  /**
+   * @deprecated Use `.getSerializableAccount` instead.
+   */
+  getSerializableAccountWithKvs() {
+    return this.getSerializableAccount();
+  }
+
+  /**
+   * @deprecated Use `.getAccount` instead.
+   */
   getAccountWithKvs() {
-    return getAccountWithKvs(this.proxy, this);
+    return this.getAccount();
   }
 }
 
@@ -399,17 +441,17 @@ const getAccountNonce = (proxy: Proxy, address: AddressLike) =>
 const getAccountBalance = (proxy: Proxy, address: AddressLike) =>
   proxy.getAccountBalance(address);
 
-const getAccount = (proxy: Proxy, address: AddressLike) =>
-  proxy.getAccount(address);
-
 const getAccountKvs = (proxy: Proxy, address: AddressLike) =>
   proxy.getAccountKvs(address);
 
-const getSerializableAccountWithKvs = (proxy: Proxy, address: AddressLike) =>
-  proxy.getSerializableAccountWithKvs(address);
+const getSerializableAccount = (proxy: Proxy, address: AddressLike) =>
+  proxy.getSerializableAccount(address);
 
-const getAccountWithKvs = (proxy: Proxy, address: AddressLike) =>
-  proxy.getAccountWithKvs(address);
+const getAccountWithoutKvs = (proxy: Proxy, address: AddressLike) =>
+  proxy.getAccountWithoutKvs(address);
+
+const getAccount = (proxy: Proxy, address: AddressLike) =>
+  proxy.getAccount(address);
 
 const query = (proxy: Proxy, params: QueryParams) =>
   InteractionPromise.fromFn<QueryResult>(async () => {
