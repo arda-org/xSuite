@@ -31,14 +31,14 @@ A test is just a `.test.ts` (or `.test.js`) file in the `tests` directory. Here 
 
 ```ts
 import { test, beforeEach, afterEach } from "vitest";
-import { assertAccount, SWorld, SWallet, SContract, e } from "xsuite";
+import { assertAccount, LSWorld, LSWallet, LSContract, e } from "xsuite";
 
-let world: SWorld;
-let deployer: SWallet;
-let contract: SContract;
+let world: LSWorld;
+let deployer: LSWallet;
+let contract: LSContract;
 
 beforeEach(async () => {
-  world = await SWorld.start();
+  world = await LSWorld.start();
   deployer = await world.createWallet();
   ({ contract } = await deployer.deployContract({
     code: "file:output/contract.wasm",
@@ -68,30 +68,30 @@ The following imports are needed at the top of the file:
 
 ```ts
 import { test, beforeEach, afterEach } from "vitest";
-import { assertAccount, SWorld, SWallet, SContract, e } from "xsuite";
+import { assertAccount, LSWorld, LSWallet, LSContract, e } from "xsuite";
 ```
 
 We use the `test`, `beforeEach` and `afterEach` hooks from `vitest`. These are functions in which we will write our test's code as well as code that we want to run before/after each test respectively.
 
 `assertAccount` is used to assert that an address (account) on MultiversX contains the data we expect (token balances, storage, etc).
 
-The impots `SWorld, SWallet, SContract` and `e` will be detailed later.
+The impots `LSWorld, LSWallet, LSContract` and `e` will be detailed later.
 
 ### "Simulated" world, wallet & contract
 
 Next, we need to define some variables:
 
 ```ts
-let world: SWorld;
-let deployer: SWallet;
-let contract: SContract;
+let world: LSWorld;
+let deployer: LSWallet;
+let contract: LSContract;
 ```
 
-The `SWorld` simplifies all the interactions with the simulnet.
+The `LSWorld` simplifies all the interactions with the simulnet.
 
-The `SWallet` represents a wallet on the simulnet and simplifies interactions with it.
+The `LSWallet` represents a wallet on the simulnet and simplifies interactions with it.
 
-The `SContract` represents a contract on the simulnet and simplifies interactions with it.
+The `LSContract` represents a contract on the simulnet and simplifies interactions with it.
 
 ### beforeEach & afterEach hooks (initializing variables)
 
@@ -99,7 +99,7 @@ Now that we have defined the imports and the variables, we need to initialize th
 
 ```ts
 beforeEach(async () => {
-  world = await SWorld.start();
+  world = await LSWorld.start();
   deployer = await world.createWallet();
   ({ contract } = await deployer.deployContract({
     code: "file:output/contract.wasm",
@@ -116,7 +116,7 @@ afterEach(async () => {
 
 Before the test starts, in the `beforeEach` hook:
 
-- We start the simulnet using `SWorld.start()` and save a reference to it in the `world` variable.
+- We start the simulnet using `LSWorld.start()` and save a reference to it in the `world` variable.
 - We create the `deployer` wallet using `world.createWallet()`.
 - We deploy our contract using `deployer.deployContract()`. This will deploy the contract with the code of the file and the specified code arguments.
 
@@ -153,10 +153,10 @@ More details about storage mappers encoding [here](/data-encoding#storage-mapper
 
 ## Creating wallets
 
-You can create wallets from a `SWorld` object using the `createWallet` method. When creating a wallet you can specify its EGLD balance as well as kvs, like ESDT tokens or storage.
+You can create wallets from a `LSWorld` object using the `createWallet` method. When creating a wallet you can specify its EGLD balance as well as kvs, like ESDT tokens or storage.
 
 ```ts
-const deployer: SWallet = await world.createWallet({
+const deployer: LSWallet = await world.createWallet({
   balance: 10_000_000_000n,
   kvs: [
     e.kvs.Esdts([
@@ -170,7 +170,7 @@ const deployer: SWallet = await world.createWallet({
 
 ### Deploy contract
 
-A contract can be deployed by an `SWallet` object using the `deployContract` method:
+A contract can be deployed by an `LSWallet` object using the `deployContract` method:
 
 ```ts
 const { contract, address } = await deployer.deployContract({
@@ -183,7 +183,7 @@ const { contract, address } = await deployer.deployContract({
 });
 ```
 
-The `contract` is an instance of `SContract` and `address` is a string containing the Bech32 address of the contract.
+The `contract` is an instance of `LSContract` and `address` is a string containing the Bech32 address of the contract.
 
 When deploying a contract you can specify:
 
@@ -196,7 +196,7 @@ Use the `e` helper to encode the data (see [Data Encoding](/data-encoding)).
 
 ### Call contract
 
-A contract can be called by an `SWallet` object using the `callContract` method and specifying which contract to call in the `callee` field.
+A contract can be called by an `LSWallet` object using the `callContract` method and specifying which contract to call in the `callee` field.
 
 ```ts
 const result = await wallet.callContract({
@@ -241,7 +241,7 @@ await deployer.callContract({
 
 ### Query contract
 
-You can query a contract directly from a `SWorld` object using the `query` method and specifying which contract to query in the `callee` field.
+You can query a contract directly from a `LSWorld` object using the `query` method and specifying which contract to query in the `callee` field.
 
 ```ts
 const { returnData, returnCode, returnMessage } = await world.query({

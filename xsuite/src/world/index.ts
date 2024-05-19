@@ -1,2 +1,2 @@
-export { SWorld, SContract, SWallet } from "./sworld";
+export { LSWorld, LSContract, LSWallet } from "./lsworld";
 export { World, Contract, Wallet } from "./world";

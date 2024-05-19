@@ -21,7 +21,7 @@ release_version() {
   fi
 }
 
-release_version "xsuite-simulnet"
+release_version "xsuite-lightsimulnet"
 
 release_version "xsuite"
 

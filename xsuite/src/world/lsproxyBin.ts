@@ -1,12 +1,12 @@
 import { ChildProcess } from "node:child_process";
-import { getSproxyBinPath } from "@xsuite/simulnet";
+import { getLsproxyBinPath } from "@xsuite/light-simulnet";
 import { spawnChildProcess } from "./childProcesses";
 
-export const startSproxyBin = async (): Promise<{
+export const startLsproxyBin = async (): Promise<{
   server: ChildProcess;
   proxyUrl: string;
 }> => {
-  const server = spawnChildProcess(getSproxyBinPath());
+  const server = spawnChildProcess(getLsproxyBinPath());
 
   server.stderr.on("data", (data: Buffer) => {
     throw new Error(data.toString());
