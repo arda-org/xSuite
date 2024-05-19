@@ -1,5 +1,5 @@
 import { expect, test, beforeAll, afterAll } from "vitest";
-import { SWorld, SContract, SWallet } from "../world";
+import { LSWorld, LSContract, LSWallet } from "../world";
 import { readFileHex } from "../world/utils";
 import { Account } from "./account";
 import { zeroBechAddress, zeroHexAddress, zeroU8AAddress } from "./address";
@@ -9,9 +9,9 @@ import { B64, d, e } from ".";
 /* Data and helpers for tests */
 
 const vs = ["0102", "0304", "0506", "0a"];
-let world: SWorld;
-let wallet: SWallet;
-let contract: SContract;
+let world: LSWorld;
+let wallet: LSWallet;
+let contract: LSContract;
 const fftId = "FFT-abcdef";
 const sft1Id = "SFT1-abcdef";
 const sft2Id = "SFT2-abcdef";
@@ -29,7 +29,7 @@ const range = (start: number, end: number) => {
 };
 
 beforeAll(async () => {
-  world = await SWorld.start();
+  world = await LSWorld.start();
   wallet = await world.createWallet({
     balance: 20n,
   });

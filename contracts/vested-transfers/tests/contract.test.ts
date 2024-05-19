@@ -3,24 +3,24 @@ import {
   assertAccount,
   assertHexList,
   e,
-  SWorld,
-  SWallet,
-  SContract,
+  LSWorld,
+  LSWallet,
+  LSContract,
 } from "xsuite";
 
-let world: SWorld;
-let deployer: SWallet;
-let contract: SContract;
-let sender1: SWallet;
-let sender2: SWallet;
-let receiver1: SWallet;
-let receiver2: SWallet;
-let executor: SWallet;
+let world: LSWorld;
+let deployer: LSWallet;
+let contract: LSContract;
+let sender1: LSWallet;
+let sender2: LSWallet;
+let receiver1: LSWallet;
+let receiver2: LSWallet;
+let executor: LSWallet;
 const egldId = "EGLD";
 const sftId = "SFT-abcdef";
 
 beforeEach(async () => {
-  world = await SWorld.start();
+  world = await LSWorld.start();
   deployer = await world.createWallet();
   ({ contract } = await deployer.deployContract({
     code: "file:output/contract.wasm",

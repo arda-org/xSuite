@@ -1,4 +1,4 @@
-module sproxy
+module lsproxy
 
 go 1.17
 
