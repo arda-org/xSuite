@@ -2,7 +2,7 @@
 
 The 4th and last step is to deploy your contract and interact with it on the real blockchain (devnet / testnet / mainnet). xSuite makes deploying and interacting super simple.
 
-The code for interacting with the real blockchain is nearly the same as the code for testing your contract and interacting with the simulnet. Instead of using a `SWorld` object, you will use a `World` object. That's the only difference.
+The code for interacting with the real blockchain is nearly the same as the code for testing your contract and interacting with the simulnet. Instead of using a `LSWorld` object, you will use a `World` object. That's the only difference.
 
 xSuite also provides an `envChain` utility to easily interact with the different networks (devent / testnet / mainnet).
 
@@ -105,7 +105,7 @@ import data from "./data.json";
 
 We use the `Command` class from `commander` to allow us to write nice NodeJs CLI commands.
 
-`envChain` is the utility we talked about previously. `World` is for interacting with the real blockchain (devnet / testnet / mainnet), similar to `SWorld` from tests for interacting with the simulnet.
+`envChain` is the utility we talked about previously. `World` is for interacting with the real blockchain (devnet / testnet / mainnet), similar to `LSWorld` from tests for interacting with the simulnet.
 
 We then import the `data.json` file and will use the `e` and `d` utilities from `xsuite` to encode/decode data respectively to a format that the MultiversX blockchain understands. More info on the [Data Encoding](/data-encoding) page
 

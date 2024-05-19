@@ -1,4 +1,4 @@
-name: Release xsuite-simulnet
+name: Release xsuite-lightsimulnet
 
 on:
   workflow_dispatch:
@@ -18,23 +18,23 @@ jobs:
       - name: Use Node.js & pnpm
         uses: ./.github/actions/node-pnpm
         with:
-          node-version: 18
-          pnpm-version: 8
+          node-version: 20
+          pnpm-version: 9
 
       - name: Use Golang
         uses: actions/setup-go@v4
         with:
           go-version: 1.19
-          cache-dependency-path: xsuite-simulnet/src/go.sum
+          cache-dependency-path: xsuite-lightsimulnet/src/go.sum
 
-      - name: Build xsuite-simulnet
-        run: pnpm build-xsuite-simulnet
+      - name: Build xsuite-lightsimulnet
+        run: pnpm build-xsuite-lightsimulnet
 
       - name: Upload package
         uses: actions/upload-artifact@v3
         with:
           name: package
-          path: xsuite-simulnet/bin
+          path: xsuite-lightsimulnet/bin
 
   test:
     needs: build
@@ -44,9 +44,9 @@ jobs:
         os: [macos-12, ubuntu-20.04]
         include:
           - os: ubuntu-20.04
-            binary: sproxy-linux-amd64
+            binary: lsproxy-linux-amd64
           - os: macos-12
-            binary: sproxy-darwin-amd64
+            binary: lsproxy-darwin-amd64
 
     runs-on: ${{ matrix.os }}
 
@@ -58,14 +58,14 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: package
-          path: xsuite-simulnet/bin
+          path: xsuite-lightsimulnet/bin
 
       - name: Add execute permissions
-        run: chmod +x xsuite-simulnet/bin/sproxy-*
+        run: chmod +x xsuite-lightsimulnet/bin/lsproxy-*
 
       - name: Test
         run: |
-          ./xsuite-simulnet/bin/${{ matrix.binary }} &
+          ./xsuite-lightsimulnet/bin/${{ matrix.binary }} &
           SERVER_PID=$!
           sleep 2
           if kill -0 $SERVER_PID 2>/dev/null; then
@@ -90,20 +90,20 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: package
-          path: xsuite-simulnet/bin
+          path: xsuite-lightsimulnet/bin
 
       - name: Add execute permissions
-        run: chmod +x xsuite-simulnet/bin/sproxy-*
+        run: chmod +x xsuite-lightsimulnet/bin/lsproxy-*
 
       - name: Use Node.js & pnpm
         uses: ./.github/actions/node-pnpm
         with:
-          node-version: 18
+          node-version: 20
           node-registry-url: "https://registry.npmjs.org"
-          pnpm-version: 8
+          pnpm-version: 9
           skip-install: true
 
-      - name: Publish xsuite-simulnet to NPM
-        run: git config core.fileMode false && cd xsuite-simulnet && pnpm publish --publish-branch dev --access public
+      - name: Publish xsuite-lightsimulnet to NPM
+        run: git config core.fileMode false && cd xsuite-lightsimulnet && pnpm publish --publish-branch dev --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

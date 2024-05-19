@@ -1,5 +1,5 @@
 packages:
   - "docs"
   - "xsuite"
-  - "xsuite-simulnet"
+  - "xsuite-lightsimulnet"
   - "contracts/*"

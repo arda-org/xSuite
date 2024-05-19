@@ -1,9 +1,25 @@
 import { e, EncodableAccount } from "../data/encoding";
-import { Proxy } from "./proxy";
+import { getSerializableAccount, Proxy, unrawRes } from "./proxy";
 
-export class SProxy extends Proxy {
+export class LSProxy extends Proxy {
+  getAllAccountsRaw() {
+    return this.fetchRaw("/admin/get-all-accounts");
+  }
+
+  async getAllSerializableAccountsWithKvs() {
+    const res = unrawRes(await this.getAllAccountsRaw());
+    return (res.accounts as any[]).map(getSerializableAccount);
+  }
+
+  setAccounts(accounts: EncodableAccount[]) {
+    return this.fetch(
+      "/admin/set-accounts",
+      accounts.map((a) => e.account(a)),
+    );
+  }
+
   setAccount(account: EncodableAccount) {
-    return this.fetch("/admin/set-account", e.account(account));
+    return this.setAccounts([account]);
   }
 
   setCurrentBlockInfo(block: Block) {

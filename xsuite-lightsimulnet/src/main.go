@@ -63,8 +63,13 @@ func main() {
 		respond(w, resBody, err)
 	})
 
-	router.Post("/admin/set-account", func(w http.ResponseWriter, r *http.Request) {
-		resBody, err := executor.HandleAdminSetAccount(r)
+	router.Get("/admin/get-all-accounts", func(w http.ResponseWriter, r *http.Request) {
+		resBody, err := executor.HandleAdminGetAllAccounts()
+		respond(w, resBody, err)
+	})
+
+	router.Post("/admin/set-accounts", func(w http.ResponseWriter, r *http.Request) {
+		resBody, err := executor.HandleAdminSetAccounts(r)
 		respond(w, resBody, err)
 	})
 

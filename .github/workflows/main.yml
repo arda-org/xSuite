@@ -21,8 +21,8 @@ jobs:
       - name: Use Node.js & pnpm
         uses: ./.github/actions/node-pnpm
         with:
-          node-version: 18
-          pnpm-version: 8
+          node-version: 20
+          pnpm-version: 9
 
       - name: Lint
         run: pnpm lint
@@ -31,10 +31,10 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: 1.19
-          cache-dependency-path: xsuite-simulnet/src/go.sum
+          cache-dependency-path: xsuite-lightsimulnet/src/go.sum
 
-      - name: Build xsuite-simulnet
-        run: pnpm build-xsuite-simulnet
+      - name: Build xsuite-lightsimulnet
+        run: pnpm build-xsuite-lightsimulnet
 
       - name: Build xsuite
         run: pnpm build-xsuite
