@@ -1,3 +1,5 @@
+// TODO: revamp test
+
 import { afterAll, beforeAll, test } from "vitest";
 import { assertAccount, CSContract, CSWallet, CSWorld, e } from "xsuite";
 import {
@@ -120,7 +122,7 @@ const liquidStakingDelegateUndelegate = async () => {
   });
   const segldReceived = esdtTokenPaymentDecoder.topDecode(tx.returnData[0]);
   console.log("Delegate EGLD successfully. Received sEGLD: ", segldReceived);
-  assertAccount(await alice.getAccountWithKvs(), {
+  assertAccount(await alice.getAccount(), {
     kvs: [
       e.kvs.Esdts([
         { id: segldReceived.token_identifier, amount: segldReceived.amount },

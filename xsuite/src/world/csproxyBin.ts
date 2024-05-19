@@ -17,6 +17,9 @@ export const startCsproxyBin = async (
   const csproxyConfigFolder = getCsproxyDefaultConfigPath();
 
   const server = spawnChildProcess(`${csproxyBinPath}`, [
+    "-log-level",
+    "*:DEBUG,process:TRACE",
+    "-log-save",
     "--server-port",
     "0",
     "--config",

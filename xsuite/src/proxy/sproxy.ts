@@ -1,12 +1,13 @@
-import { e, EncodableAccount } from "../data/encoding";
+import { EncodableAccount } from "../data/encoding";
 import { getSerializableAccount, Proxy, unrawRes } from "./proxy";
+import { accountToSettableAccount } from "./utils";
 
 export class SProxy extends Proxy {
   getAllAccountsRaw() {
     return this.fetchRaw("/admin/get-all-accounts");
   }
 
-  async getAllSerializableAccountsWithKvs() {
+  async getAllSerializableAccounts() {
     const res = unrawRes(await this.getAllAccountsRaw());
     return (res.accounts as any[]).map(getSerializableAccount);
   }
@@ -14,8 +15,8 @@ export class SProxy extends Proxy {
   setAccounts(accounts: EncodableAccount[]) {
     return this.fetch(
       "/admin/set-accounts",
-      accounts.map((a) => e.account(a)),
-    );
+      accounts.map((a) => accountToSettableAccount(a)),
+    ).then(() => {});
   }
 
   setAccount(account: EncodableAccount) {
@@ -23,11 +24,18 @@ export class SProxy extends Proxy {
   }
 
   setCurrentBlockInfo(block: Block) {
-    return this.fetch("/admin/set-current-block-info", block);
+    return this.fetch("/admin/set-current-block-info", block).then(() => {});
   }
 
   setPreviousBlockInfo(block: Block) {
-    return this.fetch("/admin/set-previous-block-info", block);
+    return this.fetch("/admin/set-previous-block-info", block).then(() => {});
+  }
+
+  /**
+   * @deprecated Use `.getAllSerializableAccounts` instead.
+   */
+  getAllSerializableAccountsWithKvs() {
+    return this.getAllSerializableAccounts();
   }
 
   /**

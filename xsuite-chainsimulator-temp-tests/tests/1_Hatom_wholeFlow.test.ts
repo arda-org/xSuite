@@ -1,5 +1,5 @@
-import { afterAll, beforeAll, expect, test } from "vitest";
-import { d, e, CSWorld } from "xsuite";
+import { afterEach, beforeEach, expect, test } from "vitest";
+import { d, e, CSWorld, CSContract } from "xsuite";
 import {
   ADMIN_ADDRESS,
   delegationContractDataDecoder,
@@ -10,79 +10,32 @@ import {
   SYSTEM_DELEGATION_MANAGER_ADDRESS,
 } from "./helpers";
 
-let world: CSWorld;
+// TODO: simplifier un max le fichier
 
-beforeAll(async () => {
+let world: CSWorld;
+let delegationContract: CSContract;
+let contract: CSContract;
+
+beforeEach(async () => {
   world = await CSWorld.start();
 });
 
-afterAll(async () => {
+afterEach(async () => {
   world.terminate();
 });
 
-const createDelegationContract = async () => {
-  const delegationOwner = await world.createWallet({
-    balance: egldUnit + 1250n * egldUnit,
-  });
+test("Test 1 - Whole flow", async () => {
+  delegationContract = await createDelegationContract();
+  const delegationStake1 = await getTotalActiveStake();
+  expect(delegationStake1).toEqual(3750n * egldUnit);
 
-  await world.generateBlocksUntilEpochReached(1); // TODO: test should work without this
-  // Seems like some things still don't work being enabled on epoch 0
+  contract = await world.createContract(loadHatomLSContractState());
 
-  const res = await delegationOwner.callContract({
-    callee: SYSTEM_DELEGATION_MANAGER_ADDRESS,
-    funcName: "createNewDelegationContract",
-    gasLimit: 65_000_000,
-    value: 1250n * egldUnit,
-    funcArgs: [
-      e.U(0), // delegation cap
-      e.U(0), // service fee
-    ],
-  });
-  const delegationContract = world.newContract(res.returnData[0]);
-  console.log("Deployed delegation contract");
-
-  const initialWallets = await world.getInitialWallets();
-  const initialStakeWallet = world.newWallet(
-    initialWallets.stakeWallets[0].address.bech32,
-  );
-
-  await delegationOwner.callContract({
-    callee: delegationContract,
-    funcName: "whitelistForMerge",
-    gasLimit: 65_000_000,
-    funcArgs: [initialStakeWallet],
-  });
-  console.log("Whitelisted initial stake wallet for merge");
-
-  await initialStakeWallet.callContract({
-    callee: SYSTEM_DELEGATION_MANAGER_ADDRESS,
-    funcName: "mergeValidatorToDelegationWithWhitelist",
-    gasLimit: 510_000_000,
-    funcArgs: [delegationContract],
-  });
-  console.log("Merged validator with delegation contract");
-
-  return delegationContract;
-};
-
-test("Test", async () => {
-  const delegationContract = await createDelegationContract();
-  const alice = await world.createWallet({
-    address: "erd1lh08nq6j75s39vtgn2gtzed8p62nr77my8h3wyhdcv7xjql7gn9szasf5c", // TODO: should have option to generate automatically in shard 1
-    balance: egldUnit + 4_000_000n * egldUnit, // TODO: why number this big?
-  });
+  const adminStake = egldUnit;
   const admin = await world.createWallet({
     address: ADMIN_ADDRESS,
-    balance: egldUnit,
+    balance: egldUnit + adminStake,
   });
-  const contract = await world.createContract(loadHatomLSContractState());
-
-  let result = await world.query({
-    callee: delegationContract,
-    funcName: "getTotalActiveStake",
-  });
-  const delegationStake = d.U().fromTop(result.returnData[0]);
-  expect(delegationStake).toEqual(3750n * egldUnit);
 
   await admin.callContract({
     callee: contract,
@@ -90,7 +43,7 @@ test("Test", async () => {
     gasLimit: 510_000_000,
     funcArgs: [
       delegationContract,
-      e.U(delegationStake), // total stake
+      e.U(delegationStake1), // total stake
       e.U64(1), // nb of nodes,
       e.U(1100), // high apr so this delegation contract is selected instead of some other
       e.U(0), // service fee
@@ -98,31 +51,36 @@ test("Test", async () => {
   });
   console.log("Whitelisted delegation contract");
 
+  await admin.callContract({
+    callee: contract,
+    funcName: "delegate", // TODO: to be replaced by another endpoint
+    value: egldUnit,
+    gasLimit: 45_000_000,
+  });
+
+  const aliceStake = 1_000_000n * egldUnit; // TODO: change test such that no need big number anymore
+  const alice = await world.createWallet({
+    address: { shard: 1 },
+    balance: egldUnit + aliceStake,
+  });
+
   await alice.callContract({
     callee: contract,
     funcName: "delegate",
-    value: 4_000_000n * egldUnit,
+    value: aliceStake,
     gasLimit: 45_000_000,
   });
-  console.log("Delegated EGLD");
-  const segldAmount = 3817949520866688250869751n;
-  expect(d.account().from(await alice.getAccountWithKvs())).toMatchObject({
+  const segldAmount = 954487380216672062717437n;
+  expect(d.account().from(await alice.getAccount())).toMatchObject({
     kvs: {
       esdts: [{ id: segldId, amount: segldAmount }],
     },
   });
-
-  result = await world.query({
-    callee: contract,
-    funcName: "getDelegationContractData",
-    funcArgs: [delegationContract],
+  const stakeToDelegate = adminStake + aliceStake;
+  expect(await getDelegationContractData()).toMatchObject({
+    pending_to_delegate: stakeToDelegate,
   });
-  let delegationContractData = delegationContractDataDecoder.fromTop(
-    result.returnData[0],
-  );
-  expect(delegationContractData.pending_to_delegate).toEqual(
-    4_000_000n * egldUnit,
-  );
+  console.log("Delegated to liquid staking contract");
 
   await admin.callContract({
     callee: contract,
@@ -130,17 +88,12 @@ test("Test", async () => {
     gasLimit: 45_000_000,
     funcArgs: [delegationContract],
   });
+  const delegationStake2 = await getTotalActiveStake();
+  expect(delegationStake2).toEqual(delegationStake1 + stakeToDelegate);
   console.log("Delegated pending amount");
 
-  result = await world.query({
-    callee: delegationContract,
-    funcName: "getTotalActiveStake",
-  });
-  expect(d.U().fromTop(result.returnData[0])).toEqual(4_003_750n * egldUnit); // staked increased by 4,000,000 EGLD
-
-  console.log("Moving forward 3 epochs...");
-  // Move forward 3 epochs (to have enough rewards so they can be claimed & delegated)
-  await world.generateBlocks(20 * 3); // TODO: move the epochs directly
+  console.log("Advancing by 1 epoch...");
+  await world.generateBlocksUntilEpochReached(2); // TODO-MvX: should advance only to epoch 1
 
   await admin.callContract({
     callee: contract,
@@ -148,69 +101,38 @@ test("Test", async () => {
     gasLimit: 45_000_000,
     funcArgs: [delegationContract],
   });
-  console.log("Claimed rewards from staking provider");
+  const rewardsReserve = await getRewardsReserve();
+  expect(rewardsReserve).toEqual(2326977120091482386n);
+  console.log("Claimed rewards from delegation contract");
 
-  result = await world.query({
-    callee: contract,
-    funcName: "getRewardsReserve",
-  });
-  const rewardsAmount = 9978146349127131213n;
-  expect(d.U().fromTop(result.returnData[0])).toEqual(rewardsAmount);
-
-  const tx2 = await admin.callContract({
+  await admin.callContract({
     callee: contract,
     funcName: "delegateRewards",
     gasLimit: 45_000_000,
   });
-  console.log("Delegated rewards", tx2);
-  console.log(JSON.stringify(tx2));
-  // TODO: If transaction has an error in an Async Call, the full logs will not appear immediately for some reason and
-  // we need to wait extra blocks. However if the Async Call is successfully completed, then the full logs will appear
-  // The transaction is not fully completed here, even though the gateway reports the status as `success`, not all
-  // logs are yet available.
-  // await world.generateBlocks(3);
-  //
-  // All logs are available here even in case of Async Call error
-  // const txResult = await world.proxy.getTx(tx2.tx.hash, { withResults: true });
-  //
-  // console.log('Transaction result after waiting');
-  // console.log(JSON.stringify(txResult));
-
-  result = await world.query({
-    callee: delegationContract,
-    funcName: "getTotalActiveStake",
-  });
-  const totalActiveStake = d.U().fromTop(result.returnData[0]);
-  console.log("New total active stake: ", totalActiveStake);
-  expect(totalActiveStake).toEqual(4_003_750n * egldUnit + rewardsAmount); // staked increased by rewards reserve amount
+  const delegationStake3 = await getTotalActiveStake();
+  expect(delegationStake3).toEqual(delegationStake2 + rewardsReserve);
+  console.log("Delegated rewards");
 
   await alice.callContract({
     callee: contract,
     funcName: "unDelegate",
     gasLimit: 45_000_000,
-    esdts: [{ id: segldId, amount: segldAmount / 10n }],
+    esdts: [{ id: segldId, amount: segldAmount }],
   });
-  console.log("Undelegate sEGLD successfully");
   const hslrNonce = 5405;
   const hslrAmount = 1n;
-  expect(d.account().from(await alice.getAccountWithKvs())).toMatchObject({
+  expect(d.account().from(await alice.getAccount())).toMatchObject({
     kvs: {
       esdts: [
         { id: hslrId, variants: [{ nonce: hslrNonce, amount: hslrAmount }] },
-        { id: segldId, amount: segldAmount - segldAmount / 10n },
       ],
     },
   });
-
-  result = await world.query({
-    callee: contract,
-    funcName: "getDelegationContractData",
-    funcArgs: [delegationContract],
+  expect(await getDelegationContractData()).toMatchObject({
+    pending_to_undelegate: 1000000961031372912645212n, // TODO: compute this amount
   });
-  delegationContractData = delegationContractDataDecoder.fromTop(
-    result.returnData[0],
-  );
-  console.log("Delegation contract data: ", delegationContractData);
+  console.log("Undelegated from liquid staking contract");
 
   await admin.callContract({
     callee: contract,
@@ -218,14 +140,12 @@ test("Test", async () => {
     gasLimit: 45_000_000,
     funcArgs: [delegationContract],
   });
-  console.log(
-    "Undelegate pending amount successfully. Moving forward 10 epochs...",
-  );
+  const delegationStake4 = await getTotalActiveStake();
+  expect(delegationStake4).toEqual(3752365945747178837174n); // TODO: compute this amount
+  console.log("Undelegated pending amount");
 
-  // Move forward 10 epochs + 5 blocks so unbonding period passes
-  // The extra 5 blocks are needed for the following `withdraw` to work correctly
-  // and not fail with `The unbond period has not ended` error, not sure why exactly
-  await world.generateBlocks(20 * 10 + 5); // TODO: move the epochs directly
+  console.log("Advancing by 10 epochs...");
+  await world.generateBlocksUntilEpochReached(12); // TODO-MvX: should advance only to epoch 11
 
   await alice
     .callContract({
@@ -242,33 +162,226 @@ test("Test", async () => {
     gasLimit: 45_000_000,
     funcArgs: [delegationContract],
   });
-  console.log("Withdraw from staking provider successfully");
+  console.log("Withdrawn from delegation contract");
 
-  const tx = await alice.callContract({
+  await alice.callContract({
     callee: contract,
     funcName: "withdraw",
     gasLimit: 45_000_000,
     esdts: [{ id: hslrId, nonce: hslrNonce, amount: hslrAmount }],
   });
-  const receivedEgldAmount = d.U().fromTop(tx.returnData[0]);
-  console.log(
-    "Withdraw EGLD successfully. Received EGLD amount: ",
-    receivedEgldAmount,
+  expect(await alice.getAccountBalance()).toEqual(
+    aliceStake + 1958706638782645212n,
   );
-  expect(receivedEgldAmount).toEqual(400000736213615074473001n); // ~400,000.73 EGLD received back, more than initially delegated
+  console.log("Withdrawn from liquid staking contract");
+}, 60_000);
 
-  const balance = await alice.getAccountBalance();
-  expect(balance).toBeGreaterThan(receivedEgldAmount);
+test("Test 2 - withdrawFrom & withdraw concurrency", async () => {
+  delegationContract = await createDelegationContract();
+  const delegationStake1 = await getTotalActiveStake();
 
-  result = await world.query({
+  contract = await world.createContract(loadHatomLSContractState());
+
+  const adminStake = egldUnit;
+  const admin = await world.createWallet({
+    address: ADMIN_ADDRESS,
+    balance: egldUnit + adminStake,
+  });
+
+  await admin.callContract({
+    callee: contract,
+    funcName: "whitelistDelegationContract",
+    gasLimit: 510_000_000,
+    funcArgs: [
+      delegationContract,
+      e.U(delegationStake1), // total stake
+      e.U64(1), // nb of nodes,
+      e.U(1100), // high apr so this delegation contract is selected instead of some other
+      e.U(0), // service fee
+    ],
+  });
+  console.log("Whitelisted delegation contract");
+
+  await admin.callContract({
+    callee: contract,
+    funcName: "delegate", // TODO: to be replaced by another endpoint
+    value: egldUnit,
+    gasLimit: 45_000_000,
+  });
+
+  const aliceStake = 1_000_000n * egldUnit; // TODO: change test such that no need big number anymore
+  const alice = await world.createWallet({
+    address: { shard: 1 },
+    balance: egldUnit + aliceStake,
+  });
+
+  await alice.callContract({
+    callee: contract,
+    funcName: "delegate",
+    value: aliceStake,
+    gasLimit: 45_000_000,
+  });
+  const segldAmount = 954487380216672062717437n; // TODO: d'où sort le nombre
+  console.log("Delegated to liquid staking contract");
+
+  await admin.callContract({
+    callee: contract,
+    funcName: "delegatePendingAmount",
+    gasLimit: 45_000_000,
+    funcArgs: [delegationContract],
+  });
+  console.log("Delegated pending amount");
+
+  await alice.callContract({
+    callee: contract,
+    funcName: "unDelegate",
+    gasLimit: 45_000_000,
+    esdts: [{ id: segldId, amount: segldAmount }],
+  });
+  const hslrNonce = 5405;
+  const hslrAmount = 1n;
+  expect(d.account().from(await alice.getAccount())).toMatchObject({
+    balance: 999318014120000000n,
+    kvs: {
+      esdts: [
+        { id: hslrId, variants: [{ nonce: hslrNonce, amount: hslrAmount }] },
+      ],
+    },
+  });
+  console.log("Undelegated from liquid staking contract");
+
+  await admin.callContract({
+    callee: contract,
+    funcName: "unDelegatePendingAmount",
+    gasLimit: 45_000_000,
+    funcArgs: [delegationContract],
+  });
+  console.log("Undelegated pending amount");
+
+  console.log("Advancing by 10 epochs...");
+  await world.generateBlocksUntilEpochReached(12); // TODO-MvX: should advance only to epoch 10
+
+  const withdrawFromTxHash = await alice.sendCallContract({
+    callee: contract,
+    funcName: "withdrawFrom",
+    gasLimit: 45_000_000,
+    funcArgs: [delegationContract],
+  });
+  console.log("Initiated to withdraw from delegation contract");
+
+  console.log("Advancing by 1 block...");
+  await world.generateBlocks(1);
+
+  await world.resolveTx(withdrawFromTxHash).assertPending();
+
+  let withdrawTxHash = await alice.sendCallContract({
+    callee: contract,
+    funcName: "withdraw",
+    gasLimit: 45_000_000,
+    esdts: [{ id: hslrId, nonce: hslrNonce, amount: hslrAmount }],
+  });
+  console.log("Initiated to withdraw");
+
+  console.log("Advancing by 1 block...");
+  await world.generateBlocks(1);
+
+  await world.resolveTx(withdrawFromTxHash).assertPending();
+  await world
+    .resolveTx(withdrawTxHash)
+    .assertFail({ code: "signalError", message: "Too much EGLD amount" });
+  console.log("Failed to withdraw");
+
+  console.log("Advancing by 1 block...");
+  await world.generateBlocks(1);
+
+  await world.resolveTx(withdrawFromTxHash).assertPending();
+
+  withdrawTxHash = await alice.sendCallContract({
+    callee: contract,
+    funcName: "withdraw",
+    gasLimit: 45_000_000,
+    esdts: [{ id: hslrId, nonce: hslrNonce, amount: hslrAmount }],
+  });
+  console.log("Initiated to withdraw again");
+
+  console.log("Advancing by 1 block...");
+  await world.generateBlocks(1);
+
+  await world.resolveTx(withdrawFromTxHash).assertSucceed();
+  await world.resolveTx(withdrawTxHash).assertSucceed();
+
+  expect(d.account().from(await alice.getAccount())).toMatchObject({
+    balance: aliceStake + 997675618849999998n,
+    kvs: {},
+  });
+  console.log("Succeeded to withdraw");
+}, 60_000);
+
+const createDelegationContract = async () => {
+  const delegationOwner = await world.createWallet({
+    balance: egldUnit + 1250n * egldUnit,
+  });
+
+  const res = await delegationOwner.callContract({
+    callee: SYSTEM_DELEGATION_MANAGER_ADDRESS,
+    funcName: "createNewDelegationContract",
+    gasLimit: 65_000_000,
+    value: 1250n * egldUnit,
+    funcArgs: [
+      e.U(0), // delegation cap
+      e.U(0), // service fee
+    ],
+  });
+  const delegationContract = world.newContract(res.returnData[0]);
+  console.log("Deployed delegation contract");
+
+  const wallets = await world.getInitialWallets();
+  const stakeWallet = world.newWallet(wallets.stakeWallets[0].address);
+  await stakeWallet.setAccount({
+    ...(await stakeWallet.getAccount()),
+    balance: egldUnit,
+  });
+
+  await delegationOwner.callContract({
+    callee: delegationContract,
+    funcName: "whitelistForMerge",
+    gasLimit: 65_000_000,
+    funcArgs: [stakeWallet],
+  });
+  console.log("Whitelisted initial stake wallet for merge");
+
+  await stakeWallet.callContract({
+    callee: SYSTEM_DELEGATION_MANAGER_ADDRESS,
+    funcName: "mergeValidatorToDelegationWithWhitelist",
+    gasLimit: 510_000_000,
+    funcArgs: [delegationContract],
+  });
+  console.log("Merged validator with delegation contract");
+
+  return delegationContract;
+};
+
+const getTotalActiveStake = async () => {
+  const result = await world.query({
     callee: delegationContract,
     funcName: "getTotalActiveStake",
   });
-  console.log(
-    "Remaining active stake for staking provider: ",
-    d.U().fromTop(result.returnData[0]),
-  );
-  expect(d.U().fromTop(result.returnData[0])).toEqual(
-    3603759241932734052658212n,
-  );
-}, 60_000); // Test takes 30-60 seconds to run
+  return d.U().fromTop(result.returnData[0]);
+};
+
+const getDelegationContractData = async () => {
+  const result = await world.query({
+    callee: contract,
+    funcName: "getDelegationContractData",
+    funcArgs: [delegationContract],
+  });
+  return delegationContractDataDecoder.fromTop(result.returnData[0]);
+};
+
+const getRewardsReserve = async () => {
+  const result = await world.query({
+    callee: contract,
+    funcName: "getRewardsReserve",
+  });
+  return d.U().fromTop(result.returnData[0]);
+};

@@ -168,7 +168,6 @@ func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
 	txHash := uint64ToString(e.txCounter)
 	var logs interface{}
 	var smartContractResults interface{}
-	var processStatus string
 	if vmOutput.ReturnCode == 0 {
 		jData := "@" + hex.EncodeToString([]byte(vmOutput.ReturnCode.String()))
 		for _, data := range vmOutput.ReturnData {
@@ -205,7 +204,6 @@ func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
 				},
 			}
 		}
-		processStatus = "success"
 	} else {
 		logs = map[string]interface{}{
 			"events": []interface{}{
@@ -214,12 +212,12 @@ func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
 				},
 			},
 		}
-		processStatus = "failed"
 	}
 	e.txResps[txHash] = map[string]interface{}{
 		"data": map[string]interface{}{
 			"transaction": map[string]interface{}{
 				"hash": txHash,
+				"receiver": rawTx.Receiver,
 				"status": "success",
 				"logs": logs,
 				"smartContractResults": smartContractResults,
@@ -232,17 +230,10 @@ func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
 		},
 		"code": "successful",
 	}
-	e.txProcessStatusResps[txHash] = map[string]interface{}{
-		"data": map[string]interface{}{
-			"status": processStatus,
-		},
-		"code": "successful",
-	}
 	e.hashesOfTxsToKeep = append(e.hashesOfTxsToKeep, txHash)
 	if len(e.hashesOfTxsToKeep) > e.numberOfTxsToKeep {
 		firstTxHash := e.hashesOfTxsToKeep[0]
 		delete(e.txResps, firstTxHash)
-		delete(e.txProcessStatusResps, firstTxHash)
 		e.hashesOfTxsToKeep = e.hashesOfTxsToKeep[1:]
 	}
 	jOutput := map[string]interface{}{
@@ -272,12 +263,6 @@ func (e *Executor) HandleTransaction(r *http.Request) (interface{}, error) {
 	} else if withResults != "true" {
 		return nil, errors.New("invalid withResults option")
 	}
-	return res, nil
-}
-
-func (e *Executor) HandleTransactionProcessStatus(r *http.Request) (interface{}, error) {
-	txHash := chi.URLParam(r, "txHash")
-	res := e.txProcessStatusResps[txHash]
 	return res, nil
 }
 

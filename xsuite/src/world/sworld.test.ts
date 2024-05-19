@@ -6,14 +6,11 @@ import {
   zeroHexAddress,
   zeroU8AAddress,
 } from "../data/address";
+import { isContract } from "../data/utils";
 import { childProcesses } from "./childProcesses";
 import { DummySigner } from "./signer";
 import { SWorld, SContract, SWallet } from "./sworld";
-import {
-  generateContractU8AAddress,
-  generateWalletU8AAddress,
-  isContractAddress,
-} from "./utils";
+import { generateU8AAddress } from "./utils";
 import { expandCode } from "./world";
 
 let world: SWorld;
@@ -134,7 +131,7 @@ test("SWorld.newContract", async () => {
 test("SWorld.createWallet - empty wallet", async () => {
   const wallet = await world.createWallet();
   expect(wallet.explorerUrl).toEqual(`${explorerUrl}/accounts/${wallet}`);
-  expect(isContractAddress(wallet)).toEqual(false);
+  expect(isContract(wallet)).toEqual(false);
   assertAccount(await wallet.getAccountWithKvs(), {});
 });
 
@@ -144,7 +141,7 @@ test("SWorld.createWallet - with balance", async () => {
 });
 
 test("SWorld.createWallet - with address & balance", async () => {
-  const address = generateWalletU8AAddress();
+  const address = generateU8AAddress({ type: "wallet" });
   const wallet = await world.createWallet({ address, balance: 10n });
   assertAccount(await wallet.getAccountWithKvs(), { address, balance: 10n });
 });
@@ -152,7 +149,7 @@ test("SWorld.createWallet - with address & balance", async () => {
 test("SWorld.createContract - empty contract", async () => {
   const contract = await world.createContract();
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
-  expect(isContractAddress(contract)).toEqual(true);
+  expect(isContract(contract)).toEqual(true);
   assertAccount(await contract.getAccountWithKvs(), { code: "00" });
 });
 
@@ -167,7 +164,7 @@ test("SWorld.createContract - with file:", async () => {
 });
 
 test("SWorld.createContract - with address & file:", async () => {
-  const address = generateContractU8AAddress();
+  const address = generateU8AAddress({ type: "contract" });
   const contract = await world.createContract({ address, code: worldCode });
   assertAccount(await contract.getAccountWithKvs(), {
     address,
@@ -419,7 +416,7 @@ test("SWorld.deployContract", async () => {
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
-  expect(isContractAddress(contract)).toEqual(true);
+  expect(isContract(contract)).toEqual(true);
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
   assertAccount(await contract.getAccountWithKvs(), {
     code: worldCode,
@@ -625,7 +622,7 @@ test("SWallet.deployContract", async () => {
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
-  expect(isContractAddress(contract)).toEqual(true);
+  expect(isContract(contract)).toEqual(true);
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
   assertAccount(await contract.getAccountWithKvs(), {
     code: worldCode,

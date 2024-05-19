@@ -21,7 +21,7 @@ export const getHatomLSContractState = async () => {
     console.log("file does not exist");
     const realContract = await new Proxy(
       "https://gateway.multiversx.com",
-    ).getSerializableAccountWithKvs(MAINNET_LIQUID_STAKING_CONTRACT_ADDRESS);
+    ).getSerializableAccount(MAINNET_LIQUID_STAKING_CONTRACT_ADDRESS);
 
     fs.writeFileSync(hatomStateFile, JSON.stringify(realContract));
   }

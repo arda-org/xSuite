@@ -13,6 +13,9 @@ OverridableConfigTomlValues = [
     { File = "enableEpochs.toml", Path = "EnableEpochs.SCDeployEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.BuiltInFunctionsEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.RelayedTransactionsEnableEpoch", Value = "0" },
+    { File = "enableEpochs.toml", Path = "EnableEpochs.PenalizedTooMuchGasEnableEpoch", Value = "0" },
+    { File = "enableEpochs.toml", Path = "EnableEpochs.SwitchJailWaitingEnableEpoch", Value = "0" },
+    { File = "enableEpochs.toml", Path = "EnableEpochs.BelowSignedThresholdEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.SwitchHysteresisForMinNodesEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.TransactionSignedWithTxHashEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.MetaProtectionEnableEpoch", Value = "0" },
@@ -23,6 +26,7 @@ OverridableConfigTomlValues = [
     { File = "enableEpochs.toml", Path = "EnableEpochs.BalanceWaitingListsEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.ReturnDataToLastTransferEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.SenderInOutTransferEnableEpoch", Value = "0" },
+    { File = "enableEpochs.toml", Path = "EnableEpochs.StakeEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.StakingV2EnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.DoubleKeyProtectionEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.ESDTEnableEpoch", Value = "0" },
@@ -70,6 +74,7 @@ OverridableConfigTomlValues = [
     { File = "enableEpochs.toml", Path = "EnableEpochs.RefactorContextEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.FailExecutionOnEveryAPIErrorEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.ManagedCryptoAPIsEnableEpoch", Value = "0" },
+    { File = "enableEpochs.toml", Path = "EnableEpochs.CheckFunctionArgumentEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.CheckExecuteOnReadOnlyEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.ESDTMetadataContinuousCleanupEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.MiniBlockPartialExecutionEnableEpoch", Value = "0" },
@@ -100,5 +105,6 @@ OverridableConfigTomlValues = [
     { File = "enableEpochs.toml", Path = "EnableEpochs.FixGasRemainingForSaveKeyValueBuiltinFunctionEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.CurrentRandomnessOnSortingEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.AlwaysMergeContextsInEEIEnableEpoch", Value = "0" },
-    { File = "systemSmartContractsConfig.toml", Path = "DelegationManagerSystemSCConfig.MinStakeAmount", Value = "1000000000000000000" }, # 1 EGLD
+
+    { File = "enableEpochs.toml", Path = "EnableEpochs.StakeLimitsEnableEpoch", Value = "1000000" },
 ]

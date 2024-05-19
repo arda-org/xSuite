@@ -9,19 +9,19 @@ import { BytesLike } from "../data/bytesLike";
 import { EncodableCodeMetadata, eCodeMetadata } from "../data/encoding";
 import { Kvs } from "../data/kvs";
 import { base64ToHex } from "../data/utils";
+import { Prettify } from "../helpers";
+import { InteractionPromise } from "../world/world";
 
 export class Proxy {
   proxyUrl: string;
   headers: HeadersInit;
   explorerUrl: string;
-  txCompletionPauseMs: number;
 
   constructor(params: ProxyParams) {
     params = typeof params === "string" ? { proxyUrl: params } : params;
     this.proxyUrl = params.proxyUrl;
     this.headers = params.headers ?? {};
     this.explorerUrl = params.explorerUrl ?? "";
-    this.txCompletionPauseMs = params.txCompletionPauseMs ?? 1000;
   }
 
   fetchRaw(path: string, data?: any) {
@@ -38,63 +38,147 @@ export class Proxy {
     return unrawRes(await this.fetchRaw(path, data));
   }
 
+  getTxRaw(txHash: string, { withResults }: GetTxRequestOptions = {}) {
+    let path = `/transaction/${txHash}`;
+    if (withResults) path += "?withResults=true";
+    return this.fetchRaw(path);
+  }
+
+  getTx(txHash: string) {
+    return this._getTx(txHash, { withResults: true });
+  }
+
+  getTxWithoutResults(txHash: string) {
+    return this._getTx(txHash, { withResults: false });
+  }
+
+  private async _getTx(txHash: string, options?: GetTxRequestOptions) {
+    const { hash, ..._res } = unrawTxRes(await this.getTxRaw(txHash, options));
+    const explorerUrl = `${this.explorerUrl}/transactions/${hash}`;
+    // Destructuring gives an invalid type: https://github.com/microsoft/TypeScript/issues/56456
+    return Object.assign({ explorerUrl, hash }, _res) as TxResult;
+  }
+
   sendTxRaw(tx: BroadTx) {
     return this.fetchRaw("/transaction/send", broadTxToRawTx(tx));
   }
+
+  // TODO: avoir sendCallContract, etc
 
   async sendTx(tx: BroadTx) {
     const res = unrawRes(await this.sendTxRaw(tx));
     return res.txHash as string;
   }
 
-  getTxRaw(txHash: string, options: GetTxOptions = {}) {
-    let path = `/transaction/${txHash}`;
-    if (options.withResults) path += "?withResults=true";
-    return this.fetchRaw(path);
-  }
-
-  async getTx(txHash: string, options?: GetTxOptions) {
-    return unrawTxRes(await this.getTxRaw(txHash, options));
-  }
-
-  getTxProcessStatusRaw(txHash: string) {
-    return this.fetchRaw(`/transaction/${txHash}/process-status`);
-  }
-
-  async getTxProcessStatus(txHash: string) {
-    const res = unrawRes(await this.getTxProcessStatusRaw(txHash));
-    return res.status as string;
-  }
-
-  async getCompletedTxRaw(txHash: string) {
-    let res = await this.getTxProcessStatusRaw(txHash);
-    while (res.code !== "successful" || res.data.status === "pending") {
-      await new Promise((r) => setTimeout(r, this.txCompletionPauseMs));
-      res = await this.getTxProcessStatusRaw(txHash);
+  async awaitTx(txHash: string) {
+    let res = await this.getTx(txHash);
+    let status = getTxStatus(res);
+    while (status.type === "pending") {
+      await new Promise((r) => setTimeout(r, 1000));
+      res = await this.getTx(txHash);
+      status = getTxStatus(res);
     }
-    return await this.getTxRaw(txHash, { withResults: true });
+  }
+
+  resolveTx(txHash: string) {
+    return this._resolveTx(txHash) as InteractionPromise<TxResult>;
+  }
+
+  resolveTransfer(txHash: string) {
+    return this.resolveTx(txHash);
+  }
+
+  resolveDeployContract(txHash: string) {
+    return InteractionPromise.fromFn<DeployContractResult>(async () => {
+      const { returnData, newAddress, ...res } = await this._resolveTx(txHash);
+      if (returnData === undefined) {
+        throw new Error("Undefined returnData.");
+      }
+      if (newAddress === undefined) {
+        throw new Error("Undefined newAddress.");
+      }
+      return { ...res, returnData, newAddress };
+    });
+  }
+
+  resolveCallContract(txHash: string) {
+    return InteractionPromise.fromFn<CallContractResult>(async () => {
+      const { returnData, ...res } = await this.resolveTx(txHash);
+      if (returnData === undefined) {
+        throw new Error("Undefined returnData.");
+      }
+      return { ...res, returnData };
+    });
+  }
+
+  resolveUpgradeContract(txHash: string) {
+    return this.resolveCallContract(txHash);
+  }
+
+  private _resolveTx(txHash: string) {
+    return InteractionPromise.fromFn(async () => {
+      const res = await this.getTx(txHash);
+      const status = getTxStatus(res);
+      if (status.type === "pending") {
+        throw new Error(pendingErrorMessage);
+      }
+      if (status.type === "error") {
+        throw new TxError(status.code, status.message, res);
+      }
+      const { returnData, newAddress } = status;
+      return { ...res, returnData, newAddress };
+    });
+  }
+
+  awaitResolvedTx(txHash: string) {
+    return this._awaitResolved(() => this.resolveTx.call(this, txHash));
+  }
+
+  awaitResolvedTransfer(txHash: string) {
+    return this._awaitResolved(() => this.resolveTransfer.call(this, txHash));
+  }
+
+  awaitResolvedDeployContract(txHash: string) {
+    return this._awaitResolved(() =>
+      this.resolveDeployContract.call(this, txHash),
+    );
+  }
+
+  awaitResolvedCallContract(txHash: string) {
+    return this._awaitResolved(() =>
+      this.resolveCallContract.call(this, txHash),
+    );
+  }
+
+  awaitResolvedUpgradeContract(txHash: string) {
+    return this._awaitResolved(() =>
+      this.resolveUpgradeContract.call(this, txHash),
+    );
+  }
+
+  private _awaitResolved<T>(resolve: () => InteractionPromise<T>) {
+    return InteractionPromise.fromFn<T>(async () => {
+      let p = resolve();
+      while (await isResolvePending(p)) {
+        await new Promise((r) => setTimeout(r, 1000));
+        p = resolve();
+      }
+      return await p;
+    });
   }
 
   async getCompletedTx(txHash: string) {
-    const { hash, ..._res } = unrawTxRes(await this.getCompletedTxRaw(txHash));
-    const explorerUrl = `${this.explorerUrl}/transactions/${hash}`;
-    // Destructuring gives an invalid type: https://github.com/microsoft/TypeScript/issues/56456
-    const res = Object.assign({ explorerUrl, hash }, _res);
-    if (res.status !== "success") {
-      throw new TxError("errorStatus", res.status, res);
+    let res = await this.getTx(txHash);
+    let status = getTxStatus(res);
+    while (status.type === "pending") {
+      await new Promise((r) => setTimeout(r, 1000));
+      res = await this.getTx(txHash);
+      status = getTxStatus(res);
     }
-    if (res.executionReceipt?.returnCode) {
-      const { returnCode, returnMessage } = res.executionReceipt;
-      throw new TxError(returnCode, returnMessage, res);
+    if (status.type === "error") {
+      throw new TxError(status.code, status.message, res);
     }
-    const signalErrorEvent = res?.logs?.events.find(
-      (e: any) => e.identifier === "signalError",
-    );
-    if (signalErrorEvent) {
-      const error = atob(signalErrorEvent.topics[1]);
-      throw new TxError("signalError", error, res);
-    }
-    return res as Record<string, any> & { hash: string; explorerUrl: string };
+    return Object.assign({ returnData: status.returnData }, res);
   }
 
   queryRaw(query: BroadQuery) {
@@ -112,61 +196,107 @@ export class Proxy {
     } as Record<string, any> & { returnData: string[] };
   }
 
-  getAccountRaw(address: AddressLike) {
-    return this.fetchRaw(`/address/${addressLikeToBechAddress(address)}`);
+  getAccountNonceRaw(
+    address: AddressLike,
+    { shardId }: AccountRequestOptions = {},
+  ) {
+    let path = `/address/${addressLikeToBechAddress(address)}/nonce`;
+    if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
+    return this.fetchRaw(path);
   }
 
-  async getSerializableAccount(address: AddressLike) {
-    const res = unrawRes(await this.getAccountRaw(address));
-    return getSerializableAccount(res.account);
-  }
-
-  async getAccount(address: AddressLike) {
-    const { balance, ...account } = await this.getSerializableAccount(address);
-    return { balance: BigInt(balance), ...account };
-  }
-
-  getAccountNonceRaw(address: AddressLike) {
-    return this.fetchRaw(`/address/${addressLikeToBechAddress(address)}/nonce`);
-  }
-
-  async getAccountNonce(address: AddressLike) {
-    const res = unrawRes(await this.getAccountNonceRaw(address));
+  async getAccountNonce(address: AddressLike, options?: AccountRequestOptions) {
+    const res = unrawRes(await this.getAccountNonceRaw(address, options));
     return res.nonce as number;
   }
 
-  getAccountBalanceRaw(address: AddressLike) {
-    return this.fetchRaw(
-      `/address/${addressLikeToBechAddress(address)}/balance`,
-    );
+  getAccountBalanceRaw(
+    address: AddressLike,
+    { shardId }: AccountRequestOptions = {},
+  ) {
+    let path = `/address/${addressLikeToBechAddress(address)}/balance`;
+    if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
+    return this.fetchRaw(path);
   }
 
-  async getAccountBalance(address: AddressLike) {
-    const res = unrawRes(await this.getAccountBalanceRaw(address));
+  async getAccountBalance(
+    address: AddressLike,
+    options?: AccountRequestOptions,
+  ) {
+    const res = unrawRes(await this.getAccountBalanceRaw(address, options));
     return BigInt(res.balance);
   }
 
-  getAccountKvsRaw(address: AddressLike) {
-    return this.fetchRaw(`/address/${addressLikeToBechAddress(address)}/keys`);
+  getAccountKvsRaw(
+    address: AddressLike,
+    { shardId }: AccountRequestOptions = {},
+  ) {
+    let path = `/address/${addressLikeToBechAddress(address)}/keys`;
+    if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
+    return this.fetchRaw(path);
   }
 
-  async getAccountKvs(address: AddressLike) {
-    const res = unrawRes(await this.getAccountKvsRaw(address));
+  async getAccountKvs(address: AddressLike, options?: AccountRequestOptions) {
+    const res = unrawRes(await this.getAccountKvsRaw(address, options));
     return res.pairs as Kvs;
   }
 
-  getSerializableAccountWithKvs(address: AddressLike) {
+  getAccountRaw(address: AddressLike, { shardId }: AccountRequestOptions = {}) {
+    let path = `/address/${addressLikeToBechAddress(address)}`;
+    if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
+    return this.fetchRaw(path);
+  }
+
+  async getSerializableAccountWithoutKvs(
+    address: AddressLike,
+    options?: AccountRequestOptions,
+  ) {
+    const res = unrawRes(await this.getAccountRaw(address, options));
+    return getSerializableAccount(res.account);
+  }
+
+  getSerializableAccount(
+    address: AddressLike,
+    options?: AccountRequestOptions,
+  ) {
+    // TODO-MvX: When ?withKeys=true out, rewrite this part
     return Promise.all([
-      this.getSerializableAccount(address),
-      this.getAccountKvs(address),
+      this.getSerializableAccountWithoutKvs(address, options),
+      this.getAccountKvs(address, options),
     ]).then(([account, kvs]) => ({ ...account, kvs }));
   }
 
-  getAccountWithKvs(address: AddressLike) {
+  async getAccountWithoutKvs(
+    address: AddressLike,
+    options?: AccountRequestOptions,
+  ) {
+    const { balance, ...account } = await this.getSerializableAccountWithoutKvs(
+      address,
+      options,
+    );
+    return { balance: BigInt(balance), ...account };
+  }
+
+  getAccount(address: AddressLike, options?: AccountRequestOptions) {
+    // TODO-MvX: When ?withKeys=true out, rewrite this part
     return Promise.all([
-      this.getAccount(address),
-      this.getAccountKvs(address),
+      this.getAccountWithoutKvs(address, options),
+      this.getAccountKvs(address, options),
     ]).then(([account, kvs]) => ({ ...account, kvs }));
+  }
+
+  /**
+   * @deprecated Use `.getSerializableAccount` instead.
+   */
+  getSerializableAccountWithKvs(address: AddressLike) {
+    return this.getSerializableAccount(address);
+  }
+
+  /**
+   * @deprecated Use `.getAccount` instead.
+   */
+  getAccountWithKvs(address: AddressLike) {
+    return this.getAccount(address);
   }
 }
 
@@ -404,16 +534,69 @@ export const getSerializableAccount = (rawAccount: any) => {
   };
 };
 
+export const getTxStatus = (result: any): TxStatus => {
+  if (result.executionReceipt?.returnCode) {
+    const { returnCode, returnMessage } = result.executionReceipt;
+    return { type: "error", code: returnCode, message: returnMessage };
+  }
+  const signalErrorEvent =
+    result?.logs?.events.find((e: any) => e.identifier === "signalError") ??
+    result?.smartContractResults
+      ?.find(
+        (r: any) =>
+          r?.logs?.events?.some((e: any) => e.identifier === "signalError"),
+      )
+      ?.logs?.events?.find((e: any) => e.identifier === "signalError");
+  if (signalErrorEvent) {
+    const message = atob(signalErrorEvent.topics[1]);
+    return { type: "error", code: "signalError", message };
+  }
+  if (
+    result?.logs?.events?.some(
+      (e: any) => e.identifier === "completedTxEvent",
+    ) ||
+    result?.smartContractResults?.some(
+      (r: any) =>
+        r?.logs?.events?.some((e: any) => e.identifier === "completedTxEvent"),
+    ) ||
+    (result.receiver === zeroBechAddress &&
+      result?.logs?.events?.find((e: any) => e.identifier === "SCDeploy")) ||
+    "receipt" in result
+  ) {
+    const newAddress = result?.logs?.events?.find(
+      (e: any) => e.identifier === "SCDeploy",
+    )?.address;
+    const writeLogEvent = result?.logs?.events?.find(
+      (e: any) => e.identifier === "writeLog",
+    );
+    if (writeLogEvent) {
+      const returnData = atob(writeLogEvent.data).split("@").slice(2);
+      return { type: "success", returnData, newAddress };
+    }
+    const scr = result?.smartContractResults?.find(
+      (r: any) => r.data === "@6f6b" || r.data?.startsWith("@6f6b@"),
+    );
+    if (scr) {
+      const returnData = scr.data.split("@").slice(2);
+      return { type: "success", returnData, newAddress };
+    }
+    return { type: "success" };
+  }
+  return { type: "pending" };
+};
+
+const isResolvePending = (p: InteractionPromise<any>) =>
+  p
+    .then(() => false)
+    .catch((e) => e instanceof Error && e.message === pendingErrorMessage);
+
+export const pendingErrorMessage = "Transaction still pending.";
+
 export type ProxyParams =
   | string
-  | {
-      proxyUrl: string;
-      headers?: HeadersInit;
-      explorerUrl?: string;
-      txCompletionPauseMs?: number;
-    };
+  | { proxyUrl: string; headers?: HeadersInit; explorerUrl?: string };
 
-export type BroadTx = Tx | RawTx;
+type BroadTx = Tx | RawTx;
 
 type RawTx = {
   nonce: number;
@@ -511,4 +694,24 @@ export type CallContractTxParams = {
   version?: number;
 };
 
-type GetTxOptions = { withResults?: boolean };
+type GetTxRequestOptions = { withResults?: boolean };
+
+type AccountRequestOptions = { shardId?: number };
+
+type TxStatus =
+  | { type: "pending" }
+  | { type: "success"; returnData?: string[]; newAddress?: string }
+  | { type: "error"; code: string; message: string };
+
+type TxResult = Prettify<
+  {
+    hash: string;
+    explorerUrl: string;
+  } & Record<string, any>
+>;
+
+type DeployContractResult = Prettify<
+  TxResult & { returnData: string[]; newAddress: string }
+>;
+
+type CallContractResult = Prettify<TxResult & { returnData: string[] }>;

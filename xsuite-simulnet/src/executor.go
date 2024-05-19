@@ -11,7 +11,6 @@ type Executor struct {
 	numberOfTxsToKeep			int
 	hashesOfTxsToKeep		  []string
 	txResps								map[string]interface{}
-	txProcessStatusResps  map[string]interface{}
 	txCounter							uint64
 	scCounter							uint64
 }
@@ -28,7 +27,6 @@ func NewExecutor() (*Executor, error) {
 		numberOfTxsToKeep: 20,
 		hashesOfTxsToKeep: []string{},
 		txResps: map[string]interface{}{},
-		txProcessStatusResps: map[string]interface{}{},
 		txCounter: 0,
 		scCounter: 0,
 	}

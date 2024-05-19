@@ -18,15 +18,13 @@
 
 **Test 2: Hatom cross-shard calls concurrency**
 
-1. Alice has delegated EGLD.
-2. Alice calls `undelegate`.
-3. Alice calls `undelegate_pending_amount`.
-4. Move forward 10 epochs.
-5. Alice calls `withdrawFrom`.
-6. Move forward 1 block
-7. Alice calls `withdraw`. This fails as EGLD are still in the async call. In Rust testing ramework this would have not failed, not reproducing accurately the blockchain behavior.
-8. Move forward 2 blocks.
-9. Alice calls `withdraw`. This succeeds.
+Alice has withdrawable EGLD.
+
+1. Alice calls `withdrawFrom`.
+2. The blockchain advances by 1 block.
+3. Alice calls `withdraw`. This fails because the async call of `withdrawFrom` is not completed. With the Rust testing framework, this wouldn't have failed, not reproducing accurately the blockchain.
+4. The blockchain advances by 2 blocks.
+5. Alice calls `withdraw`. This succeeds.
 
 **Test 3: Hatom gas consumption**
 

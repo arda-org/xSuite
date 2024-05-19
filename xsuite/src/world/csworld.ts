@@ -1,22 +1,22 @@
 import { ChildProcess } from "node:child_process";
+import { fullU8AAddress } from "../data/address";
 import { AddressLike, isAddressLike } from "../data/addressLike";
 import { EncodableAccount } from "../data/encoding";
 import { Prettify } from "../helpers";
 import { CSProxy } from "../proxy";
+import { getTxStatus } from "../proxy/proxy";
 import { killChildProcess } from "./childProcesses";
 import { startCsproxyBin } from "./csproxyBin";
 import { DummySigner, Signer } from "./signer";
-import {
-  generateContractU8AAddress,
-  generateWalletU8AAddress,
-  isContractAddress,
-} from "./utils";
+import { generateU8AAddress } from "./utils";
 import {
   Contract,
   expandCode,
   Wallet,
   WalletDeployContractParams,
   World,
+  WorldDeployContractParams,
+  WorldExecuteTxParams,
   WorldNewOptions,
 } from "./world";
 
@@ -40,21 +40,18 @@ export class CSWorld extends World {
 
     this.proxy = proxy;
     this.server = server;
-    this.sysAcc = this.newContract(new Uint8Array(32).fill(255));
+    this.sysAcc = this.newContract(fullU8AAddress); // TODO: améliorer ici
   }
 
   static new(options: CSWorldNewOptions) {
     if (options.chainId !== undefined) {
       throw new Error("chainId is not undefined.");
     }
-    const { proxyUrl, gasPrice, explorerUrl, server, waitCompletedTimeout } =
-      options;
+    const { proxyUrl, gasPrice, explorerUrl, server } = options;
     return new CSWorld({
       proxy: new CSProxy({
         proxyUrl,
         explorerUrl,
-        autoGenerateBlocks: options.autoGenerateBlocks ?? true,
-        txCompletionPauseMs: waitCompletedTimeout,
       }),
       gasPrice: gasPrice ?? 1000000000,
       explorerUrl,
@@ -108,31 +105,56 @@ export class CSWorld extends World {
       signer: isAddressLike(addressOrSigner)
         ? new DummySigner(addressOrSigner)
         : addressOrSigner,
-      proxy: this.proxy,
-      chainId: this.chainId,
-      gasPrice: this.gasPrice,
+      world: this,
     });
   }
 
   newContract(address: string | Uint8Array): CSContract {
-    return new CSContract({
-      address,
-      proxy: this.proxy,
-    });
+    return new CSContract({ address, world: this });
   }
 
   async createWallet({ address, ...params }: CSWorldCreateAccountParams = {}) {
-    address ??= generateWalletU8AAddress();
-    await setAccount(this.proxy, { address, ...params });
+    if (
+      address === undefined ||
+      (typeof address === "object" && "shard" in address)
+    ) {
+      address = generateU8AAddress({ type: "wallet", shard: address?.shard });
+    }
+    await this.setAccount({ address, ...params });
     return this.newWallet(new DummySigner(address));
   }
 
-  createContract(params?: CSWorldCreateAccountParams) {
-    return createContract(this.proxy, params);
+  async createContract({
+    address,
+    ...params
+  }: CSWorldCreateAccountParams = {}) {
+    if (
+      address === undefined ||
+      (typeof address === "object" && "shard" in address)
+    ) {
+      address = generateU8AAddress({ type: "contract", shard: address?.shard });
+    }
+    await this.setAccount({ address, ...params });
+    return new CSContract({ address, world: this });
   }
 
-  setAccount(params: EncodableAccount) {
-    return setAccount(this.proxy, params);
+  getInitialWallets() {
+    return this.proxy.getInitialWallets();
+  }
+
+  async setAccounts(params: CSWorldSetAccountsParams) {
+    for (const _params of params) {
+      if (_params.code !== undefined) {
+        _params.code = expandCode(_params.code);
+      }
+    }
+    const result = await this.proxy.setAccounts(params);
+    await this.generateBlock(); // TODO-MvX: to be removed once endpoint also generates block
+    return result;
+  }
+
+  setAccount(params: CSWorldSetAccountParams) {
+    return this.setAccounts([params]);
   }
 
   generateBlocks(numBlocks: number) {
@@ -143,12 +165,32 @@ export class CSWorld extends World {
     return this.proxy.generateBlock();
   }
 
+  // TODO-MvX: replace by the new one that will force skip the epoch
   generateBlocksUntilEpochReached(epoch: number) {
     return this.proxy.generateBlocksUntilEpochReached(epoch);
   }
 
-  getInitialWallets() {
-    return this.proxy.getInitialWallets();
+  // TODO-MvX: to be removed when built-in in chain simulator
+  async generateBlocksUntilTxCompleted(txHash: string) {
+    // TODO: commencer par checker le state
+    await this.generateBlock();
+    let res = await this.proxy.getTx(txHash);
+    let status = getTxStatus(res);
+    while (status.type === "pending") {
+      await this.generateBlock();
+      res = await this.proxy.getTx(txHash);
+      status = getTxStatus(res);
+    }
+  }
+
+  async sendTx(params: WorldExecuteTxParams) {
+    const result = await super.sendTx(params);
+    await new Promise((r) => setTimeout(r, 200)); // TODO-MvX: to be removed once they fix this
+    return result;
+  }
+
+  awaitTx(txHash: string) {
+    return this.generateBlocksUntilTxCompleted(txHash);
   }
 
   terminate() {
@@ -156,112 +198,47 @@ export class CSWorld extends World {
     killChildProcess(this.server);
   }
 
-  getAccountNonce(
-    address: AddressLike,
-    shardId: number | undefined = undefined,
-  ) {
-    return this.proxy.getAccountNonce(address, shardId);
-  }
-
-  getAccountBalance(
-    address: AddressLike,
-    shardId: number | undefined = undefined,
-  ) {
-    return this.proxy.getAccountBalance(address, shardId);
-  }
-
-  getAccount(address: AddressLike, shardId: number | undefined = undefined) {
-    return this.proxy.getAccount(address, shardId);
-  }
-
-  getAccountKvs(address: AddressLike, shardId: number | undefined = undefined) {
-    return this.proxy.getAccountKvs(address, shardId);
-  }
-
-  getSerializableAccountWithKvs(
-    address: AddressLike,
-    shardId: number | undefined = undefined,
-  ) {
-    return this.proxy.getSerializableAccountWithKvs(address, shardId);
-  }
-
-  getAccountWithKvs(
-    address: AddressLike,
-    shardId: number | undefined = undefined,
-  ) {
-    return this.proxy.getAccountWithKvs(address, shardId);
-  }
-}
-
-export class CSWallet extends Wallet {
-  proxy: CSProxy;
-
-  constructor({
-    signer,
-    proxy,
-    chainId,
-    gasPrice,
-  }: {
-    signer: Signer;
-    proxy: CSProxy;
-    chainId: string;
-    gasPrice: number;
-  }) {
-    super({ signer, proxy, chainId, gasPrice });
-    this.proxy = proxy;
-  }
-
-  setAccount(params: CSAccountSetAccountParams) {
-    return setAccount(this.proxy, { ...params, address: this });
-  }
-
-  createContract(params?: CSWalletCreateContractParams) {
-    return createContract(this.proxy, { ...params, owner: this });
-  }
-
-  deployContract(params: WalletDeployContractParams) {
+  deployContract(params: WorldDeployContractParams) {
     return super.deployContract(params).then((data) => ({
       ...data,
-      contract: new CSContract({
-        address: data.address,
-        proxy: this.proxy,
-      }),
+      contract: new CSContract({ address: data.address, world: this }),
     }));
   }
 }
 
-export class CSContract extends Contract {
-  proxy: CSProxy;
+export class CSWallet extends Wallet {
+  world: CSWorld;
 
-  constructor({ address, proxy }: { address: AddressLike; proxy: CSProxy }) {
-    super({ address, proxy });
-    this.proxy = proxy;
+  constructor({ signer, world }: { signer: Signer; world: CSWorld }) {
+    super({ signer, world });
+    this.world = world;
   }
 
   setAccount(params: CSAccountSetAccountParams) {
-    return setAccount(this.proxy, { ...params, address: this });
+    return this.world.setAccount({ ...params, address: this });
+  }
+
+  createContract(params?: CSWalletCreateContractParams) {
+    return this.world.createContract({ ...params, owner: this });
+  }
+
+  deployContract(params: WalletDeployContractParams) {
+    return this.world.deployContract({ ...params, sender: this });
   }
 }
 
-const setAccount = (proxy: CSProxy, params: EncodableAccount) => {
-  if (params.code == null) {
-    if (isContractAddress(params.address)) {
-      params.code = "00";
-    }
-  } else {
-    params.code = expandCode(params.code);
-  }
-  return proxy.setAccount(params);
-};
+export class CSContract extends Contract {
+  world: CSWorld;
 
-export const createContract = async (
-  proxy: CSProxy,
-  { address, ...params }: CSWorldCreateAccountParams = {},
-) => {
-  address ??= generateContractU8AAddress();
-  await setAccount(proxy, { address, ...params });
-  return new CSContract({ address, proxy });
-};
+  constructor({ address, world }: { address: AddressLike; world: CSWorld }) {
+    super({ address, world });
+    this.world = world;
+  }
+
+  setAccount(params: CSAccountSetAccountParams) {
+    return this.world.setAccount({ ...params, address: this });
+  }
+}
 
 type CSWorldNewOptions =
   | {
@@ -275,9 +252,21 @@ type CSWorldNewOptions =
     }
   | WorldNewOptions;
 
-export type CSWorldCreateAccountParams = Prettify<Partial<EncodableAccount>>;
+export type CSWorldCreateAccountParams = Prettify<
+  Partial<
+    Omit<EncodableAccount, "address"> & {
+      address: AddressLike | { shard: number };
+    }
+  >
+>;
 
-type CSAccountSetAccountParams = Prettify<Omit<EncodableAccount, "address">>;
+type CSWorldSetAccountsParams = EncodableAccount[];
+
+type CSWorldSetAccountParams = EncodableAccount;
+
+type CSAccountSetAccountParams = Prettify<
+  Omit<CSWorldSetAccountParams, "address">
+>;
 
 type CSWalletCreateContractParams = Prettify<
   Omit<CSWorldCreateAccountParams, "owner">

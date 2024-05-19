@@ -4,8 +4,8 @@ import { UserSecretKey, UserWallet, Mnemonic } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
 import { Command } from "commander";
 import { input, log } from "../_stdio";
+import { getShardOfU8AAddress, numShards } from "../data/utils";
 import { Keystore } from "../world/signer";
-import { computeShard, totalShards } from "../world/utils";
 import { logError, logSuccess } from "./helpers";
 
 export const registerNewWalletCmd = (cmd: Command) => {
@@ -83,7 +83,7 @@ const action = async ({
       logError("Multiple wallet sources have been specified.");
       return;
     }
-    if (shard < 0 || shard >= totalShards) {
+    if (shard < 0 || shard >= numShards) {
       logError("The shard you entered does not exist.");
       return;
     }
@@ -91,9 +91,9 @@ const action = async ({
     let shardOfMnemonic: number;
     do {
       const _mnemonic = Mnemonic.generate();
-      const pubKey = _mnemonic.deriveKey().generatePublicKey().hex().toString();
+      const pubKey = _mnemonic.deriveKey().generatePublicKey().valueOf();
       mnemonic = _mnemonic.toString();
-      shardOfMnemonic = computeShard(pubKey);
+      shardOfMnemonic = getShardOfU8AAddress(pubKey);
     } while (shardOfMnemonic !== shard);
     data = UserWallet.fromMnemonic({ mnemonic, password }).toJSON();
   }
@@ -109,7 +109,9 @@ const action = async ({
   log();
   log(chalk.bold.blue("Address:") + ` ${keystore.newSigner()}`);
   log();
-  log(chalk.bold.blue("Shard:") + ` ${computeShard(signer.toTopHex())}`);
+  log(
+    chalk.bold.blue("Shard:") + ` ${getShardOfU8AAddress(signer.toTopU8A())}`,
+  );
   if (keystore.kind === "mnemonic") {
     log();
     log(chalk.bold.blue("Mnemonic phrase:"));

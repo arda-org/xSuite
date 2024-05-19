@@ -33,7 +33,7 @@ beforeAll(async () => {
   wallet = await world.createWallet({
     balance: 20n,
   });
-  walletState = await wallet.getSerializableAccountWithKvs();
+  walletState = await wallet.getSerializableAccount();
   contract = await wallet.createContract({
     balance: 10n,
     code: "file:contracts/data/output/data.wasm",
@@ -158,8 +158,8 @@ beforeAll(async () => {
     ],
     gasLimit: 10_000_000,
   });
-  complexContractState = await contract.getSerializableAccountWithKvs();
-  complexSysAccState = await world.sysAcc.getSerializableAccountWithKvs();
+  complexContractState = await contract.getSerializableAccount();
+  complexSysAccState = await world.sysAcc.getSerializableAccount();
 });
 
 afterAll(async () => {

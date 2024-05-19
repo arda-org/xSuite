@@ -1,14 +1,16 @@
 import { beforeEach, expect, test, beforeAll, afterAll, assert } from "vitest";
 import { assertAccount, assertVs } from "../assert";
 import { e } from "../data";
+import {
+  zeroBechAddress,
+  zeroHexAddress,
+  zeroU8AAddress,
+} from "../data/address";
+import { isContract } from "../data/utils";
 import { Tx } from "../proxy";
 import { CSWorld, CSContract, CSWallet } from "./csworld";
 import { DummySigner } from "./signer";
-import {
-  generateContractU8AAddress,
-  generateWalletU8AAddress,
-  isContractAddress,
-} from "./utils";
+import { generateU8AAddress } from "./utils";
 
 let world: CSWorld;
 let wallet: CSWallet;
@@ -17,11 +19,6 @@ let contract: CSContract;
 const fftId = "FFT-abcdef";
 const sftId = "SFT-abcdef";
 const worldCode = "file:contracts/world/output/world.wasm";
-const zeroBechAddress =
-  "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu";
-const zeroHexAddress =
-  "0000000000000000000000000000000000000000000000000000000000000000";
-const zeroBytesAddress = new Uint8Array(32);
 const emptyAccount = {
   nonce: 0,
   balance: 0,
@@ -88,7 +85,7 @@ test("CSWorld.proxy.getAccountNonce on empty hex address", async () => {
 });
 
 test("CSWorld.proxy.getAccountNonce on empty bytes address", async () => {
-  expect(await world.proxy.getAccountNonce(zeroBytesAddress)).toEqual(0);
+  expect(await world.proxy.getAccountNonce(zeroBechAddress)).toEqual(0);
 });
 
 test("CSWorld.proxy.getAccountBalance on empty bech address", async () => {
@@ -100,7 +97,7 @@ test("CSWorld.proxy.getAccountBalance on empty hex address", async () => {
 });
 
 test("CSWorld.proxy.getAccountBalance on empty bytes address", async () => {
-  expect(await world.proxy.getAccountBalance(zeroBytesAddress)).toEqual(0n);
+  expect(await world.proxy.getAccountBalance(zeroBechAddress)).toEqual(0n);
 });
 
 test("CSWorld.proxy.getAccountWithKvs on empty bech address", async () => {
@@ -119,7 +116,7 @@ test("CSWorld.proxy.getAccountWithKvs on empty hex address", async () => {
 
 test("CSWorld.proxy.getAccountWithKvs on empty bytes address", async () => {
   assertAccount(
-    await world.proxy.getAccountWithKvs(zeroBytesAddress),
+    await world.proxy.getAccountWithKvs(zeroU8AAddress),
     emptyAccount,
   );
 });
@@ -144,18 +141,18 @@ test("CSWorld.newMainnet", () => {
 
 test("CSWorld.newWallet", async () => {
   const wallet = world.newWallet(new DummySigner(new Uint8Array(32)));
-  expect(wallet.toTopBytes()).toEqual(new Uint8Array(32));
+  expect(wallet.toTopU8A()).toEqual(new Uint8Array(32));
 });
 
 test("CSWorld.newContract", async () => {
   const wallet = world.newWallet(new DummySigner(new Uint8Array(32)));
-  expect(wallet.toTopBytes()).toEqual(new Uint8Array(32));
+  expect(wallet.toTopU8A()).toEqual(new Uint8Array(32));
 });
 
 test("CSWorld.createWallet - empty wallet", async () => {
   const wallet = await world.createWallet();
   expect(wallet.explorerUrl).toEqual(`${explorerUrl}/accounts/${wallet}`);
-  expect(isContractAddress(wallet)).toEqual(false);
+  expect(isContract(wallet)).toEqual(false);
   assertAccount(await wallet.getAccountWithKvs(), {});
 });
 
@@ -165,7 +162,7 @@ test("CSWorld.createWallet - with balance", async () => {
 });
 
 test("CSWorld.createWallet - with address & balance", async () => {
-  const address = generateWalletU8AAddress();
+  const address = generateU8AAddress({ type: "wallet" });
   const wallet = await world.createWallet({ address, balance: 10n });
   assertAccount(await wallet.getAccountWithKvs(), { address, balance: 10n });
 });
@@ -173,7 +170,7 @@ test("CSWorld.createWallet - with address & balance", async () => {
 test("CSWorld.createContract - empty contract", async () => {
   const contract = await world.createContract();
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
-  expect(isContractAddress(contract)).toEqual(true);
+  expect(isContract(contract)).toEqual(true);
   assertAccount(await contract.getAccountWithKvs(), { code: "00" });
 });
 
@@ -188,7 +185,7 @@ test("CSWorld.createContract - with file:", async () => {
 });
 
 test("CSWorld.createContract - with address & file:", async () => {
-  const address = generateContractU8AAddress();
+  const address = generateU8AAddress({ type: "contract" });
   const contract = await world.createContract({ address, code: worldCode });
   assertAccount(await contract.getAccountWithKvs(), {
     address,
@@ -322,7 +319,7 @@ test(
 
     // Transaction was not yet included in a block
     try {
-      await world.proxy.getTx(txHash, { withResults: true });
+      await world.proxy.getTx(txHash);
 
       assert(false);
     } catch (e) {
@@ -331,13 +328,13 @@ test(
 
     // After generating 1 block, transaction is pending
     await world.generateBlock();
-    let result = await world.proxy.getTx(txHash, { withResults: true });
+    let result = await world.proxy.getTx(txHash);
 
     expect(result.status === "pending");
 
     // After generating 2 blocks, transaction is successful
     await world.generateBlocks(1);
-    result = await world.proxy.getTx(txHash, { withResults: true });
+    result = await world.proxy.getTx(txHash);
 
     expect(result.status === "success");
 
@@ -386,7 +383,7 @@ test("CSWorld.deployContract & upgradeContract", async () => {
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
-  expect(isContractAddress(contract)).toEqual(true);
+  expect(isContract(contract)).toEqual(true);
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
   assertAccount(await contract.getAccountWithKvs(), {
     code: worldCode,
@@ -424,11 +421,10 @@ test("CSWorld.callContract", async () => {
 
 test("CSWorld.getInitialWallets", async () => {
   const initialWallets = await world.getInitialWallets();
-  const initialAddressWithStake = initialWallets.stakeWallets[0].address.bech32;
+  const initialAddressWithStake = initialWallets.stakeWallets[0].address;
   assert(initialAddressWithStake);
 
-  const initialAddressWithBalance =
-    initialWallets.balanceWallets[0].address.bech32;
+  const initialAddressWithBalance = initialWallets.balanceWallets[0].address;
   const initialAddressWithBalanceWallet = world.newWallet(
     new DummySigner(initialAddressWithBalance),
   );
@@ -611,7 +607,7 @@ test("CSWallet.deployContract & upgradeContract", async () => {
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
-  expect(isContractAddress(contract)).toEqual(true);
+  expect(isContract(contract)).toEqual(true);
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
   assertAccount(await contract.getAccountWithKvs(), {
     code: worldCode,
@@ -641,7 +637,7 @@ test("CSWallet.deployContract - is contract address", async () => {
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
-  expect(isContractAddress(contract)).toEqual(true);
+  expect(isContract(contract)).toEqual(true);
 });
 
 test("CSWallet.callContract with EGLD", async () => {

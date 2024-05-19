@@ -8,11 +8,7 @@ import { Block } from "../proxy/sproxy";
 import { killChildProcess } from "./childProcesses";
 import { DummySigner, Signer } from "./signer";
 import { startSproxyBin } from "./sproxyBin";
-import {
-  generateContractU8AAddress,
-  generateWalletU8AAddress,
-  isContractAddress,
-} from "./utils";
+import { generateU8AAddress } from "./utils";
 import {
   World,
   Contract,
@@ -20,6 +16,7 @@ import {
   expandCode,
   WalletDeployContractParams,
   WorldNewOptions,
+  WorldDeployContractParams,
 } from "./world";
 
 export class SWorld extends World {
@@ -82,39 +79,51 @@ export class SWorld extends World {
       signer: isAddressLike(addressOrSigner)
         ? new DummySigner(addressOrSigner)
         : addressOrSigner,
-      proxy: this.proxy,
-      chainId: this.chainId,
-      gasPrice: this.gasPrice,
+      world: this,
     });
   }
 
   newContract(address: AddressLike): SContract {
-    return new SContract({
-      address,
-      proxy: this.proxy,
-    });
+    return new SContract({ address, world: this });
   }
 
   async createWallet({ address, ...params }: SWorldCreateAccountParams = {}) {
-    address ??= generateWalletU8AAddress();
-    await setAccount(this.proxy, { address, ...params });
+    if (
+      address === undefined ||
+      (typeof address === "object" && "shard" in address)
+    ) {
+      address = generateU8AAddress({ type: "wallet", shard: address?.shard });
+    }
+    await this.setAccount({ address, ...params });
     return this.newWallet(new DummySigner(address));
   }
 
-  createContract(params?: SWorldCreateAccountParams) {
-    return createContract(this.proxy, params);
+  async createContract({ address, ...params }: SWorldCreateAccountParams = {}) {
+    if (
+      address === undefined ||
+      (typeof address === "object" && "shard" in address)
+    ) {
+      address = generateU8AAddress({ type: "contract", shard: address?.shard });
+    }
+    await this.setAccount({ address, ...params });
+    return new SContract({ address, world: this });
   }
 
-  getAllSerializableAccountsWithKvs() {
-    return this.proxy.getAllSerializableAccountsWithKvs();
+  getAllSerializableAccounts() {
+    return this.proxy.getAllSerializableAccounts();
   }
 
-  setAccounts(params: SWorldSetAccountsParams) {
-    return setAccounts(this.proxy, params);
+  async setAccounts(params: SWorldSetAccountsParams) {
+    for (const _params of params) {
+      if (_params.code !== undefined) {
+        _params.code = expandCode(_params.code);
+      }
+    }
+    return await this.proxy.setAccounts(params);
   }
 
   setAccount(params: SWorldSetAccountParams) {
-    return setAccount(this.proxy, params);
+    return this.setAccounts([params]);
   }
 
   setCurrentBlockInfo(block: Block) {
@@ -125,84 +134,59 @@ export class SWorld extends World {
     return this.proxy.setPreviousBlockInfo(block);
   }
 
+  deployContract(params: WorldDeployContractParams) {
+    return super.deployContract(params).then((data) => ({
+      ...data,
+      contract: new SContract({ address: data.address, world: this }),
+    }));
+  }
+
   terminate() {
     if (!this.server) throw new Error("No server defined.");
     killChildProcess(this.server);
   }
+
+  /**
+   * @deprecated Use `.getAllSerializableAccounts` instead.
+   */
+  getAllSerializableAccountsWithKvs() {
+    return this.getAllSerializableAccounts();
+  }
 }
 
 export class SWallet extends Wallet {
-  proxy: SProxy;
+  world: SWorld;
 
-  constructor({
-    signer,
-    proxy,
-    chainId,
-    gasPrice,
-  }: {
-    signer: Signer;
-    proxy: SProxy;
-    chainId: string;
-    gasPrice: number;
-  }) {
-    super({ signer, proxy, chainId, gasPrice });
-    this.proxy = proxy;
+  constructor({ signer, world }: { signer: Signer; world: SWorld }) {
+    super({ signer, world });
+    this.world = world;
   }
 
   setAccount(params: SAccountSetAccountParams) {
-    return setAccount(this.proxy, { ...params, address: this });
+    return this.world.setAccount({ ...params, address: this });
   }
 
   createContract(params?: SWalletCreateContractParams) {
-    return createContract(this.proxy, { ...params, owner: this });
+    return this.world.createContract({ ...params, owner: this });
   }
 
   deployContract(params: WalletDeployContractParams) {
-    return super.deployContract(params).then((data) => ({
-      ...data,
-      contract: new SContract({ address: data.address, proxy: this.proxy }),
-    }));
+    return this.world.deployContract({ ...params, sender: this });
   }
 }
 
 export class SContract extends Contract {
-  proxy: SProxy;
+  world: SWorld;
 
-  constructor({ address, proxy }: { address: AddressLike; proxy: SProxy }) {
-    super({ address, proxy });
-    this.proxy = proxy;
+  constructor({ address, world }: { address: AddressLike; world: SWorld }) {
+    super({ address, world });
+    this.world = world;
   }
 
   setAccount(params: SAccountSetAccountParams) {
-    return setAccount(this.proxy, { ...params, address: this });
+    return this.world.setAccount({ ...params, address: this });
   }
 }
-
-const setAccounts = async (proxy: SProxy, params: EncodableAccount[]) => {
-  for (const _params of params) {
-    if (_params.code == null) {
-      if (isContractAddress(_params.address)) {
-        _params.code = "00";
-      }
-    } else {
-      _params.code = expandCode(_params.code);
-    }
-  }
-  await proxy.setAccounts(params);
-};
-
-const setAccount = async (proxy: SProxy, params: EncodableAccount) => {
-  return setAccounts(proxy, [params]);
-};
-
-const createContract = async (
-  proxy: SProxy,
-  { address, ...params }: SWorldCreateAccountParams = {},
-) => {
-  address ??= generateContractU8AAddress();
-  await setAccount(proxy, { address, ...params });
-  return new SContract({ address, proxy });
-};
 
 type SWorldNewOptions =
   | {
@@ -214,7 +198,13 @@ type SWorldNewOptions =
     }
   | WorldNewOptions;
 
-type SWorldCreateAccountParams = Prettify<Partial<EncodableAccount>>;
+type SWorldCreateAccountParams = Prettify<
+  Partial<
+    Omit<EncodableAccount, "address"> & {
+      address: AddressLike | { shard: number };
+    }
+  >
+>;
 
 type SWorldSetAccountsParams = EncodableAccount[];
 
