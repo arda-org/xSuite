@@ -82,25 +82,16 @@ test("LSWorld.proxy.getAccountBalance on empty U8A address", async () => {
   expect(await world.proxy.getAccountBalance(zeroU8AAddress)).toEqual(0n);
 });
 
-test("LSWorld.proxy.getAccountWithKvs on empty bech address", async () => {
-  assertAccount(
-    await world.proxy.getAccountWithKvs(zeroBechAddress),
-    emptyAccount,
-  );
+test("LSWorld.proxy.getAccount on empty bech address", async () => {
+  assertAccount(await world.proxy.getAccount(zeroBechAddress), emptyAccount);
 });
 
-test("LSWorld.proxy.getAccountWithKvs on empty hex address", async () => {
-  assertAccount(
-    await world.proxy.getAccountWithKvs(zeroHexAddress),
-    emptyAccount,
-  );
+test("LSWorld.proxy.getAccount on empty hex address", async () => {
+  assertAccount(await world.proxy.getAccount(zeroHexAddress), emptyAccount);
 });
 
-test("LSWorld.proxy.getAccountWithKvs on empty U8A address", async () => {
-  assertAccount(
-    await world.proxy.getAccountWithKvs(zeroU8AAddress),
-    emptyAccount,
-  );
+test("LSWorld.proxy.getAccount on empty U8A address", async () => {
+  assertAccount(await world.proxy.getAccount(zeroU8AAddress), emptyAccount);
 });
 
 test("LSWorld.new with defined chainId", () => {
@@ -135,41 +126,41 @@ test("LSWorld.createWallet - empty wallet", async () => {
   const wallet = await world.createWallet();
   expect(wallet.explorerUrl).toEqual(`${explorerUrl}/accounts/${wallet}`);
   expect(isContractAddress(wallet)).toEqual(false);
-  assertAccount(await wallet.getAccountWithKvs(), {});
+  assertAccount(await wallet.getAccount(), {});
 });
 
 test("LSWorld.createWallet - with balance", async () => {
   const wallet = await world.createWallet({ balance: 10n });
-  assertAccount(await wallet.getAccountWithKvs(), { balance: 10n });
+  assertAccount(await wallet.getAccount(), { balance: 10n });
 });
 
 test("LSWorld.createWallet - with address & balance", async () => {
   const address = generateWalletU8AAddress();
   const wallet = await world.createWallet({ address, balance: 10n });
-  assertAccount(await wallet.getAccountWithKvs(), { address, balance: 10n });
+  assertAccount(await wallet.getAccount(), { address, balance: 10n });
 });
 
 test("LSWorld.createContract - empty contract", async () => {
   const contract = await world.createContract();
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
   expect(isContractAddress(contract)).toEqual(true);
-  assertAccount(await contract.getAccountWithKvs(), { code: "00" });
+  assertAccount(await contract.getAccount(), { code: "00" });
 });
 
 test("LSWorld.createContract - with balance", async () => {
   const contract = await world.createContract({ balance: 10n });
-  assertAccount(await contract.getAccountWithKvs(), { balance: 10n });
+  assertAccount(await contract.getAccount(), { balance: 10n });
 });
 
 test("LSWorld.createContract - with file:", async () => {
   const contract = await world.createContract({ code: worldCode });
-  assertAccount(await contract.getAccountWithKvs(), { code: worldCode });
+  assertAccount(await contract.getAccount(), { code: worldCode });
 });
 
 test("LSWorld.createContract - with address & file:", async () => {
   const address = generateContractU8AAddress();
   const contract = await world.createContract({ address, code: worldCode });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     address,
     code: worldCode,
   });
@@ -185,11 +176,6 @@ test("LSWorld.getAccountBalance", async () => {
   expect(await world.getAccountBalance(wallet)).toEqual(1234n);
 });
 
-test("LSWorld.getAccount", async () => {
-  await wallet.setAccount({ nonce: 10, balance: 1234 });
-  assertAccount(await world.getAccount(wallet), { nonce: 10, balance: 1234 });
-});
-
 test("LSWorld.getAccountKvs", async () => {
   await wallet.setAccount({ kvs: [[e.Str("n"), e.U(12)]] });
   expect(await world.getAccountKvs(wallet)).toEqual(
@@ -197,21 +183,29 @@ test("LSWorld.getAccountKvs", async () => {
   );
 });
 
-test("LSWorld.getAccountWithKvs", async () => {
+test("LSWorld.getAccountWithoutKvs", async () => {
+  await wallet.setAccount({ nonce: 10, balance: 1234 });
+  assertAccount(await world.getAccountWithoutKvs(wallet), {
+    nonce: 10,
+    balance: 1234,
+  });
+});
+
+test("LSWorld.getAccount", async () => {
   await wallet.setAccount({
     nonce: 10,
     balance: 1234,
     kvs: [[e.Str("n"), e.U(12)]],
   });
-  assertAccount(await world.getAccountWithKvs(wallet), {
+  assertAccount(await world.getAccount(wallet), {
     nonce: 10,
     balance: 1234,
     kvs: [[e.Str("n"), e.U(12)]],
   });
 });
 
-test("LSWorld.getAllSerializableAccountsWithKvs", async () => {
-  expect(await world.getAllSerializableAccountsWithKvs()).toEqual([
+test("LSWorld.getAllSerializableAccounts", async () => {
+  expect(await world.getAllSerializableAccounts()).toEqual([
     e.account({
       address: contract,
       balance: 10n ** 18n,
@@ -269,14 +263,14 @@ test("LSWorld.setAccounts", async () => {
       owner: wallet,
     },
   ]);
-  assertAccount(await wallet.getAccountWithKvs(), {
+  assertAccount(await wallet.getAccount(), {
     address: wallet,
     balance: 10n ** 19n,
     kvs: {
       esdts: [{ id: fftId, amount: 10n ** 19n }],
     },
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     address: contract,
     balance: 1234,
     code: worldCode,
@@ -295,7 +289,7 @@ test("LSWorld.setAccount", async () => {
     kvs: [[e.Str("n"), e.U64(10)]],
     owner: wallet,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: 1234,
     code: worldCode,
     codeHash:
@@ -380,10 +374,10 @@ test("LSWorld.executeTx", async () => {
   });
   expect(tx.hash).toBeTruthy();
   expect(tx.explorerUrl).toEqual(`${explorerUrl}/transactions/${tx.hash}`);
-  assertAccount(await wallet.getAccountWithKvs(), {
+  assertAccount(await wallet.getAccount(), {
     balance: 9n * 10n ** 17n,
   });
-  assertAccount(await otherWallet.getAccountWithKvs(), {
+  assertAccount(await otherWallet.getAccount(), {
     balance: 10n ** 17n,
   });
 });
@@ -401,11 +395,11 @@ test("LSWorld.transfer", async () => {
     esdts: [{ id: fftId, amount: 10n ** 17n }],
     gasLimit: 10_000_000,
   });
-  assertAccount(await wallet.getAccountWithKvs(), {
+  assertAccount(await wallet.getAccount(), {
     balance: 9n * 10n ** 17n,
     hasKvs: { esdts: [{ id: fftId, amount: 9n * 10n ** 17n }] },
   });
-  assertAccount(await otherWallet.getAccountWithKvs(), {
+  assertAccount(await otherWallet.getAccount(), {
     balance: 10n ** 17n,
     hasKvs: { esdts: [{ id: fftId, amount: 10n ** 17n }] },
   });
@@ -421,7 +415,7 @@ test("LSWorld.deployContract", async () => {
   });
   expect(isContractAddress(contract)).toEqual(true);
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     code: worldCode,
     codeMetadata: ["readable"],
     hasKvs: [[e.Str("n"), e.U64(1)]],
@@ -442,7 +436,7 @@ test("LSWorld.upgradeContract", async () => {
     codeArgs: [e.U64(2)],
     gasLimit: 10_000_000,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     code: worldCode,
     codeMetadata: ["readable"],
     hasKvs: [[e.Str("n"), e.U64(2)]],
@@ -457,10 +451,10 @@ test("LSWorld.callContract", async () => {
     value: 10n ** 17n,
     gasLimit: 10_000_000,
   });
-  assertAccount(await wallet.getAccountWithKvs(), {
+  assertAccount(await wallet.getAccount(), {
     balance: 9n * 10n ** 17n,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: 10n ** 18n + 10n ** 17n,
   });
 });
@@ -482,10 +476,10 @@ test("LSWallet.query", async () => {
 });
 
 test("LSWallet.query - try to change the state", async () => {
-  assertAccount(await wallet.getAccountWithKvs(), {
+  assertAccount(await wallet.getAccount(), {
     balance: 10n ** 18n,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: 10n ** 18n,
     hasKvs: [[e.Str("n"), e.U64(2)]],
   });
@@ -499,10 +493,10 @@ test("LSWallet.query - try to change the state", async () => {
     funcName: "set_n",
     funcArgs: [e.U64(100)],
   });
-  assertAccount(await wallet.getAccountWithKvs(), {
+  assertAccount(await wallet.getAccount(), {
     balance: 10n ** 18n,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: 10n ** 18n,
     hasKvs: [[e.Str("n"), e.U64(2)]],
   });
@@ -551,8 +545,8 @@ test("LSWallet.getAccountKvs", async () => {
   );
 });
 
-test("LSWallet.getAccount", async () => {
-  assertAccount(await wallet.getAccount(), {
+test("LSWallet.getAccountWithoutKvs", async () => {
+  assertAccount(await wallet.getAccountWithoutKvs(), {
     nonce: 0,
     balance: 10n ** 18n,
     code: "",
@@ -562,8 +556,8 @@ test("LSWallet.getAccount", async () => {
   });
 });
 
-test("LSWallet.getAccountWithKvs", async () => {
-  assertAccount(await wallet.getAccountWithKvs(), {
+test("LSWallet.getAccount", async () => {
+  assertAccount(await wallet.getAccount(), {
     nonce: 0,
     balance: 10n ** 18n,
     code: "",
@@ -574,10 +568,10 @@ test("LSWallet.getAccountWithKvs", async () => {
   });
 });
 
-test("LSWallet.setAccount - LSWallet.getAccountWithKvs", async () => {
-  const before = await wallet.getAccountWithKvs();
+test("LSWallet.setAccount - LSWallet.getAccount", async () => {
+  const before = await wallet.getAccount();
   await wallet.setAccount(before);
-  const after = await wallet.getAccountWithKvs();
+  const after = await wallet.getAccount();
   expect(after).toEqual(before);
 });
 
@@ -589,10 +583,10 @@ test("LSWallet.executeTx", async () => {
   });
   expect(tx.hash).toBeTruthy();
   expect(tx.explorerUrl).toEqual(`${explorerUrl}/transactions/${tx.hash}`);
-  assertAccount(await wallet.getAccountWithKvs(), {
+  assertAccount(await wallet.getAccount(), {
     balance: 9n * 10n ** 17n,
   });
-  assertAccount(await otherWallet.getAccountWithKvs(), {
+  assertAccount(await otherWallet.getAccount(), {
     balance: 10n ** 17n,
   });
 });
@@ -608,11 +602,11 @@ test("LSWallet.transfer", async () => {
     esdts: [{ id: fftId, amount: 10n ** 17n }],
     gasLimit: 10_000_000,
   });
-  assertAccount(await wallet.getAccountWithKvs(), {
+  assertAccount(await wallet.getAccount(), {
     balance: 9n * 10n ** 17n,
     hasKvs: { esdts: [{ id: fftId, amount: 9n * 10n ** 17n }] },
   });
-  assertAccount(await otherWallet.getAccountWithKvs(), {
+  assertAccount(await otherWallet.getAccount(), {
     balance: 10n ** 17n,
     hasKvs: { esdts: [{ id: fftId, amount: 10n ** 17n }] },
   });
@@ -627,7 +621,7 @@ test("LSWallet.deployContract", async () => {
   });
   expect(isContractAddress(contract)).toEqual(true);
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     code: worldCode,
     codeMetadata: ["readable"],
     hasKvs: [[e.Str("n"), e.U64(1)]],
@@ -647,7 +641,7 @@ test("LSWallet.upgradeContract", async () => {
     codeArgs: [e.U64(2)],
     gasLimit: 10_000_000,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     code: worldCode,
     codeMetadata: ["readable"],
     hasKvs: [[e.Str("n"), e.U64(2)]],
@@ -661,10 +655,10 @@ test("LSWallet.callContract with EGLD", async () => {
     value: 10n ** 17n,
     gasLimit: 10_000_000,
   });
-  assertAccount(await wallet.getAccountWithKvs(), {
+  assertAccount(await wallet.getAccount(), {
     balance: 9n * 10n ** 17n,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     balance: 10n ** 18n + 10n ** 17n,
   });
 });
@@ -676,10 +670,10 @@ test("LSWallet.callContract with ESDT", async () => {
     esdts: [{ id: fftId, amount: 10n ** 17n }],
     gasLimit: 10_000_000,
   });
-  assertAccount(await wallet.getAccountWithKvs(), {
+  assertAccount(await wallet.getAccount(), {
     hasKvs: { esdts: [{ id: fftId, amount: 9n * 10n ** 17n }] },
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     hasKvs: { esdts: [{ id: fftId, amount: 10n ** 18n + 10n ** 17n }] },
   });
 });
@@ -701,7 +695,7 @@ test("LSWallet.callContract - change the state", async () => {
     funcArgs: [e.U64(100)],
     gasLimit: 10_000_000,
   });
-  assertAccount(await contract.getAccountWithKvs(), {
+  assertAccount(await contract.getAccount(), {
     kvs: {
       esdts: [{ id: fftId, amount: 10n ** 18n }],
       extraKvs: [[e.Str("n"), e.U64(100)]],
@@ -795,15 +789,15 @@ test("LSContract.getAccountKvs", async () => {
   );
 });
 
-test("LSContract.getAccount", async () => {
+test("LSContract.getAccountWithoutKvs", async () => {
   assertAccount(await contract.getAccount(), {
     nonce: 0,
     balance: 10n ** 18n,
   });
 });
 
-test("LSContract.getAccountWithKvs", async () => {
-  assertAccount(await contract.getAccountWithKvs(), {
+test("LSContract.getAccount", async () => {
+  assertAccount(await contract.getAccount(), {
     nonce: 0,
     balance: 10n ** 18n,
     code: worldCode,
@@ -815,9 +809,9 @@ test("LSContract.getAccountWithKvs", async () => {
   });
 });
 
-test("LSContract.setAccount - LSContract.getAccountWithKvs", async () => {
-  const before = await contract.getAccountWithKvs();
+test("LSContract.setAccount - LSContract.getAccount", async () => {
+  const before = await contract.getAccount();
   await contract.setAccount(before);
-  const after = await contract.getAccountWithKvs();
+  const after = await contract.getAccount();
   expect(after).toEqual(before);
 });

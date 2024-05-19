@@ -45,13 +45,21 @@ export class Proxy {
     return res.txHash as string;
   }
 
-  getTxRaw(txHash: string, options: GetTxOptions = {}) {
+  getTxRaw(txHash: string, { withResults }: TxRequestOptions = {}) {
     let path = `/transaction/${txHash}`;
-    if (options.withResults) path += "?withResults=true";
+    if (withResults) path += "?withResults=true";
     return this.fetchRaw(path);
   }
 
-  async getTx(txHash: string, options?: GetTxOptions) {
+  getTx(txHash: string) {
+    return this._getTx(txHash, { withResults: true });
+  }
+
+  getTxWithoutResults(txHash: string) {
+    return this._getTx(txHash, { withResults: false });
+  }
+
+  private async _getTx(txHash: string, options?: TxRequestOptions) {
     return unrawTxRes(await this.getTxRaw(txHash, options));
   }
 
@@ -110,61 +118,107 @@ export class Proxy {
     } as Record<string, any> & { returnData: string[] };
   }
 
-  getAccountRaw(address: AddressLike) {
-    return this.fetchRaw(`/address/${addressLikeToBechAddress(address)}`);
+  getAccountNonceRaw(
+    address: AddressLike,
+    { shardId }: AccountRequestOptions = {},
+  ) {
+    let path = `/address/${addressLikeToBechAddress(address)}/nonce`;
+    if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
+    return this.fetchRaw(path);
   }
 
-  async getSerializableAccount(address: AddressLike) {
-    const res = unrawRes(await this.getAccountRaw(address));
-    return getSerializableAccount(res.account);
-  }
-
-  async getAccount(address: AddressLike) {
-    const { balance, ...account } = await this.getSerializableAccount(address);
-    return { balance: BigInt(balance), ...account };
-  }
-
-  getAccountNonceRaw(address: AddressLike) {
-    return this.fetchRaw(`/address/${addressLikeToBechAddress(address)}/nonce`);
-  }
-
-  async getAccountNonce(address: AddressLike) {
-    const res = unrawRes(await this.getAccountNonceRaw(address));
+  async getAccountNonce(address: AddressLike, options?: AccountRequestOptions) {
+    const res = unrawRes(await this.getAccountNonceRaw(address, options));
     return res.nonce as number;
   }
 
-  getAccountBalanceRaw(address: AddressLike) {
-    return this.fetchRaw(
-      `/address/${addressLikeToBechAddress(address)}/balance`,
-    );
+  getAccountBalanceRaw(
+    address: AddressLike,
+    { shardId }: AccountRequestOptions = {},
+  ) {
+    let path = `/address/${addressLikeToBechAddress(address)}/balance`;
+    if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
+    return this.fetchRaw(path);
   }
 
-  async getAccountBalance(address: AddressLike) {
-    const res = unrawRes(await this.getAccountBalanceRaw(address));
+  async getAccountBalance(
+    address: AddressLike,
+    options?: AccountRequestOptions,
+  ) {
+    const res = unrawRes(await this.getAccountBalanceRaw(address, options));
     return BigInt(res.balance);
   }
 
-  getAccountKvsRaw(address: AddressLike) {
-    return this.fetchRaw(`/address/${addressLikeToBechAddress(address)}/keys`);
+  getAccountKvsRaw(
+    address: AddressLike,
+    { shardId }: AccountRequestOptions = {},
+  ) {
+    let path = `/address/${addressLikeToBechAddress(address)}/keys`;
+    if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
+    return this.fetchRaw(path);
   }
 
-  async getAccountKvs(address: AddressLike) {
-    const res = unrawRes(await this.getAccountKvsRaw(address));
+  async getAccountKvs(address: AddressLike, options?: AccountRequestOptions) {
+    const res = unrawRes(await this.getAccountKvsRaw(address, options));
     return res.pairs as Kvs;
   }
 
-  getSerializableAccountWithKvs(address: AddressLike) {
+  getAccountRaw(address: AddressLike, { shardId }: AccountRequestOptions = {}) {
+    let path = `/address/${addressLikeToBechAddress(address)}`;
+    if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
+    return this.fetchRaw(path);
+  }
+
+  async getSerializableAccountWithoutKvs(
+    address: AddressLike,
+    options?: AccountRequestOptions,
+  ) {
+    const res = unrawRes(await this.getAccountRaw(address, options));
+    return getSerializableAccount(res.account);
+  }
+
+  getSerializableAccount(
+    address: AddressLike,
+    options?: AccountRequestOptions,
+  ) {
+    // TODO-MvX: When ?withKeys=true out, rewrite this part
     return Promise.all([
-      this.getSerializableAccount(address),
-      this.getAccountKvs(address),
+      this.getSerializableAccountWithoutKvs(address, options),
+      this.getAccountKvs(address, options),
     ]).then(([account, kvs]) => ({ ...account, kvs }));
   }
 
-  getAccountWithKvs(address: AddressLike) {
+  async getAccountWithoutKvs(
+    address: AddressLike,
+    options?: AccountRequestOptions,
+  ) {
+    const { balance, ...account } = await this.getSerializableAccountWithoutKvs(
+      address,
+      options,
+    );
+    return { balance: BigInt(balance), ...account };
+  }
+
+  getAccount(address: AddressLike, options?: AccountRequestOptions) {
+    // TODO-MvX: When ?withKeys=true out, rewrite this part
     return Promise.all([
-      this.getAccount(address),
-      this.getAccountKvs(address),
+      this.getAccountWithoutKvs(address, options),
+      this.getAccountKvs(address, options),
     ]).then(([account, kvs]) => ({ ...account, kvs }));
+  }
+
+  /**
+   * @deprecated Use `.getSerializableAccount` instead.
+   */
+  getSerializableAccountWithKvs(address: AddressLike) {
+    return this.getSerializableAccount(address);
+  }
+
+  /**
+   * @deprecated Use `.getAccount` instead.
+   */
+  getAccountWithKvs(address: AddressLike) {
+    return this.getAccount(address);
   }
 }
 
@@ -504,4 +558,6 @@ export type CallContractTxParams = {
   version?: number;
 };
 
-type GetTxOptions = { withResults?: boolean };
+type TxRequestOptions = { withResults?: boolean };
+
+type AccountRequestOptions = { shardId?: number };

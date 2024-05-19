@@ -105,8 +105,8 @@ export class LSWorld extends World {
     return createContract(this.proxy, params);
   }
 
-  getAllSerializableAccountsWithKvs() {
-    return this.proxy.getAllSerializableAccountsWithKvs();
+  getAllSerializableAccounts() {
+    return this.proxy.getAllSerializableAccounts();
   }
 
   setAccounts(params: LSWorldSetAccountsParams) {
@@ -128,6 +128,13 @@ export class LSWorld extends World {
   terminate() {
     if (!this.server) throw new Error("No server defined.");
     killChildProcess(this.server);
+  }
+
+  /**
+   * @deprecated Use `.getAllSerializableAccounts` instead.
+   */
+  getAllSerializableAccountsWithKvs() {
+    return this.getAllSerializableAccounts();
   }
 }
 
