@@ -143,7 +143,7 @@ test("Test", async () => {
 
 Here, using `assertAccount`, we will test that the contract we deployed has the correct balance and ESDTs/storage we expect. The ESDTs/storage of an account are stored as a list of key-value in the blockchain. To refer to the list of key-value of an account, we use the abbreviation "kvs".
 
-`contract.getAccount()` will fetch the contract data from the simulnet.
+`contract.getAccount()` will fetch the full contract data from the simulnet.
 
 Using `hasKvs` we can test that the contract contains the kvs provided (use `kvs` if you want to test that the contract contains exactly all the kvs provided).
 

@@ -35,8 +35,8 @@
     "@multiversx/sdk-core": "12.12.0",
     "@multiversx/sdk-native-auth-client": "1.0.5",
     "@multiversx/sdk-wallet": "4.2.0",
-    "@xsuite/light-simulnet": "workspace:*",
     "@xsuite/chainsimulator": "workspace:*",
+    "@xsuite/light-simulnet": "workspace:*",
     "bech32": "2.0.0",
     "chalk": "4.1.2",
     "commander": "12.0.0",
@@ -51,7 +51,7 @@
     "msw": "2.1.5",
     "rimraf": "5.0.5",
     "tsx": "4.7.0",
-    "typescript": "5.4.0-beta",
+    "typescript": "5.4.5",
     "vitest": "^1.2.2"
   },
   "engines": {
