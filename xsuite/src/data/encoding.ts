@@ -180,7 +180,7 @@ export const e = {
   },
   Tuple: (...encodables: Encodable[]) => {
     return newEncodable(() => {
-      return Uint8Array.from(
+      return new Uint8Array(
         encodables.flatMap((e) => Array.from(e.toNestU8A())),
       );
     });
@@ -199,9 +199,7 @@ export const e = {
         () => new Uint8Array([0]),
       );
     }
-    return newEncodable(() =>
-      Uint8Array.from([1, ...optEncodable.toNestU8A()]),
-    );
+    return newEncodable(() => new Uint8Array([1, ...optEncodable.toNestU8A()]));
   },
   vs: (encodableVs: EncodableVs): Vs => {
     return encodableVs.map(bytesLikeToHex);
@@ -610,7 +608,7 @@ const biguintToU8A = (uint: bigint) => {
     res.unshift(Number(uint % 256n));
     uint = uint / 256n;
   }
-  return Uint8Array.from(res);
+  return new Uint8Array(res);
 };
 
 const bigintToU8A = (int: bigint) => {
@@ -642,7 +640,7 @@ const getUnambiguousNumBytes = (n: bigint): number => {
 
 const prependLength = (u8a: Uint8Array, length?: number) => {
   length = length ?? u8a.byteLength;
-  return Uint8Array.from([...e.U32(length).toNestU8A(), ...u8a]);
+  return new Uint8Array([...e.U32(length).toNestU8A(), ...u8a]);
 };
 
 export const ESDTRolesMessage = new Type("ESDTRoles").add(

@@ -23,7 +23,7 @@ export const addressLikeToU8AAddress = (
       addressLike = hexToU8A(addressLike);
     } else if (bech32.decodeUnsafe(addressLike)?.prefix === HRP) {
       const { words } = bech32.decode(addressLike);
-      addressLike = Uint8Array.from(bech32.fromWords(words));
+      addressLike = new Uint8Array(bech32.fromWords(words));
     } else {
       throw new Error("Invalid address format.");
     }
