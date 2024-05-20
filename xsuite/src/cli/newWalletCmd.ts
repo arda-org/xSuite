@@ -4,7 +4,7 @@ import { UserSecretKey, UserWallet, Mnemonic } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
 import { Command } from "commander";
 import { input, log } from "../_stdio";
-import { getShardOfU8AAddress, numShards } from "../data/utils";
+import { getAddressShard, numShards } from "../data/utils";
 import { Keystore } from "../world/signer";
 import { logError, logSuccess } from "./helpers";
 
@@ -93,7 +93,7 @@ const action = async ({
       const _mnemonic = Mnemonic.generate();
       const pubKey = _mnemonic.deriveKey().generatePublicKey().valueOf();
       mnemonic = _mnemonic.toString();
-      shardOfMnemonic = getShardOfU8AAddress(pubKey);
+      shardOfMnemonic = getAddressShard(pubKey);
     } while (shardOfMnemonic !== shard);
     data = UserWallet.fromMnemonic({ mnemonic, password }).toJSON();
   }
@@ -109,9 +109,7 @@ const action = async ({
   log();
   log(chalk.bold.blue("Address:") + ` ${keystore.newSigner()}`);
   log();
-  log(
-    chalk.bold.blue("Shard:") + ` ${getShardOfU8AAddress(signer.toTopU8A())}`,
-  );
+  log(chalk.bold.blue("Shard:") + ` ${getAddressShard(signer)}`);
   if (keystore.kind === "mnemonic") {
     log();
     log(chalk.bold.blue("Mnemonic phrase:"));

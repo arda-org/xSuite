@@ -38,7 +38,7 @@ export class Proxy {
     return unrawRes(await this.fetchRaw(path, data));
   }
 
-  getTxRaw(txHash: string, { withResults }: GetTxRequestOptions = {}) {
+  getTxRaw(txHash: string, { withResults }: TxRequestOptions = {}) {
     let path = `/transaction/${txHash}`;
     if (withResults) path += "?withResults=true";
     return this.fetchRaw(path);
@@ -52,7 +52,7 @@ export class Proxy {
     return this._getTx(txHash, { withResults: false });
   }
 
-  private async _getTx(txHash: string, options?: GetTxRequestOptions) {
+  private async _getTx(txHash: string, options?: TxRequestOptions) {
     const { hash, ..._res } = unrawTxRes(await this.getTxRaw(txHash, options));
     const explorerUrl = `${this.explorerUrl}/transactions/${hash}`;
     // Destructuring gives an invalid type: https://github.com/microsoft/TypeScript/issues/56456
@@ -694,7 +694,7 @@ export type CallContractTxParams = {
   version?: number;
 };
 
-type GetTxRequestOptions = { withResults?: boolean };
+type TxRequestOptions = { withResults?: boolean };
 
 type AccountRequestOptions = { shardId?: number };
 

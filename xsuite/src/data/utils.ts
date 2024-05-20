@@ -1,5 +1,5 @@
 import { addressByteLength } from "./address";
-import { AddressLike, addressLikeToHexAddress } from "./addressLike";
+import { AddressLike, addressLikeToU8AAddress } from "./addressLike";
 
 export const u8aToHex = (u8a: Uint8Array) =>
   Array.from(u8a)
@@ -43,46 +43,27 @@ export const safeBigintToNumber = (n: bigint) => {
   return Number(n);
 };
 
+export const getAddressType = (address: AddressLike): AddressType => {
+  const u8aAddress = addressLikeToU8AAddress(address);
+  if (u8aStartsWith(u8aAddress, metaContractPrefix)) {
+    return "metaContract";
+  } else if (u8aStartsWith(u8aAddress, vmContractPrefix)) {
+    return "vmContract";
+  } else {
+    return "wallet";
+  }
+};
+
 export const isContract = (address: AddressLike) => {
-  return addressLikeToHexAddress(address).startsWith("0000000000000000");
+  const type = getAddressType(address);
+  return type === "vmContract" || type === "metaContract";
 };
 
-export const makeU8AAddress = ({
-  counter,
-  type,
-  shard,
-}: {
-  counter: number;
-  type: AddressType;
-  shard?: number;
-}) => {
-  if (counter <= 0) {
-    throw new Error("Number must be positive.");
+export const getAddressShard = (address: AddressLike): number => {
+  const u8aAddress = addressLikeToU8AAddress(address);
+  if (u8aStartsWith(u8aAddress, metaContractPrefix)) {
+    return metaShard;
   }
-  let lastByte: number;
-  if (shard !== undefined) {
-    if (shard >= numShards) {
-      throw new Error(`Shard must be smaller than ${numShards}.`);
-    }
-    lastByte = shard;
-  } else {
-    lastByte = counter % 256;
-  }
-  const buffer = new ArrayBuffer(addressByteLength);
-  const view = new DataView(buffer);
-  if (type === "wallet") {
-    view.setUint8(0, 1);
-  } else if (type === "contract") {
-    view.setUint8(8, 5);
-  } else {
-    throw new Error("Invalid type.");
-  }
-  view.setUint32(10, counter);
-  view.setUint8(addressByteLength - 1, lastByte);
-  return new Uint8Array(buffer);
-};
-
-export const getShardOfU8AAddress = (u8aAddress: Uint8Array): number => {
   const lastByte = u8aAddress[addressByteLength - 1];
   const bites = Math.ceil(Math.log2(numShards));
   const maskHigh = (1 << bites) - 1;
@@ -94,6 +75,77 @@ export const getShardOfU8AAddress = (u8aAddress: Uint8Array): number => {
   return shard;
 };
 
+export const makeU8AAddress = ({
+  counter,
+  type,
+  shard,
+}: {
+  counter: number;
+  type: AddressType;
+  shard?: number;
+}) => {
+  if (counter < 0) {
+    throw new Error("Counter must be non-negative.");
+  }
+  if (type === "metaContract") {
+    if (shard !== undefined && shard !== metaShard) {
+      throw new Error(`Shard must be undefined or equal to ${metaShard}.`);
+    }
+  }
+  if (shard !== undefined) {
+    if (shard < 0) {
+      throw new Error("Shard must be non-negative.");
+    }
+    if (shard >= numShards) {
+      throw new Error(`Shard must be smaller than ${numShards}.`);
+    }
+  }
+  let prefix: number[];
+  if (type === "metaContract") {
+    prefix = metaContractPrefix;
+  } else if (type === "vmContract") {
+    prefix = vmContractPrefix;
+  } else if (type === "wallet") {
+    prefix = walletPrefix;
+  } else {
+    throw new Error("Invalid address type.");
+  }
+  return new Uint8Array([
+    ...prefix,
+    ...numberToByteList(counter, addressByteLength - prefix.length - 1),
+    shard !== undefined ? shard : counter % 256,
+  ]);
+};
+
+const u8aStartsWith = (u8a: Uint8Array, prefix: number[]) => {
+  if (u8a.length < prefix.length) {
+    return false;
+  }
+  for (let i = 0; i < prefix.length; i++) {
+    if (u8a[i] !== prefix[i]) {
+      return false;
+    }
+  }
+  return true;
+};
+
+const numberToByteList = (n: number, length: number) => {
+  const buffer = new ArrayBuffer(length);
+  const view = new DataView(buffer);
+  view.setUint32(0, n);
+  return [...new Uint8Array(buffer)];
+};
+
+const metaContractPrefix = [
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+];
+
+const vmContractPrefix = [0, 0, 0, 0, 0, 0, 0, 0, 5, 0];
+
+const walletPrefix = [1];
+
+export const metaShard = 4294967295;
+
 export const numShards = 3;
 
-export type AddressType = "wallet" | "contract";
+export type AddressType = "metaContract" | "vmContract" | "wallet";

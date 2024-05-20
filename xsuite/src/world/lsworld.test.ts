@@ -6,14 +6,12 @@ import {
   zeroHexAddress,
   zeroU8AAddress,
 } from "../data/address";
-import { isContract } from "../data/utils";
+import { getAddressType } from "../data/utils";
 import { childProcesses } from "./childProcesses";
 import { LSWorld, LSContract, LSWallet } from "./lsworld";
 import { DummySigner } from "./signer";
 import { generateU8AAddress } from "./utils";
 import { expandCode } from "./world";
-
-// TODO: mettre à jour tests WithKvs (ajouter la version WithoutKvs)
 
 let world: LSWorld;
 let wallet: LSWallet;
@@ -124,7 +122,7 @@ test("LSWorld.newContract", async () => {
 test("LSWorld.createWallet - empty wallet", async () => {
   const wallet = await world.createWallet();
   expect(wallet.explorerUrl).toEqual(`${explorerUrl}/accounts/${wallet}`);
-  expect(isContract(wallet)).toEqual(false);
+  expect(getAddressType(wallet)).toEqual("wallet");
   assertAccount(await wallet.getAccount(), {});
 });
 
@@ -142,7 +140,7 @@ test("LSWorld.createWallet - with address & balance", async () => {
 test("LSWorld.createContract - empty contract", async () => {
   const contract = await world.createContract();
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
-  expect(isContract(contract)).toEqual(true);
+  expect(getAddressType(contract)).toEqual("vmContract");
   assertAccount(await contract.getAccount(), { code: "00" });
 });
 
@@ -157,7 +155,7 @@ test("LSWorld.createContract - with file:", async () => {
 });
 
 test("LSWorld.createContract - with address & file:", async () => {
-  const address = generateU8AAddress({ type: "contract" });
+  const address = generateU8AAddress({ type: "vmContract" });
   const contract = await world.createContract({ address, code: worldCode });
   assertAccount(await contract.getAccount(), {
     address,
@@ -220,6 +218,16 @@ test("LSWorld.getAllSerializableAccounts", async () => {
       owner: wallet,
     }),
     e.account({
+      address: otherWallet,
+      balance: "0",
+      code: "",
+      codeHash: "",
+      codeMetadata: ["readable"],
+      kvs: {},
+      nonce: 0,
+      owner: "",
+    }),
+    e.account({
       address: wallet,
       balance: 10n ** 18n,
       code: "",
@@ -228,16 +236,6 @@ test("LSWorld.getAllSerializableAccounts", async () => {
       kvs: {
         esdts: [{ id: fftId, amount: 10n ** 18n }],
       },
-      nonce: 0,
-      owner: "",
-    }),
-    e.account({
-      address: "erd1qyqqqqpmqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqc3scyn",
-      balance: "0",
-      code: "",
-      codeHash: "",
-      codeMetadata: ["readable"],
-      kvs: {},
       nonce: 0,
       owner: "",
     }),
@@ -412,7 +410,7 @@ test("LSWorld.deployContract", async () => {
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
-  expect(isContract(contract)).toEqual(true);
+  expect(getAddressType(contract)).toEqual("vmContract");
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
   assertAccount(await contract.getAccount(), {
     code: worldCode,
@@ -618,7 +616,7 @@ test("LSWallet.deployContract", async () => {
     codeArgs: [e.U64(1)],
     gasLimit: 10_000_000,
   });
-  expect(isContract(contract)).toEqual(true);
+  expect(getAddressType(contract)).toEqual("vmContract");
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
   assertAccount(await contract.getAccount(), {
     code: worldCode,

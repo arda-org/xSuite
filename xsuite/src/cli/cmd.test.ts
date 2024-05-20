@@ -6,7 +6,7 @@ import { http } from "msw";
 import { setupServer } from "msw/node";
 import { test, beforeEach, afterEach, expect } from "vitest";
 import { stdoutInt, input } from "../_stdio";
-import { getShardOfU8AAddress } from "../data/utils";
+import { getAddressShard } from "../data/utils";
 import { Keystore } from "../world/signer";
 import { getCommand } from "./cmd";
 import { rustToolchain, rustTarget, rustKey } from "./helpers";
@@ -45,8 +45,7 @@ test("new-wallet --wallet wallet.json", async () => {
     "",
     chalk.bold.blue("Address:") + ` ${keystoreSigner}`,
     "",
-    chalk.bold.blue("Shard:") +
-      ` ${getShardOfU8AAddress(keystoreSigner.toTopU8A())}`,
+    chalk.bold.blue("Shard:") + ` ${getAddressShard(keystoreSigner)}`,
     "",
     chalk.bold.blue("Mnemonic phrase:"),
     ...keystore.getMnemonicWords().map((w, i) => `  ${i + 1}. ${w}`),
@@ -144,8 +143,7 @@ test("new-wallet --wallet wallet.json --password 1234", async () => {
     "",
     chalk.bold.blue("Address:") + ` ${keystoreSigner}`,
     "",
-    chalk.bold.blue("Shard:") +
-      ` ${getShardOfU8AAddress(keystoreSigner.toTopU8A())}`,
+    chalk.bold.blue("Shard:") + ` ${getAddressShard(keystoreSigner)}`,
     "",
     chalk.bold.blue("Mnemonic phrase:"),
     ...keystore.getMnemonicWords().map((w, i) => `  ${i + 1}. ${w}`),
@@ -176,8 +174,7 @@ test("new-wallet --wallet wallet.json --from-pem wallet.pem", async () => {
     "",
     chalk.bold.blue("Address:") + ` ${keystoreSigner}`,
     "",
-    chalk.bold.blue("Shard:") +
-      ` ${getShardOfU8AAddress(keystoreSigner.toTopU8A())}`,
+    chalk.bold.blue("Shard:") + ` ${getAddressShard(keystoreSigner)}`,
     "",
   ]);
 });
@@ -200,8 +197,7 @@ test("new-wallet --wallet wallet.json --password 1234 --from-pem wallet.pem", as
     "",
     chalk.bold.blue("Address:") + ` ${keystoreSigner}`,
     "",
-    chalk.bold.blue("Shard:") +
-      ` ${getShardOfU8AAddress(keystoreSigner.toTopU8A())}`,
+    chalk.bold.blue("Shard:") + ` ${getAddressShard(keystoreSigner)}`,
     "",
   ]);
 });
@@ -232,8 +228,7 @@ test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_key
     "",
     chalk.bold.blue("Address:") + ` ${newKeystoreSigner}`,
     "",
-    chalk.bold.blue("Shard:") +
-      ` ${getShardOfU8AAddress(newKeystoreSigner.toTopU8A())}`,
+    chalk.bold.blue("Shard:") + ` ${getAddressShard(newKeystoreSigner)}`,
     "",
   ]);
 });
@@ -261,8 +256,7 @@ test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_mne
     "",
     chalk.bold.blue("Address:") + ` ${newKeystoreSigner}`,
     "",
-    chalk.bold.blue("Shard:") +
-      ` ${getShardOfU8AAddress(newKeystoreSigner.toTopU8A())}`,
+    chalk.bold.blue("Shard:") + ` ${getAddressShard(newKeystoreSigner)}`,
     "",
     chalk.bold.blue("Mnemonic phrase:"),
     ...newKeystore.getMnemonicWords().map((w, i) => `  ${i + 1}. ${w}`),

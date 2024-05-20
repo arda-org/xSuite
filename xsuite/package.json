@@ -48,7 +48,7 @@
     "@types/node": "20.11.16",
     "@types/tar": "6.1.7",
     "@vitest/coverage-istanbul": "^1.2.2",
-    "msw": "2.1.5",
+    "msw": "2.3.0",
     "rimraf": "5.0.5",
     "tsx": "4.7.0",
     "typescript": "5.4.5",

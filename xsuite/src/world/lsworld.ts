@@ -106,7 +106,10 @@ export class LSWorld extends World {
       address === undefined ||
       (typeof address === "object" && "shard" in address)
     ) {
-      address = generateU8AAddress({ type: "contract", shard: address?.shard });
+      address = generateU8AAddress({
+        type: "vmContract",
+        shard: address?.shard,
+      });
     }
     await this.setAccount({ address, ...params });
     return new LSContract({ address, world: this });
