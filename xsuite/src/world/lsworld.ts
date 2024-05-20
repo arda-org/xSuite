@@ -2,17 +2,14 @@ import { ChildProcess } from "node:child_process";
 import { fullU8AAddress } from "../data/address";
 import { AddressLike, isAddressLike } from "../data/addressLike";
 import { EncodableAccount } from "../data/encoding";
+import { isContract } from "../data/utils";
 import { Prettify } from "../helpers";
 import { LSProxy } from "../proxy";
 import { Block } from "../proxy/lsproxy";
 import { killChildProcess } from "./childProcesses";
 import { startLsproxyBin } from "./lsproxyBin";
 import { DummySigner, Signer } from "./signer";
-import {
-  generateContractU8AAddress,
-  generateWalletU8AAddress,
-  isContractAddress,
-} from "./utils";
+import { generateU8AAddress } from "./utils";
 import {
   World,
   Contract,
@@ -96,7 +93,7 @@ export class LSWorld extends World {
   }
 
   async createWallet({ address, ...params }: LSWorldCreateAccountParams = {}) {
-    address ??= generateWalletU8AAddress();
+    address ??= generateU8AAddress({ type: "wallet" });
     await setAccount(this.proxy, { address, ...params });
     return this.newWallet(new DummySigner(address));
   }
@@ -188,7 +185,7 @@ export class LSContract extends Contract {
 const setAccounts = async (proxy: LSProxy, params: EncodableAccount[]) => {
   for (const _params of params) {
     if (_params.code == null) {
-      if (isContractAddress(_params.address)) {
+      if (isContract(_params.address)) {
         _params.code = "00";
       }
     } else {
@@ -206,7 +203,7 @@ const createContract = async (
   proxy: LSProxy,
   { address, ...params }: LSWorldCreateAccountParams = {},
 ) => {
-  address ??= generateContractU8AAddress();
+  address ??= generateU8AAddress({ type: "vmContract" });
   await setAccount(proxy, { address, ...params });
   return new LSContract({ address, proxy });
 };

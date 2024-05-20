@@ -15,7 +15,7 @@ export class LSProxy extends Proxy {
     return this.fetch(
       "/admin/set-accounts",
       accounts.map((a) => e.account(a)),
-    );
+    ).then(() => {});
   }
 
   setAccount(account: EncodableAccount) {
@@ -23,11 +23,11 @@ export class LSProxy extends Proxy {
   }
 
   setCurrentBlockInfo(block: Block) {
-    return this.fetch("/admin/set-current-block-info", block);
+    return this.fetch("/admin/set-current-block-info", block).then(() => {});
   }
 
   setPreviousBlockInfo(block: Block) {
-    return this.fetch("/admin/set-previous-block-info", block);
+    return this.fetch("/admin/set-previous-block-info", block).then(() => {});
   }
 
   /**
