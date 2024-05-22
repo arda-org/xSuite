@@ -6,6 +6,10 @@ export const u8aToHex = (u8a: Uint8Array) =>
     .map((byte) => byte.toString(16).padStart(2, "0"))
     .join("");
 
+export const u8aToBase64 = (u8a: Uint8Array) => {
+  return btoa(Array.from(u8a, (b) => String.fromCharCode(b)).join(""));
+};
+
 export const hexToU8A = (hex: string) => {
   if (hex.length % 2 !== 0) {
     throw new Error("Odd hex length.");
@@ -15,10 +19,6 @@ export const hexToU8A = (hex: string) => {
   }
   const hs = hex.match(/.{2}/g) ?? [];
   return new Uint8Array(hs.map((h) => parseInt(h, 16)));
-};
-
-export const u8aToBase64 = (u8a: Uint8Array) => {
-  return btoa(Array.from(u8a, (b) => String.fromCharCode(b)).join(""));
 };
 
 export const base64ToU8A = (base64: string) => {

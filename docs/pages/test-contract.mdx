@@ -143,11 +143,11 @@ test("Test", async () => {
 
 Here, using `assertAccount`, we will test that the contract we deployed has the correct balance and ESDTs/storage we expect. The ESDTs/storage of an account are stored as a list of key-value in the blockchain. To refer to the list of key-value of an account, we use the abbreviation "kvs".
 
-`contract.getAccount()` will fetch the account of the contract with all its kvs from the simulnet.
+`contract.getAccount()` will fetch the full contract data from the simulnet.
 
 Using `hasKvs` we can test that the contract contains the kvs provided (use `kvs` if you want to test that the contract contains exactly all the kvs provided).
 
-The `e.p` is a helper that lets you easily encode storage mappers in the format that the MultiversX blockchain understands. Here, `e.kvs.Mapper()` represents a simple `SingleValueMapper` type from a Rust Smart Contract. Using `.Value()` we can assert that it contains the value we expect.
+The `e.kvs` is a helper that lets you easily encode storage mappers in the format that the MultiversX blockchain understands. Here, `e.kvs.Mapper()` represents a simple `SingleValueMapper` type from a Rust Smart Contract. Using `.Value()` we can assert that it contains the value we expect.
 
 More details about storage mappers encoding [here](/data-encoding#storage-mappers).
 
@@ -300,7 +300,7 @@ assertAccount(account, {
 
 ### Checking storage
 
-The helper `e.p` can be used to check storage. More details about storage mappers encoding [here](/data-encoding#storage-mappers).
+The helper `e.kvs` can be used to check storage. More details about storage mappers encoding [here](/data-encoding#storage-mappers).
 
 ```ts
 const account = await contract.getAccount();
