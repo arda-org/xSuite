@@ -17,6 +17,7 @@ import {
   expandCode,
   WalletDeployContractParams,
   WorldNewOptions,
+  WorldDeployContractParams,
 } from "./world";
 
 export class LSWorld extends World {
@@ -79,27 +80,27 @@ export class LSWorld extends World {
       signer: isAddressLike(addressOrSigner)
         ? new DummySigner(addressOrSigner)
         : addressOrSigner,
-      proxy: this.proxy,
-      chainId: this.chainId,
-      gasPrice: this.gasPrice,
+      world: this,
     });
   }
 
   newContract(address: AddressLike): LSContract {
-    return new LSContract({
-      address,
-      proxy: this.proxy,
-    });
+    return new LSContract({ address, world: this });
   }
 
   async createWallet({ address, ...params }: LSWorldCreateAccountParams = {}) {
     address ??= generateU8AAddress({ type: "wallet" });
-    await setAccount(this.proxy, { address, ...params });
+    await this.setAccount({ address, ...params });
     return this.newWallet(new DummySigner(address));
   }
 
-  createContract(params?: LSWorldCreateAccountParams) {
-    return createContract(this.proxy, params);
+  async createContract({
+    address,
+    ...params
+  }: LSWorldCreateAccountParams = {}) {
+    address ??= generateU8AAddress({ type: "vmContract" });
+    await this.setAccount({ address, ...params });
+    return this.newContract(address);
   }
 
   getAllSerializableAccounts() {
@@ -107,11 +108,20 @@ export class LSWorld extends World {
   }
 
   setAccounts(params: LSWorldSetAccountsParams) {
-    return setAccounts(this.proxy, params);
+    for (const _params of params) {
+      if (_params.code == null) {
+        if (isContract(_params.address)) {
+          _params.code = "00";
+        }
+      } else {
+        _params.code = expandCode(_params.code);
+      }
+    }
+    return this.proxy.setAccounts(params);
   }
 
   setAccount(params: LSWorldSetAccountParams) {
-    return setAccount(this.proxy, params);
+    return this.setAccounts([params]);
   }
 
   setCurrentBlockInfo(block: Block) {
@@ -120,6 +130,13 @@ export class LSWorld extends World {
 
   setPreviousBlockInfo(block: Block) {
     return this.proxy.setPreviousBlockInfo(block);
+  }
+
+  deployContract(params: WorldDeployContractParams) {
+    return super.deployContract(params).then((data) => ({
+      ...data,
+      contract: this.newContract(data.address),
+    }));
   }
 
   terminate() {
@@ -136,77 +153,38 @@ export class LSWorld extends World {
 }
 
 export class LSWallet extends Wallet {
-  proxy: LSProxy;
+  world: LSWorld;
 
-  constructor({
-    signer,
-    proxy,
-    chainId,
-    gasPrice,
-  }: {
-    signer: Signer;
-    proxy: LSProxy;
-    chainId: string;
-    gasPrice: number;
-  }) {
-    super({ signer, proxy, chainId, gasPrice });
-    this.proxy = proxy;
+  constructor({ signer, world }: { signer: Signer; world: LSWorld }) {
+    super({ signer, world });
+    this.world = world;
   }
 
   setAccount(params: LSAccountSetAccountParams) {
-    return setAccount(this.proxy, { ...params, address: this });
+    return this.world.setAccount({ ...params, address: this });
   }
 
   createContract(params?: LSWalletCreateContractParams) {
-    return createContract(this.proxy, { ...params, owner: this });
+    return this.world.createContract({ ...params, owner: this });
   }
 
   deployContract(params: WalletDeployContractParams) {
-    return super.deployContract(params).then((data) => ({
-      ...data,
-      contract: new LSContract({ address: data.address, proxy: this.proxy }),
-    }));
+    return this.world.deployContract({ ...params, sender: this });
   }
 }
 
 export class LSContract extends Contract {
-  proxy: LSProxy;
+  world: LSWorld;
 
-  constructor({ address, proxy }: { address: AddressLike; proxy: LSProxy }) {
-    super({ address, proxy });
-    this.proxy = proxy;
+  constructor({ address, world }: { address: AddressLike; world: LSWorld }) {
+    super({ address, world });
+    this.world = world;
   }
 
   setAccount(params: LSAccountSetAccountParams) {
-    return setAccount(this.proxy, { ...params, address: this });
+    return this.world.setAccount({ ...params, address: this });
   }
 }
-
-const setAccounts = async (proxy: LSProxy, params: EncodableAccount[]) => {
-  for (const _params of params) {
-    if (_params.code == null) {
-      if (isContract(_params.address)) {
-        _params.code = "00";
-      }
-    } else {
-      _params.code = expandCode(_params.code);
-    }
-  }
-  await proxy.setAccounts(params);
-};
-
-const setAccount = async (proxy: LSProxy, params: EncodableAccount) => {
-  return setAccounts(proxy, [params]);
-};
-
-const createContract = async (
-  proxy: LSProxy,
-  { address, ...params }: LSWorldCreateAccountParams = {},
-) => {
-  address ??= generateU8AAddress({ type: "vmContract" });
-  await setAccount(proxy, { address, ...params });
-  return new LSContract({ address, proxy });
-};
 
 type LSWorldNewOptions =
   | {
