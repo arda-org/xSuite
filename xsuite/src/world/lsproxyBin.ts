@@ -16,13 +16,11 @@ export const startLsproxyBin = async (): Promise<{
     throw error;
   });
 
-  const proxyUrl = await new Promise<string>((resolve, reject) => {
+  const proxyUrl = await new Promise<string>((resolve) => {
     server.stdout.on("data", (data: Buffer) => {
       const addressRegex = /Server running on (http:\/\/[\w\d.:]+)/;
       const match = data.toString().match(addressRegex);
-      if (match === null) {
-        reject(new Error("Simulnet failed starting."));
-      } else {
+      if (match) {
         resolve(match[1]);
       }
     });
