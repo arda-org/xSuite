@@ -141,7 +141,7 @@ test("LSWorld.createContract - empty contract", async () => {
   const contract = await world.createContract();
   expect(contract.explorerUrl).toEqual(`${explorerUrl}/accounts/${contract}`);
   expect(getAddressType(contract)).toEqual("vmContract");
-  assertAccount(await contract.getAccount(), { code: "00" });
+  assertAccount(await contract.getAccount(), { code: "" });
 });
 
 test("LSWorld.createContract - with balance", async () => {

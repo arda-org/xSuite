@@ -2,7 +2,6 @@ import { ChildProcess } from "node:child_process";
 import { fullU8AAddress } from "../data/address";
 import { AddressLike, isAddressLike } from "../data/addressLike";
 import { EncodableAccount } from "../data/encoding";
-import { isContract } from "../data/utils";
 import { Prettify } from "../helpers";
 import { LSProxy } from "../proxy";
 import { Block } from "../proxy/lsproxy";
@@ -109,11 +108,7 @@ export class LSWorld extends World {
 
   setAccounts(params: LSWorldSetAccountsParams) {
     for (const _params of params) {
-      if (_params.code == null) {
-        if (isContract(_params.address)) {
-          _params.code = "00";
-        }
-      } else {
+      if (_params.code !== undefined) {
         _params.code = expandCode(_params.code);
       }
     }
