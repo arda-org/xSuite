@@ -50,11 +50,6 @@ export const getAddressType = (address: AddressLike): AddressType => {
   }
 };
 
-export const isContract = (address: AddressLike) => {
-  const type = getAddressType(address);
-  return type === "vmContract" || type === "metaContract";
-};
-
 export const getAddressShard = (address: AddressLike): number => {
   const u8aAddress = addressLikeToU8AAddress(address);
   if (u8aStartsWith(u8aAddress, metaContractPrefix)) {
