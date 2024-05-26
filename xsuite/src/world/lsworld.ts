@@ -128,10 +128,9 @@ export class LSWorld extends World {
   }
 
   deployContract(tx: WorldDeployContractTx) {
-    return super.deployContract(tx).then((res) => ({
-      ...res,
-      contract: this.newContract(res.address),
-    }));
+    return super
+      .deployContract(tx)
+      .then((res) => ({ ...res, contract: this.newContract(res.address) }));
   }
 
   terminate() {

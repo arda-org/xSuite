@@ -143,10 +143,10 @@ export class Proxy {
   }
 
   async awaitTx(txHash: string) {
-    let res = await this.getTxProcessStatusRaw(txHash);
-    while (res.code !== "successful" || res.data.status === "pending") {
+    let res = await this.getTxProcessStatus(txHash);
+    while (res === "pending") {
       await new Promise((r) => setTimeout(r, 1000));
-      res = await this.getTxProcessStatusRaw(txHash);
+      res = await this.getTxProcessStatus(txHash);
     }
   }
 

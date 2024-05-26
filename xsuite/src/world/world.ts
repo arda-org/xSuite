@@ -140,6 +140,7 @@ export class World {
   }
 
   async sendDeployContract(tx: WorldDeployContractTx) {
+    tx.code = expandCode(tx.code);
     return this.proxy.sendDeployContract(await this.getProxyTx(tx));
   }
 
@@ -148,6 +149,7 @@ export class World {
   }
 
   async sendUpgradeContract(tx: WorldUpgradeContractTx) {
+    tx.code = expandCode(tx.code);
     return this.proxy.sendUpgradeContract(await this.getProxyTx(tx));
   }
 
@@ -175,7 +177,11 @@ export class World {
   }
 
   resolveDeployContract(txHash: string) {
-    return InteractionPromise.from(this.proxy.resolveDeployContract(txHash));
+    return InteractionPromise.fromFn(async () => {
+      const res = await this.proxy.resolveDeployContract(txHash);
+      const contract = this.newContract(res.address);
+      return { ...res, contract };
+    });
   }
 
   resolveCallContract(txHash: string) {
@@ -204,12 +210,9 @@ export class World {
 
   deployContract(tx: WorldDeployContractTx) {
     return InteractionPromise.fromFn(async () => {
-      tx.code = expandCode(tx.code);
       const txHash = await this.sendDeployContract(tx);
       await this.awaitTx(txHash);
-      const res = await this.resolveDeployContract(txHash);
-      const contract = this.newContract(res.address);
-      return { ...res, contract };
+      return this.resolveDeployContract(txHash);
     });
   }
 
@@ -223,7 +226,6 @@ export class World {
 
   upgradeContract(tx: WorldUpgradeContractTx) {
     return InteractionPromise.fromFn(async () => {
-      tx.code = expandCode(tx.code);
       const txHash = await this.sendUpgradeContract(tx);
       await this.awaitTx(txHash);
       return this.resolveUpgradeContract(txHash);
@@ -292,28 +294,48 @@ export class Wallet extends Signer {
     return this.world.getAccount(this);
   }
 
-  query(params: WalletQueryParams) {
-    return this.world.query({ ...params, sender: this });
+  sendTx(tx: WalletTx) {
+    return this.world.sendTx({ ...tx, sender: this });
+  }
+
+  sendTransfer(tx: WalletTransferTx) {
+    return this.world.sendTransfer({ ...tx, sender: this });
+  }
+
+  sendDeployContract(tx: WalletDeployContractTx) {
+    return this.world.sendDeployContract({ ...tx, sender: this });
+  }
+
+  sendCallContract(tx: WalletCallContractTx) {
+    return this.world.sendCallContract({ ...tx, sender: this });
+  }
+
+  sendUpgradeContract(tx: WalletUpgradeContractTx) {
+    return this.world.sendUpgradeContract({ ...tx, sender: this });
   }
 
   executeTx(tx: WalletTx) {
     return this.world.executeTx({ ...tx, sender: this });
   }
 
+  transfer(tx: WalletTransferTx) {
+    return this.world.transfer({ ...tx, sender: this });
+  }
+
   deployContract(tx: WalletDeployContractTx) {
     return this.world.deployContract({ ...tx, sender: this });
+  }
+
+  callContract(tx: WalletCallContractTx) {
+    return this.world.callContract({ ...tx, sender: this });
   }
 
   upgradeContract(tx: WalletUpgradeContractTx) {
     return this.world.upgradeContract({ ...tx, sender: this });
   }
 
-  transfer(tx: WalletTransferTx) {
-    return this.world.transfer({ ...tx, sender: this });
-  }
-
-  callContract(tx: WalletCallContractTx) {
-    return this.world.callContract({ ...tx, sender: this });
+  query(tx: WalletQuery) {
+    return this.world.query({ ...tx, sender: this });
   }
 
   /**
@@ -509,4 +531,4 @@ type WalletCallContractTx = Prettify<Omit<WorldCallContractTx, "sender">>;
 
 type WalletUpgradeContractTx = Prettify<Omit<WorldUpgradeContractTx, "sender">>;
 
-type WalletQueryParams = Prettify<Omit<WorldQuery, "sender">>;
+type WalletQuery = Prettify<Omit<WorldQuery, "sender">>;
