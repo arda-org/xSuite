@@ -14,9 +14,9 @@ import {
   Contract,
   Wallet,
   expandCode,
-  WalletDeployContractParams,
+  WalletDeployContractTx,
   WorldNewOptions,
-  WorldDeployContractParams,
+  WorldDeployContractTx,
 } from "./world";
 
 export class LSWorld extends World {
@@ -127,10 +127,10 @@ export class LSWorld extends World {
     return this.proxy.setPreviousBlockInfo(block);
   }
 
-  deployContract(params: WorldDeployContractParams) {
-    return super.deployContract(params).then((data) => ({
-      ...data,
-      contract: this.newContract(data.address),
+  deployContract(tx: WorldDeployContractTx) {
+    return super.deployContract(tx).then((res) => ({
+      ...res,
+      contract: this.newContract(res.address),
     }));
   }
 
@@ -163,8 +163,8 @@ export class LSWallet extends Wallet {
     return this.world.createContract({ ...params, owner: this });
   }
 
-  deployContract(params: WalletDeployContractParams) {
-    return this.world.deployContract({ ...params, sender: this });
+  deployContract(tx: WalletDeployContractTx) {
+    return this.world.deployContract({ ...tx, sender: this });
   }
 }
 

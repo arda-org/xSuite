@@ -4,6 +4,7 @@ import chalk from "chalk";
 import { Command } from "commander";
 import open from "open";
 import { log } from "../_stdio";
+import { u8aToHex } from "../data/utils";
 import { Proxy } from "../proxy";
 import { KeystoreSigner } from "../world/signer";
 import { logSuccess } from "./helpers";
@@ -42,9 +43,7 @@ const action = async ({
   const dataToSign = new SignableMessage({
     message: Buffer.from(`${address}${initToken}`, "utf8"),
   }).serializeForSigning();
-  const signature = await signer
-    .sign(dataToSign)
-    .then((b) => b.toString("hex"));
+  const signature = await signer.sign(dataToSign).then(u8aToHex);
   const accessToken = client.getToken(address, initToken, signature);
 
   const faucetUrl = `https://devnet-wallet.multiversx.com/faucet?accessToken=${accessToken}`;
