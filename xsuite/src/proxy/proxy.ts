@@ -6,9 +6,14 @@ import {
   addressLikeToHexAddress,
 } from "../data/addressLike";
 import { BytesLike } from "../data/bytesLike";
-import { EncodableCodeMetadata, eCodeMetadata } from "../data/encoding";
+import {
+  Encodable,
+  EncodableCodeMetadata,
+  eCodeMetadata,
+} from "../data/encoding";
 import { Kvs } from "../data/kvs";
-import { base64ToHex } from "../data/utils";
+import { base64ToHex, u8aToHex } from "../data/utils";
+import { Prettify } from "../helpers";
 
 export class Proxy {
   proxyUrl: string;
@@ -36,13 +41,204 @@ export class Proxy {
     return unrawRes(await this.fetchRaw(path, data));
   }
 
-  sendTxRaw(tx: BroadTx) {
-    return this.fetchRaw("/transaction/send", broadTxToRawTx(tx));
+  async sendTxRaw(tx: BroadTx) {
+    return this.fetchRaw("/transaction/send", await broadTxToRawTx(tx));
   }
 
   async sendTx(tx: BroadTx) {
     const res = unrawRes(await this.sendTxRaw(tx));
     return res.txHash as string;
+  }
+
+  sendTransfer({ receiver: _receiver, sender, esdts, ...tx }: TransferTx) {
+    let receiver: AddressLike;
+    let data: string | undefined;
+    if (esdts?.length) {
+      receiver = sender;
+      const dataParts: string[] = [];
+      dataParts.push("MultiESDTNFTTransfer");
+      dataParts.push(addressLikeToHexAddress(_receiver));
+      dataParts.push(e.U(esdts.length).toTopHex());
+      for (const esdt of esdts) {
+        dataParts.push(e.Str(esdt.id).toTopHex());
+        dataParts.push(e.U(esdt.nonce ?? 0).toTopHex());
+        dataParts.push(e.U(esdt.amount).toTopHex());
+      }
+      data = dataParts.join("@");
+    } else {
+      receiver = _receiver;
+    }
+    return this.sendTx({ receiver, sender, data, ...tx });
+  }
+
+  sendDeployContract({
+    code,
+    codeMetadata,
+    codeArgs,
+    ...tx
+  }: DeployContractTx) {
+    return this.sendTx({
+      receiver: zeroBechAddress,
+      data: [
+        code,
+        "0500",
+        eCodeMetadata(codeMetadata),
+        ...e.vs(codeArgs ?? []),
+      ].join("@"),
+      ...tx,
+    });
+  }
+
+  sendCallContract({
+    callee,
+    sender,
+    funcName,
+    funcArgs,
+    esdts,
+    ...tx
+  }: CallContractTx) {
+    const dataParts: string[] = [];
+    let receiver: AddressLike;
+    if (esdts?.length) {
+      receiver = sender;
+      dataParts.push("MultiESDTNFTTransfer");
+      dataParts.push(addressLikeToHexAddress(callee));
+      dataParts.push(e.U(esdts.length).toTopHex());
+      for (const esdt of esdts) {
+        dataParts.push(e.Str(esdt.id).toTopHex());
+        dataParts.push(e.U(esdt.nonce ?? 0).toTopHex());
+        dataParts.push(e.U(esdt.amount).toTopHex());
+      }
+      dataParts.push(e.Str(funcName).toTopHex());
+    } else {
+      receiver = callee;
+      dataParts.push(funcName);
+    }
+    dataParts.push(...e.vs(funcArgs ?? []));
+    return this.sendTx({
+      receiver,
+      sender,
+      data: dataParts.join("@"),
+      ...tx,
+    });
+  }
+
+  sendUpgradeContract({
+    callee,
+    code,
+    codeMetadata,
+    codeArgs,
+    ...tx
+  }: UpgradeContractTx) {
+    return this.sendTx({
+      receiver: callee,
+      data: [
+        "upgradeContract",
+        code,
+        eCodeMetadata(codeMetadata),
+        ...e.vs(codeArgs ?? []),
+      ].join("@"),
+      ...tx,
+    });
+  }
+
+  async awaitTx(txHash: string) {
+    let res = await this.getTxProcessStatusRaw(txHash);
+    while (res.code !== "successful" || res.data.status === "pending") {
+      await new Promise((r) => setTimeout(r, 1000));
+      res = await this.getTxProcessStatusRaw(txHash);
+    }
+  }
+
+  async resolveTx(txHash: string): Promise<TxResult> {
+    let tx = await this.getTx(txHash);
+    const hash: string = tx.hash;
+    const explorerUrl = `${this.explorerUrl}/transactions/${hash}`;
+    tx = { explorerUrl, hash, ...tx };
+    if (tx.status !== "success") {
+      throw new TxError("errorStatus", tx.status, tx);
+    }
+    if (tx.executionReceipt?.returnCode) {
+      const { returnCode, returnMessage } = tx.executionReceipt;
+      throw new TxError(returnCode, returnMessage, tx);
+    }
+    const signalErrorEvent = tx?.logs?.events.find(
+      (e: any) => e.identifier === "signalError",
+    );
+    if (signalErrorEvent) {
+      const error = atob(signalErrorEvent.topics[1]);
+      throw new TxError("signalError", error, tx);
+    }
+    const gasUsed: number = tx.gasUsed;
+    return { explorerUrl, hash, gasUsed, tx };
+  }
+
+  resolveTransfer(txHash: string) {
+    return this.resolveTx(txHash);
+  }
+
+  async resolveDeployContract(txHash: string): Promise<DeployContractResult> {
+    const res = await this.resolveTx(txHash);
+    const returnData = getTxReturnData(res.tx);
+    const address = res.tx.logs.events.find(
+      (e: any) => e.identifier === "SCDeploy",
+    )!.address;
+    return { ...res, returnData, address };
+  }
+
+  async resolveCallContract(txHash: string): Promise<CallContractResult> {
+    const res = await this.resolveTx(txHash);
+    const returnData = getTxReturnData(res.tx);
+    return { ...res, returnData };
+  }
+
+  resolveUpgradeContract(txHash: string) {
+    return this.resolveCallContract(txHash);
+  }
+
+  async executeTx(tx: BroadTx) {
+    const txHash = await this.sendTx(tx);
+    await this.awaitTx(txHash);
+    return this.resolveTx(txHash);
+  }
+
+  async transfer(tx: TransferTx) {
+    const txHash = await this.sendTransfer(tx);
+    await this.awaitTx(txHash);
+    return this.resolveTransfer(txHash);
+  }
+
+  async deployContract(tx: DeployContractTx) {
+    const txHash = await this.sendDeployContract(tx);
+    await this.awaitTx(txHash);
+    return this.resolveDeployContract(txHash);
+  }
+
+  async callContract(tx: CallContractTx) {
+    const txHash = await this.sendCallContract(tx);
+    await this.awaitTx(txHash);
+    return this.resolveCallContract(txHash);
+  }
+
+  async upgradeContract(tx: UpgradeContractTx) {
+    const txHash = await this.sendUpgradeContract(tx);
+    await this.awaitTx(txHash);
+    return this.resolveUpgradeContract(txHash);
+  }
+
+  queryRaw(query: BroadQuery) {
+    return this.fetchRaw("/vm-values/query", broadQueryToRawQuery(query));
+  }
+
+  async query(query: BroadQuery): Promise<QueryResult> {
+    const { data } = unrawRes(await this.queryRaw(query));
+    if (![0, "ok"].includes(data.returnCode)) {
+      throw new QueryError(data.returnCode, data.returnMessage, data);
+    }
+    return {
+      returnData: data.returnData.map(base64ToHex),
+      query: data,
+    };
   }
 
   getTxRaw(txHash: string, { withResults }: TxRequestOptions = {}) {
@@ -60,7 +256,8 @@ export class Proxy {
   }
 
   private async _getTx(txHash: string, options?: TxRequestOptions) {
-    return unrawTxRes(await this.getTxRaw(txHash, options));
+    const res = unrawRes(await this.getTxRaw(txHash, options));
+    return res.transaction as Record<string, any>;
   }
 
   getTxProcessStatusRaw(txHash: string) {
@@ -70,52 +267,6 @@ export class Proxy {
   async getTxProcessStatus(txHash: string) {
     const res = unrawRes(await this.getTxProcessStatusRaw(txHash));
     return res.status as string;
-  }
-
-  async getCompletedTxRaw(txHash: string) {
-    let res = await this.getTxProcessStatusRaw(txHash);
-    while (res.code !== "successful" || res.data.status === "pending") {
-      await new Promise((r) => setTimeout(r, 1000));
-      res = await this.getTxProcessStatusRaw(txHash);
-    }
-    return await this.getTxRaw(txHash, { withResults: true });
-  }
-
-  async getCompletedTx(txHash: string) {
-    const { hash, ..._res } = unrawTxRes(await this.getCompletedTxRaw(txHash));
-    const explorerUrl = `${this.explorerUrl}/transactions/${hash}`;
-    // Destructuring gives an invalid type: https://github.com/microsoft/TypeScript/issues/56456
-    const res = Object.assign({ explorerUrl, hash }, _res);
-    if (res.status !== "success") {
-      throw new TxError("errorStatus", res.status, res);
-    }
-    if (res.executionReceipt?.returnCode) {
-      const { returnCode, returnMessage } = res.executionReceipt;
-      throw new TxError(returnCode, returnMessage, res);
-    }
-    const signalErrorEvent = res?.logs?.events.find(
-      (e: any) => e.identifier === "signalError",
-    );
-    if (signalErrorEvent) {
-      const error = atob(signalErrorEvent.topics[1]);
-      throw new TxError("signalError", error, res);
-    }
-    return res as Record<string, any> & { hash: string; explorerUrl: string };
-  }
-
-  queryRaw(query: BroadQuery) {
-    return this.fetchRaw("/vm-values/query", broadQueryToRawQuery(query));
-  }
-
-  async query(query: BroadQuery) {
-    const { data } = unrawRes(await this.queryRaw(query));
-    if (![0, "ok"].includes(data.returnCode)) {
-      throw new QueryError(data.returnCode, data.returnMessage, data);
-    }
-    return {
-      ...data,
-      returnData: data.returnData.map(base64ToHex),
-    } as Record<string, any> & { returnData: string[] };
   }
 
   getAccountNonceRaw(
@@ -222,147 +373,6 @@ export class Proxy {
   }
 }
 
-export class Tx {
-  unsignedRawTx: Omit<RawTx, "signature">;
-  signature: string | undefined;
-
-  constructor(params: TxParams) {
-    this.unsignedRawTx = {
-      nonce: params.nonce,
-      value: (params.value ?? 0n).toString(),
-      receiver: addressLikeToBechAddress(params.receiver),
-      sender: addressLikeToBechAddress(params.sender),
-      gasPrice: params.gasPrice,
-      gasLimit: params.gasLimit,
-      data: params.data === undefined ? undefined : btoa(params.data),
-      chainID: params.chainId,
-      version: params.version ?? 1,
-    };
-  }
-
-  static getParamsToDeployContract<T>({
-    code,
-    codeMetadata,
-    codeArgs,
-    ...txParams
-  }: Pick<DeployContractTxParams, "code" | "codeMetadata" | "codeArgs"> & T) {
-    return {
-      receiver: zeroBechAddress,
-      data: [
-        code,
-        "0500",
-        eCodeMetadata(codeMetadata),
-        ...e.vs(codeArgs ?? []),
-      ].join("@"),
-      ...txParams,
-    };
-  }
-
-  static getParamsToUpgradeContract<T>({
-    callee,
-    code,
-    codeMetadata,
-    codeArgs,
-    ...txParams
-  }: Pick<
-    UpgradeContractTxParams,
-    "callee" | "code" | "codeMetadata" | "codeArgs"
-  > &
-    T) {
-    return {
-      receiver: callee,
-      data: [
-        "upgradeContract",
-        code,
-        eCodeMetadata(codeMetadata),
-        ...e.vs(codeArgs ?? []),
-      ].join("@"),
-      ...txParams,
-    };
-  }
-
-  static getParamsToTransfer<T, U extends AddressLike>({
-    receiver: _receiver,
-    sender,
-    esdts,
-    ...txParams
-  }: Pick<TransferTxParams, "receiver" | "esdts"> & { sender: U } & T) {
-    let receiver: AddressLike;
-    let data: string | undefined;
-    if (esdts?.length) {
-      receiver = sender;
-      const dataParts: string[] = [];
-      dataParts.push("MultiESDTNFTTransfer");
-      dataParts.push(addressLikeToHexAddress(_receiver));
-      dataParts.push(e.U(esdts.length).toTopHex());
-      for (const esdt of esdts) {
-        dataParts.push(e.Str(esdt.id).toTopHex());
-        dataParts.push(e.U(esdt.nonce ?? 0).toTopHex());
-        dataParts.push(e.U(esdt.amount).toTopHex());
-      }
-      data = dataParts.join("@");
-    } else {
-      receiver = _receiver;
-    }
-    return {
-      receiver,
-      sender,
-      data,
-      ...txParams,
-    };
-  }
-
-  static getParamsToCallContract<T, U extends AddressLike>({
-    callee,
-    sender,
-    funcName,
-    funcArgs,
-    esdts,
-    ...txParams
-  }: Pick<
-    CallContractTxParams,
-    "callee" | "funcName" | "funcArgs" | "esdts"
-  > & { sender: U } & T) {
-    const dataParts: string[] = [];
-    let receiver: AddressLike;
-    if (esdts?.length) {
-      receiver = sender;
-      dataParts.push("MultiESDTNFTTransfer");
-      dataParts.push(addressLikeToHexAddress(callee));
-      dataParts.push(e.U(esdts.length).toTopHex());
-      for (const esdt of esdts) {
-        dataParts.push(e.Str(esdt.id).toTopHex());
-        dataParts.push(e.U(esdt.nonce ?? 0).toTopHex());
-        dataParts.push(e.U(esdt.amount).toTopHex());
-      }
-      dataParts.push(e.Str(funcName).toTopHex());
-    } else {
-      receiver = callee;
-      dataParts.push(funcName);
-    }
-    dataParts.push(...e.vs(funcArgs ?? []));
-    return {
-      receiver,
-      sender,
-      data: dataParts.join("@"),
-      ...txParams,
-    };
-  }
-
-  async sign(signer: { sign: (data: Buffer) => Promise<Buffer> }) {
-    this.signature = await signer
-      .sign(Buffer.from(JSON.stringify(this.unsignedRawTx)))
-      .then((b) => b.toString("hex"));
-  }
-
-  toRawTx(): RawTx {
-    if (this.signature === undefined) {
-      throw new Error("Transaction not signed.");
-    }
-    return { ...this.unsignedRawTx, signature: this.signature };
-  }
-}
-
 export class InteractionError extends Error {
   interaction: string;
   code: number | string;
@@ -407,16 +417,28 @@ export const unrawRes = (res: any) => {
   }
 };
 
-const unrawTxRes = (r: any) => {
-  return unrawRes(r).transaction as Record<string, any>;
+const broadTxToRawTx = async (tx: BroadTx): Promise<RawTx> => {
+  if (isRawTx(tx)) {
+    return tx;
+  }
+  const unsignedRawTx = {
+    nonce: tx.nonce,
+    value: (tx.value ?? 0n).toString(),
+    receiver: addressLikeToBechAddress(tx.receiver),
+    sender: addressLikeToBechAddress(tx.sender),
+    gasPrice: tx.gasPrice,
+    gasLimit: tx.gasLimit,
+    data: tx.data === undefined ? undefined : btoa(tx.data),
+    chainID: tx.chainId,
+    version: tx.version ?? 1,
+  };
+  const signature = await tx.sender
+    .sign(new TextEncoder().encode(JSON.stringify(unsignedRawTx)))
+    .then(u8aToHex);
+  return { ...unsignedRawTx, signature };
 };
 
-const broadTxToRawTx = (tx: BroadTx): RawTx => {
-  if (tx instanceof Tx) {
-    return tx.toRawTx();
-  }
-  return tx;
-};
+const isRawTx = (tx: BroadTx): tx is RawTx => typeof tx.sender === "string";
 
 const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
   if ("callee" in query) {
@@ -456,11 +478,92 @@ export const getSerializableAccount = (rawAccount: any) => {
   };
 };
 
+const getTxReturnData = (tx: any): string[] => {
+  const writeLogEvent = tx?.logs?.events.find(
+    (e: any) => e.identifier === "writeLog",
+  );
+  if (writeLogEvent) {
+    return atob(writeLogEvent.data).split("@").slice(2);
+  }
+  const scr = tx?.smartContractResults.find(
+    (r: any) => r.data === "@6f6b" || r.data?.startsWith("@6f6b@"),
+  );
+  if (scr) {
+    return scr.data.split("@").slice(2);
+  }
+  return [];
+};
+
 export type ProxyParams =
   | string
   | { proxyUrl: string; headers?: HeadersInit; explorerUrl?: string };
 
 type BroadTx = Tx | RawTx;
+
+export type Tx = {
+  nonce: number;
+  value?: number | bigint;
+  receiver: AddressLike;
+  sender: Signer;
+  gasPrice: number;
+  gasLimit: number;
+  data?: string;
+  chainId: string;
+  version?: number;
+};
+
+export type TransferTx = {
+  nonce: number;
+  value?: number | bigint;
+  receiver: AddressLike;
+  sender: Signer;
+  gasPrice: number;
+  gasLimit: number;
+  esdts?: { id: string; nonce?: number; amount: number | bigint }[];
+  chainId: string;
+  version?: number;
+};
+
+export type DeployContractTx = {
+  nonce: number;
+  value?: number | bigint;
+  sender: Signer;
+  gasPrice: number;
+  gasLimit: number;
+  code: string;
+  codeMetadata: EncodableCodeMetadata;
+  codeArgs?: BytesLike[];
+  chainId: string;
+  version?: number;
+};
+
+export type CallContractTx = {
+  nonce: number;
+  value?: number | bigint;
+  callee: AddressLike;
+  sender: Signer;
+  gasPrice: number;
+  gasLimit: number;
+  funcName: string;
+  funcArgs?: BytesLike[];
+  esdts?: { id: string; nonce?: number; amount: number | bigint }[];
+  chainId: string;
+  version?: number;
+};
+
+export type UpgradeContractTx = {
+  nonce: number;
+  value?: number | bigint;
+  callee: AddressLike;
+  sender: Signer;
+  gasPrice: number;
+  gasLimit: number;
+  code: string;
+  codeMetadata: EncodableCodeMetadata;
+  codeArgs?: BytesLike[];
+  chainId: string;
+  version?: number;
+};
 
 type RawTx = {
   nonce: number;
@@ -476,6 +579,8 @@ type RawTx = {
 };
 
 type BroadQuery = Query | RawQuery;
+
+type Signer = Encodable & { sign: (data: Uint8Array) => Promise<Uint8Array> };
 
 export type Query = {
   callee: AddressLike;
@@ -493,71 +598,27 @@ type RawQuery = {
   value?: string;
 };
 
-export type TxParams = {
-  nonce: number;
-  value?: number | bigint;
-  receiver: AddressLike;
-  sender: AddressLike;
-  gasPrice: number;
-  gasLimit: number;
-  data?: string;
-  chainId: string;
-  version?: number;
-};
-
-export type DeployContractTxParams = {
-  nonce: number;
-  value?: number | bigint;
-  sender: AddressLike;
-  gasPrice: number;
-  gasLimit: number;
-  code: string;
-  codeMetadata: EncodableCodeMetadata;
-  codeArgs?: BytesLike[];
-  chainId: string;
-  version?: number;
-};
-
-export type UpgradeContractTxParams = {
-  nonce: number;
-  value?: number | bigint;
-  callee: AddressLike;
-  sender: AddressLike;
-  gasPrice: number;
-  gasLimit: number;
-  code: string;
-  codeMetadata: EncodableCodeMetadata;
-  codeArgs?: BytesLike[];
-  chainId: string;
-  version?: number;
-};
-
-export type TransferTxParams = {
-  nonce: number;
-  value?: number | bigint;
-  receiver: AddressLike;
-  sender: AddressLike;
-  gasPrice: number;
-  gasLimit: number;
-  esdts?: { id: string; nonce?: number; amount: number | bigint }[];
-  chainId: string;
-  version?: number;
-};
-
-export type CallContractTxParams = {
-  nonce: number;
-  value?: number | bigint;
-  callee: AddressLike;
-  sender: AddressLike;
-  gasPrice: number;
-  gasLimit: number;
-  funcName: string;
-  funcArgs?: BytesLike[];
-  esdts?: { id: string; nonce?: number; amount: number | bigint }[];
-  chainId: string;
-  version?: number;
-};
-
 type TxRequestOptions = { withResults?: boolean };
 
 type AccountRequestOptions = { shardId?: number };
+
+type TxResult = Prettify<{
+  hash: string;
+  explorerUrl: string;
+  gasUsed: number;
+  tx: { [x: string]: any };
+}>;
+
+type DeployContractResult = Prettify<
+  TxResult & {
+    returnData: string[];
+    address: string;
+  }
+>;
+
+type CallContractResult = Prettify<TxResult & { returnData: string[] }>;
+
+type QueryResult = {
+  returnData: string[];
+  query: { [x: string]: any };
+};

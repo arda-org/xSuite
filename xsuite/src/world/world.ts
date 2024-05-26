@@ -15,13 +15,12 @@ import {
   mainnetPublicProxyUrl,
 } from "../interact/envChain";
 import {
-  CallContractTxParams,
-  DeployContractTxParams,
+  CallContractTx,
+  DeployContractTx,
   Query,
-  TransferTxParams,
+  TransferTx,
   Tx,
-  TxParams,
-  UpgradeContractTxParams,
+  UpgradeContractTx,
   Proxy,
   InteractionError,
 } from "../proxy/proxy";
@@ -132,66 +131,107 @@ export class World {
     return this.proxy.getAccount(address);
   }
 
-  query(params: WorldQueryParams) {
-    return InteractionPromise.fromFn<QueryResult>(async () => {
-      const resQuery = await this.proxy.query(params);
-      return { query: resQuery, returnData: resQuery.returnData! };
+  async sendTx(tx: WorldTx) {
+    return this.proxy.sendTx(await this.getProxyTx(tx));
+  }
+
+  async sendTransfer(tx: WorldTransferTx) {
+    return this.proxy.sendTransfer(await this.getProxyTx(tx));
+  }
+
+  async sendDeployContract(tx: WorldDeployContractTx) {
+    return this.proxy.sendDeployContract(await this.getProxyTx(tx));
+  }
+
+  async sendCallContract(tx: WorldCallContractTx) {
+    return this.proxy.sendCallContract(await this.getProxyTx(tx));
+  }
+
+  async sendUpgradeContract(tx: WorldUpgradeContractTx) {
+    return this.proxy.sendUpgradeContract(await this.getProxyTx(tx));
+  }
+
+  private async getProxyTx<
+    T extends { sender: AddressLike; gasPrice?: number },
+  >(tx: T) {
+    return {
+      ...tx,
+      nonce: await this.proxy.getAccountNonce(tx.sender),
+      gasPrice: tx.gasPrice ?? this.gasPrice,
+      chainId: this.chainId,
+    };
+  }
+
+  awaitTx(txHash: string) {
+    return this.proxy.awaitTx(txHash);
+  }
+
+  resolveTx(txHash: string) {
+    return InteractionPromise.from(this.proxy.resolveTx(txHash));
+  }
+
+  resolveTransfer(txHash: string) {
+    return InteractionPromise.from(this.proxy.resolveTransfer(txHash));
+  }
+
+  resolveDeployContract(txHash: string) {
+    return InteractionPromise.from(this.proxy.resolveDeployContract(txHash));
+  }
+
+  resolveCallContract(txHash: string) {
+    return InteractionPromise.from(this.proxy.resolveCallContract(txHash));
+  }
+
+  resolveUpgradeContract(txHash: string) {
+    return InteractionPromise.from(this.proxy.resolveUpgradeContract(txHash));
+  }
+
+  executeTx(tx: WorldTx) {
+    return InteractionPromise.fromFn(async () => {
+      const txHash = await this.sendTx(tx);
+      await this.awaitTx(txHash);
+      return this.resolveTx(txHash);
     });
   }
 
-  executeTx(params: WorldExecuteTxParams) {
-    return InteractionPromise.fromFn<ExecuteTxResult>(async () => {
-      const nonce = await this.proxy.getAccountNonce(params.sender);
-      const tx = new Tx({
-        ...params,
-        nonce,
-        gasPrice: params.gasPrice ?? this.gasPrice,
-        chainId: this.chainId,
-      });
-      await tx.sign(params.sender);
-      const txHash = await this.proxy.sendTx(tx);
-      return { tx: await this.proxy.getCompletedTx(txHash) };
+  transfer(tx: WorldTransferTx) {
+    return InteractionPromise.fromFn(async () => {
+      const txHash = await this.sendTransfer(tx);
+      await this.awaitTx(txHash);
+      return this.resolveTransfer(txHash);
     });
   }
 
-  deployContract(params: WorldDeployContractParams) {
-    return InteractionPromise.fromFn<DeployContractResult>(async () => {
-      params.code = expandCode(params.code);
-      const txResult = await this.executeTx(
-        Tx.getParamsToDeployContract(params),
-      );
-      const address = txResult.tx.logs.events.find(
-        (e: any) => e.identifier === "SCDeploy",
-      )!.address;
-      const contract = this.newContract(address);
-      const returnData = getTxReturnData(txResult.tx);
-      return { ...txResult, address, contract, returnData };
+  deployContract(tx: WorldDeployContractTx) {
+    return InteractionPromise.fromFn(async () => {
+      tx.code = expandCode(tx.code);
+      const txHash = await this.sendDeployContract(tx);
+      await this.awaitTx(txHash);
+      const res = await this.resolveDeployContract(txHash);
+      const contract = this.newContract(res.address);
+      return { ...res, contract };
     });
   }
 
-  upgradeContract(params: WorldUpgradeContractParams) {
-    return InteractionPromise.fromFn<CallContractResult>(async () => {
-      params.code = expandCode(params.code);
-      const txResult = await this.executeTx(
-        Tx.getParamsToUpgradeContract(params),
-      );
-      const returnData = getTxReturnData(txResult.tx);
-      return { ...txResult, returnData };
+  callContract(tx: WorldCallContractTx) {
+    return InteractionPromise.fromFn(async () => {
+      const txHash = await this.sendCallContract(tx);
+      await this.awaitTx(txHash);
+      return this.resolveCallContract(txHash);
     });
   }
 
-  transfer(params: WorldTransferParams) {
-    return InteractionPromise.fromFn<ExecuteTxResult>(async () => {
-      return this.executeTx(Tx.getParamsToTransfer(params));
+  upgradeContract(tx: WorldUpgradeContractTx) {
+    return InteractionPromise.fromFn(async () => {
+      tx.code = expandCode(tx.code);
+      const txHash = await this.sendUpgradeContract(tx);
+      await this.awaitTx(txHash);
+      return this.resolveUpgradeContract(txHash);
     });
   }
 
-  callContract(params: WorldCallContractParams) {
-    return InteractionPromise.fromFn<CallContractResult>(async () => {
-      const txResult = await this.executeTx(Tx.getParamsToCallContract(params));
-      const returnData = getTxReturnData(txResult.tx);
-      return { ...txResult, returnData };
-    });
+  query(query: WorldQuery) {
+    return InteractionPromise.from(this.proxy.query(query));
   }
 
   /**
@@ -224,7 +264,7 @@ export class Wallet extends Signer {
     );
   }
 
-  sign(data: Buffer) {
+  sign(data: Uint8Array) {
     return this.signer.sign(data);
   }
 
@@ -256,24 +296,24 @@ export class Wallet extends Signer {
     return this.world.query({ ...params, sender: this });
   }
 
-  executeTx(params: WalletExecuteTxParams) {
-    return this.world.executeTx({ ...params, sender: this });
+  executeTx(tx: WalletTx) {
+    return this.world.executeTx({ ...tx, sender: this });
   }
 
-  deployContract(params: WalletDeployContractParams) {
-    return this.world.deployContract({ ...params, sender: this });
+  deployContract(tx: WalletDeployContractTx) {
+    return this.world.deployContract({ ...tx, sender: this });
   }
 
-  upgradeContract(params: WalletUpgradeContractParams) {
-    return this.world.upgradeContract({ ...params, sender: this });
+  upgradeContract(tx: WalletUpgradeContractTx) {
+    return this.world.upgradeContract({ ...tx, sender: this });
   }
 
-  transfer(params: WalletTransferParams) {
-    return this.world.transfer({ ...params, sender: this });
+  transfer(tx: WalletTransferTx) {
+    return this.world.transfer({ ...tx, sender: this });
   }
 
-  callContract(params: WalletCallContractParams) {
-    return this.world.callContract({ ...params, sender: this });
+  callContract(tx: WalletCallContractTx) {
+    return this.world.callContract({ ...tx, sender: this });
   }
 
   /**
@@ -412,22 +452,6 @@ export class InteractionPromise<T> implements PromiseLike<T> {
 const getAccountExplorerUrl = (baseExplorerUrl: string, address: string) =>
   `${baseExplorerUrl}/accounts/${address}`;
 
-const getTxReturnData = (tx: any): string[] => {
-  const writeLogEvent = tx?.logs?.events.find(
-    (e: any) => e.identifier === "writeLog",
-  );
-  if (writeLogEvent) {
-    return atob(writeLogEvent.data).split("@").slice(2);
-  }
-  const scr = tx?.smartContractResults.find(
-    (r: any) => r.data === "@6f6b" || r.data?.startsWith("@6f6b@"),
-  );
-  if (scr) {
-    return scr.data.split("@").slice(2);
-  }
-  return [];
-};
-
 export const expandCode = (code: string) => {
   if (code.startsWith("file:")) {
     code = readFileHex(code.slice(5));
@@ -453,84 +477,36 @@ type WorldNewRealnetOptions = {
   explorerUrl?: string;
 };
 
-type QueryParams = Query;
+type WorldTx = Prettify<Omit<Optional<Tx, "gasPrice">, "chainId" | "nonce">>;
 
-type ExecuteTxParams = Omit<TxParams, "sender" | "nonce"> & { sender: Signer };
-
-type DeployContractParams = Omit<DeployContractTxParams, "sender" | "nonce"> & {
-  sender: Signer;
-};
-
-type UpgradeContractParams = Omit<
-  UpgradeContractTxParams,
-  "sender" | "nonce"
-> & { sender: Signer };
-
-type TransferParams = Omit<TransferTxParams, "sender" | "nonce"> & {
-  sender: Signer;
-};
-
-type CallContractParams = Omit<CallContractTxParams, "sender" | "nonce"> & {
-  sender: Signer;
-};
-
-type WorldQueryParams = QueryParams;
-
-type WorldExecuteTxParams = Prettify<
-  Omit<Optional<ExecuteTxParams, "gasPrice">, "chainId">
+type WorldTransferTx = Prettify<
+  Omit<Optional<TransferTx, "gasPrice">, "chainId" | "nonce">
 >;
 
-export type WorldDeployContractParams = Prettify<
-  Omit<Optional<DeployContractParams, "gasPrice">, "chainId">
+export type WorldDeployContractTx = Prettify<
+  Omit<Optional<DeployContractTx, "gasPrice">, "chainId" | "nonce">
 >;
 
-type WorldUpgradeContractParams = Prettify<
-  Omit<Optional<UpgradeContractParams, "gasPrice">, "chainId">
+type WorldCallContractTx = Prettify<
+  Omit<Optional<CallContractTx, "gasPrice">, "chainId" | "nonce">
 >;
 
-type WorldTransferParams = Prettify<
-  Omit<Optional<TransferParams, "gasPrice">, "chainId">
+type WorldUpgradeContractTx = Prettify<
+  Omit<Optional<UpgradeContractTx, "gasPrice">, "chainId" | "nonce">
 >;
 
-type WorldCallContractParams = Prettify<
-  Omit<Optional<CallContractParams, "gasPrice">, "chainId">
+type WorldQuery = Query;
+
+type WalletTx = Prettify<Omit<WorldTx, "sender">>;
+
+type WalletTransferTx = Prettify<Omit<WorldTransferTx, "sender">>;
+
+export type WalletDeployContractTx = Prettify<
+  Omit<WorldDeployContractTx, "sender">
 >;
 
-type WalletQueryParams = Omit<QueryParams, "sender">;
+type WalletCallContractTx = Prettify<Omit<WorldCallContractTx, "sender">>;
 
-type WalletExecuteTxParams = Prettify<Omit<WorldExecuteTxParams, "sender">>;
+type WalletUpgradeContractTx = Prettify<Omit<WorldUpgradeContractTx, "sender">>;
 
-export type WalletDeployContractParams = Prettify<
-  Omit<WorldDeployContractParams, "sender">
->;
-
-type WalletUpgradeContractParams = Prettify<
-  Omit<WorldUpgradeContractParams, "sender">
->;
-
-type WalletTransferParams = Prettify<Omit<WorldTransferParams, "sender">>;
-
-type WalletCallContractParams = Prettify<
-  Omit<WorldCallContractParams, "sender">
->;
-
-type QueryResult = {
-  query: any;
-  returnData: string[];
-};
-
-export type ExecuteTxResult = Prettify<{
-  tx: { hash: string; explorerUrl: string } & Record<string, any>;
-}>;
-
-export type DeployContractResult = Prettify<
-  ExecuteTxResult & {
-    address: string;
-    contract: Contract;
-    returnData: string[];
-  }
->;
-
-export type CallContractResult = Prettify<
-  ExecuteTxResult & { returnData: string[] }
->;
+type WalletQueryParams = Prettify<Omit<WorldQuery, "sender">>;
