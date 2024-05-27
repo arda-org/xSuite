@@ -1,12 +1,8 @@
 name: "Setup Node.js with pnpm and cache"
 
 inputs:
-  node-version:
-    description: "Node.js version to use."
   node-registry-url:
     description: "Optional registry to set up for auth."
-  pnpm-version:
-    description: "pnpm version to use."
   skip-install:
     description: "Skip the installation step."
     default: false
@@ -16,14 +12,14 @@ runs:
   using: composite
   steps:
     - name: Use pnpm
-      uses: pnpm/action-setup@v2
+      uses: pnpm/action-setup@v4
       with:
-        version: ${{ inputs.pnpm-version }}
+        version: 9
 
     - name: Use Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
-        node-version: ${{ inputs.node-version }}
+        node-version: 20
         registry-url: ${{ inputs.node-registry-url }}
         cache: "pnpm"
 

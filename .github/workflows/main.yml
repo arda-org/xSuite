@@ -16,19 +16,16 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Use Node.js & pnpm
         uses: ./.github/actions/node-pnpm
-        with:
-          node-version: 20
-          pnpm-version: 9
 
       - name: Lint
         run: pnpm lint
 
       - name: Use Golang
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: 1.19
           cache-dependency-path: xsuite-lightsimulnet/src/go.sum
@@ -43,7 +40,7 @@ jobs:
         run: echo "XSUITE_RUST=$(pnpm xsuite install-rust-key)" >> $GITHUB_ENV
 
       - name: Cache Rust
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.rustup/toolchains
