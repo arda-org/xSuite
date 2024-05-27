@@ -23,6 +23,7 @@
     "eslint-plugin-import": "2.29.0",
     "eslint-plugin-prettier": "5.0.1",
     "prettier": "3.0.3",
-    "xsuite": "workspace:*"
+    "xsuite": "workspace:*",
+    "zx": "^8.1.1"
   }
 }
