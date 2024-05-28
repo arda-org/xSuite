@@ -1,11 +1,9 @@
-const path = require("node:path");
-
 function getLsproxyBinPath() {
   switch (process.platform) {
     case "linux":
-      return path.join(__dirname, "bin", "lsproxy-linux-amd64");
+      return require.resolve("@xsuite/light-simulnet-linux-amd64/bin/lsproxy");
     case "darwin":
-      return path.join(__dirname, "bin", "lsproxy-darwin-amd64");
+      return require.resolve("@xsuite/light-simulnet-darwin-amd64/bin/lsproxy");
     default:
       throw new Error(`Unsupported platform: ${process.platform}`);
   }

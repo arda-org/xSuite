@@ -4,15 +4,19 @@
   "license": "MIT",
   "scripts": {
     "build": "run-script-os",
-    "build:linux": "cd src && GOOS=linux GOARCH=amd64 go build -o ../bin/lsproxy-linux-amd64 -ldflags \"-extldflags '-Wl,-rpath,\\$ORIGIN'\"",
-    "build:darwin": "cd src && GOOS=darwin GOARCH=amd64 go build -o ../bin/lsproxy-darwin-amd64 -ldflags \"-extldflags '-Wl,-rpath,@loader_path'\"",
-    "postinstall": "chmod -f +x ./bin/lsproxy-* || true"
+    "build:linux": "cd src && GOOS=linux GOARCH=amd64 go build -o ../../xsuite-lightsimulnet-linux-amd64/bin/lsproxy -ldflags \"-extldflags '-Wl,-rpath,\\$ORIGIN'\"",
+    "build:darwin": "cd src && GOOS=darwin GOARCH=amd64 go build -o ../../xsuite-lightsimulnet-darwin-amd64/bin/lsproxy -ldflags \"-extldflags '-Wl,-rpath,@loader_path'\"",
+    "test": "node --test"
   },
   "files": [
     "bin",
     "index.js",
     "index.d.ts"
   ],
+  "dependencies": {
+    "@xsuite/light-simulnet-darwin-amd64": "workspace:*",
+    "@xsuite/light-simulnet-linux-amd64": "workspace:*"
+  },
   "devDependencies": {
     "run-script-os": "1.1.6"
   }

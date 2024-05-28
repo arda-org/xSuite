@@ -30,8 +30,10 @@ jobs:
       - name: Upload package
         uses: actions/upload-artifact@v4
         with:
-          name: package
-          path: xsuite-lightsimulnet/bin
+          name: package-${{ matrix.os }}
+          path: |
+            xsuite-lightsimulnet-darwin-amd64/bin/lsproxy
+            xsuite-lightsimulnet-linux-amd64/bin/lsproxy
 
   test:
     needs: build
@@ -39,11 +41,6 @@ jobs:
     strategy:
       matrix:
         os: [macos-12, ubuntu-20.04]
-        include:
-          - os: ubuntu-20.04
-            binary: lsproxy-linux-amd64
-          - os: macos-12
-            binary: lsproxy-darwin-amd64
 
     runs-on: ${{ matrix.os }}
 
@@ -54,25 +51,14 @@ jobs:
       - name: Download package
         uses: actions/download-artifact@v4
         with:
-          name: package
-          path: xsuite-lightsimulnet/bin
+          pattern: package-*
+          merge-multiple: true
 
-      - name: Add execute permissions
-        run: chmod +x xsuite-lightsimulnet/bin/lsproxy-*
-
+      - name: Use Node.js & pnpm
+        uses: ./.github/actions/node-pnpm
+      
       - name: Test
-        run: |
-          ./xsuite-lightsimulnet/bin/${{ matrix.binary }} &
-          SERVER_PID=$!
-          sleep 2
-          if kill -0 $SERVER_PID 2>/dev/null; then
-            echo "Simulnet succeeded to start."
-            kill $SERVER_PID
-            wait $SERVER_PID || [ $? -eq 143 ]
-          else
-            echo "Simulnet failed to start."
-            exit 1
-          fi
+        run: pnpm test-xsuite-lightsimulnet
 
   publish:
     needs: test
@@ -86,19 +72,15 @@ jobs:
       - name: Download package
         uses: actions/download-artifact@v4
         with:
-          name: package
-          path: xsuite-lightsimulnet/bin
-
-      - name: Add execute permissions
-        run: chmod +x xsuite-lightsimulnet/bin/lsproxy-*
+          pattern: package-*
+          merge-multiple: true
 
       - name: Use Node.js & pnpm
         uses: ./.github/actions/node-pnpm
         with:
           node-registry-url: "https://registry.npmjs.org"
-          skip-install: true
 
-      - name: Publish xsuite-lightsimulnet to NPM
-        run: git config core.fileMode false && cd xsuite-lightsimulnet && pnpm publish --publish-branch dev --access public
+      - name: Publish xsuite-lightsimulnet packages to NPM
+        run: git config core.fileMode false && pnpm --filter "@xsuite/light-simulnet*" publish --publish-branch dev --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
