@@ -3,6 +3,7 @@
   "scripts": {
     "lint": "eslint .",
     "build-xsuite-lightsimulnet": "cd xsuite-lightsimulnet && pnpm build",
+    "test-xsuite-lightsimulnet": "cd xsuite-lightsimulnet && pnpm test",
     "build-xsuite": "cd xsuite && pnpm build",
     "test-xsuite": "cd xsuite && pnpm test",
     "verify-xsuite-wasms": "cd xsuite && pnpm verify-wasms",
@@ -12,7 +13,7 @@
     "ci-main": "pnpm lint && pnpm build-xsuite-lightsimulnet && pnpm build-xsuite && pnpm test-xsuite && pnpm verify-xsuite-wasms && pnpm build-contracts && pnpm typecheck-contracts && pnpm test-contracts",
     "dev-docs": "cd docs && pnpm dev",
     "build-docs": "cd docs && pnpm build",
-    "release-versions": "./release_versions.sh",
+    "release-versions": "./release-versions.mjs",
     "update-contracts-deps": "pnpm up -r commander tsx typescript vitest --latest"
   },
   "devDependencies": {

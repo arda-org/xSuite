@@ -19,17 +19,21 @@ const releaseVersion = async (versionPkgDir, ...additionalPkgDirs) => {
     console.log("  Skipped.");
     return;
   }
+  updatedPkgs.push(`${name}@${newVersion}`);
   for (const pkgDir of [versionPkgDir, ...additionalPkgDirs]) {
     const pkgJsonPath = getPkgJsonPath(pkgDir);
     const pkgJson = JSON.parse(fs.readFileSync(pkgJsonPath));
     pkgJson.version = newVersion;
     fs.writeFileSync(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + "\n");
     updatedFiles.push(pkgJsonPath);
-    updatedPkgs.push(`${name}@${newVersion}`);
   }
 };
 
-await releaseVersion("xsuite-lightsimulnet");
+await releaseVersion(
+  "xsuite-lightsimulnet",
+  "xsuite-lightsimulnet-darwin-amd64",
+  "xsuite-lightsimulnet-linux-amd64",
+);
 await releaseVersion("xsuite");
 
 if (updatedFiles.length > 0) {

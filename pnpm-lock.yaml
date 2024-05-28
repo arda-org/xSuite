@@ -183,10 +183,21 @@ importers:
         version: 1.2.2(@types/node@20.11.16)
 
   xsuite-lightsimulnet:
+    dependencies:
+      '@xsuite/light-simulnet-darwin-amd64':
+        specifier: workspace:*
+        version: link:../xsuite-lightsimulnet-darwin-amd64
+      '@xsuite/light-simulnet-linux-amd64':
+        specifier: workspace:*
+        version: link:../xsuite-lightsimulnet-linux-amd64
     devDependencies:
       run-script-os:
         specifier: 1.1.6
         version: 1.1.6
+
+  xsuite-lightsimulnet-darwin-amd64: {}
+
+  xsuite-lightsimulnet-linux-amd64: {}
 
 packages:
 
