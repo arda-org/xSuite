@@ -2,6 +2,8 @@
   "private": true,
   "scripts": {
     "lint": "eslint .",
+    "build-xsuite-fullsimulnet": "cd xsuite-fullsimulnet && pnpm build",
+    "test-xsuite-fullsimulnet": "cd xsuite-fullsimulnet && pnpm test",
     "build-xsuite-lightsimulnet": "cd xsuite-lightsimulnet && pnpm build",
     "test-xsuite-lightsimulnet": "cd xsuite-lightsimulnet && pnpm test",
     "build-xsuite": "cd xsuite && pnpm build",
@@ -10,10 +12,10 @@
     "build-contracts": "pnpm --filter \"./contracts/**\" build --locked --target-dir $(pwd)/target",
     "typecheck-contracts": "pnpm --filter \"./contracts/**\" typecheck",
     "test-contracts": "pnpm --filter \"./contracts/**\" test",
-    "ci-main": "pnpm lint && pnpm build-xsuite-lightsimulnet && pnpm build-xsuite && pnpm test-xsuite && pnpm verify-xsuite-wasms && pnpm build-contracts && pnpm typecheck-contracts && pnpm test-contracts",
+    "ci-main": "pnpm lint && pnpm build-xsuite-fullsimulnet && pnpm build-xsuite-lightsimulnet && pnpm build-xsuite && pnpm test-xsuite && pnpm verify-xsuite-wasms && pnpm build-contracts && pnpm typecheck-contracts && pnpm test-contracts",
     "dev-docs": "cd docs && pnpm dev",
     "build-docs": "cd docs && pnpm build",
-    "release-versions": "./release-versions.mjs",
+    "release-versions": "node release-versions.mjs",
     "update-contracts-deps": "pnpm up -r commander tsx typescript vitest --latest"
   },
   "devDependencies": {
