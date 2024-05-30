@@ -13,11 +13,12 @@
     "index.js",
     "index.d.ts"
   ],
-  "dependencies": {
+  "optionalDependencies": {
     "@xsuite/full-simulnet-darwin-amd64": "workspace:*",
     "@xsuite/full-simulnet-linux-amd64": "workspace:*"
   },
   "devDependencies": {
+    "@types/node": "20.11.16",
     "run-script-os": "1.1.6"
   }
 }
