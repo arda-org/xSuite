@@ -1,6 +1,6 @@
 {
   "name": "@xsuite/light-simulnet-linux-amd64",
-  "version": "0.0.21",
+  "version": "0.0.22",
   "license": "MIT",
   "scripts": {
     "postinstall": "chmod -f +x ./bin/lsproxy || true"

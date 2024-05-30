@@ -1,6 +1,6 @@
 {
   "name": "@xsuite/full-simulnet-darwin-amd64",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "license": "MIT",
   "scripts": {
     "postinstall": "chmod -f +x ./bin/fsproxy || true"
