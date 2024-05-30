@@ -182,6 +182,23 @@ importers:
         specifier: ^1.2.2
         version: 1.2.2(@types/node@20.11.16)
 
+  xsuite-fullsimulnet:
+    dependencies:
+      '@xsuite/full-simulnet-darwin-amd64':
+        specifier: workspace:*
+        version: link:../xsuite-fullsimulnet-darwin-amd64
+      '@xsuite/full-simulnet-linux-amd64':
+        specifier: workspace:*
+        version: link:../xsuite-fullsimulnet-linux-amd64
+    devDependencies:
+      run-script-os:
+        specifier: 1.1.6
+        version: 1.1.6
+
+  xsuite-fullsimulnet-darwin-amd64: {}
+
+  xsuite-fullsimulnet-linux-amd64: {}
+
   xsuite-lightsimulnet:
     dependencies:
       '@xsuite/light-simulnet-darwin-amd64':

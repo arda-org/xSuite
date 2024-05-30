@@ -4,12 +4,11 @@
   "license": "MIT",
   "scripts": {
     "build": "run-script-os",
-    "build:linux": "cd src && GOOS=linux GOARCH=amd64 go build -o ../../xsuite-lightsimulnet-linux-amd64/bin/lsproxy -ldflags \"-extldflags '-Wl,-rpath,\\$ORIGIN'\"",
-    "build:darwin": "cd src && GOOS=darwin GOARCH=amd64 go build -o ../../xsuite-lightsimulnet-darwin-amd64/bin/lsproxy -ldflags \"-extldflags '-Wl,-rpath,@loader_path'\"",
+    "build:darwin": "node build-binary.mjs --os darwin --arch amd64 --ldflags=\"-extldflags '-Wl,-rpath,@loader_path'\"",
+    "build:linux": "node build-binary.mjs --os linux --arch amd64 --ldflags=\"-extldflags '-Wl,-rpath,\\$ORIGIN'\"",
     "test": "node --test"
   },
   "files": [
-    "bin",
     "index.js",
     "index.d.ts"
   ],

@@ -1,0 +1,11 @@
+{
+  "name": "@xsuite/full-simulnet-linux-amd64",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "postinstall": "chmod -f +x ./bin/fsproxy || true"
+  },
+  "files": [
+    "bin"
+  ]
+}

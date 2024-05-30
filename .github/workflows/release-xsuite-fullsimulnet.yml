@@ -1,0 +1,86 @@
+name: Release xsuite-fullsimulnet
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [macos-12, ubuntu-20.04]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js & pnpm
+        uses: ./.github/actions/node-pnpm
+
+      - name: Use Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.19
+          cache-dependency-path: xsuite-fullsimulnet/build-binary.mjs
+
+      - name: Build xsuite-fullsimulnet
+        run: pnpm build-xsuite-fullsimulnet
+
+      - name: Upload package
+        uses: actions/upload-artifact@v4
+        with:
+          name: package-${{ matrix.os }}
+          path: |
+            xsuite-fullsimulnet-darwin-amd64/bin/fsproxy
+            xsuite-fullsimulnet-linux-amd64/bin/fsproxy
+
+  test:
+    needs: build
+
+    strategy:
+      matrix:
+        os: [macos-12, ubuntu-20.04]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          pattern: package-*
+          merge-multiple: true
+
+      - name: Use Node.js & pnpm
+        uses: ./.github/actions/node-pnpm
+      
+      - name: Test xsuite-fullsimulnet
+        run: pnpm test-xsuite-fullsimulnet
+
+  publish:
+    needs: test
+
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          pattern: package-*
+          merge-multiple: true
+
+      - name: Use Node.js & pnpm
+        uses: ./.github/actions/node-pnpm
+        with:
+          node-registry-url: "https://registry.npmjs.org"
+
+      - name: Publish xsuite-fullsimulnet packages to NPM
+        run: git config core.fileMode false && pnpm --filter "@xsuite/full-simulnet*" publish --publish-branch dev --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -57,7 +57,7 @@ jobs:
       - name: Use Node.js & pnpm
         uses: ./.github/actions/node-pnpm
       
-      - name: Test
+      - name: Test xsuite-lightsimulnet
         run: pnpm test-xsuite-lightsimulnet
 
   publish:

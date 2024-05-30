@@ -1,0 +1,23 @@
+{
+  "name": "@xsuite/full-simulnet",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "build": "run-script-os",
+    "build:darwin": "node build-binary.mjs --os darwin --arch amd64 --ldflags=\"-extldflags '-Wl,-rpath,@loader_path'\"",
+    "build:linux": "node build-binary.mjs --os linux --arch amd64 --ldflags=\"-extldflags '-Wl,-rpath,\\$ORIGIN'\"",
+    "test": "node --test"
+  },
+  "files": [
+    "config",
+    "index.js",
+    "index.d.ts"
+  ],
+  "dependencies": {
+    "@xsuite/full-simulnet-darwin-amd64": "workspace:*",
+    "@xsuite/full-simulnet-linux-amd64": "workspace:*"
+  },
+  "devDependencies": {
+    "run-script-os": "1.1.6"
+  }
+}
