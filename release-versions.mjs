@@ -28,6 +28,11 @@ const releaseVersion = async (versionPkgDir, ...additionalPkgDirs) => {
 };
 
 await releaseVersion(
+  "xsuite-fullsimulnet",
+  "xsuite-fullsimulnet-darwin-amd64",
+  "xsuite-fullsimulnet-linux-amd64",
+);
+await releaseVersion(
   "xsuite-lightsimulnet",
   "xsuite-lightsimulnet-darwin-amd64",
   "xsuite-lightsimulnet-linux-amd64",
