@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"math/big"
 	"net/http"
 	"strings"
 
@@ -216,6 +217,11 @@ func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
 		}
 		processStatus = "failed"
 	}
+	gasUsed := rawTx.GasLimit - vmOutput.GasRemaining
+	fee := new(big.Int).Mul(
+		new(big.Int).SetUint64(gasUsed),
+		new(big.Int).SetUint64(rawTx.GasPrice),
+	)
 	e.txResps[txHash] = map[string]interface{}{
 		"data": map[string]interface{}{
 			"transaction": map[string]interface{}{
@@ -228,6 +234,8 @@ func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
 					"returnMessage": vmOutput.ReturnMessage,
 				},
 				"executionLogs": logger.StopAndCollect(),
+				"gasUsed": rawTx.GasLimit - vmOutput.GasRemaining,
+				"fee": fee.String(),
 			},
 		},
 		"code": "successful",
