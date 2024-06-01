@@ -135,6 +135,9 @@ importers:
       '@multiversx/sdk-wallet':
         specifier: 4.2.0
         version: 4.2.0
+      '@xsuite/full-simulnet':
+        specifier: workspace:*
+        version: link:../xsuite-fullsimulnet
       '@xsuite/light-simulnet':
         specifier: workspace:*
         version: link:../xsuite-lightsimulnet

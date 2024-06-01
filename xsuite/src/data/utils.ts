@@ -21,6 +21,10 @@ export const hexToU8A = (hex: string) => {
   return new Uint8Array(hs.map((h) => parseInt(h, 16)));
 };
 
+export const hexToBase64 = (hex: string) => {
+  return u8aToBase64(hexToU8A(hex));
+};
+
 export const base64ToU8A = (base64: string) => {
   return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
 };

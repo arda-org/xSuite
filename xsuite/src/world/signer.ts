@@ -13,7 +13,7 @@ export abstract class Signer extends Account {
 
 export class DummySigner extends Signer {
   async sign() {
-    return Buffer.from("");
+    return Buffer.from("00");
   }
 }
 
