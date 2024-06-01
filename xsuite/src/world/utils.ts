@@ -5,7 +5,7 @@ export const readFileHex = (path: string) => {
   return fs.readFileSync(path, "hex");
 };
 
-export const generateU8AAddress = ({
+export const createU8AAddress = ({
   type,
   shard,
 }: {

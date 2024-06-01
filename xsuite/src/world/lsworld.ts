@@ -8,7 +8,7 @@ import { Block } from "../proxy/lsproxy";
 import { killChildProcess } from "./childProcesses";
 import { startLsproxyBin } from "./lsproxyBin";
 import { DummySigner, Signer } from "./signer";
-import { generateU8AAddress } from "./utils";
+import { createU8AAddress } from "./utils";
 import {
   World,
   Contract,
@@ -88,7 +88,7 @@ export class LSWorld extends World {
   }
 
   async createWallet({ address, ...params }: LSWorldCreateAccountParams = {}) {
-    address ??= generateU8AAddress({ type: "wallet" });
+    address ??= createU8AAddress({ type: "wallet" });
     await this.setAccount({ address, ...params });
     return this.newWallet(new DummySigner(address));
   }
@@ -97,7 +97,7 @@ export class LSWorld extends World {
     address,
     ...params
   }: LSWorldCreateAccountParams = {}) {
-    address ??= generateU8AAddress({ type: "vmContract" });
+    address ??= createU8AAddress({ type: "vmContract" });
     await this.setAccount({ address, ...params });
     return this.newContract(address);
   }
