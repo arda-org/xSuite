@@ -10,7 +10,7 @@ import { getAddressType } from "../data/utils";
 import { childProcesses } from "./childProcesses";
 import { LSWorld, LSContract, LSWallet } from "./lsworld";
 import { DummySigner } from "./signer";
-import { generateU8AAddress } from "./utils";
+import { createU8AAddress } from "./utils";
 import { expandCode } from "./world";
 
 let world: LSWorld;
@@ -132,7 +132,7 @@ test("LSWorld.createWallet - with balance", async () => {
 });
 
 test("LSWorld.createWallet - with address & balance", async () => {
-  const address = generateU8AAddress({ type: "wallet" });
+  const address = createU8AAddress({ type: "wallet" });
   const wallet = await world.createWallet({ address, balance: 10n });
   assertAccount(await wallet.getAccount(), { address, balance: 10n });
 });
@@ -157,12 +157,9 @@ test("LSWorld.createContract - with file:", async () => {
 });
 
 test("LSWorld.createContract - with address & file:", async () => {
-  const address = generateU8AAddress({ type: "vmContract" });
+  const address = createU8AAddress({ type: "vmContract" });
   const contract = await world.createContract({ address, code: worldCode });
-  assertAccount(await contract.getAccount(), {
-    address,
-    code: worldCode,
-  });
+  assertAccount(await contract.getAccount(), { address, code: worldCode });
 });
 
 test("LSWorld.getAccountNonce", async () => {
