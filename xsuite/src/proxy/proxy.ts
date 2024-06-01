@@ -170,7 +170,8 @@ export class Proxy {
       throw new TxError("signalError", error, tx);
     }
     const gasUsed: number = tx.gasUsed;
-    return { explorerUrl, hash, gasUsed, tx };
+    const fee: bigint = BigInt(tx.fee);
+    return { explorerUrl, hash, gasUsed, fee, tx };
   }
 
   resolveTransfer(txHash: string) {
@@ -606,6 +607,7 @@ type TxResult = Prettify<{
   hash: string;
   explorerUrl: string;
   gasUsed: number;
+  fee: bigint;
   tx: { [x: string]: any };
 }>;
 
