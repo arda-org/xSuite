@@ -151,6 +151,9 @@ export class Proxy {
   }
 
   async resolveTx(txHash: string): Promise<TxResult> {
+    if ((await this.getTxProcessStatus(txHash)) === "pending") {
+      throw new Error(pendingErrorMessage);
+    }
     let tx = await this.getTx(txHash);
     const hash: string = tx.hash;
     const explorerUrl = `${this.explorerUrl}/transactions/${hash}`;
@@ -494,6 +497,8 @@ const getTxReturnData = (tx: any): string[] => {
   }
   return [];
 };
+
+export const pendingErrorMessage = "Transaction still pending.";
 
 export type ProxyParams =
   | string

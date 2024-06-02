@@ -17,6 +17,7 @@ import {
 import {
   CallContractTx,
   DeployContractTx,
+  pendingErrorMessage,
   Query,
   TransferTx,
   Tx,
@@ -445,6 +446,22 @@ export class InteractionPromise<T> implements PromiseLike<T> {
       | null,
   ) {
     return this.then(null, onrejected);
+  }
+
+  assertPending() {
+    return this.then(() => {
+      throw new Error("Not pending.");
+    }).catch((error) => {
+      if (!(error instanceof Error) || error.message !== pendingErrorMessage) {
+        throw error;
+      }
+    });
+  }
+
+  assertSucceed() {
+    return this.catch(() => {
+      throw new Error("No success.");
+    });
   }
 
   assertFail({
