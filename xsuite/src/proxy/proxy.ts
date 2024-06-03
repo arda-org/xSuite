@@ -314,9 +314,23 @@ export class Proxy {
     return res.pairs as Kvs;
   }
 
-  async getSerializableAccountWithoutKvs(
+  getSerializableAccountWithoutKvs(
     address: AddressLike,
     options?: GetAccountOptions,
+  ) {
+    return this._getSerializableAccount(address, options);
+  }
+
+  getSerializableAccount(address: AddressLike, options?: GetAccountOptions) {
+    return this._getSerializableAccount(address, {
+      withKeys: true,
+      ...options,
+    });
+  }
+
+  private async _getSerializableAccount(
+    address: AddressLike,
+    options?: GetAccountRawOptions,
   ) {
     const res = await this.fetch(
       makePath(`/address/${addressLikeToBechAddress(address)}`, options),
@@ -324,31 +338,26 @@ export class Proxy {
     return getSerializableAccount(res.account);
   }
 
-  getSerializableAccount(address: AddressLike, options?: GetAccountOptions) {
-    // TODO-MvX: When ?withKeys=true out, rewrite this part
-    return Promise.all([
-      this.getSerializableAccountWithoutKvs(address, options),
-      this.getAccountKvs(address, options),
-    ]).then(([account, kvs]) => ({ ...account, kvs }));
-  }
-
   async getAccountWithoutKvs(
     address: AddressLike,
     options?: GetAccountOptions,
   ) {
-    const { balance, ...account } = await this.getSerializableAccountWithoutKvs(
+    return this._getAccount(address, options);
+  }
+
+  getAccount(address: AddressLike, options?: GetAccountOptions) {
+    return this._getAccount(address, { withKeys: true, ...options });
+  }
+
+  private async _getAccount(
+    address: AddressLike,
+    options?: GetAccountRawOptions,
+  ) {
+    const { balance, ...account } = await this._getSerializableAccount(
       address,
       options,
     );
     return { balance: BigInt(balance), ...account };
-  }
-
-  getAccount(address: AddressLike, options?: GetAccountOptions) {
-    // TODO-MvX: When ?withKeys=true out, rewrite this part
-    return Promise.all([
-      this.getAccountWithoutKvs(address, options),
-      this.getAccountKvs(address, options),
-    ]).then(([account, kvs]) => ({ ...account, kvs }));
   }
 
   /**
@@ -708,6 +717,8 @@ type RawQuery = {
 };
 
 type GetTxRawOptions = { withResults?: boolean };
+
+type GetAccountRawOptions = { withKeys?: boolean; shardId?: number };
 
 type GetAccountOptions = { shardId?: number };
 

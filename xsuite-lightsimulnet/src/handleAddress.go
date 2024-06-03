@@ -16,7 +16,12 @@ func (e *Executor) HandleAddress(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 	worldAccount := e.getWorldAccount(address)
-	accountData, err := e.getAccountData(worldAccount, false)
+	withKeysStr := r.URL.Query().Get("withKeys")
+	withKeys, err := parseBool(withKeysStr)
+	if err != nil {
+		return nil, err
+	}
+	accountData, err := e.getAccountData(worldAccount, withKeys)
 	if err != nil {
 		return nil, err
 	}
