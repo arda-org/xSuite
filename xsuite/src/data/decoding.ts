@@ -986,3 +986,7 @@ type DecodersToValues<T> = Prettify<{
 type KvsDecoder<T> = { _from: (consumer: KvsConsumer) => T };
 
 type KvsSeparator = [value: string, keyed: boolean];
+
+export type InferDecoderOutput<T extends Decoder> = T extends Decoder<infer U>
+  ? U
+  : never;

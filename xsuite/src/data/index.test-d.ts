@@ -1,5 +1,5 @@
 import { expectTypeOf, test } from "vitest";
-import { e, d } from ".";
+import { e, d, InferDecoderOutput } from ".";
 
 test("e.account - keep definedness", () => {
   expectTypeOf(e.account({ address: "", nonce: 0, balance: 0 })).toEqualTypeOf<{
@@ -42,4 +42,10 @@ test("d.account.from - keep definedness", () => {
     address: string;
     balance: bigint;
   }>();
+});
+
+test("InferDecoderOutput", () => {
+  const decoder = d.Tuple(d.U8(), d.Str(), d.Tuple(d.Bool()));
+  type Output = InferDecoderOutput<typeof decoder>;
+  expectTypeOf<Output>().toEqualTypeOf<[bigint, string, [boolean]]>();
 });
