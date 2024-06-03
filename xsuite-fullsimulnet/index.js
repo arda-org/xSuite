@@ -1,5 +1,3 @@
-const path = require("node:path");
-
 function getFsproxyBinPath() {
   if (process.platform === "linux" && process.arch === "x64") {
     return require.resolve("@xsuite/full-simulnet-linux-amd64/bin/fsproxy");
@@ -10,8 +8,4 @@ function getFsproxyBinPath() {
   }
 }
 
-function getFsproxyConfigPath() {
-  return path.join(__dirname, "config");
-}
-
-module.exports = { getFsproxyBinPath, getFsproxyConfigPath };
+module.exports = { getFsproxyBinPath };
