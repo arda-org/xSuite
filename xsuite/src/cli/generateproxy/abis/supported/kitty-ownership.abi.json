@@ -1,0 +1,456 @@
+{
+    "buildInfo": {
+        "rustc": {
+            "version": "1.71.0-nightly",
+            "commitHash": "a2b1646c597329d0a25efa3889b66650f65de1de",
+            "commitDate": "2023-05-25",
+            "channel": "Nightly",
+            "short": "rustc 1.71.0-nightly (a2b1646c5 2023-05-25)"
+        },
+        "contractCrate": {
+            "name": "kitty-ownership",
+            "version": "0.0.0"
+        },
+        "framework": {
+            "name": "multiversx-sc",
+            "version": "0.45.2"
+        }
+    },
+    "name": "KittyOwnership",
+    "constructor": {
+        "inputs": [
+            {
+                "name": "birth_fee",
+                "type": "BigUint"
+            },
+            {
+                "name": "opt_gene_science_contract_address",
+                "type": "optional<Address>",
+                "multi_arg": true
+            },
+            {
+                "name": "opt_kitty_auction_contract_address",
+                "type": "optional<Address>",
+                "multi_arg": true
+            }
+        ],
+        "outputs": []
+    },
+    "endpoints": [
+        {
+            "name": "setGeneScienceContractAddress",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "setKittyAuctionContractAddress",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "claim",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "name": "totalSupply",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u32"
+                }
+            ]
+        },
+        {
+            "name": "balanceOf",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "u32"
+                }
+            ]
+        },
+        {
+            "name": "ownerOf",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "kitty_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
+        },
+        {
+            "name": "approve",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "to",
+                    "type": "Address"
+                },
+                {
+                    "name": "kitty_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "transfer",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "to",
+                    "type": "Address"
+                },
+                {
+                    "name": "kitty_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "transfer_from",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "from",
+                    "type": "Address"
+                },
+                {
+                    "name": "to",
+                    "type": "Address"
+                },
+                {
+                    "name": "kitty_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "tokensOfOwner",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "variadic<u32>",
+                    "multi_result": true
+                }
+            ]
+        },
+        {
+            "name": "allowAuctioning",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "by",
+                    "type": "Address"
+                },
+                {
+                    "name": "kitty_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "approveSiringAndReturnKitty",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "approved_address",
+                    "type": "Address"
+                },
+                {
+                    "name": "kitty_owner",
+                    "type": "Address"
+                },
+                {
+                    "name": "kitty_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "createGenZeroKitty",
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u32"
+                }
+            ]
+        },
+        {
+            "name": "getKittyById",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "kitty_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Kitty"
+                }
+            ]
+        },
+        {
+            "name": "isReadyToBreed",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "kitty_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "isPregnant",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "kitty_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "canBreedWith",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "matron_id",
+                    "type": "u32"
+                },
+                {
+                    "name": "sire_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "approveSiring",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                },
+                {
+                    "name": "kitty_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "breedWith",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "EGLD"
+            ],
+            "inputs": [
+                {
+                    "name": "matron_id",
+                    "type": "u32"
+                },
+                {
+                    "name": "sire_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "giveBirth",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "matron_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "birthFee",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "BigUint"
+                }
+            ]
+        }
+    ],
+    "events": [
+        {
+            "identifier": "transfer",
+            "inputs": [
+                {
+                    "name": "from",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "to",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "token_id",
+                    "type": "u32",
+                    "indexed": true
+                }
+            ]
+        },
+        {
+            "identifier": "approve",
+            "inputs": [
+                {
+                    "name": "owner",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "approved",
+                    "type": "Address",
+                    "indexed": true
+                },
+                {
+                    "name": "token_id",
+                    "type": "u32",
+                    "indexed": true
+                }
+            ]
+        }
+    ],
+    "esdtAttributes": [],
+    "hasCallback": true,
+    "types": {
+        "Color": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "r",
+                    "type": "u8"
+                },
+                {
+                    "name": "g",
+                    "type": "u8"
+                },
+                {
+                    "name": "b",
+                    "type": "u8"
+                }
+            ]
+        },
+        "Kitty": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "genes",
+                    "type": "KittyGenes"
+                },
+                {
+                    "name": "birth_time",
+                    "type": "u64"
+                },
+                {
+                    "name": "cooldown_end",
+                    "type": "u64"
+                },
+                {
+                    "name": "matron_id",
+                    "type": "u32"
+                },
+                {
+                    "name": "sire_id",
+                    "type": "u32"
+                },
+                {
+                    "name": "siring_with_id",
+                    "type": "u32"
+                },
+                {
+                    "name": "nr_children",
+                    "type": "u16"
+                },
+                {
+                    "name": "generation",
+                    "type": "u16"
+                }
+            ]
+        },
+        "KittyGenes": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "fur_color",
+                    "type": "Color"
+                },
+                {
+                    "name": "eye_color",
+                    "type": "Color"
+                },
+                {
+                    "name": "meow_power",
+                    "type": "u8"
+                }
+            ]
+        }
+    }
+}

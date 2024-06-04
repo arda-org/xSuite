@@ -1,0 +1,267 @@
+{
+    "buildInfo": {
+        "rustc": {
+            "version": "1.71.0-nightly",
+            "commitHash": "a2b1646c597329d0a25efa3889b66650f65de1de",
+            "commitDate": "2023-05-25",
+            "channel": "Nightly",
+            "short": "rustc 1.71.0-nightly (a2b1646c5 2023-05-25)"
+        },
+        "contractCrate": {
+            "name": "rewards-distribution",
+            "version": "0.0.0"
+        },
+        "framework": {
+            "name": "multiversx-sc",
+            "version": "0.45.2"
+        }
+    },
+    "name": "RewardsDistribution",
+    "constructor": {
+        "inputs": [
+            {
+                "name": "seed_nft_minter_address",
+                "type": "Address"
+            },
+            {
+                "name": "brackets",
+                "type": "List<Bracket>"
+            }
+        ],
+        "outputs": []
+    },
+    "endpoints": [
+        {
+            "name": "depositRoyalties",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "*"
+            ],
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "name": "raffle",
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "OperationCompletionStatus"
+                }
+            ]
+        },
+        {
+            "name": "claimRewards",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "*"
+            ],
+            "inputs": [
+                {
+                    "name": "raffle_id_start",
+                    "type": "u64"
+                },
+                {
+                    "name": "raffle_id_end",
+                    "type": "u64"
+                },
+                {
+                    "name": "reward_tokens",
+                    "type": "variadic<multi<EgldOrEsdtTokenIdentifier,u64>>",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "computeClaimableAmount",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "raffle_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "reward_token_id",
+                    "type": "EgldOrEsdtTokenIdentifier"
+                },
+                {
+                    "name": "reward_token_nonce",
+                    "type": "u64"
+                },
+                {
+                    "name": "nft_nonce",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "name": "getRaffleId",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "getCompletedRaffleIdCount",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "getRoyalties",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "raffle_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "reward_token_id",
+                    "type": "EgldOrEsdtTokenIdentifier"
+                },
+                {
+                    "name": "reward_token_nonce",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "name": "getNftRewardPercent",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "raffle_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "nft_nonce",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "name": "getWasClaimed",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "raffle_id",
+                    "type": "u64"
+                },
+                {
+                    "name": "reward_token_id",
+                    "type": "EgldOrEsdtTokenIdentifier"
+                },
+                {
+                    "name": "reward_token_nonce",
+                    "type": "u64"
+                },
+                {
+                    "name": "nft_nonce",
+                    "type": "u64"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "getSeedNftMinterAddress",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
+        },
+        {
+            "name": "getBrackets",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "List<Bracket>"
+                }
+            ]
+        },
+        {
+            "name": "getLastRaffleEpoch",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "u64"
+                }
+            ]
+        },
+        {
+            "name": "getNftTokenId",
+            "mutability": "readonly",
+            "inputs": [],
+            "outputs": [
+                {
+                    "type": "TokenIdentifier"
+                }
+            ]
+        }
+    ],
+    "esdtAttributes": [],
+    "hasCallback": false,
+    "types": {
+        "Bracket": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "index_percent",
+                    "type": "u64"
+                },
+                {
+                    "name": "bracket_reward_percent",
+                    "type": "u64"
+                }
+            ]
+        },
+        "OperationCompletionStatus": {
+            "type": "explicit-enum",
+            "variants": [
+                {
+                    "docs": [
+                        "indicates that operation was completed"
+                    ],
+                    "name": "completed"
+                },
+                {
+                    "docs": [
+                        "indicates that operation was interrupted prematurely, due to low gas"
+                    ],
+                    "name": "interrupted"
+                }
+            ]
+        }
+    }
+}

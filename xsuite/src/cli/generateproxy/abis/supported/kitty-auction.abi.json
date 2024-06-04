@@ -1,0 +1,229 @@
+{
+    "buildInfo": {
+        "rustc": {
+            "version": "1.71.0-nightly",
+            "commitHash": "a2b1646c597329d0a25efa3889b66650f65de1de",
+            "commitDate": "2023-05-25",
+            "channel": "Nightly",
+            "short": "rustc 1.71.0-nightly (a2b1646c5 2023-05-25)"
+        },
+        "contractCrate": {
+            "name": "kitty-auction",
+            "version": "0.0.0"
+        },
+        "framework": {
+            "name": "multiversx-sc",
+            "version": "0.45.2"
+        }
+    },
+    "name": "KittyAuction",
+    "constructor": {
+        "inputs": [
+            {
+                "name": "gen_zero_kitty_starting_price",
+                "type": "BigUint"
+            },
+            {
+                "name": "gen_zero_kitty_ending_price",
+                "type": "BigUint"
+            },
+            {
+                "name": "gen_zero_kitty_auction_duration",
+                "type": "u64"
+            },
+            {
+                "name": "opt_kitty_ownership_contract_address",
+                "type": "optional<Address>",
+                "multi_arg": true
+            }
+        ],
+        "outputs": []
+    },
+    "endpoints": [
+        {
+            "name": "setKittyOwnershipContractAddress",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "address",
+                    "type": "Address"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "createAndAuctionGenZeroKitty",
+            "onlyOwner": true,
+            "mutability": "mutable",
+            "inputs": [],
+            "outputs": []
+        },
+        {
+            "name": "isUpForAuction",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "kitty_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "bool"
+                }
+            ]
+        },
+        {
+            "name": "getAuctionStatus",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "kitty_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Auction"
+                }
+            ]
+        },
+        {
+            "name": "getCurrentWinningBid",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "kitty_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "BigUint"
+                }
+            ]
+        },
+        {
+            "name": "createSaleAuction",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "kitty_id",
+                    "type": "u32"
+                },
+                {
+                    "name": "starting_price",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "ending_price",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "duration",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "createSiringAuction",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "kitty_id",
+                    "type": "u32"
+                },
+                {
+                    "name": "starting_price",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "ending_price",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "duration",
+                    "type": "u64"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "bid",
+            "mutability": "mutable",
+            "payableInTokens": [
+                "EGLD"
+            ],
+            "inputs": [
+                {
+                    "name": "kitty_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": []
+        },
+        {
+            "name": "endAuction",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "kitty_id",
+                    "type": "u32"
+                }
+            ],
+            "outputs": []
+        }
+    ],
+    "esdtAttributes": [],
+    "hasCallback": true,
+    "types": {
+        "Auction": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "auction_type",
+                    "type": "AuctionType"
+                },
+                {
+                    "name": "starting_price",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "ending_price",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "deadline",
+                    "type": "u64"
+                },
+                {
+                    "name": "kitty_owner",
+                    "type": "Address"
+                },
+                {
+                    "name": "current_bid",
+                    "type": "BigUint"
+                },
+                {
+                    "name": "current_winner",
+                    "type": "Address"
+                }
+            ]
+        },
+        "AuctionType": {
+            "type": "enum",
+            "variants": [
+                {
+                    "name": "Selling",
+                    "discriminant": 0
+                },
+                {
+                    "name": "Siring",
+                    "discriminant": 1
+                }
+            ]
+        }
+    }
+}

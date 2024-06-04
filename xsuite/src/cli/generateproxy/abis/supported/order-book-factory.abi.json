@@ -1,0 +1,78 @@
+{
+    "buildInfo": {
+        "rustc": {
+            "version": "1.71.0-nightly",
+            "commitHash": "a2b1646c597329d0a25efa3889b66650f65de1de",
+            "commitDate": "2023-05-25",
+            "channel": "Nightly",
+            "short": "rustc 1.71.0-nightly (a2b1646c5 2023-05-25)"
+        },
+        "contractCrate": {
+            "name": "order-book-factory",
+            "version": "0.0.0"
+        },
+        "framework": {
+            "name": "multiversx-sc",
+            "version": "0.45.2"
+        }
+    },
+    "name": "Factory",
+    "constructor": {
+        "inputs": [
+            {
+                "name": "pair_template_address",
+                "type": "Address"
+            }
+        ],
+        "outputs": []
+    },
+    "endpoints": [
+        {
+            "name": "createPair",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "token_id_pair",
+                    "type": "TokenIdPair"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Address"
+                }
+            ]
+        },
+        {
+            "name": "getPair",
+            "mutability": "readonly",
+            "inputs": [
+                {
+                    "name": "token_id_pair",
+                    "type": "TokenIdPair"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "Option<Address>"
+                }
+            ]
+        }
+    ],
+    "esdtAttributes": [],
+    "hasCallback": false,
+    "types": {
+        "TokenIdPair": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "first_token_id",
+                    "type": "TokenIdentifier"
+                },
+                {
+                    "name": "second_token_id",
+                    "type": "TokenIdentifier"
+                }
+            ]
+        }
+    }
+}

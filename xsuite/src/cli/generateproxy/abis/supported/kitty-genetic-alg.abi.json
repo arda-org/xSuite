@@ -1,0 +1,120 @@
+{
+    "buildInfo": {
+        "rustc": {
+            "version": "1.71.0-nightly",
+            "commitHash": "a2b1646c597329d0a25efa3889b66650f65de1de",
+            "commitDate": "2023-05-25",
+            "channel": "Nightly",
+            "short": "rustc 1.71.0-nightly (a2b1646c5 2023-05-25)"
+        },
+        "contractCrate": {
+            "name": "kitty-genetic-alg",
+            "version": "0.0.0"
+        },
+        "framework": {
+            "name": "multiversx-sc",
+            "version": "0.45.2"
+        }
+    },
+    "name": "KittyGeneticAlg",
+    "constructor": {
+        "inputs": [],
+        "outputs": []
+    },
+    "endpoints": [
+        {
+            "name": "generateKittyGenes",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "matron",
+                    "type": "Kitty"
+                },
+                {
+                    "name": "sire",
+                    "type": "Kitty"
+                }
+            ],
+            "outputs": [
+                {
+                    "type": "KittyGenes"
+                }
+            ]
+        }
+    ],
+    "esdtAttributes": [],
+    "hasCallback": false,
+    "types": {
+        "Color": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "r",
+                    "type": "u8"
+                },
+                {
+                    "name": "g",
+                    "type": "u8"
+                },
+                {
+                    "name": "b",
+                    "type": "u8"
+                }
+            ]
+        },
+        "Kitty": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "genes",
+                    "type": "KittyGenes"
+                },
+                {
+                    "name": "birth_time",
+                    "type": "u64"
+                },
+                {
+                    "name": "cooldown_end",
+                    "type": "u64"
+                },
+                {
+                    "name": "matron_id",
+                    "type": "u32"
+                },
+                {
+                    "name": "sire_id",
+                    "type": "u32"
+                },
+                {
+                    "name": "siring_with_id",
+                    "type": "u32"
+                },
+                {
+                    "name": "nr_children",
+                    "type": "u16"
+                },
+                {
+                    "name": "generation",
+                    "type": "u16"
+                }
+            ]
+        },
+        "KittyGenes": {
+            "type": "struct",
+            "fields": [
+                {
+                    "name": "fur_color",
+                    "type": "Color"
+                },
+                {
+                    "name": "eye_color",
+                    "type": "Color"
+                },
+                {
+                    "name": "meow_power",
+                    "type": "u8"
+                }
+            ]
+        }
+    }
+}

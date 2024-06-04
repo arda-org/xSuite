@@ -1,0 +1,19 @@
+{
+    "name": "NotSupportedType",
+    "constructor": {},
+    "endpoints": [
+        {
+            "name": "ping",
+            "mutability": "mutable",
+            "inputs": [
+                {
+                    "name": "_data",
+                    "type": "NOTSUPPORTEDTYPE",
+                    "multi_arg": true
+                }
+            ],
+            "outputs": []
+        }
+    ],
+    "types": {}
+}
