@@ -9,21 +9,24 @@ export const startFsproxyBin = async (): Promise<{
 }> => {
   const fsproxyBinPath = getFsproxyBinPath();
 
-  const simulnetPkgPath = path.dirname(
+  const fsproxyPkgPath = path.dirname(
     require.resolve("@xsuite/full-simulnet/package.json"),
   );
+  const fsproxyConfigPath = `${fsproxyPkgPath}/config`;
 
-  const server = spawnChildProcess(
-    `${fsproxyBinPath}`,
-    [
-      "--server-port",
-      "0",
-      "--node-override-config",
-      `${simulnetPkgPath}/config/nodeOverride.toml`,
-      "--skip-configs-download",
-    ],
-    { cwd: simulnetPkgPath },
-  );
+  const server = spawnChildProcess(`${fsproxyBinPath}`, [
+    "--server-port",
+    "0",
+    "--config",
+    `${fsproxyConfigPath}/config.toml`,
+    "--node-configs",
+    `${fsproxyConfigPath}/node/config`,
+    "--proxy-configs",
+    `${fsproxyConfigPath}/proxy/config`,
+    "--node-override-config",
+    `${fsproxyConfigPath}/nodeOverrideDefault.toml,${fsproxyConfigPath}/nodeOverride.toml`,
+    "--skip-configs-download",
+  ]);
 
   server.stderr.on("data", (data: Buffer) => {
     throw new Error(data.toString());

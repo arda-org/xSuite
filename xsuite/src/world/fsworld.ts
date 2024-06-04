@@ -121,9 +121,7 @@ export class FSWorld extends World {
         _params.code = expandCode(_params.code);
       }
     }
-    const result = await this.proxy.setAccounts(params);
-    await this.generateBlock(); // TODO-MvX: to be removed once endpoint also generates block
-    return result;
+    return this.proxy.setAccounts(params);
   }
 
   setAccount(params: FSWorldSetAccountParams) {
