@@ -1,5 +1,10 @@
 packages:
   - "docs"
   - "xsuite"
+  - "xsuite-fullsimulnet"
+  - "xsuite-fullsimulnet-darwin-amd64"
+  - "xsuite-fullsimulnet-linux-amd64"
   - "xsuite-lightsimulnet"
+  - "xsuite-lightsimulnet-darwin-amd64"
+  - "xsuite-lightsimulnet-linux-amd64"
   - "contracts/*"

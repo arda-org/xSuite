@@ -144,10 +144,6 @@ func (e *Executor) setAccount(rawAccount RawAccount) error {
 	if err != nil {
 		return err
 	}
-	err = worldAccount.Validate()
-	if err != nil {
-		return err
-	}
 	e.scenexec.World.AcctMap.PutAccount(worldAccount)
 	return nil
 }

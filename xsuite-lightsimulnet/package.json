@@ -1,19 +1,23 @@
 {
   "name": "@xsuite/light-simulnet",
-  "version": "0.0.21",
+  "version": "0.0.25",
   "license": "MIT",
   "scripts": {
     "build": "run-script-os",
-    "build:linux": "cd src && GOOS=linux GOARCH=amd64 go build -o ../bin/lsproxy-linux-amd64 -ldflags \"-extldflags '-Wl,-rpath,\\$ORIGIN'\"",
-    "build:darwin": "cd src && GOOS=darwin GOARCH=amd64 go build -o ../bin/lsproxy-darwin-amd64 -ldflags \"-extldflags '-Wl,-rpath,@loader_path'\"",
-    "postinstall": "chmod -f +x ./bin/lsproxy-* || true"
+    "build:darwin": "node build-binary.mjs --os darwin --arch amd64 --ldflags=\"-extldflags '-Wl,-rpath,@loader_path'\"",
+    "build:linux": "node build-binary.mjs --os linux --arch amd64 --ldflags=\"-extldflags '-Wl,-rpath,\\$ORIGIN'\"",
+    "test": "node --test"
   },
   "files": [
-    "bin",
     "index.js",
     "index.d.ts"
   ],
+  "optionalDependencies": {
+    "@xsuite/light-simulnet-darwin-amd64": "workspace:*",
+    "@xsuite/light-simulnet-linux-amd64": "workspace:*"
+  },
   "devDependencies": {
+    "@types/node": "20.11.16",
     "run-script-os": "1.1.6"
   }
 }

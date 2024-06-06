@@ -1,0 +1,18 @@
+{
+  "name": "@xsuite/light-simulnet-darwin-amd64",
+  "version": "0.0.25",
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "postinstall": "chmod -f +x ./bin/lsproxy || true"
+  },
+  "files": [
+    "bin"
+  ]
+}

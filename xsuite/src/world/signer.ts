@@ -8,12 +8,12 @@ import { input, log } from "../_stdio";
 import { Account } from "./account";
 
 export abstract class Signer extends Account {
-  abstract sign(data: Buffer): Promise<Buffer>;
+  abstract sign(data: Uint8Array): Promise<Uint8Array>;
 }
 
 export class DummySigner extends Signer {
   async sign() {
-    return Buffer.from("");
+    return Buffer.from("00");
   }
 }
 
@@ -25,8 +25,8 @@ export class UserSigner extends Signer {
     this.#signer = signer;
   }
 
-  sign(data: Buffer): Promise<Buffer> {
-    return this.#signer.sign(data);
+  sign(data: Uint8Array): Promise<Uint8Array> {
+    return this.#signer.sign(Buffer.from(data));
   }
 }
 
