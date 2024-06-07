@@ -391,6 +391,10 @@ export class Contract extends Account {
     return this.world.getAccount(this);
   }
 
+  query(tx: ContractQuery) {
+    return this.world.query({ ...tx, callee: this });
+  }
+
   /**
    * @deprecated Use `.getSerializableAccount` instead.
    */
@@ -549,3 +553,5 @@ type WalletCallContractTx = Prettify<Omit<WorldCallContractTx, "sender">>;
 type WalletUpgradeContractTx = Prettify<Omit<WorldUpgradeContractTx, "sender">>;
 
 type WalletQuery = Prettify<Omit<WorldQuery, "sender">>;
+
+type ContractQuery = Prettify<Omit<WorldQuery, "callee">>;
