@@ -153,6 +153,10 @@ export class LSWorld extends World {
     killChildProcess(this.server);
   }
 
+  [Symbol.dispose]() {
+    this.terminate();
+  }
+
   /**
    * @deprecated Use `.getAllSerializableAccounts` instead.
    */
