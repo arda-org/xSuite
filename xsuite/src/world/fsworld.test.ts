@@ -9,8 +9,7 @@ import {
 import { getAddressShard, getAddressType } from "../data/utils";
 import { childProcesses } from "./childProcesses";
 import { FSWorld, FSContract, FSWallet } from "./fsworld";
-import { DummySigner } from "./signer";
-import { createU8AAddress } from "./utils";
+import { createAddressLike } from "./utils";
 import { expandCode } from "./world";
 
 let world: FSWorld;
@@ -113,12 +112,12 @@ test("FSWorld.newMainnet", () => {
 });
 
 test("FSWorld.newWallet", async () => {
-  const wallet = world.newWallet(new DummySigner(zeroU8AAddress));
+  const wallet = world.newWallet(zeroU8AAddress);
   expect(wallet.toTopU8A()).toEqual(zeroU8AAddress);
 });
 
 test("FSWorld.newContract", async () => {
-  const wallet = world.newWallet(new DummySigner(zeroU8AAddress));
+  const wallet = world.newWallet(zeroU8AAddress);
   expect(wallet.toTopU8A()).toEqual(zeroU8AAddress);
 });
 
@@ -135,7 +134,7 @@ test("FSWorld.createWallet - with balance", async () => {
 });
 
 test("FSWorld.createWallet - with address & balance", async () => {
-  const address = createU8AAddress({ type: "wallet" });
+  const address = createAddressLike("wallet");
   const wallet = await world.createWallet({ address, balance: 10n });
   assertAccount(await wallet.getAccount(), { address, balance: 10n });
 });
@@ -172,7 +171,7 @@ test("FSWorld.createContract - with file:", async () => {
 });
 
 test("FSWorld.createContract - with address & file:", async () => {
-  const address = createU8AAddress({ type: "vmContract" });
+  const address = createAddressLike("vmContract");
   const contract = await world.createContract({ address, code: worldCode });
   assertAccount(await contract.getAccount(), { address, code: worldCode });
 });

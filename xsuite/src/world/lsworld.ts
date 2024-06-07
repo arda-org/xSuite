@@ -2,13 +2,13 @@ import { ChildProcess } from "node:child_process";
 import { fullU8AAddress } from "../data/address";
 import { AddressLike, isAddressLike } from "../data/addressLike";
 import { EncodableAccount } from "../data/encoding";
-import { Prettify } from "../helpers";
+import { Prettify, Replace } from "../helpers";
 import { LSProxy } from "../proxy";
 import { Block } from "../proxy/lsproxy";
 import { killChildProcess } from "./childProcesses";
 import { startLsproxyBin } from "./lsproxyBin";
 import { DummySigner, Signer } from "./signer";
-import { createU8AAddress } from "./utils";
+import { AddressLikeParams, createAddressLike } from "./utils";
 import {
   World,
   Contract,
@@ -87,19 +87,34 @@ export class LSWorld extends World {
     return new LSContract({ address, world: this });
   }
 
-  async createWallet({ address, ...params }: LSWorldCreateAccountParams = {}) {
-    address ??= createU8AAddress({ type: "wallet" });
-    await this.setAccount({ address, ...params });
-    return this.newWallet(new DummySigner(address));
+  async createWallets(createAccountsParams: LSWorldCreateAccountParams[]) {
+    const setAccountsParams = createAccountsParams.map(
+      ({ address, ...params }) => ({
+        address: createAddressLike("wallet", address),
+        ...params,
+      }),
+    );
+    await this.setAccounts(setAccountsParams);
+    return setAccountsParams.map((a) => this.newWallet(a.address));
   }
 
-  async createContract({
-    address,
-    ...params
-  }: LSWorldCreateAccountParams = {}) {
-    address ??= createU8AAddress({ type: "vmContract" });
-    await this.setAccount({ address, ...params });
-    return this.newContract(address);
+  async createWallet(params: LSWorldCreateAccountParams = {}) {
+    return this.createWallets([params]).then((wallets) => wallets[0]);
+  }
+
+  async createContracts(createAccountsParams: LSWorldCreateAccountParams[]) {
+    const setAccountsParams = createAccountsParams.map(
+      ({ address, ...params }) => ({
+        address: createAddressLike("vmContract", address),
+        ...params,
+      }),
+    );
+    await this.setAccounts(setAccountsParams);
+    return setAccountsParams.map((a) => this.newContract(a.address));
+  }
+
+  async createContract(params: LSWorldCreateAccountParams = {}) {
+    return this.createContracts([params]).then((contracts) => contracts[0]);
   }
 
   getAllSerializableAccounts() {
@@ -190,7 +205,9 @@ type LSWorldNewOptions =
     }
   | WorldNewOptions;
 
-type LSWorldCreateAccountParams = Prettify<Partial<EncodableAccount>>;
+type LSWorldCreateAccountParams = Prettify<
+  Replace<EncodableAccount, { address?: AddressLikeParams }>
+>;
 
 type LSWorldSetAccountsParams = EncodableAccount[];
 

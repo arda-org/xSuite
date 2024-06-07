@@ -9,3 +9,5 @@ export type PreserveDefinedness<U, V> = {
     ? V[K]
     : Exclude<V[K], undefined>;
 };
+
+export type Replace<U, V> = Omit<U, keyof V> & V;
