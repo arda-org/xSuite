@@ -197,6 +197,10 @@ export class FSWorld extends World {
     if (!this.server) throw new Error("No server defined.");
     killChildProcess(this.server);
   }
+
+  [Symbol.dispose]() {
+    this.terminate();
+  }
 }
 
 export class FSWallet extends Wallet {
