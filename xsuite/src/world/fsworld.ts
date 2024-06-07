@@ -1,12 +1,12 @@
 import { ChildProcess } from "node:child_process";
 import { AddressLike, isAddressLike } from "../data/addressLike";
 import { EncodableAccount } from "../data/encoding";
-import { Prettify } from "../helpers";
+import { Prettify, Replace } from "../helpers";
 import { FSProxy } from "../proxy";
 import { killChildProcess } from "./childProcesses";
 import { startFsproxyBin } from "./fsproxyBin";
 import { DummySigner, Signer } from "./signer";
-import { createU8AAddress } from "./utils";
+import { AddressLikeParams, createAddressLike } from "./utils";
 import {
   World,
   Contract,
@@ -83,32 +83,34 @@ export class FSWorld extends World {
     return new FSContract({ address, world: this });
   }
 
-  async createWallet({ address, ...params }: FSWorldCreateAccountParams = {}) {
-    if (
-      address === undefined ||
-      (typeof address === "object" && "shard" in address)
-    ) {
-      address = createU8AAddress({ type: "wallet", shard: address?.shard });
-    }
-    await this.setAccount({ address, ...params });
-    return this.newWallet(new DummySigner(address));
+  async createWallets(createAccountsParams: FSWorldCreateAccountParams[]) {
+    const setAccountsParams = createAccountsParams.map(
+      ({ address, ...params }) => ({
+        address: createAddressLike("wallet", address),
+        ...params,
+      }),
+    );
+    await this.setAccounts(setAccountsParams);
+    return setAccountsParams.map((a) => this.newWallet(a.address));
   }
 
-  async createContract({
-    address,
-    ...params
-  }: FSWorldCreateAccountParams = {}) {
-    if (
-      address === undefined ||
-      (typeof address === "object" && "shard" in address)
-    ) {
-      address = createU8AAddress({
-        type: "vmContract",
-        shard: address?.shard,
-      });
-    }
-    await this.setAccount({ address, ...params });
-    return this.newContract(address);
+  async createWallet(params: FSWorldCreateAccountParams = {}) {
+    return this.createWallets([params]).then((wallets) => wallets[0]);
+  }
+
+  async createContracts(createAccountsParams: FSWorldCreateAccountParams[]) {
+    const setAccountsParams = createAccountsParams.map(
+      ({ address, ...params }) => ({
+        address: createAddressLike("vmContract", address),
+        ...params,
+      }),
+    );
+    await this.setAccounts(setAccountsParams);
+    return setAccountsParams.map((a) => this.newContract(a.address));
+  }
+
+  async createContract(params: FSWorldCreateAccountParams = {}) {
+    return this.createContracts([params]).then((contracts) => contracts[0]);
   }
 
   getInitialAddresses() {
@@ -242,11 +244,7 @@ type FSWorldNewOptions =
   | WorldNewOptions;
 
 type FSWorldCreateAccountParams = Prettify<
-  Partial<
-    Omit<EncodableAccount, "address"> & {
-      address: AddressLike | { shard: number };
-    }
-  >
+  Replace<EncodableAccount, { address?: AddressLikeParams }>
 >;
 
 type FSWorldSetAccountsParams = EncodableAccount[];
