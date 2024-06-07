@@ -115,7 +115,7 @@ export class FSWorld extends World {
     return this.proxy.getInitialAddresses();
   }
 
-  async setAccounts(params: FSWorldSetAccountsParams) {
+  setAccounts(params: FSWorldSetAccountsParams) {
     for (const _params of params) {
       if (_params.code !== undefined) {
         _params.code = expandCode(_params.code);
@@ -128,30 +128,25 @@ export class FSWorld extends World {
     return this.setAccounts([params]);
   }
 
-  async generateBlocks(numBlocks: number) {
+  generateBlocks(numBlocks: number) {
     return this.proxy.generateBlocks(numBlocks);
   }
 
-  async generateBlock() {
-    return this.proxy.generateBlock();
+  advanceToEpoch(epoch: number) {
+    return this.proxy.advanceToEpoch(epoch);
   }
 
-  // TODO-MvX: replace by the new one that will force skip the epoch
-  async generateBlocksUntilEpochReached(epoch: number) {
-    return this.proxy.generateBlocksUntilEpochReached(epoch);
+  async advanceEpoch(epochs: number) {
+    const status = await this.proxy.getNetworkStatus(0);
+    return this.advanceToEpoch(status.epoch + epochs);
   }
 
-  // TODO-MvX: to be removed when built-in in chain simulator
-  async generateBlocksUntilTxCompleted(txHash: string) {
-    let res = await this.proxy.getTxProcessStatus(txHash);
-    while (res === "pending") {
-      await this.generateBlock();
-      res = await this.proxy.getTxProcessStatus(txHash);
-    }
+  processTx(txHash: string) {
+    return this.proxy.processTx(txHash);
   }
 
   awaitTx(txHash: string) {
-    return this.generateBlocksUntilTxCompleted(txHash);
+    return this.processTx(txHash);
   }
 
   async sendTx(...[tx]: Parameters<typeof World.prototype.sendTx>) {

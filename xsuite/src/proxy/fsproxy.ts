@@ -36,13 +36,16 @@ export class FSProxy extends Proxy {
     );
   }
 
-  generateBlock() {
-    return this.generateBlocks(1);
+  advanceToEpoch(epoch: number) {
+    return this.fetch(
+      `/simulator/force-epoch-change?targetEpoch=${epoch}`,
+      {},
+    ).then(() => {});
   }
 
-  generateBlocksUntilEpochReached(epoch: number) {
+  processTx(txHash: string) {
     return this.fetch(
-      `/simulator/generate-blocks-until-epoch-reached/${epoch}`,
+      `/simulator/generate-blocks-until-transaction-processed/${txHash}`,
       {},
     ).then(() => {});
   }

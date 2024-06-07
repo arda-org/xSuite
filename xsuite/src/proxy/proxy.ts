@@ -245,6 +245,23 @@ export class Proxy {
     };
   }
 
+  async getNetworkStatus(shard: number): Promise<NetworkStatus> {
+    const { status } = await this.fetch(`/network/status/${shard}`);
+    return {
+      blockTimestamp: status.erd_block_timestamp,
+      crossCheckBlockHeight: status.erd_cross_check_block_height,
+      round: status.erd_current_round,
+      epoch: status.erd_epoch_number,
+      highestFinalNonce: status.erd_highest_final_nonce,
+      nonce: status.erd_nonce,
+      nonceAtEpochStart: status.erd_nonce_at_epoch_start,
+      noncesPassedInCurrentEpoch: status.erd_nonces_passed_in_current_epoch,
+      roundAtEpochStart: status.erd_round_at_epoch_start,
+      roundsPassedInCurrentEpoch: status.erd_rounds_passed_in_current_epoch,
+      roundsPerEpoch: status.erd_rounds_per_epoch,
+    };
+  }
+
   getTxRaw(txHash: string, { withResults }: TxRequestOptions = {}) {
     let path = `/transaction/${txHash}`;
     if (withResults) path += "?withResults=true";
@@ -628,4 +645,18 @@ type CallContractResult = Prettify<TxResult & { returnData: string[] }>;
 type QueryResult = {
   returnData: string[];
   query: { [x: string]: any };
+};
+
+type NetworkStatus = {
+  blockTimestamp: number;
+  crossCheckBlockHeight: string;
+  round: number;
+  epoch: number;
+  highestFinalNonce: number;
+  nonce: number;
+  nonceAtEpochStart: number;
+  noncesPassedInCurrentEpoch: number;
+  roundAtEpochStart: number;
+  roundsPassedInCurrentEpoch: number;
+  roundsPerEpoch: number;
 };
