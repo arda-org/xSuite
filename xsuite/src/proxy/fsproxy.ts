@@ -1,19 +1,15 @@
 import { EncodableAccount, e } from "../data/encoding";
 import { hexToBase64 } from "../data/utils";
-import { Proxy, unrawRes } from "./proxy";
+import { getValuesInOrder, Proxy } from "./proxy";
 
 export class FSProxy extends Proxy {
-  getInitialWalletsRaw() {
-    return this.fetchRaw("/simulator/initial-wallets");
-  }
-
   async getInitialAddresses() {
-    const res = unrawRes(await this.getInitialWalletsRaw());
+    const res = await this.fetch("/simulator/initial-wallets");
     return {
       withStake: (res.stakeWallets as any[]).map(
         (w) => w.address.bech32 as string,
       ),
-      withBalance: Object.values<any>(res.balanceWallets).map(
+      withBalance: getValuesInOrder<any>(res.balanceWallets).map(
         (w) => w.address.bech32 as string,
       ),
     };

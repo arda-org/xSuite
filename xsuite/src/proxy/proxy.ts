@@ -38,15 +38,17 @@ export class Proxy {
   }
 
   async fetch(path: string, data?: any) {
-    return unrawRes(await this.fetchRaw(path, data));
-  }
-
-  async sendTxRaw(tx: BroadTx) {
-    return this.fetchRaw("/transaction/send", await broadTxToRawTx(tx));
+    const res = await this.fetchRaw(path, data);
+    if (res.code === "successful") {
+      return res.data;
+    } else {
+      const resStr = JSON.stringify(res, null, 2);
+      throw new Error(`Unsuccessful proxy request. Response: ${resStr}`);
+    }
   }
 
   async sendTx(tx: BroadTx) {
-    const res = unrawRes(await this.sendTxRaw(tx));
+    const res = await this.fetch("/transaction/send", await broadTxToRawTx(tx));
     return res.txHash as string;
   }
 
@@ -230,12 +232,11 @@ export class Proxy {
     return this.resolveUpgradeContract(txHash);
   }
 
-  queryRaw(query: BroadQuery) {
-    return this.fetchRaw("/vm-values/query", broadQueryToRawQuery(query));
-  }
-
   async query(query: BroadQuery): Promise<QueryResult> {
-    const { data } = unrawRes(await this.queryRaw(query));
+    const { data } = await this.fetch(
+      "/vm-values/query",
+      broadQueryToRawQuery(query),
+    );
     if (![0, "ok"].includes(data.returnCode)) {
       throw new QueryError(data.returnCode, data.returnMessage, data);
     }
@@ -262,12 +263,6 @@ export class Proxy {
     };
   }
 
-  getTxRaw(txHash: string, { withResults }: TxRequestOptions = {}) {
-    let path = `/transaction/${txHash}`;
-    if (withResults) path += "?withResults=true";
-    return this.fetchRaw(path);
-  }
-
   getTx(txHash: string) {
     return this._getTx(txHash, { withResults: true });
   }
@@ -276,76 +271,55 @@ export class Proxy {
     return this._getTx(txHash, { withResults: false });
   }
 
-  private async _getTx(txHash: string, options?: TxRequestOptions) {
-    const res = unrawRes(await this.getTxRaw(txHash, options));
+  private async _getTx(txHash: string, { withResults }: TxRequestOptions = {}) {
+    let path = `/transaction/${txHash}`;
+    if (withResults) path += "?withResults=true";
+    const res = await this.fetch(path);
     return res.transaction as Record<string, any>;
   }
 
-  getTxProcessStatusRaw(txHash: string) {
-    return this.fetchRaw(`/transaction/${txHash}/process-status`);
-  }
-
   async getTxProcessStatus(txHash: string) {
-    const res = unrawRes(await this.getTxProcessStatusRaw(txHash));
+    const res = await this.fetch(`/transaction/${txHash}/process-status`);
     return res.status as string;
   }
 
-  getAccountNonceRaw(
+  async getAccountNonce(
     address: AddressLike,
     { shardId }: AccountRequestOptions = {},
   ) {
     let path = `/address/${addressLikeToBechAddress(address)}/nonce`;
     if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
-    return this.fetchRaw(path);
-  }
-
-  async getAccountNonce(address: AddressLike, options?: AccountRequestOptions) {
-    const res = unrawRes(await this.getAccountNonceRaw(address, options));
+    const res = await this.fetch(path);
     return res.nonce as number;
   }
 
-  getAccountBalanceRaw(
+  async getAccountBalance(
     address: AddressLike,
     { shardId }: AccountRequestOptions = {},
   ) {
     let path = `/address/${addressLikeToBechAddress(address)}/balance`;
     if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
-    return this.fetchRaw(path);
-  }
-
-  async getAccountBalance(
-    address: AddressLike,
-    options?: AccountRequestOptions,
-  ) {
-    const res = unrawRes(await this.getAccountBalanceRaw(address, options));
+    const res = await this.fetch(path);
     return BigInt(res.balance);
   }
 
-  getAccountKvsRaw(
+  async getAccountKvs(
     address: AddressLike,
     { shardId }: AccountRequestOptions = {},
   ) {
     let path = `/address/${addressLikeToBechAddress(address)}/keys`;
     if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
-    return this.fetchRaw(path);
-  }
-
-  async getAccountKvs(address: AddressLike, options?: AccountRequestOptions) {
-    const res = unrawRes(await this.getAccountKvsRaw(address, options));
+    const res = await this.fetch(path);
     return res.pairs as Kvs;
-  }
-
-  getAccountRaw(address: AddressLike, { shardId }: AccountRequestOptions = {}) {
-    let path = `/address/${addressLikeToBechAddress(address)}`;
-    if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
-    return this.fetchRaw(path);
   }
 
   async getSerializableAccountWithoutKvs(
     address: AddressLike,
-    options?: AccountRequestOptions,
+    { shardId }: AccountRequestOptions = {},
   ) {
-    const res = unrawRes(await this.getAccountRaw(address, options));
+    let path = `/address/${addressLikeToBechAddress(address)}`;
+    if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
+    const res = await this.fetch(path);
     return getSerializableAccount(res.account);
   }
 
@@ -429,15 +403,6 @@ class QueryError extends InteractionError {
   }
 }
 
-export const unrawRes = (res: any) => {
-  if (res.code === "successful") {
-    return res.data;
-  } else {
-    const resStr = JSON.stringify(res, null, 2);
-    throw new Error(`Unsuccessful proxy request. Response: ${resStr}`);
-  }
-};
-
 const broadTxToRawTx = async (tx: BroadTx): Promise<RawTx> => {
   if (isRawTx(tx)) {
     return tx;
@@ -513,6 +478,14 @@ const getTxReturnData = (tx: any): string[] => {
     return scr.data.split("@").slice(2);
   }
   return [];
+};
+
+export const getValuesInOrder = <T>(o: Record<string, T>) => {
+  const values: T[] = [];
+  for (let i = 0; i < Object.keys(o).length; i++) {
+    values.push(o[i]);
+  }
+  return values;
 };
 
 export const pendingErrorMessage = "Transaction still pending.";
