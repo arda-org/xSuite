@@ -1,13 +1,9 @@
 import { e, EncodableAccount } from "../data/encoding";
-import { getSerializableAccount, Proxy, unrawRes } from "./proxy";
+import { getSerializableAccount, Proxy } from "./proxy";
 
 export class LSProxy extends Proxy {
-  getAllAccountsRaw() {
-    return this.fetchRaw("/admin/get-all-accounts");
-  }
-
   async getAllSerializableAccounts() {
-    const res = unrawRes(await this.getAllAccountsRaw());
+    const res = await this.fetch("/admin/get-all-accounts");
     return (res.accounts as any[]).map(getSerializableAccount);
   }
 
