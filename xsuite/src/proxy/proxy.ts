@@ -47,9 +47,17 @@ export class Proxy {
     }
   }
 
-  async sendTx(tx: BroadTx) {
-    const res = await this.fetch("/transaction/send", await broadTxToRawTx(tx));
-    return res.txHash as string;
+  async sendTxs(txs: BroadTx[]) {
+    const rawTxs: RawTx[] = [];
+    for (const tx of txs) {
+      rawTxs.push(await broadTxToRawTx(tx));
+    }
+    const res = await this.fetch("/transaction/send-multiple", rawTxs);
+    return getValuesInOrder(res.txsHashes) as string[];
+  }
+
+  sendTx(tx: BroadTx) {
+    return this.sendTxs([tx]).then((r) => r[0]);
   }
 
   sendTransfer({ receiver: _receiver, sender, esdts, ...tx }: TransferTx) {
