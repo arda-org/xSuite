@@ -45,6 +45,10 @@ export class FSProxy extends Proxy {
       {},
     ).then(() => {});
   }
+
+  awaitTx(txHash: string) {
+    return this.processTx(txHash);
+  }
 }
 
 const encodableAccountToSettableAccount = (account: EncodableAccount) => {

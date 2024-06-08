@@ -142,10 +142,32 @@ export class LSWorld extends World {
     return this.proxy.setPreviousBlockInfo(block);
   }
 
-  deployContract(tx: WorldDeployContractTx) {
+  resolveDeployContracts(txHashes: string[]) {
     return super
-      .deployContract(tx)
-      .then((res) => ({ ...res, contract: this.newContract(res.address) }));
+      .resolveDeployContracts(txHashes)
+      .then((rs) => rs.map((r) => this.addContractPostTx(r)));
+  }
+
+  resolveDeployContract(txHash: string) {
+    return super
+      .resolveDeployContract(txHash)
+      .then((r) => this.addContractPostTx(r));
+  }
+
+  protected addContractPostTx<T extends { address: string }>(
+    res: T,
+  ): Prettify<Replace<T, { contract: LSContract }>> {
+    return { ...res, contract: this.newContract(res.address) };
+  }
+
+  deployContracts(txs: WorldDeployContractTx[]) {
+    return super
+      .deployContracts(txs)
+      .then((rs) => rs.map((r) => this.addContractPostTx(r)));
+  }
+
+  deployContract(tx: WorldDeployContractTx) {
+    return super.deployContract(tx).then((r) => this.addContractPostTx(r));
   }
 
   terminate() {

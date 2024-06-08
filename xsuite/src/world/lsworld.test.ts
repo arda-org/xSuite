@@ -14,7 +14,8 @@ import { expandCode } from "./world";
 
 let world: LSWorld;
 let wallet: LSWallet;
-let otherWallet: LSWallet;
+let otherWallet1: LSWallet;
+let otherWallet2: LSWallet;
 let contract: LSContract;
 const fftId = "FFT-abcdef";
 const sftId = "SFT-abcdef";
@@ -38,7 +39,8 @@ beforeEach(async () => {
       esdts: [{ id: fftId, amount: 10n ** 18n }],
     },
   });
-  otherWallet = await world.createWallet();
+  otherWallet1 = await world.createWallet();
+  otherWallet2 = await world.createWallet();
   contract = await wallet.createContract({
     balance: 10n ** 18n,
     code: worldCode,
@@ -216,7 +218,7 @@ test("LSWorld.getAllSerializableAccounts", async () => {
       owner: wallet,
     }),
     e.account({
-      address: otherWallet,
+      address: otherWallet1,
       balance: "0",
       code: "",
       codeHash: "",
@@ -234,6 +236,16 @@ test("LSWorld.getAllSerializableAccounts", async () => {
       kvs: {
         esdts: [{ id: fftId, amount: 10n ** 18n }],
       },
+      nonce: 0,
+      owner: "",
+    }),
+    e.account({
+      address: otherWallet2,
+      balance: "0",
+      code: "",
+      codeHash: "",
+      codeMetadata: ["readable"],
+      kvs: {},
       nonce: 0,
       owner: "",
     }),
@@ -360,10 +372,36 @@ test("LSWorld.query.assertFail - correct parameters", async () => {
     .assertFail({ code: 4, message: "Amount is not positive." });
 });
 
+test("LSWorld.executeTxs", async () => {
+  const [{ fee: fee1 }, { fee: fee2 }] = await world.executeTxs([
+    {
+      sender: wallet,
+      receiver: otherWallet1,
+      value: 10n ** 17n,
+      gasLimit: 10_000_000,
+    },
+    {
+      sender: wallet,
+      receiver: otherWallet2,
+      value: 10n ** 17n,
+      gasLimit: 10_000_000,
+    },
+  ]);
+  assertAccount(await wallet.getAccount(), {
+    balance: 8n * 10n ** 17n - fee1 - fee2,
+  });
+  assertAccount(await otherWallet1.getAccount(), {
+    balance: 10n ** 17n,
+  });
+  assertAccount(await otherWallet2.getAccount(), {
+    balance: 10n ** 17n,
+  });
+});
+
 test("LSWorld.executeTx", async () => {
   const { hash, explorerUrl, gasUsed, fee } = await world.executeTx({
     sender: wallet,
-    receiver: otherWallet,
+    receiver: otherWallet1,
     value: 10n ** 17n,
     gasLimit: 10_000_000,
   });
@@ -373,7 +411,7 @@ test("LSWorld.executeTx", async () => {
   assertAccount(await wallet.getAccount(), {
     balance: 9n * 10n ** 17n - fee,
   });
-  assertAccount(await otherWallet.getAccount(), {
+  assertAccount(await otherWallet1.getAccount(), {
     balance: 10n ** 17n,
   });
 });
@@ -381,14 +419,14 @@ test("LSWorld.executeTx", async () => {
 test("LSWorld.transfer", async () => {
   const { fee } = await world.transfer({
     sender: wallet,
-    receiver: otherWallet,
+    receiver: otherWallet1,
     value: 10n ** 17n,
     gasLimit: 10_000_000,
   });
   assertAccount(await wallet.getAccount(), {
     balance: 9n * 10n ** 17n - fee,
   });
-  assertAccount(await otherWallet.getAccount(), {
+  assertAccount(await otherWallet1.getAccount(), {
     balance: 10n ** 17n,
   });
 });
@@ -567,7 +605,7 @@ test("LSWallet.setAccount - LSWallet.getAccount", async () => {
 
 test("LSWallet.executeTx", async () => {
   const { hash, explorerUrl, gasUsed, fee } = await wallet.executeTx({
-    receiver: otherWallet,
+    receiver: otherWallet1,
     value: 10n ** 17n,
     gasLimit: 10_000_000,
   });
@@ -577,35 +615,35 @@ test("LSWallet.executeTx", async () => {
   assertAccount(await wallet.getAccount(), {
     balance: 9n * 10n ** 17n - fee,
   });
-  assertAccount(await otherWallet.getAccount(), {
+  assertAccount(await otherWallet1.getAccount(), {
     balance: 10n ** 17n,
   });
 });
 
 test("LSWallet.transfer - EGLD", async () => {
   const { fee } = await wallet.transfer({
-    receiver: otherWallet,
+    receiver: otherWallet1,
     value: 10n ** 17n,
     gasLimit: 10_000_000,
   });
   assertAccount(await wallet.getAccount(), {
     balance: 9n * 10n ** 17n - fee,
   });
-  assertAccount(await otherWallet.getAccount(), {
+  assertAccount(await otherWallet1.getAccount(), {
     balance: 10n ** 17n,
   });
 });
 
 test("LSWallet.transfer - ESDTs", async () => {
   await wallet.transfer({
-    receiver: otherWallet,
+    receiver: otherWallet1,
     esdts: [{ id: fftId, amount: 10n ** 17n }],
     gasLimit: 10_000_000,
   });
   assertAccount(await wallet.getAccount(), {
     hasKvs: { esdts: [{ id: fftId, amount: 9n * 10n ** 17n }] },
   });
-  assertAccount(await otherWallet.getAccount(), {
+  assertAccount(await otherWallet1.getAccount(), {
     hasKvs: { esdts: [{ id: fftId, amount: 10n ** 17n }] },
   });
 });
@@ -814,4 +852,12 @@ test("LSContract.setAccount - LSContract.getAccount", async () => {
   await contract.setAccount(before);
   const after = await contract.getAccount();
   expect(after).toEqual(before);
+});
+
+test("LSContract.query", async () => {
+  const { returnData } = await contract.query({
+    funcName: "multiply_by_n",
+    funcArgs: [e.U64(10)],
+  });
+  assertVs(returnData, [e.U64(20n)]);
 });
