@@ -53,6 +53,7 @@ export class Proxy {
       rawTxs.push(await broadTxToRawTx(tx));
     }
     const res = await this.fetch("/transaction/send-multiple", rawTxs);
+    await new Promise((r) => setTimeout(r, 250)); // TODO-MvX: to be removed once they fix this
     return getValuesInOrder(res.txsHashes) as string[];
   }
 

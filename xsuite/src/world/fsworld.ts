@@ -151,42 +151,6 @@ export class FSWorld extends World {
     return this.processTx(txHash);
   }
 
-  async sendTx(...[tx]: Parameters<typeof World.prototype.sendTx>) {
-    const txHash = await super.sendTx(tx);
-    await new Promise((r) => setTimeout(r, 250)); // TODO-MvX: to be removed once they fix this
-    return txHash;
-  }
-
-  async sendTransfer(...[tx]: Parameters<typeof World.prototype.sendTransfer>) {
-    const txHash = await super.sendTransfer(tx);
-    await new Promise((r) => setTimeout(r, 250)); // TODO-MvX: to be removed once they fix this
-    return txHash;
-  }
-
-  async sendDeployContract(
-    ...[tx]: Parameters<typeof World.prototype.sendDeployContract>
-  ) {
-    const txHash = await super.sendDeployContract(tx);
-    await new Promise((r) => setTimeout(r, 250)); // TODO-MvX: to be removed once they fix this
-    return txHash;
-  }
-
-  async sendCallContract(
-    ...[tx]: Parameters<typeof World.prototype.sendCallContract>
-  ) {
-    const txHash = await super.sendCallContract(tx);
-    await new Promise((r) => setTimeout(r, 250)); // TODO-MvX: to be removed once they fix this
-    return txHash;
-  }
-
-  async sendUpgradeContract(
-    ...[tx]: Parameters<typeof World.prototype.sendUpgradeContract>
-  ) {
-    const txHash = await super.sendUpgradeContract(tx);
-    await new Promise((r) => setTimeout(r, 250)); // TODO-MvX: to be removed once they fix this
-    return txHash;
-  }
-
   deployContract(tx: WorldDeployContractTx) {
     return super
       .deployContract(tx)
