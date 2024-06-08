@@ -42,9 +42,13 @@ func (e *Executor) HandleTransactionSendMultiple(r *http.Request) (interface{}, 
 
 func (e *Executor) HandleTransaction(r *http.Request) (interface{}, error) {
 	txHash := chi.URLParam(r, "txHash")
-	withResults := r.URL.Query().Get("withResults")
+	withResultsStr := r.URL.Query().Get("withResults")
+	withResults, err := parseBool(withResultsStr)
+	if err != nil {
+		return nil, err
+	}
 	res := e.txResps[txHash]
-	if withResults == "" || withResults == "false" {
+	if !withResults {
 		if txMap, ok := res.(map[string]interface{}); ok {
 			if data, ok := txMap["data"].(map[string]interface{}); ok {
 				if transaction, ok := data["transaction"].(map[string]interface{}); ok {
@@ -55,8 +59,6 @@ func (e *Executor) HandleTransaction(r *http.Request) (interface{}, error) {
 				}
 			}
 		}
-	} else if withResults != "true" {
-		return nil, errors.New("invalid withResults option")
 	}
 	return res, nil
 }
