@@ -80,5 +80,15 @@ func bech32Encode(input []byte) (string, error) {
 	return res, err
 }
 
+func parseBool(input string) (bool, error) {
+	if input == "" || input == "false" {
+		return false, nil
+	} else if input == "true" {
+		return true, nil
+	} else {
+		return false, errors.New("invalid bool")
+	}
+}
+
 var addressByteLength = 32
 var contractAddressLeftShift = 8

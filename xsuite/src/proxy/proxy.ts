@@ -263,13 +263,13 @@ export class Proxy {
   }
 
   getTxWithoutResults(txHash: string) {
-    return this._getTx(txHash, { withResults: false });
+    return this._getTx(txHash);
   }
 
-  private async _getTx(txHash: string, { withResults }: TxRequestOptions = {}) {
-    let path = `/transaction/${txHash}`;
-    if (withResults) path += "?withResults=true";
-    const res = await this.fetch(path);
+  private async _getTx(txHash: string, { withResults }: GetTxRawOptions = {}) {
+    const res = await this.fetch(
+      makePath(`/transaction/${txHash}`, { withResults }),
+    );
     return res.transaction as Record<string, any>;
   }
 
@@ -280,48 +280,51 @@ export class Proxy {
 
   async getAccountNonce(
     address: AddressLike,
-    { shardId }: AccountRequestOptions = {},
+    { shardId }: GetAccountOptions = {},
   ) {
-    let path = `/address/${addressLikeToBechAddress(address)}/nonce`;
-    if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
-    const res = await this.fetch(path);
+    const res = await this.fetch(
+      makePath(`/address/${addressLikeToBechAddress(address)}/nonce`, {
+        "forced-shard-id": shardId,
+      }),
+    );
     return res.nonce as number;
   }
 
   async getAccountBalance(
     address: AddressLike,
-    { shardId }: AccountRequestOptions = {},
+    { shardId }: GetAccountOptions = {},
   ) {
-    let path = `/address/${addressLikeToBechAddress(address)}/balance`;
-    if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
-    const res = await this.fetch(path);
+    const res = await this.fetch(
+      makePath(`/address/${addressLikeToBechAddress(address)}/balance`, {
+        "forced-shard-id": shardId,
+      }),
+    );
     return BigInt(res.balance);
   }
 
   async getAccountKvs(
     address: AddressLike,
-    { shardId }: AccountRequestOptions = {},
+    { shardId }: GetAccountOptions = {},
   ) {
-    let path = `/address/${addressLikeToBechAddress(address)}/keys`;
-    if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
-    const res = await this.fetch(path);
+    const res = await this.fetch(
+      makePath(`/address/${addressLikeToBechAddress(address)}/keys`, {
+        "forced-shard-id": shardId,
+      }),
+    );
     return res.pairs as Kvs;
   }
 
   async getSerializableAccountWithoutKvs(
     address: AddressLike,
-    { shardId }: AccountRequestOptions = {},
+    options?: GetAccountOptions,
   ) {
-    let path = `/address/${addressLikeToBechAddress(address)}`;
-    if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
-    const res = await this.fetch(path);
+    const res = await this.fetch(
+      makePath(`/address/${addressLikeToBechAddress(address)}`, options),
+    );
     return getSerializableAccount(res.account);
   }
 
-  getSerializableAccount(
-    address: AddressLike,
-    options?: AccountRequestOptions,
-  ) {
+  getSerializableAccount(address: AddressLike, options?: GetAccountOptions) {
     // TODO-MvX: When ?withKeys=true out, rewrite this part
     return Promise.all([
       this.getSerializableAccountWithoutKvs(address, options),
@@ -331,7 +334,7 @@ export class Proxy {
 
   async getAccountWithoutKvs(
     address: AddressLike,
-    options?: AccountRequestOptions,
+    options?: GetAccountOptions,
   ) {
     const { balance, ...account } = await this.getSerializableAccountWithoutKvs(
       address,
@@ -340,7 +343,7 @@ export class Proxy {
     return { balance: BigInt(balance), ...account };
   }
 
-  getAccount(address: AddressLike, options?: AccountRequestOptions) {
+  getAccount(address: AddressLike, options?: GetAccountOptions) {
     // TODO-MvX: When ?withKeys=true out, rewrite this part
     return Promise.all([
       this.getAccountWithoutKvs(address, options),
@@ -493,6 +496,24 @@ const upgradeContractTxToTx = ({
     ].join("@"),
     ...tx,
   };
+};
+
+const makePath = (
+  basePath: string,
+  params: Record<string, { toString: () => string } | undefined> = {},
+) => {
+  let path = basePath;
+  let first = true;
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined) {
+      if (first) {
+        path += "?";
+        first = false;
+      }
+      path += `${k}=${v}`;
+    }
+  }
+  return path;
 };
 
 const broadTxToRawTx = async (tx: BroadTx): Promise<RawTx> => {
@@ -686,9 +707,9 @@ type RawQuery = {
   value?: string;
 };
 
-type TxRequestOptions = { withResults?: boolean };
+type GetTxRawOptions = { withResults?: boolean };
 
-type AccountRequestOptions = { shardId?: number };
+type GetAccountOptions = { shardId?: number };
 
 type TxResult = Prettify<{
   hash: string;
