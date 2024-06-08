@@ -9,6 +9,7 @@ import (
 	"io"
 	"math/big"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/go-chi/chi"
@@ -16,19 +17,63 @@ import (
 	worldmock "github.com/multiversx/mx-chain-scenario-go/worldmock"
 )
 
-func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
-	logger := NewLoggerStarted()
+func (e *Executor) HandleTransactionSendMultiple(r *http.Request) (interface{}, error) {
 	reqBody, _ := io.ReadAll(r.Body)
-	var rawTx RawTx
-	err := json.Unmarshal(reqBody, &rawTx)
+	var rawTxs []RawTx
+	err := json.Unmarshal(reqBody, &rawTxs)
 	if err != nil {
 		return nil, err
 	}
+	txsHashes := make(map[string]string)
+	for i, rawTx := range rawTxs {
+		e.txCounter += 1
+		txHash := uint64ToString(e.txCounter)
+		txsHashes[strconv.Itoa(i)] = txHash
+		e.executeTx(txHash, rawTx)
+	}
+	jOutput := map[string]interface{}{
+		"data": map[string]interface{}{
+			"txsHashes": txsHashes,
+		},
+		"code": "successful",
+	}
+	return jOutput, nil
+}
+
+func (e *Executor) HandleTransaction(r *http.Request) (interface{}, error) {
+	txHash := chi.URLParam(r, "txHash")
+	withResults := r.URL.Query().Get("withResults")
+	res := e.txResps[txHash]
+	if withResults == "" || withResults == "false" {
+		if txMap, ok := res.(map[string]interface{}); ok {
+			if data, ok := txMap["data"].(map[string]interface{}); ok {
+				if transaction, ok := data["transaction"].(map[string]interface{}); ok {
+					delete(transaction, "logs")
+					delete(transaction, "smartContractResults")
+					delete(transaction, "fee")
+					delete(transaction, "gasUsed")
+				}
+			}
+		}
+	} else if withResults != "true" {
+		return nil, errors.New("invalid withResults option")
+	}
+	return res, nil
+}
+
+func (e *Executor) HandleTransactionProcessStatus(r *http.Request) (interface{}, error) {
+	txHash := chi.URLParam(r, "txHash")
+	res := e.txProcessStatusResps[txHash]
+	return res, nil
+}
+
+func (e *Executor) executeTx(txHash string, rawTx RawTx) (error) {
+	logger := NewLoggerStarted()
 	if rawTx.ChainID != "S" {
-		return nil, errors.New("invalid chain ID")
+		return errors.New("invalid chain ID")
 	}
 	if rawTx.Version != 1 {
-		return nil, errors.New("invalid version")
+		return errors.New("invalid version")
 	}
 	tx := &model.TxStep{
 		Tx: &model.Transaction{
@@ -40,75 +85,75 @@ func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
 	}
 	sender, err := bech32Decode(rawTx.Sender)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	tx.Tx.From = model.JSONBytesFromString{Value: sender}
 	senderAccount := e.scenexec.World.AcctMap.GetAccount(sender)
 	if senderAccount.Nonce != rawTx.Nonce {
-		return nil, errors.New("invalid nonce")
+		return errors.New("invalid nonce")
 	}
 	receiver, err := bech32Decode(rawTx.Receiver)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	tx.Tx.To = model.JSONBytesFromString{Value: receiver}
 	egldValue, err := stringToBigint(rawTx.Value)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	tx.Tx.EGLDValue = model.JSONBigInt{Value: egldValue}
 	if rawTx.Data != nil {
 		dataBytes, err := base64.StdEncoding.DecodeString(*rawTx.Data)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		dataParts := strings.Split(string(dataBytes), "@")
 		i := 0
 		if isAllZero(receiver) {
 			code, err := hex.DecodeString(dataParts[i])
 			if err != nil {
-				return nil, err
+				return err
 			}
 			tx.Tx.Code = model.JSONBytesFromString{Value: code}
 			i += 2
 			codeMetadata, err := hex.DecodeString(dataParts[i])
 			if err != nil {
-				return nil, err
+				return err
 			}
 			tx.Tx.CodeMetadata = model.JSONBytesFromString{Value: codeMetadata}
 			i += 1
 		} else {
 			if dataParts[i] == "MultiESDTNFTTransfer" {
 				if !bytes.Equal(sender, receiver) {
-					return nil, errors.New("receiver and sender are not equal")
+					return errors.New("receiver and sender are not equal")
 				}
 				i += 1
 				realReceiver, err := hex.DecodeString(dataParts[i])
 				if err != nil {
-					return nil, err
+					return err
 				}
 				tx.Tx.To = model.JSONBytesFromString{Value: realReceiver}
 				i += 1
 				l, err := hexToUint64(dataParts[i])
 				if err != nil {
-					return nil, err
+					return err
 				}
 				i += 1
 				tx.Tx.ESDTValue = []*model.ESDTTxData{}
 				for j := uint64(0); j < l; j++ {
 					id, err := hex.DecodeString(dataParts[i])
 					if err != nil {
-						return nil, err
+						return err
 					}
 					i += 1
 					nonce, err := hexToUint64(dataParts[i])
 					if err != nil {
-						return nil, err
+						return err
 					}
 					i += 1
 					amount, err := hexToBigint(dataParts[i])
 					if err != nil {
-						return nil, err
+						return err
 					}
 					i += 1
 					tx.Tx.ESDTValue = append(tx.Tx.ESDTValue, &model.ESDTTxData{
@@ -120,7 +165,7 @@ func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
 				if i < len(dataParts) {
 					function, err := hex.DecodeString(dataParts[i])
 					if err != nil {
-						return nil, err
+						return err
 					}
 					tx.Tx.Function = string(function)
 					i += 1
@@ -137,7 +182,7 @@ func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
 			for _, rawArgument := range dataParts[i:] {
 				argument, err := hex.DecodeString(rawArgument)
 				if err != nil {
-					return nil, err
+					return err
 				}
 				tx.Tx.Arguments = append(tx.Tx.Arguments, model.JSONBytesFromTree{Value: argument})
 			}
@@ -163,10 +208,8 @@ func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
 	}
 	vmOutput, err := e.scenexec.ExecuteTxStep(tx)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	e.txCounter += 1
-	txHash := uint64ToString(e.txCounter)
 	var logs interface{}
 	var smartContractResults interface{}
 	var processStatus string
@@ -178,7 +221,7 @@ func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
 		if tx.Tx.Type == model.ScDeploy {
 			bechAddress, err := bech32Encode(uint64ToBytesAddress(e.scCounter, true))
 			if err != nil {
-				return nil, err
+				return err
 			}
 			logs = map[string]interface{}{
 				"events": []interface{}{
@@ -253,40 +296,7 @@ func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
 		delete(e.txProcessStatusResps, firstTxHash)
 		e.hashesOfTxsToKeep = e.hashesOfTxsToKeep[1:]
 	}
-	jOutput := map[string]interface{}{
-		"data": map[string]interface{}{
-			"txHash": txHash,
-		},
-		"code": "successful",
-	}
-	return jOutput, nil
-}
-
-func (e *Executor) HandleTransaction(r *http.Request) (interface{}, error) {
-	txHash := chi.URLParam(r, "txHash")
-	withResults := r.URL.Query().Get("withResults")
-	res := e.txResps[txHash]
-	if withResults == "" || withResults == "false" {
-		if txMap, ok := res.(map[string]interface{}); ok {
-			if data, ok := txMap["data"].(map[string]interface{}); ok {
-				if transaction, ok := data["transaction"].(map[string]interface{}); ok {
-					delete(transaction, "logs")
-					delete(transaction, "smartContractResults")
-					delete(transaction, "fee")
-					delete(transaction, "gasUsed")
-				}
-			}
-		}
-	} else if withResults != "true" {
-		return nil, errors.New("invalid withResults option")
-	}
-	return res, nil
-}
-
-func (e *Executor) HandleTransactionProcessStatus(r *http.Request) (interface{}, error) {
-	txHash := chi.URLParam(r, "txHash")
-	res := e.txProcessStatusResps[txHash]
-	return res, nil
+	return nil
 }
 
 func isAllZero(bytes []byte) bool {
