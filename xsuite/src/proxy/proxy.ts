@@ -61,96 +61,36 @@ export class Proxy {
     return this.sendTxs([tx]).then((r) => r[0]);
   }
 
-  sendTransfer({ receiver: _receiver, sender, esdts, ...tx }: TransferTx) {
-    let receiver: AddressLike;
-    let data: string | undefined;
-    if (esdts?.length) {
-      receiver = sender;
-      const dataParts: string[] = [];
-      dataParts.push("MultiESDTNFTTransfer");
-      dataParts.push(addressLikeToHexAddress(_receiver));
-      dataParts.push(e.U(esdts.length).toTopHex());
-      for (const esdt of esdts) {
-        dataParts.push(e.Str(esdt.id).toTopHex());
-        dataParts.push(e.U(esdt.nonce ?? 0).toTopHex());
-        dataParts.push(e.U(esdt.amount).toTopHex());
-      }
-      data = dataParts.join("@");
-    } else {
-      receiver = _receiver;
-    }
-    return this.sendTx({ receiver, sender, data, ...tx });
+  sendTransfers(txs: TransferTx[]) {
+    return this.sendTxs(txs.map(transferTxToTx));
   }
 
-  sendDeployContract({
-    code,
-    codeMetadata,
-    codeArgs,
-    ...tx
-  }: DeployContractTx) {
-    return this.sendTx({
-      receiver: zeroBechAddress,
-      data: [
-        code,
-        "0500",
-        eCodeMetadata(codeMetadata),
-        ...e.vs(codeArgs ?? []),
-      ].join("@"),
-      ...tx,
-    });
+  sendTransfer(tx: TransferTx) {
+    return this.sendTransfers([tx]).then((r) => r[0]);
   }
 
-  sendCallContract({
-    callee,
-    sender,
-    funcName,
-    funcArgs,
-    esdts,
-    ...tx
-  }: CallContractTx) {
-    const dataParts: string[] = [];
-    let receiver: AddressLike;
-    if (esdts?.length) {
-      receiver = sender;
-      dataParts.push("MultiESDTNFTTransfer");
-      dataParts.push(addressLikeToHexAddress(callee));
-      dataParts.push(e.U(esdts.length).toTopHex());
-      for (const esdt of esdts) {
-        dataParts.push(e.Str(esdt.id).toTopHex());
-        dataParts.push(e.U(esdt.nonce ?? 0).toTopHex());
-        dataParts.push(e.U(esdt.amount).toTopHex());
-      }
-      dataParts.push(e.Str(funcName).toTopHex());
-    } else {
-      receiver = callee;
-      dataParts.push(funcName);
-    }
-    dataParts.push(...e.vs(funcArgs ?? []));
-    return this.sendTx({
-      receiver,
-      sender,
-      data: dataParts.join("@"),
-      ...tx,
-    });
+  sendDeployContracts(txs: DeployContractTx[]) {
+    return this.sendTxs(txs.map(deployContractTxToTx));
   }
 
-  sendUpgradeContract({
-    callee,
-    code,
-    codeMetadata,
-    codeArgs,
-    ...tx
-  }: UpgradeContractTx) {
-    return this.sendTx({
-      receiver: callee,
-      data: [
-        "upgradeContract",
-        code,
-        eCodeMetadata(codeMetadata),
-        ...e.vs(codeArgs ?? []),
-      ].join("@"),
-      ...tx,
-    });
+  sendDeployContract(tx: DeployContractTx) {
+    return this.sendDeployContracts([tx]).then((r) => r[0]);
+  }
+
+  sendCallContracts(txs: CallContractTx[]) {
+    return this.sendTxs(txs.map(callContractTxToTx));
+  }
+
+  sendCallContract(tx: CallContractTx) {
+    return this.sendCallContracts([tx]).then((r) => r[0]);
+  }
+
+  sendUpgradeContracts(txs: UpgradeContractTx[]) {
+    return this.sendTxs(txs.map(upgradeContractTxToTx));
+  }
+
+  sendUpgradeContract(tx: UpgradeContractTx) {
+    return this.sendUpgradeContracts([tx]).then((r) => r[0]);
   }
 
   async awaitTx(txHash: string) {
@@ -158,6 +98,12 @@ export class Proxy {
     while (res === "pending") {
       await new Promise((r) => setTimeout(r, 1000));
       res = await this.getTxProcessStatus(txHash);
+    }
+  }
+
+  async awaitTxs(txHashes: string[]) {
+    for (const txHash of txHashes) {
+      await this.awaitTx(txHash);
     }
   }
 
@@ -188,8 +134,16 @@ export class Proxy {
     return { explorerUrl, hash, gasUsed, fee, tx };
   }
 
+  resolveTxs(txHashes: string[]) {
+    return Promise.all(txHashes.map((h) => this.resolveTx(h)));
+  }
+
   resolveTransfer(txHash: string) {
     return this.resolveTx(txHash);
+  }
+
+  resolveTransfers(txHashes: string[]) {
+    return this.resolveTxs(txHashes);
   }
 
   async resolveDeployContract(txHash: string): Promise<DeployContractResult> {
@@ -201,44 +155,76 @@ export class Proxy {
     return { ...res, returnData, address };
   }
 
+  resolveDeployContracts(txHashes: string[]) {
+    return Promise.all(txHashes.map((h) => this.resolveDeployContract(h)));
+  }
+
   async resolveCallContract(txHash: string): Promise<CallContractResult> {
     const res = await this.resolveTx(txHash);
     const returnData = getTxReturnData(res.tx);
     return { ...res, returnData };
   }
 
+  resolveCallContracts(txHashes: string[]) {
+    return Promise.all(txHashes.map((h) => this.resolveCallContract(h)));
+  }
+
   resolveUpgradeContract(txHash: string) {
     return this.resolveCallContract(txHash);
   }
 
-  async executeTx(tx: BroadTx) {
-    const txHash = await this.sendTx(tx);
-    await this.awaitTx(txHash);
-    return this.resolveTx(txHash);
+  resolveUpgradeContracts(txHashes: string[]) {
+    return this.resolveCallContracts(txHashes);
   }
 
-  async transfer(tx: TransferTx) {
-    const txHash = await this.sendTransfer(tx);
-    await this.awaitTx(txHash);
-    return this.resolveTransfer(txHash);
+  async executeTxs(txs: BroadTx[]) {
+    const txHashes = await this.sendTxs(txs);
+    await this.awaitTxs(txHashes);
+    return this.resolveTxs(txHashes);
   }
 
-  async deployContract(tx: DeployContractTx) {
-    const txHash = await this.sendDeployContract(tx);
-    await this.awaitTx(txHash);
-    return this.resolveDeployContract(txHash);
+  executeTx(tx: BroadTx) {
+    return this.executeTxs([tx]).then((r) => r[0]);
   }
 
-  async callContract(tx: CallContractTx) {
-    const txHash = await this.sendCallContract(tx);
-    await this.awaitTx(txHash);
-    return this.resolveCallContract(txHash);
+  async doTransfers(txs: TransferTx[]) {
+    const txHashs = await this.sendTransfers(txs);
+    await this.awaitTxs(txHashs);
+    return this.resolveTransfers(txHashs);
   }
 
-  async upgradeContract(tx: UpgradeContractTx) {
-    const txHash = await this.sendUpgradeContract(tx);
-    await this.awaitTx(txHash);
-    return this.resolveUpgradeContract(txHash);
+  transfer(tx: TransferTx) {
+    return this.doTransfers([tx]).then((r) => r[0]);
+  }
+
+  async deployContracts(txs: DeployContractTx[]) {
+    const txHashes = await this.sendDeployContracts(txs);
+    await this.awaitTxs(txHashes);
+    return this.resolveDeployContracts(txHashes);
+  }
+
+  deployContract(tx: DeployContractTx) {
+    return this.deployContracts([tx]).then((r) => r[0]);
+  }
+
+  async callContracts(txs: CallContractTx[]) {
+    const txHashes = await this.sendCallContracts(txs);
+    await this.awaitTxs(txHashes);
+    return this.resolveCallContracts(txHashes);
+  }
+
+  callContract(tx: CallContractTx) {
+    return this.callContracts([tx]).then((r) => r[0]);
+  }
+
+  async upgradeContracts(txs: UpgradeContractTx[]) {
+    const txHashes = await this.sendUpgradeContracts(txs);
+    await this.awaitTxs(txHashes);
+    return this.resolveUpgradeContracts(txHashes);
+  }
+
+  upgradeContract(tx: UpgradeContractTx) {
+    return this.upgradeContracts([tx]).then((r) => r[0]);
   }
 
   async query(query: BroadQuery): Promise<QueryResult> {
@@ -411,6 +397,103 @@ class QueryError extends InteractionError {
     super("Query", code, message, result);
   }
 }
+
+const transferTxToTx = ({
+  receiver: _receiver,
+  sender,
+  esdts,
+  ...tx
+}: TransferTx): Tx => {
+  let receiver: AddressLike;
+  let data: string | undefined;
+  if (esdts?.length) {
+    receiver = sender;
+    const dataParts: string[] = [];
+    dataParts.push("MultiESDTNFTTransfer");
+    dataParts.push(addressLikeToHexAddress(_receiver));
+    dataParts.push(e.U(esdts.length).toTopHex());
+    for (const esdt of esdts) {
+      dataParts.push(e.Str(esdt.id).toTopHex());
+      dataParts.push(e.U(esdt.nonce ?? 0).toTopHex());
+      dataParts.push(e.U(esdt.amount).toTopHex());
+    }
+    data = dataParts.join("@");
+  } else {
+    receiver = _receiver;
+  }
+  return { receiver, sender, data, ...tx };
+};
+
+const deployContractTxToTx = ({
+  code,
+  codeMetadata,
+  codeArgs,
+  ...tx
+}: DeployContractTx): Tx => {
+  return {
+    receiver: zeroBechAddress,
+    data: [
+      code,
+      "0500",
+      eCodeMetadata(codeMetadata),
+      ...e.vs(codeArgs ?? []),
+    ].join("@"),
+    ...tx,
+  };
+};
+
+const callContractTxToTx = ({
+  callee,
+  sender,
+  funcName,
+  funcArgs,
+  esdts,
+  ...tx
+}: CallContractTx): Tx => {
+  const dataParts: string[] = [];
+  let receiver: AddressLike;
+  if (esdts?.length) {
+    receiver = sender;
+    dataParts.push("MultiESDTNFTTransfer");
+    dataParts.push(addressLikeToHexAddress(callee));
+    dataParts.push(e.U(esdts.length).toTopHex());
+    for (const esdt of esdts) {
+      dataParts.push(e.Str(esdt.id).toTopHex());
+      dataParts.push(e.U(esdt.nonce ?? 0).toTopHex());
+      dataParts.push(e.U(esdt.amount).toTopHex());
+    }
+    dataParts.push(e.Str(funcName).toTopHex());
+  } else {
+    receiver = callee;
+    dataParts.push(funcName);
+  }
+  dataParts.push(...e.vs(funcArgs ?? []));
+  return {
+    receiver,
+    sender,
+    data: dataParts.join("@"),
+    ...tx,
+  };
+};
+
+const upgradeContractTxToTx = ({
+  callee,
+  code,
+  codeMetadata,
+  codeArgs,
+  ...tx
+}: UpgradeContractTx): Tx => {
+  return {
+    receiver: callee,
+    data: [
+      "upgradeContract",
+      code,
+      eCodeMetadata(codeMetadata),
+      ...e.vs(codeArgs ?? []),
+    ].join("@"),
+    ...tx,
+  };
+};
 
 const broadTxToRawTx = async (tx: BroadTx): Promise<RawTx> => {
   if (isRawTx(tx)) {

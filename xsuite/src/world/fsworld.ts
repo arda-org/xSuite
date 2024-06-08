@@ -147,14 +147,32 @@ export class FSWorld extends World {
     return this.proxy.processTx(txHash);
   }
 
-  awaitTx(txHash: string) {
-    return this.processTx(txHash);
+  resolveDeployContracts(txHashes: string[]) {
+    return super
+      .resolveDeployContracts(txHashes)
+      .then((rs) => rs.map((r) => this.addContractPostTx(r)));
+  }
+
+  resolveDeployContract(txHash: string) {
+    return super
+      .resolveDeployContract(txHash)
+      .then((r) => this.addContractPostTx(r));
+  }
+
+  protected addContractPostTx<T extends { address: string }>(
+    res: T,
+  ): Prettify<Replace<T, { contract: FSContract }>> {
+    return { ...res, contract: this.newContract(res.address) };
+  }
+
+  deployContracts(txs: WorldDeployContractTx[]) {
+    return super
+      .deployContracts(txs)
+      .then((rs) => rs.map((r) => this.addContractPostTx(r)));
   }
 
   deployContract(tx: WorldDeployContractTx) {
-    return super
-      .deployContract(tx)
-      .then((res) => ({ ...res, contract: this.newContract(res.address) }));
+    return super.deployContract(tx).then((r) => this.addContractPostTx(r));
   }
 
   terminate() {

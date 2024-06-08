@@ -14,7 +14,8 @@ import { expandCode } from "./world";
 
 let world: FSWorld;
 let wallet: FSWallet;
-let otherWallet: FSWallet;
+let otherWallet1: FSWallet;
+let otherWallet2: FSWallet;
 let contract: FSContract;
 const fftId = "FFT-abcdef";
 const sftId = "SFT-abcdef";
@@ -39,7 +40,10 @@ beforeEach(async () => {
       esdts: [{ id: fftId, amount: 10n ** 18n }],
     },
   });
-  otherWallet = await world.createWallet({
+  otherWallet1 = await world.createWallet({
+    address: { shard: 1 },
+  });
+  otherWallet2 = await world.createWallet({
     address: { shard: 1 },
   });
   contract = await wallet.createContract({
@@ -333,7 +337,7 @@ test("FSWorld.query.assertFail - correct parameters", async () => {
 test("FSWorld.sendTx & FSWorld.resolveTx.assertPending & FSWorld.resolveTx.assertSucceed", async () => {
   const txHash = await world.sendTx({
     sender: wallet,
-    receiver: otherWallet,
+    receiver: otherWallet1,
     value: 10n ** 17n,
     gasLimit: 10_000_000,
   });
@@ -343,7 +347,33 @@ test("FSWorld.sendTx & FSWorld.resolveTx.assertPending & FSWorld.resolveTx.asser
   assertAccount(await wallet.getAccount(), {
     balance: 9n * 10n ** 17n - fee,
   });
-  assertAccount(await otherWallet.getAccount(), {
+  assertAccount(await otherWallet1.getAccount(), {
+    balance: 10n ** 17n,
+  });
+});
+
+test("FSWorld.executeTxs", async () => {
+  const [{ fee: fee1 }, { fee: fee2 }] = await world.executeTxs([
+    {
+      sender: wallet,
+      receiver: otherWallet1,
+      value: 10n ** 17n,
+      gasLimit: 10_000_000,
+    },
+    {
+      sender: wallet,
+      receiver: otherWallet2,
+      value: 10n ** 17n,
+      gasLimit: 10_000_000,
+    },
+  ]);
+  assertAccount(await wallet.getAccount(), {
+    balance: 8n * 10n ** 17n - fee1 - fee2,
+  });
+  assertAccount(await otherWallet1.getAccount(), {
+    balance: 10n ** 17n,
+  });
+  assertAccount(await otherWallet2.getAccount(), {
     balance: 10n ** 17n,
   });
 });
@@ -351,7 +381,7 @@ test("FSWorld.sendTx & FSWorld.resolveTx.assertPending & FSWorld.resolveTx.asser
 test("FSWorld.executeTx", async () => {
   const { hash, explorerUrl, gasUsed, fee } = await world.executeTx({
     sender: wallet,
-    receiver: otherWallet,
+    receiver: otherWallet1,
     value: 10n ** 17n,
     gasLimit: 10_000_000,
   });
@@ -361,7 +391,7 @@ test("FSWorld.executeTx", async () => {
   assertAccount(await wallet.getAccount(), {
     balance: 9n * 10n ** 17n - fee,
   });
-  assertAccount(await otherWallet.getAccount(), {
+  assertAccount(await otherWallet1.getAccount(), {
     balance: 10n ** 17n,
   });
 });
@@ -369,14 +399,14 @@ test("FSWorld.executeTx", async () => {
 test("FSWorld.transfer", async () => {
   const { fee } = await world.transfer({
     sender: wallet,
-    receiver: otherWallet,
+    receiver: otherWallet1,
     value: 10n ** 17n,
     gasLimit: 10_000_000,
   });
   assertAccount(await wallet.getAccount(), {
     balance: 9n * 10n ** 17n - fee,
   });
-  assertAccount(await otherWallet.getAccount(), {
+  assertAccount(await otherWallet1.getAccount(), {
     balance: 10n ** 17n,
   });
 });
@@ -555,7 +585,7 @@ test("FSWallet.setAccount - FSWallet.getAccount", async () => {
 
 test("FSWallet.executeTx", async () => {
   const { hash, explorerUrl, gasUsed, fee } = await wallet.executeTx({
-    receiver: otherWallet,
+    receiver: otherWallet1,
     value: 10n ** 17n,
     gasLimit: 10_000_000,
   });
@@ -565,35 +595,35 @@ test("FSWallet.executeTx", async () => {
   assertAccount(await wallet.getAccount(), {
     balance: 9n * 10n ** 17n - fee,
   });
-  assertAccount(await otherWallet.getAccount(), {
+  assertAccount(await otherWallet1.getAccount(), {
     balance: 10n ** 17n,
   });
 });
 
 test("FSWallet.transfer - EGLD", async () => {
   const { fee } = await wallet.transfer({
-    receiver: otherWallet,
+    receiver: otherWallet1,
     value: 10n ** 17n,
     gasLimit: 10_000_000,
   });
   assertAccount(await wallet.getAccount(), {
     balance: 9n * 10n ** 17n - fee,
   });
-  assertAccount(await otherWallet.getAccount(), {
+  assertAccount(await otherWallet1.getAccount(), {
     balance: 10n ** 17n,
   });
 });
 
 test("FSWallet.transfer - ESDTs", async () => {
   await wallet.transfer({
-    receiver: otherWallet,
+    receiver: otherWallet1,
     esdts: [{ id: fftId, amount: 10n ** 17n }],
     gasLimit: 10_000_000,
   });
   assertAccount(await wallet.getAccount(), {
     hasKvs: { esdts: [{ id: fftId, amount: 9n * 10n ** 17n }] },
   });
-  assertAccount(await otherWallet.getAccount(), {
+  assertAccount(await otherWallet1.getAccount(), {
     hasKvs: { esdts: [{ id: fftId, amount: 10n ** 17n }] },
   });
 });
@@ -802,4 +832,12 @@ test("FSContract.setAccount - FSContract.getAccount", async () => {
   await contract.setAccount(before);
   const after = await contract.getAccount();
   expect(after).toEqual(before);
+});
+
+test("FSContract.query", async () => {
+  const { returnData } = await contract.query({
+    funcName: "multiply_by_n",
+    funcArgs: [e.U64(10)],
+  });
+  assertVs(returnData, [e.U64(20n)]);
 });
