@@ -9,7 +9,7 @@ import { Proxy } from "../proxy";
 import { KeystoreSigner } from "../world/signer";
 import { logSuccess } from "./helpers";
 
-export const registerRequestXegldCmd = (cmd: Command) => {
+export const addRequestXegldCmd = (cmd: Command) => {
   cmd
     .command("request-xegld")
     .description("Request xEGLD (once per day).")

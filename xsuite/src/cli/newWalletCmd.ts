@@ -8,7 +8,7 @@ import { getAddressShard, numShards } from "../data/utils";
 import { Keystore } from "../world/signer";
 import { logError, logSuccess } from "./helpers";
 
-export const registerNewWalletCmd = (cmd: Command) => {
+export const addNewWalletCmd = (cmd: Command) => {
   cmd
     .command("new-wallet")
     .description("Create a new wallet.")

@@ -6,7 +6,7 @@ import { pkgPath } from "../_pkg";
 import { log } from "../_stdio";
 import { logTitle, logAndRunCommand, downloadArchive } from "./helpers";
 
-export const registerTestScenCmd = (cmd: Command) => {
+export const addTestScenCmd = (cmd: Command) => {
   cmd
     .command("test-scen")
     .description("Test contract with scenarios.")

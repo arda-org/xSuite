@@ -4,7 +4,7 @@ import { Command } from "commander";
 import { log } from "../_stdio";
 import { logTitle, logAndRunCommand, logError } from "./helpers";
 
-export const registerBuildCmd = (cmd: Command) => {
+export const addBuildCmd = (cmd: Command) => {
   cmd
     .command("build")
     .description("Build contract.")

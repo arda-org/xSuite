@@ -6,7 +6,7 @@ import {
   rustTarget,
 } from "./helpers";
 
-export const registerInstallRustCmd = (cmd: Command) => {
+export const addInstallRustCmd = (cmd: Command) => {
   cmd
     .command("install-rust")
     .description(

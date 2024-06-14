@@ -13,7 +13,7 @@ import {
   downloadArchive,
 } from "./helpers";
 
-export const registerNewCmd = (cmd: Command) => {
+export const addNewCmd = (cmd: Command) => {
   cmd
     .command("new")
     .description("Create a new blank contract.")

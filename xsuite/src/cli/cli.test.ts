@@ -8,7 +8,7 @@ import { test, expect } from "vitest";
 import { stdoutInt, input } from "../_stdio";
 import { getAddressShard } from "../data/utils";
 import { Keystore } from "../world/signer";
-import { getCommand } from "./cli";
+import { CLI } from "./cli";
 import { rustToolchain, rustTarget, rustKey } from "./helpers";
 
 const cwd = process.cwd();
@@ -456,7 +456,7 @@ class Runner {
 
   async run(c: string) {
     stdoutInt.start();
-    await getCommand().parseAsync(c.split(" "), { from: "user" });
+    await new CLI().run(c);
     stdoutInt.stop();
     this.stdout += stdoutInt.data;
   }
