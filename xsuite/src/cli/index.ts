@@ -1,4 +1,4 @@
-import { getCommand } from "./cmd";
+import { getCommand } from "./cli";
 
 if (process.env["PWD"]) {
   process.chdir(process.env["PWD"]);

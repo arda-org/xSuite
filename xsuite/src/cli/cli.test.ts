@@ -8,7 +8,7 @@ import { test, expect } from "vitest";
 import { stdoutInt, input } from "../_stdio";
 import { getAddressShard } from "../data/utils";
 import { Keystore } from "../world/signer";
-import { getCommand } from "./cmd";
+import { getCommand } from "./cli";
 import { rustToolchain, rustTarget, rustKey } from "./helpers";
 
 const cwd = process.cwd();
