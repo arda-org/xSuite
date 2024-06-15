@@ -5,7 +5,7 @@ import chalk from "chalk";
 import { http } from "msw";
 import { setupServer } from "msw/node";
 import { test, expect } from "vitest";
-import { stdoutInt, input } from "../_stdio";
+import { Context } from "../context";
 import { getAddressShard } from "../data/utils";
 import { Keystore } from "../world/signer";
 import { CLI } from "./cli";
@@ -19,7 +19,7 @@ const mneKeystorePath = path.resolve("wallets", "keystore_mnemonic.json");
 test("new-wallet --wallet wallet.json", async () => {
   using r = new Runner();
   const walletPath = path.resolve("wallet.json");
-  input.inject("1234", "1234");
+  r.input("1234", "1234");
   await r.run(`new-wallet --wallet ${walletPath}`);
   const keystore = Keystore.fromFile_unsafe(walletPath, "1234");
   const keystoreSigner = keystore.newSigner();
@@ -47,7 +47,7 @@ for (const shard of [0, 1, 2]) {
   test(`new-wallet --wallet wallet.json --shard ${shard}`, async () => {
     using r = new Runner();
     const walletPath = path.resolve("wallet.json");
-    input.inject("1234", "1234");
+    r.input("1234", "1234");
     await r.run(`new-wallet --wallet ${walletPath} --shard ${shard}`);
     const keystore = Keystore.fromFile_unsafe(walletPath, "1234");
     expect(fs.existsSync(walletPath)).toEqual(true);
@@ -75,7 +75,7 @@ for (const shard of [-1, 3]) {
   test(`new-wallet --wallet wallet.json --shard ${shard} | error: The shard you entered does not exist`, async () => {
     using r = new Runner();
     const walletPath = path.resolve("wallet.json");
-    input.inject("1234", "1234");
+    r.input("1234", "1234");
     await r.run(`new-wallet --wallet ${walletPath} --shard ${shard}`);
     expect(fs.existsSync(walletPath)).toEqual(false);
     expect(r.flushStdout().split("\n")).toEqual([
@@ -92,7 +92,7 @@ for (const shard of [-1, 3]) {
 test("new-wallet --wallet wallet.json | error: passwords don't match", async () => {
   using r = new Runner();
   const walletPath = path.resolve("wallet.json");
-  input.inject("1234", "1235");
+  r.input("1234", "1235");
   await r.run(`new-wallet --wallet ${walletPath}`);
   expect(r.flushStdout().split("\n")).toEqual([
     `Creating keystore wallet at "${walletPath}"...`,
@@ -139,7 +139,7 @@ test("new-wallet --wallet wallet.json --password 1234", async () => {
 test("new-wallet --wallet wallet.json --from-pem wallet.pem", async () => {
   using r = new Runner();
   const walletPath = path.resolve("wallet.json");
-  input.inject("1234", "1234");
+  r.input("1234", "1234");
   await r.run(`new-wallet --wallet ${walletPath} --from-pem ${pemPath}`);
   const keystore = Keystore.fromFile_unsafe(walletPath, "1234");
   const keystoreSigner = keystore.newSigner();
@@ -186,7 +186,7 @@ test("new-wallet --wallet wallet.json --password 1234 --from-pem wallet.pem", as
 test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_key.json", async () => {
   using r = new Runner();
   const walletPath = path.resolve("wallet.json");
-  input.inject("qpGjv7ZJ9gcPXWSN");
+  r.input("qpGjv7ZJ9gcPXWSN");
   await r.run(
     `new-wallet --wallet ${walletPath} --password 1234 --from-wallet ${keyKeystorePath}`,
   );
@@ -216,7 +216,7 @@ test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_key
 test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_mnemonic.json", async () => {
   using r = new Runner();
   const walletPath = path.resolve("wallet.json");
-  input.inject("1234");
+  r.input("1234");
   await r.run(
     `new-wallet --wallet ${walletPath} --password 1234 --from-wallet ${mneKeystorePath}`,
   );
@@ -268,7 +268,7 @@ test("request-xegld --wallet wallet.json", async () => {
     ),
   );
   server.listen();
-  input.inject("1234", "1234");
+  r.input("1234", "1234");
   balances = [0, 1];
   await r.run(`request-xegld --wallet ${walletPath}`);
   balances = [0, 10];
@@ -445,26 +445,25 @@ test("new --dir contract | error: already exists", async () => {
 });
 
 class Runner {
-  stdout: string;
+  ctx: Context;
   tmpDir: string;
 
   constructor() {
-    this.stdout = "";
+    this.ctx = new Context();
     this.tmpDir = fs.mkdtempSync("/tmp/xsuite-tests-");
     process.chdir(this.tmpDir);
   }
 
-  async run(c: string) {
-    stdoutInt.start();
-    await new CLI().run(c);
-    stdoutInt.stop();
-    this.stdout += stdoutInt.data;
+  input(...inputs: string[]) {
+    return this.ctx.input(...inputs);
+  }
+
+  run(c: string) {
+    return this.ctx.run(() => new CLI().run(c));
   }
 
   flushStdout() {
-    const stdout = this.stdout;
-    this.stdout = "";
-    return stdout;
+    return this.ctx.flushStdout();
   }
 
   [Symbol.dispose]() {

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { Command } from "commander";
-import { log } from "../_stdio";
+import { log } from "../context";
 import { logTitle, logAndRunCommand, logError } from "./helpers";
 
 export const addBuildCmd = (cmd: Command) => {

@@ -3,7 +3,7 @@ import { NativeAuthClient } from "@multiversx/sdk-native-auth-client";
 import chalk from "chalk";
 import { Command } from "commander";
 import open from "open";
-import { log } from "../_stdio";
+import { log } from "../context";
 import { u8aToHex } from "../data/utils";
 import { Proxy } from "../proxy";
 import { KeystoreSigner } from "../world/signer";

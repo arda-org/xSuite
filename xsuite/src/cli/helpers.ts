@@ -8,7 +8,7 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { finished } from "node:stream/promises";
 import chalk from "chalk";
-import { log } from "../_stdio";
+import { log } from "../context";
 
 export const logTitle = (title: string) => log(chalk.blue(title));
 

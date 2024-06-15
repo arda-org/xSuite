@@ -1,5 +1,5 @@
 import { Command } from "commander";
-import { log } from "../_stdio";
+import { log } from "../context";
 import { rustKey } from "./helpers";
 
 export const addInstallRustKeyCmd = (cmd: Command) => {

@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { afterEach, beforeEach, expect, test } from "vitest";
-import { input, stdoutInt } from "../_stdio";
+import { Context } from "../context";
 import { u8aToHex } from "../data/utils";
 import { KeystoreSigner } from "./signer";
 
@@ -45,18 +45,19 @@ test("KeystoreSigner.fromFile_unsafe - keystore mnemonic", async () => {
 });
 
 test("KeystoreSigner.fromFile", async () => {
-  stdoutInt.start();
-  input.inject("1234");
-  const signer = await KeystoreSigner.fromFile(mneKeystorePath);
-  expect(signer.toString()).toEqual(
-    "erd1jdf0xwqrx9y47mlp6n5q29wlk7jh2p63j3raekknhky3f2f6668qzjwmee",
-  );
-  const signature = await signer.sign(new TextEncoder().encode("message"));
-  expect(u8aToHex(signature)).toEqual(
-    "316411a3656c30780c1f8317d568b8e6c48802fcbb54578ccee01a7e0de59782cc5ebe374cec313efd390797b426ba2e325b8c20c47cce9a4bb2467f1d999d0f",
-  );
-  stdoutInt.stop();
-  expect(stdoutInt.data.split("\n")).toEqual([
+  const ctx = new Context();
+  await ctx.run(async () => {
+    ctx.input("1234");
+    const signer = await KeystoreSigner.fromFile(mneKeystorePath);
+    expect(signer.toString()).toEqual(
+      "erd1jdf0xwqrx9y47mlp6n5q29wlk7jh2p63j3raekknhky3f2f6668qzjwmee",
+    );
+    const signature = await signer.sign(new TextEncoder().encode("message"));
+    expect(u8aToHex(signature)).toEqual(
+      "316411a3656c30780c1f8317d568b8e6c48802fcbb54578ccee01a7e0de59782cc5ebe374cec313efd390797b426ba2e325b8c20c47cce9a4bb2467f1d999d0f",
+    );
+  });
+  expect(ctx.flushStdout().split("\n")).toEqual([
     `Loading keystore wallet at "${mneKeystorePath}"...`,
     "Enter password: ",
     "",
@@ -64,12 +65,13 @@ test("KeystoreSigner.fromFile", async () => {
 });
 
 test("KeystoreSigner.fromFile - ENOENT", async () => {
-  stdoutInt.start();
-  await expect(KeystoreSigner.fromFile(walletPath)).rejects.toThrow(
-    `ENOENT: no such file or directory, open '${walletPath}'`,
-  );
-  stdoutInt.stop();
-  expect(stdoutInt.data.split("\n")).toEqual([
+  const ctx = new Context();
+  await ctx.run(async () => {
+    await expect(KeystoreSigner.fromFile(walletPath)).rejects.toThrow(
+      `ENOENT: no such file or directory, open '${walletPath}'`,
+    );
+  });
+  expect(ctx.flushStdout().split("\n")).toEqual([
     `Loading keystore wallet at "${walletPath}"...`,
     "",
   ]);

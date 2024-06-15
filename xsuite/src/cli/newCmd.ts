@@ -4,7 +4,7 @@ import path from "node:path";
 import chalk from "chalk";
 import { Command } from "commander";
 import tar from "tar";
-import { log } from "../_stdio";
+import { log } from "../context";
 import {
   logTitle,
   logAndRunCommand,
