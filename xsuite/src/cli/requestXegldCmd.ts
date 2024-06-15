@@ -3,13 +3,13 @@ import { NativeAuthClient } from "@multiversx/sdk-native-auth-client";
 import chalk from "chalk";
 import { Command } from "commander";
 import open from "open";
-import { log } from "../_stdio";
+import { log } from "../context";
 import { u8aToHex } from "../data/utils";
 import { Proxy } from "../proxy";
 import { KeystoreSigner } from "../world/signer";
 import { logSuccess } from "./helpers";
 
-export const registerRequestXegldCmd = (cmd: Command) => {
+export const addRequestXegldCmd = (cmd: Command) => {
   cmd
     .command("request-xegld")
     .description("Request xEGLD (once per day).")
@@ -57,8 +57,8 @@ const action = async ({
   const initialBalance = await devnetProxy.getAccountBalance(address);
   let balance = initialBalance;
   while (balance <= initialBalance) {
-    balance = await devnetProxy.getAccountBalance(address);
     await new Promise((r) => setTimeout(r, 1000));
+    balance = await devnetProxy.getAccountBalance(address);
   }
 
   log();

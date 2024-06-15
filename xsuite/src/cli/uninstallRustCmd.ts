@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import { logAndRunCommand, logTitle } from "./helpers";
 
-export const registerUninstallRustCmd = (cmd: Command) => {
+export const addUninstallRustCmd = (cmd: Command) => {
   cmd
     .command("uninstall-rust")
     .description("Uninstall Rust with rustup.")
