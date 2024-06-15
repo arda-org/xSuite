@@ -2,9 +2,16 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import readline from "node:readline";
 import { Writable } from "node:stream";
 
-export const readHidden = (p: string) => {
-  const f = contextStorage.getStore()?.readHidden ?? defaultReadHidden;
-  return f(p);
+export const cwd = () => {
+  const ctx = contextStorage.getStore();
+  return ctx ? ctx.cwd() : defaultCwd();
+};
+
+const defaultCwd = () => process.cwd();
+
+export const readHidden = (s: string) => {
+  const ctx = contextStorage.getStore();
+  return ctx ? ctx.readHidden(s) : defaultReadHidden(s);
 };
 
 const defaultReadHidden = (p: string) => {
@@ -36,8 +43,8 @@ const defaultReadHidden = (p: string) => {
 };
 
 export const log = (s: string = "") => {
-  const f = contextStorage.getStore()?.log ?? defaultLog;
-  return f(s);
+  const ctx = contextStorage.getStore();
+  return ctx ? ctx.log(s) : defaultLog(s);
 };
 
 const defaultLog = (s: string) => {
@@ -45,22 +52,29 @@ const defaultLog = (s: string) => {
 };
 
 export class Context {
-  stdout: string = "";
-  inputs: string[] = [];
+  private stdout: string = "";
+  private inputs: string[] = [];
+  private _cwd: string;
 
-  run<T>(callback: () => T) {
-    const log = (buffer: string) => {
-      this.stdout += buffer + "\n";
-    };
-    const readHidden = (p: string) => {
-      const input = this.inputs.shift();
-      if (input === undefined) {
-        throw new Error("Undefined input.");
-      }
-      log(p);
-      return Promise.resolve(input);
-    };
-    return contextStorage.run({ log, readHidden }, callback);
+  constructor({ cwd }: { cwd?: string } = {}) {
+    this._cwd = cwd ?? process.cwd();
+  }
+
+  cwd() {
+    return this._cwd;
+  }
+
+  log(s: string) {
+    this.stdout += s + "\n";
+  }
+
+  readHidden(s: string) {
+    const input = this.inputs.shift();
+    if (input === undefined) {
+      throw new Error("Undefined input.");
+    }
+    this.log(s);
+    return Promise.resolve(input);
   }
 
   input(...inputs: string[]) {
@@ -72,9 +86,10 @@ export class Context {
     this.stdout = "";
     return stdout;
   }
+
+  run<T>(callback: () => T) {
+    return contextStorage.run(this, callback);
+  }
 }
 
-const contextStorage = new AsyncLocalStorage<{
-  log: (buffer: string) => void;
-  readHidden: (p: string) => Promise<string>;
-}>();
+const contextStorage = new AsyncLocalStorage<Context>();

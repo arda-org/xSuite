@@ -1,7 +1,7 @@
-import { CLI } from "./cli";
+import { getCli } from "./cli";
 
 if (process.env["PWD"]) {
   process.chdir(process.env["PWD"]);
 }
 
-new CLI().parseAsync();
+getCli().parseAsync();

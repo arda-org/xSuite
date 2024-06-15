@@ -8,7 +8,7 @@ import { test, expect } from "vitest";
 import { Context } from "../context";
 import { getAddressShard } from "../data/utils";
 import { Keystore } from "../world/signer";
-import { CLI } from "./cli";
+import { getCli } from "./cli";
 import { rustToolchain, rustTarget, rustKey } from "./helpers";
 
 const cwd = process.cwd();
@@ -17,14 +17,14 @@ const keyKeystorePath = path.resolve("wallets", "keystore_key.json");
 const mneKeystorePath = path.resolve("wallets", "keystore_mnemonic.json");
 
 test("new-wallet --wallet wallet.json", async () => {
-  using r = new Runner();
+  using c = newContext(true);
   const walletPath = path.resolve("wallet.json");
-  r.input("1234", "1234");
-  await r.run(`new-wallet --wallet ${walletPath}`);
+  c.input("1234", "1234");
+  await c.cmd(`new-wallet --wallet ${walletPath}`);
   const keystore = Keystore.fromFile_unsafe(walletPath, "1234");
   const keystoreSigner = keystore.newSigner();
   expect(fs.existsSync(walletPath)).toEqual(true);
-  expect(r.flushStdout().split("\n")).toEqual([
+  expect(c.flushStdout().split("\n")).toEqual([
     `Creating keystore wallet at "${walletPath}"...`,
     "Enter password: ",
     "Re-enter password: ",
@@ -45,13 +45,13 @@ test("new-wallet --wallet wallet.json", async () => {
 
 for (const shard of [0, 1, 2]) {
   test(`new-wallet --wallet wallet.json --shard ${shard}`, async () => {
-    using r = new Runner();
+    using c = newContext(true);
     const walletPath = path.resolve("wallet.json");
-    r.input("1234", "1234");
-    await r.run(`new-wallet --wallet ${walletPath} --shard ${shard}`);
+    c.input("1234", "1234");
+    await c.cmd(`new-wallet --wallet ${walletPath} --shard ${shard}`);
     const keystore = Keystore.fromFile_unsafe(walletPath, "1234");
     expect(fs.existsSync(walletPath)).toEqual(true);
-    expect(r.flushStdout().split("\n")).toEqual([
+    expect(c.flushStdout().split("\n")).toEqual([
       `Creating keystore wallet at "${walletPath}"...`,
       "Enter password: ",
       "Re-enter password: ",
@@ -73,12 +73,12 @@ for (const shard of [0, 1, 2]) {
 
 for (const shard of [-1, 3]) {
   test(`new-wallet --wallet wallet.json --shard ${shard} | error: The shard you entered does not exist`, async () => {
-    using r = new Runner();
+    using c = newContext(true);
     const walletPath = path.resolve("wallet.json");
-    r.input("1234", "1234");
-    await r.run(`new-wallet --wallet ${walletPath} --shard ${shard}`);
+    c.input("1234", "1234");
+    await c.cmd(`new-wallet --wallet ${walletPath} --shard ${shard}`);
     expect(fs.existsSync(walletPath)).toEqual(false);
-    expect(r.flushStdout().split("\n")).toEqual([
+    expect(c.flushStdout().split("\n")).toEqual([
       `Creating keystore wallet at "${walletPath}"...`,
       "Enter password: ",
       "Re-enter password: ",
@@ -90,11 +90,11 @@ for (const shard of [-1, 3]) {
 }
 
 test("new-wallet --wallet wallet.json | error: passwords don't match", async () => {
-  using r = new Runner();
+  using c = newContext(true);
   const walletPath = path.resolve("wallet.json");
-  r.input("1234", "1235");
-  await r.run(`new-wallet --wallet ${walletPath}`);
-  expect(r.flushStdout().split("\n")).toEqual([
+  c.input("1234", "1235");
+  await c.cmd(`new-wallet --wallet ${walletPath}`);
+  expect(c.flushStdout().split("\n")).toEqual([
     `Creating keystore wallet at "${walletPath}"...`,
     "Enter password: ",
     "Re-enter password: ",
@@ -104,24 +104,24 @@ test("new-wallet --wallet wallet.json | error: passwords don't match", async () 
 });
 
 test("new-wallet --wallet wallet.json | error: already exists", async () => {
-  using r = new Runner();
+  using c = newContext(true);
   const walletPath = path.resolve("wallet.json");
   fs.writeFileSync(walletPath, "");
-  await r.run(`new-wallet --wallet ${walletPath}`);
-  expect(r.flushStdout().split("\n")).toEqual([
+  await c.cmd(`new-wallet --wallet ${walletPath}`);
+  expect(c.flushStdout().split("\n")).toEqual([
     chalk.red(`Wallet already exists at "${walletPath}".`),
     "",
   ]);
 });
 
 test("new-wallet --wallet wallet.json --password 1234", async () => {
-  using r = new Runner();
+  using c = newContext(true);
   const walletPath = path.resolve("wallet.json");
-  await r.run(`new-wallet --wallet ${walletPath} --password 1234`);
+  await c.cmd(`new-wallet --wallet ${walletPath} --password 1234`);
   const keystore = Keystore.fromFile_unsafe(walletPath, "1234");
   const keystoreSigner = keystore.newSigner();
   expect(fs.existsSync(walletPath)).toEqual(true);
-  expect(r.flushStdout().split("\n")).toEqual([
+  expect(c.flushStdout().split("\n")).toEqual([
     chalk.green(`Wallet created at "${walletPath}".`),
     "",
     chalk.bold.blue("Address:") + ` ${keystoreSigner}`,
@@ -137,17 +137,17 @@ test("new-wallet --wallet wallet.json --password 1234", async () => {
 });
 
 test("new-wallet --wallet wallet.json --from-pem wallet.pem", async () => {
-  using r = new Runner();
+  using c = newContext(true);
   const walletPath = path.resolve("wallet.json");
-  r.input("1234", "1234");
-  await r.run(`new-wallet --wallet ${walletPath} --from-pem ${pemPath}`);
+  c.input("1234", "1234");
+  await c.cmd(`new-wallet --wallet ${walletPath} --from-pem ${pemPath}`);
   const keystore = Keystore.fromFile_unsafe(walletPath, "1234");
   const keystoreSigner = keystore.newSigner();
   const secretKey = UserSecretKey.fromPem(
     fs.readFileSync(pemPath, "utf8"),
   ).hex();
   expect(keystore.getSecretKey()).toEqual(secretKey);
-  expect(r.flushStdout().split("\n")).toEqual([
+  expect(c.flushStdout().split("\n")).toEqual([
     `Creating keystore wallet at "${walletPath}"...`,
     "Enter password: ",
     "Re-enter password: ",
@@ -162,9 +162,9 @@ test("new-wallet --wallet wallet.json --from-pem wallet.pem", async () => {
 });
 
 test("new-wallet --wallet wallet.json --password 1234 --from-pem wallet.pem", async () => {
-  using r = new Runner();
+  using c = newContext(true);
   const walletPath = path.resolve("wallet.json");
-  await r.run(
+  await c.cmd(
     `new-wallet --wallet ${walletPath} --password 1234 --from-pem ${pemPath}`,
   );
   const keystore = Keystore.fromFile_unsafe(walletPath, "1234");
@@ -173,7 +173,7 @@ test("new-wallet --wallet wallet.json --password 1234 --from-pem wallet.pem", as
     fs.readFileSync(pemPath, "utf8"),
   ).hex();
   expect(keystore.getSecretKey()).toEqual(secretKey);
-  expect(r.flushStdout().split("\n")).toEqual([
+  expect(c.flushStdout().split("\n")).toEqual([
     chalk.green(`Wallet created at "${walletPath}".`),
     "",
     chalk.bold.blue("Address:") + ` ${keystoreSigner}`,
@@ -184,10 +184,10 @@ test("new-wallet --wallet wallet.json --password 1234 --from-pem wallet.pem", as
 });
 
 test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_key.json", async () => {
-  using r = new Runner();
+  using c = newContext(true);
   const walletPath = path.resolve("wallet.json");
-  r.input("qpGjv7ZJ9gcPXWSN");
-  await r.run(
+  c.input("qpGjv7ZJ9gcPXWSN");
+  await c.cmd(
     `new-wallet --wallet ${walletPath} --password 1234 --from-wallet ${keyKeystorePath}`,
   );
   const newKeystore = Keystore.fromFile_unsafe(walletPath, "1234");
@@ -201,7 +201,7 @@ test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_key
     oldKeystore.newSigner().sign(Buffer.from("hello")),
   ]);
   expect(newSignature).toEqual(oldSignature);
-  expect(r.flushStdout().split("\n")).toEqual([
+  expect(c.flushStdout().split("\n")).toEqual([
     `Loading keystore wallet at "${keyKeystorePath}"...`,
     "Enter password: ",
     chalk.green(`Wallet created at "${walletPath}".`),
@@ -214,10 +214,10 @@ test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_key
 });
 
 test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_mnemonic.json", async () => {
-  using r = new Runner();
+  using c = newContext(true);
   const walletPath = path.resolve("wallet.json");
-  r.input("1234");
-  await r.run(
+  c.input("1234");
+  await c.cmd(
     `new-wallet --wallet ${walletPath} --password 1234 --from-wallet ${mneKeystorePath}`,
   );
   const newKeystore = Keystore.fromFile_unsafe(walletPath, "1234");
@@ -228,7 +228,7 @@ test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_mne
   ]);
   const newKeystoreSigner = newKeystore.newSigner();
   expect(newSignature).toEqual(oldSignature);
-  expect(r.flushStdout().split("\n")).toEqual([
+  expect(c.flushStdout().split("\n")).toEqual([
     `Loading keystore wallet at "${mneKeystorePath}"...`,
     "Enter password: ",
     chalk.green(`Wallet created at "${walletPath}".`),
@@ -246,7 +246,7 @@ test("new-wallet --wallet wallet.json --password 1234 --from-wallet keystore_mne
 });
 
 test("request-xegld --wallet wallet.json", async () => {
-  using r = new Runner();
+  using c = newContext(true);
   const walletPath = path.resolve("wallet.json");
   fs.copyFileSync(mneKeystorePath, walletPath);
   const signer = Keystore.fromFile_unsafe(walletPath, "1234").newSigner();
@@ -268,13 +268,13 @@ test("request-xegld --wallet wallet.json", async () => {
     ),
   );
   server.listen();
-  r.input("1234", "1234");
+  c.input("1234", "1234");
   balances = [0, 1];
-  await r.run(`request-xegld --wallet ${walletPath}`);
+  await c.cmd(`request-xegld --wallet ${walletPath}`);
   balances = [0, 10];
-  await r.run(`request-xegld --wallet ${walletPath} --password 1234`);
+  await c.cmd(`request-xegld --wallet ${walletPath} --password 1234`);
   server.close();
-  const splittedStdoutData = r.flushStdout().split("\n");
+  const splittedStdoutData = c.flushStdout().split("\n");
   expect(splittedStdoutData).toEqual([
     `Loading keystore wallet at "${walletPath}"...`,
     "Enter password: ",
@@ -296,15 +296,15 @@ test("request-xegld --wallet wallet.json", async () => {
 });
 
 test("install-rust-key", async () => {
-  using r = new Runner();
-  await r.run("install-rust-key");
-  expect(r.flushStdout().split("\n")).toEqual([rustKey, ""]);
+  using c = newContext(true);
+  await c.cmd("install-rust-key");
+  expect(c.flushStdout().split("\n")).toEqual([rustKey, ""]);
 });
 
 test("install-rust", async () => {
-  using r = new Runner();
-  await r.run("install-rust");
-  expect(r.flushStdout().split("\n")).toEqual([
+  using c = newContext(true);
+  await c.cmd("install-rust");
+  expect(c.flushStdout().split("\n")).toEqual([
     chalk.blue(
       `Installing Rust: toolchain ${rustToolchain} & target ${rustTarget}...`,
     ),
@@ -316,13 +316,13 @@ test("install-rust", async () => {
 });
 
 test("new --dir contract && build --locked && build -r && test-rust && test-scen", async () => {
-  using r = new Runner();
+  using c = newContext(true);
 
-  await r.run("new --dir contract");
+  await c.cmd("new --dir contract");
   expect(fs.readdirSync(process.cwd()).length).toEqual(1);
   const dir = "contract";
   const absDir = path.resolve(dir);
-  expect(r.flushStdout().split("\n")).toEqual([
+  expect(c.flushStdout().split("\n")).toEqual([
     chalk.blue(
       `Downloading contract ${chalk.magenta("blank")} in "${absDir}"...`,
     ),
@@ -357,8 +357,8 @@ test("new --dir contract && build --locked && build -r && test-rust && test-scen
   const targetDir = path.join(__dirname, "..", "..", "..", "target");
   process.chdir(absDir);
 
-  await r.run(`build --locked --target-dir ${targetDir}`);
-  expect(r.flushStdout().split("\n")).toEqual([
+  await c.cmd(`build --locked --target-dir ${targetDir}`);
+  expect(c.flushStdout().split("\n")).toEqual([
     chalk.blue("Building contract..."),
     `(1/1) Building "${absDir}"...`,
     chalk.cyan(
@@ -367,8 +367,8 @@ test("new --dir contract && build --locked && build -r && test-rust && test-scen
     "",
   ]);
 
-  await r.run(`build -r --target-dir ${targetDir}`);
-  expect(r.flushStdout().split("\n")).toEqual([
+  await c.cmd(`build -r --target-dir ${targetDir}`);
+  expect(c.flushStdout().split("\n")).toEqual([
     chalk.blue("Building contract..."),
     `(1/1) Building "${absDir}"...`,
     chalk.cyan(
@@ -377,8 +377,8 @@ test("new --dir contract && build --locked && build -r && test-rust && test-scen
     "",
   ]);
 
-  await r.run(`test-rust --target-dir ${targetDir}`);
-  expect(r.flushStdout().split("\n")).toEqual([
+  await c.cmd(`test-rust --target-dir ${targetDir}`);
+  expect(c.flushStdout().split("\n")).toEqual([
     chalk.blue("Testing contract with Rust tests..."),
     chalk.cyan(`$ cargo test --target-dir ${targetDir}`),
     "",
@@ -393,8 +393,8 @@ test("new --dir contract && build --locked && build -r && test-rust && test-scen
   );
   const binaryPath = path.join(extractPath, "scenexec");
   fs.rmSync(extractPath, { recursive: true, force: true });
-  await r.run("test-scen");
-  expect(r.flushStdout().split("\n")).toEqual([
+  await c.cmd("test-scen");
+  expect(c.flushStdout().split("\n")).toEqual([
     chalk.blue("Testing contract with scenarios..."),
     "Downloading scenexec-v1.5.22-ubuntu-20.04...",
     chalk.cyan(`$ ${binaryPath} .`),
@@ -403,14 +403,14 @@ test("new --dir contract && build --locked && build -r && test-rust && test-scen
 }, 600_000);
 
 test("new --starter vested-transfers --dir contract --no-git --no-install", async () => {
-  using r = new Runner();
+  using c = newContext(true);
   const contract = "vested-transfers";
-  await r.run(`new --starter ${contract} --dir contract --no-git --no-install`);
+  await c.cmd(`new --starter ${contract} --dir contract --no-git --no-install`);
   expect(fs.readdirSync(process.cwd()).length).toEqual(1);
   const contractChalk = chalk.magenta(contract);
   const dir = "contract";
   const absDir = path.resolve(dir);
-  expect(r.flushStdout().split("\n")).toEqual([
+  expect(c.flushStdout().split("\n")).toEqual([
     chalk.blue(`Downloading contract ${contractChalk} in "${absDir}"...`),
     "",
     chalk.green(`Successfully created ${contractChalk} in "${absDir}".`),
@@ -435,39 +435,25 @@ test("new --starter vested-transfers --dir contract --no-git --no-install", asyn
 });
 
 test("new --dir contract | error: already exists", async () => {
-  using r = new Runner();
+  using c = newContext(true);
   fs.mkdirSync("contract");
-  await r.run("new --dir contract");
+  await c.cmd("new --dir contract");
   const dirPath = path.resolve("contract");
-  expect(r.flushStdout()).toEqual(
+  expect(c.flushStdout()).toEqual(
     chalk.red(`Directory already exists at "${dirPath}".`) + "\n",
   );
 });
 
-class Runner {
-  ctx: Context;
-  tmpDir: string;
-
-  constructor() {
-    this.ctx = new Context();
-    this.tmpDir = fs.mkdtempSync("/tmp/xsuite-tests-");
-    process.chdir(this.tmpDir);
-  }
-
-  input(...inputs: string[]) {
-    return this.ctx.input(...inputs);
-  }
-
-  run(c: string) {
-    return this.ctx.run(() => new CLI().run(c));
-  }
-
-  flushStdout() {
-    return this.ctx.flushStdout();
-  }
-
-  [Symbol.dispose]() {
-    fs.rmSync(this.tmpDir, { recursive: true, force: true });
-    process.chdir(cwd);
-  }
-}
+const newContext = (chdir = false) => {
+  const ctx = new Context({ cwd: fs.mkdtempSync("/tmp/xsuite-tests-") });
+  if (chdir) process.chdir(ctx.cwd());
+  return Object.assign(ctx, {
+    cmd: (c: string) => {
+      return ctx.run(() => getCli().parseAsync(c.split(" "), { from: "user" }));
+    },
+    [Symbol.dispose]() {
+      fs.rmSync(ctx.cwd(), { recursive: true, force: true });
+      if (chdir) process.chdir(cwd);
+    },
+  });
+};

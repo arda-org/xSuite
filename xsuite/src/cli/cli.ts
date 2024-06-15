@@ -10,22 +10,17 @@ import { addTestRustCmd } from "./testRustCmd";
 import { addTestScenCmd } from "./testScenCmd";
 import { addUninstallRustCmd } from "./uninstallRustCmd";
 
-export class CLI extends Command {
-  constructor() {
-    super();
-    this.version(pkgVersion);
-    addInstallRustCmd(this);
-    addInstallRustKeyCmd(this);
-    addUninstallRustCmd(this);
-    addNewCmd(this);
-    addBuildCmd(this);
-    addTestRustCmd(this);
-    addTestScenCmd(this);
-    addNewWalletCmd(this);
-    addRequestXegldCmd(this);
-  }
-
-  run(c: string) {
-    return this.parseAsync(c.split(" "), { from: "user" });
-  }
-}
+export const getCli = () => {
+  const cmd = new Command();
+  cmd.version(pkgVersion);
+  addInstallRustCmd(cmd);
+  addInstallRustKeyCmd(cmd);
+  addUninstallRustCmd(cmd);
+  addNewCmd(cmd);
+  addBuildCmd(cmd);
+  addTestRustCmd(cmd);
+  addTestScenCmd(cmd);
+  addNewWalletCmd(cmd);
+  addRequestXegldCmd(cmd);
+  return cmd;
+};
