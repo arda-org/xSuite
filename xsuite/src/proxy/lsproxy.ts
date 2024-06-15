@@ -4,7 +4,9 @@ import { getSerializableAccount, Proxy } from "./proxy";
 export class LSProxy extends Proxy {
   async getAllSerializableAccounts() {
     const res = await this.fetch("/admin/get-all-accounts");
-    return (res.accounts as any[]).map(getSerializableAccount);
+    return (res.accounts as any[])
+      .map(getSerializableAccount)
+      .sort((a, b) => a.address.localeCompare(b.address));
   }
 
   setAccounts(accounts: EncodableAccount[]) {
