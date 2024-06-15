@@ -64,6 +64,10 @@ export class Context {
     return this._cwd;
   }
 
+  setCwd(cwd: string) {
+    this._cwd = cwd;
+  }
+
   log(s: string) {
     this.stdout += s + "\n";
   }

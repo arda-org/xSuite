@@ -8,7 +8,7 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { finished } from "node:stream/promises";
 import chalk from "chalk";
-import { log } from "../context";
+import { cwd, log } from "../context";
 
 export const logTitle = (title: string) => log(chalk.blue(title));
 
@@ -27,6 +27,7 @@ export const logAndRunCommand = (
   const result = spawnSync(command, args, {
     stdio: "inherit",
     shell: true,
+    cwd: cwd(),
     ...options,
   });
   /* istanbul ignore next */

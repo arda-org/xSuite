@@ -3,7 +3,7 @@ import path from "node:path";
 import { UserSecretKey, UserWallet, Mnemonic } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
 import { Command } from "commander";
-import { readHidden, log } from "../context";
+import { readHidden, log, cwd } from "../context";
 import { getAddressShard, numShards } from "../data/utils";
 import { Keystore } from "../world/signer";
 import { logError, logSuccess } from "./helpers";
@@ -33,7 +33,7 @@ const action = async ({
   fromWallet?: string;
   shard?: number;
 }) => {
-  walletPath = path.resolve(walletPath);
+  walletPath = path.resolve(cwd(), walletPath);
   if (fs.existsSync(walletPath)) {
     logError(`Wallet already exists at "${walletPath}".`);
     return;

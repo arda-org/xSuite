@@ -4,7 +4,7 @@ import path from "node:path";
 import chalk from "chalk";
 import { Command } from "commander";
 import tar from "tar";
-import { log } from "../context";
+import { cwd, log } from "../context";
 import {
   logTitle,
   logAndRunCommand,
@@ -25,7 +25,7 @@ export const addNewCmd = (cmd: Command) => {
 };
 
 const action = async ({
-  dir,
+  dir: dirPath,
   starter = "blank",
   install,
   git,
@@ -35,28 +35,30 @@ const action = async ({
   install?: boolean;
   git?: boolean;
 }) => {
-  const absDir = path.resolve(dir);
-  if (fs.existsSync(dir)) {
-    logError(`Directory already exists at "${absDir}".`);
+  const absDirPath = path.resolve(cwd(), dirPath);
+  if (fs.existsSync(absDirPath)) {
+    logError(`Directory already exists at "${absDirPath}".`);
     return;
   } else {
-    fs.mkdirSync(dir, { recursive: true });
+    fs.mkdirSync(absDirPath, { recursive: true });
   }
-  logTitle(`Downloading contract ${chalk.magenta(starter)} in "${absDir}"...`);
-  await downloadAndExtractContract(starter, dir);
+  logTitle(
+    `Downloading contract ${chalk.magenta(starter)} in "${absDirPath}"...`,
+  );
+  await downloadAndExtractContract(starter, absDirPath);
   if (install) {
     log();
     logTitle("Installing packages...");
-    logAndRunCommand("npm", ["install"], { cwd: dir });
+    logAndRunCommand("npm", ["install"], { cwd: absDirPath });
   }
-  if (git && tryGitInit(dir)) {
+  if (git && tryGitInit(absDirPath)) {
     log();
     logTitle("Initialized a git repository.");
   }
   log();
   log(
     chalk.green(
-      `Successfully created ${chalk.magenta(starter)} in "${absDir}".`,
+      `Successfully created ${chalk.magenta(starter)} in "${absDirPath}".`,
     ),
   );
   log();
@@ -73,7 +75,7 @@ const action = async ({
   log();
   log("We suggest that you begin by typing:");
   log();
-  logCommand(`  cd ${dir}`);
+  logCommand(`  cd ${dirPath}`);
   logCommand("  npm run build");
 };
 

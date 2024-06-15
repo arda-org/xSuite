@@ -1,5 +1,14 @@
 import { expect, test } from "vitest";
-import { Context, log, readHidden } from "./context";
+import { Context, cwd, log, readHidden } from "./context";
+
+test("cwd inside context", () => {
+  const ctx = new Context({ cwd: "/tmp" });
+  expect(ctx.run(() => cwd())).toEqual("/tmp");
+});
+
+test("cwd outside context", () => {
+  expect(cwd()).toEqual(process.cwd());
+});
 
 test("log inside context", async () => {
   const ctx = new Context();
