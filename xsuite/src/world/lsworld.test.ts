@@ -7,7 +7,6 @@ import {
   zeroU8AAddress,
 } from "../data/address";
 import { getAddressShard, getAddressType } from "../data/utils";
-import { childProcesses } from "./childProcesses";
 import { LSWorld } from "./lsworld";
 import { createAddressLike } from "./utils";
 import { expandCode } from "./world";
@@ -26,82 +25,100 @@ const emptyAccount = {
 };
 const baseExplorerUrl = "http://explorer.local";
 
-test("LSWorld.proxy.getAccountNonce on empty bech address", async () => {
-  using world = await startWorld();
-  expect(await world.proxy.getAccountNonce(zeroBechAddress)).toEqual(0);
-});
+test.concurrent(
+  "LSWorld.proxy.getAccountNonce on empty bech address",
+  async () => {
+    using world = await startWorld();
+    expect(await world.proxy.getAccountNonce(zeroBechAddress)).toEqual(0);
+  },
+);
 
-test("LSWorld.proxy.getAccountNonce on empty hex address", async () => {
-  using world = await startWorld();
-  expect(await world.proxy.getAccountNonce(zeroHexAddress)).toEqual(0);
-});
+test.concurrent(
+  "LSWorld.proxy.getAccountNonce on empty hex address",
+  async () => {
+    using world = await startWorld();
+    expect(await world.proxy.getAccountNonce(zeroHexAddress)).toEqual(0);
+  },
+);
 
-test("LSWorld.proxy.getAccountNonce on empty U8A address", async () => {
-  using world = await startWorld();
-  expect(await world.proxy.getAccountNonce(zeroU8AAddress)).toEqual(0);
-});
+test.concurrent(
+  "LSWorld.proxy.getAccountNonce on empty U8A address",
+  async () => {
+    using world = await startWorld();
+    expect(await world.proxy.getAccountNonce(zeroU8AAddress)).toEqual(0);
+  },
+);
 
-test("LSWorld.proxy.getAccountBalance on empty bech address", async () => {
-  using world = await startWorld();
-  expect(await world.proxy.getAccountBalance(zeroBechAddress)).toEqual(0n);
-});
+test.concurrent(
+  "LSWorld.proxy.getAccountBalance on empty bech address",
+  async () => {
+    using world = await startWorld();
+    expect(await world.proxy.getAccountBalance(zeroBechAddress)).toEqual(0n);
+  },
+);
 
-test("LSWorld.proxy.getAccountBalance on empty hex address", async () => {
-  using world = await startWorld();
-  expect(await world.proxy.getAccountBalance(zeroHexAddress)).toEqual(0n);
-});
+test.concurrent(
+  "LSWorld.proxy.getAccountBalance on empty hex address",
+  async () => {
+    using world = await startWorld();
+    expect(await world.proxy.getAccountBalance(zeroHexAddress)).toEqual(0n);
+  },
+);
 
-test("LSWorld.proxy.getAccountBalance on empty U8A address", async () => {
-  using world = await startWorld();
-  expect(await world.proxy.getAccountBalance(zeroU8AAddress)).toEqual(0n);
-});
+test.concurrent(
+  "LSWorld.proxy.getAccountBalance on empty U8A address",
+  async () => {
+    using world = await startWorld();
+    expect(await world.proxy.getAccountBalance(zeroU8AAddress)).toEqual(0n);
+  },
+);
 
-test("LSWorld.proxy.getAccount on empty bech address", async () => {
+test.concurrent("LSWorld.proxy.getAccount on empty bech address", async () => {
   using world = await startWorld();
   assertAccount(await world.proxy.getAccount(zeroBechAddress), emptyAccount);
 });
 
-test("LSWorld.proxy.getAccount on empty hex address", async () => {
+test.concurrent("LSWorld.proxy.getAccount on empty hex address", async () => {
   using world = await startWorld();
   assertAccount(await world.proxy.getAccount(zeroHexAddress), emptyAccount);
 });
 
-test("LSWorld.proxy.getAccount on empty U8A address", async () => {
+test.concurrent("LSWorld.proxy.getAccount on empty U8A address", async () => {
   using world = await startWorld();
   assertAccount(await world.proxy.getAccount(zeroU8AAddress), emptyAccount);
 });
 
-test("LSWorld.new with defined chainId", () => {
+test.concurrent("LSWorld.new with defined chainId", () => {
   expect(() => LSWorld.new({ chainId: "D" })).toThrow(
     "chainId is not undefined.",
   );
 });
 
-test("LSWorld.newDevnet", () => {
+test.concurrent("LSWorld.newDevnet", () => {
   expect(() => LSWorld.newDevnet()).toThrow("newDevnet is not implemented.");
 });
 
-test("LSWorld.newTestnet", () => {
+test.concurrent("LSWorld.newTestnet", () => {
   expect(() => LSWorld.newTestnet()).toThrow("newTestnet is not implemented.");
 });
 
-test("LSWorld.newMainnet", () => {
+test.concurrent("LSWorld.newMainnet", () => {
   expect(() => LSWorld.newMainnet()).toThrow("newMainnet is not implemented.");
 });
 
-test("LSWorld.newWallet", async () => {
+test.concurrent("LSWorld.newWallet", async () => {
   using world = await startWorld();
   const wallet = world.newWallet(zeroU8AAddress);
   expect(wallet.toTopU8A()).toEqual(zeroU8AAddress);
 });
 
-test("LSWorld.newContract", async () => {
+test.concurrent("LSWorld.newContract", async () => {
   using world = await startWorld();
   const wallet = world.newWallet(zeroU8AAddress);
   expect(wallet.toTopU8A()).toEqual(zeroU8AAddress);
 });
 
-test("LSWorld.createWallet - empty wallet", async () => {
+test.concurrent("LSWorld.createWallet - empty wallet", async () => {
   using world = await startWorld();
   const wallet = await world.createWallet();
   expect(wallet.explorerUrl).toEqual(`${baseExplorerUrl}/accounts/${wallet}`);
@@ -109,20 +126,20 @@ test("LSWorld.createWallet - empty wallet", async () => {
   assertAccount(await wallet.getAccount(), {});
 });
 
-test("LSWorld.createWallet - with balance", async () => {
+test.concurrent("LSWorld.createWallet - with balance", async () => {
   using world = await startWorld();
   const wallet = await world.createWallet({ balance: 10n });
   assertAccount(await wallet.getAccount(), { balance: 10n });
 });
 
-test("LSWorld.createWallet - with address & balance", async () => {
+test.concurrent("LSWorld.createWallet - with address & balance", async () => {
   using world = await startWorld();
   const address = createAddressLike("wallet");
   const wallet = await world.createWallet({ address, balance: 10n });
   assertAccount(await wallet.getAccount(), { address, balance: 10n });
 });
 
-test("LSWorld.createWallet - with shard", async () => {
+test.concurrent("LSWorld.createWallet - with shard", async () => {
   using world = await startWorld();
   const wallet0 = await world.createWallet({ address: { shard: 0 } });
   const wallet1 = await world.createWallet({ address: { shard: 1 } });
@@ -135,7 +152,7 @@ test("LSWorld.createWallet - with shard", async () => {
   expect(getAddressShard(wallet2)).toEqual(2);
 });
 
-test("LSWorld.createContract - empty contract", async () => {
+test.concurrent("LSWorld.createContract - empty contract", async () => {
   using world = await startWorld();
   const contract = await world.createContract();
   expect(contract.explorerUrl).toEqual(
@@ -145,26 +162,26 @@ test("LSWorld.createContract - empty contract", async () => {
   assertAccount(await contract.getAccount(), { code: "" });
 });
 
-test("LSWorld.createContract - with balance", async () => {
+test.concurrent("LSWorld.createContract - with balance", async () => {
   using world = await startWorld();
   const contract = await world.createContract({ balance: 10n });
   assertAccount(await contract.getAccount(), { balance: 10n });
 });
 
-test("LSWorld.createContract - with file:", async () => {
+test.concurrent("LSWorld.createContract - with file:", async () => {
   using world = await startWorld();
   const contract = await world.createContract({ code: worldCode });
   assertAccount(await contract.getAccount(), { code: worldCode });
 });
 
-test("LSWorld.createContract - with address & file:", async () => {
+test.concurrent("LSWorld.createContract - with address & file:", async () => {
   using world = await startWorld();
   const address = createAddressLike("vmContract");
   const contract = await world.createContract({ address, code: worldCode });
   assertAccount(await contract.getAccount(), { address, code: worldCode });
 });
 
-test("LSWorld.createContract - with shard", async () => {
+test.concurrent("LSWorld.createContract - with shard", async () => {
   using world = await startWorld();
   const contract0 = await world.createContract({ address: { shard: 0 } });
   const contract1 = await world.createContract({ address: { shard: 1 } });
@@ -177,19 +194,19 @@ test("LSWorld.createContract - with shard", async () => {
   expect(getAddressShard(contract2)).toEqual(2);
 });
 
-test("LSWorld.getAccountNonce", async () => {
+test.concurrent("LSWorld.getAccountNonce", async () => {
   using world = await startWorld();
   const wallet = await world.createWallet({ nonce: 10 });
   expect(await world.getAccountNonce(wallet)).toEqual(10);
 });
 
-test("LSWorld.getAccountBalance", async () => {
+test.concurrent("LSWorld.getAccountBalance", async () => {
   using world = await startWorld();
   const wallet = await world.createWallet({ balance: 1234 });
   expect(await world.getAccountBalance(wallet)).toEqual(1234n);
 });
 
-test("LSWorld.getAccountKvs", async () => {
+test.concurrent("LSWorld.getAccountKvs", async () => {
   using world = await startWorld();
   const wallet = await world.createWallet({ kvs: [[e.Str("n"), e.U(1)]] });
   expect(await world.getAccountKvs(wallet)).toEqual(
@@ -197,13 +214,13 @@ test("LSWorld.getAccountKvs", async () => {
   );
 });
 
-test("LSWorld.getAccountWithoutKvs", async () => {
+test.concurrent("LSWorld.getAccountWithoutKvs", async () => {
   using world = await startWorld();
   const wallet = await world.createWallet({ kvs: [[e.Str("n"), e.U(1)]] });
   assertAccount(await world.getAccountWithoutKvs(wallet), { kvs: {} });
 });
 
-test("LSWorld.getAccount", async () => {
+test.concurrent("LSWorld.getAccount", async () => {
   using world = await startWorld();
   const wallet = await world.createWallet({ kvs: [[e.Str("n"), e.U(1)]] });
   assertAccount(await world.getAccount(wallet), {
@@ -211,7 +228,7 @@ test("LSWorld.getAccount", async () => {
   });
 });
 
-test("LSWorld.getAllSerializableAccounts", async () => {
+test.concurrent("LSWorld.getAllSerializableAccounts", async () => {
   using world = await startWorld();
   const { wallet, wallet2, wallet3, contract } = await createAccounts(world);
   expect(await world.getAllSerializableAccounts()).toEqual(
@@ -266,7 +283,7 @@ test("LSWorld.getAllSerializableAccounts", async () => {
   );
 });
 
-test("LSWorld.setAccounts", async () => {
+test.concurrent("LSWorld.setAccounts", async () => {
   using world = await startWorld();
   const walletAddress = createAddressLike("wallet");
   const contractAddress = createAddressLike("vmContract");
@@ -304,7 +321,7 @@ test("LSWorld.setAccounts", async () => {
   });
 });
 
-test("LSWorld.setAccount", async () => {
+test.concurrent("LSWorld.setAccount", async () => {
   using world = await startWorld();
   const walletAddress = createAddressLike("wallet");
   const contractAddress = createAddressLike("vmContract");
@@ -328,7 +345,7 @@ test("LSWorld.setAccount", async () => {
   });
 });
 
-test("LSWorld.setCurrentBlockInfo", async () => {
+test.concurrent("LSWorld.setCurrentBlockInfo", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   await world.setCurrentBlockInfo({
@@ -344,7 +361,7 @@ test("LSWorld.setCurrentBlockInfo", async () => {
   assertVs(returnData, [e.U64(100), e.U64(200), e.U64(300), e.U64(400)]);
 });
 
-test("LSWorld.setPreviousBlockInfo", async () => {
+test.concurrent("LSWorld.setPreviousBlockInfo", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   await world.setPreviousBlockInfo({
@@ -360,7 +377,7 @@ test("LSWorld.setPreviousBlockInfo", async () => {
   assertVs(returnData, [e.U64(10), e.U64(20), e.U64(30), e.U64(40)]);
 });
 
-test("LSWorld.query - basic", async () => {
+test.concurrent("LSWorld.query - basic", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   const { returnData } = await world.query({
@@ -371,7 +388,7 @@ test("LSWorld.query - basic", async () => {
   assertVs(returnData, [e.U64(20n)]);
 });
 
-test("LSWorld.query - sender", async () => {
+test.concurrent("LSWorld.query - sender", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   const { returnData } = await world.query({
@@ -382,7 +399,7 @@ test("LSWorld.query - sender", async () => {
   assertVs(returnData, [wallet]);
 });
 
-test("LSWorld.query - value", async () => {
+test.concurrent("LSWorld.query - value", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   const { returnData } = await world.query({
@@ -393,7 +410,7 @@ test("LSWorld.query - value", async () => {
   assertVs(returnData, [e.U(10)]);
 });
 
-test("LSWorld.query.assertFail - correct parameters", async () => {
+test.concurrent("LSWorld.query.assertFail - correct parameters", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   await world
@@ -405,7 +422,7 @@ test("LSWorld.query.assertFail - correct parameters", async () => {
     .assertFail({ code: 4, message: "Amount is not positive." });
 });
 
-test("LSWorld.executeTxs", async () => {
+test.concurrent("LSWorld.executeTxs", async () => {
   using world = await startWorld();
   const { wallet, wallet2, wallet3 } = await createAccounts(world);
   const [{ fee: fee1 }, { fee: fee2 }] = await world.executeTxs([
@@ -433,7 +450,7 @@ test("LSWorld.executeTxs", async () => {
   });
 });
 
-test("LSWorld.executeTx", async () => {
+test.concurrent("LSWorld.executeTx", async () => {
   using world = await startWorld();
   const { wallet, wallet2 } = await createAccounts(world);
   const { hash, explorerUrl, gasUsed, fee } = await world.executeTx({
@@ -453,7 +470,7 @@ test("LSWorld.executeTx", async () => {
   });
 });
 
-test("LSWorld.transfer", async () => {
+test.concurrent("LSWorld.transfer", async () => {
   using world = await startWorld();
   const { wallet, wallet2 } = await createAccounts(world);
   const { fee } = await world.transfer({
@@ -470,7 +487,7 @@ test("LSWorld.transfer", async () => {
   });
 });
 
-test("LSWorld.deployContract", async () => {
+test.concurrent("LSWorld.deployContract", async () => {
   using world = await startWorld();
   const { wallet } = await createAccounts(world);
   const { contract } = await world.deployContract({
@@ -491,7 +508,7 @@ test("LSWorld.deployContract", async () => {
   });
 });
 
-test("LSWorld.upgradeContract", async () => {
+test.concurrent("LSWorld.upgradeContract", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   await contract.setAccount({
@@ -514,7 +531,7 @@ test("LSWorld.upgradeContract", async () => {
   });
 });
 
-test("LSWorld.callContract", async () => {
+test.concurrent("LSWorld.callContract", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   const { fee } = await world.callContract({
@@ -532,16 +549,14 @@ test("LSWorld.callContract", async () => {
   });
 });
 
-test("LSWorld.terminate", async () => {
+test.concurrent("LSWorld.terminate", async () => {
   using world = await startWorld();
-  expect(childProcesses.size).toEqual(1);
-  const childProcess = [...childProcesses][0];
+  expect(world.server?.killed).toEqual(false);
   world.terminate();
-  expect(childProcesses.size).toEqual(0);
-  expect(childProcess.killed);
+  expect(world.server?.killed).toEqual(true);
 });
 
-test("LSWallet.query", async () => {
+test.concurrent("LSWallet.query", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   const { returnData } = await wallet.query({
@@ -551,7 +566,7 @@ test("LSWallet.query", async () => {
   assertVs(returnData, [wallet]);
 });
 
-test("LSWallet.query - try to change the state", async () => {
+test.concurrent("LSWallet.query - try to change the state", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   assertAccount(await wallet.getAccount(), {
@@ -597,7 +612,7 @@ test.todo("LSWallet.query - esdts", async () => {
   ]);
 });
 
-test("LSWallet.callContract failure", async () => {
+test.concurrent("LSWallet.callContract failure", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   await expect(
@@ -613,19 +628,19 @@ test("LSWallet.callContract failure", async () => {
   });
 });
 
-test("LSWallet.getAccountNonce", async () => {
+test.concurrent("LSWallet.getAccountNonce", async () => {
   using world = await startWorld();
   const { wallet } = await createAccounts(world);
   expect(await wallet.getAccountNonce()).toEqual(0);
 });
 
-test("LSWallet.getAccountBalance", async () => {
+test.concurrent("LSWallet.getAccountBalance", async () => {
   using world = await startWorld();
   const { wallet } = await createAccounts(world);
   expect(await wallet.getAccountBalance()).toEqual(10n ** 18n);
 });
 
-test("LSWallet.getAccountKvs", async () => {
+test.concurrent("LSWallet.getAccountKvs", async () => {
   using world = await startWorld();
   const { wallet } = await createAccounts(world);
   expect(await wallet.getAccountKvs()).toEqual(
@@ -633,7 +648,7 @@ test("LSWallet.getAccountKvs", async () => {
   );
 });
 
-test("LSWallet.getAccountWithoutKvs", async () => {
+test.concurrent("LSWallet.getAccountWithoutKvs", async () => {
   using world = await startWorld();
   const { wallet } = await createAccounts(world);
   assertAccount(await wallet.getAccountWithoutKvs(), {
@@ -646,7 +661,7 @@ test("LSWallet.getAccountWithoutKvs", async () => {
   });
 });
 
-test("LSWallet.getAccount", async () => {
+test.concurrent("LSWallet.getAccount", async () => {
   using world = await startWorld();
   const { wallet } = await createAccounts(world);
   assertAccount(await wallet.getAccount(), {
@@ -660,7 +675,7 @@ test("LSWallet.getAccount", async () => {
   });
 });
 
-test("LSWallet.setAccount - LSWallet.getAccount", async () => {
+test.concurrent("LSWallet.setAccount - LSWallet.getAccount", async () => {
   using world = await startWorld();
   const { wallet } = await createAccounts(world);
   const before = await wallet.getAccount();
@@ -669,7 +684,7 @@ test("LSWallet.setAccount - LSWallet.getAccount", async () => {
   expect(after).toEqual(before);
 });
 
-test("LSWallet.executeTx", async () => {
+test.concurrent("LSWallet.executeTx", async () => {
   using world = await startWorld();
   const { wallet, wallet2 } = await createAccounts(world);
   const { hash, explorerUrl, gasUsed, fee } = await wallet.executeTx({
@@ -688,7 +703,7 @@ test("LSWallet.executeTx", async () => {
   });
 });
 
-test("LSWallet.transfer - EGLD", async () => {
+test.concurrent("LSWallet.transfer - EGLD", async () => {
   using world = await startWorld();
   const { wallet, wallet2 } = await createAccounts(world);
   const { fee } = await wallet.transfer({
@@ -704,7 +719,7 @@ test("LSWallet.transfer - EGLD", async () => {
   });
 });
 
-test("LSWallet.transfer - ESDTs", async () => {
+test.concurrent("LSWallet.transfer - ESDTs", async () => {
   using world = await startWorld();
   const { wallet, wallet2 } = await createAccounts(world);
   await wallet.transfer({
@@ -720,7 +735,7 @@ test("LSWallet.transfer - ESDTs", async () => {
   });
 });
 
-test("LSWallet.deployContract", async () => {
+test.concurrent("LSWallet.deployContract", async () => {
   using world = await startWorld();
   const { wallet } = await createAccounts(world);
   const { contract } = await wallet.deployContract({
@@ -740,7 +755,7 @@ test("LSWallet.deployContract", async () => {
   });
 });
 
-test("LSWallet.upgradeContract", async () => {
+test.concurrent("LSWallet.upgradeContract", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   await contract.setAccount({
@@ -762,7 +777,7 @@ test("LSWallet.upgradeContract", async () => {
   });
 });
 
-test("LSWallet.callContract with EGLD", async () => {
+test.concurrent("LSWallet.callContract with EGLD", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   const { fee } = await wallet.callContract({
@@ -779,7 +794,7 @@ test("LSWallet.callContract with EGLD", async () => {
   });
 });
 
-test("LSWallet.callContract with ESDT", async () => {
+test.concurrent("LSWallet.callContract with ESDT", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   await wallet.callContract({
@@ -796,7 +811,7 @@ test("LSWallet.callContract with ESDT", async () => {
   });
 });
 
-test("LSWallet.callContract with return", async () => {
+test.concurrent("LSWallet.callContract with return", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   const { returnData } = await wallet.callContract({
@@ -808,7 +823,7 @@ test("LSWallet.callContract with return", async () => {
   assertVs(returnData, [e.U64(20)]);
 });
 
-test("LSWallet.callContract - change the state", async () => {
+test.concurrent("LSWallet.callContract - change the state", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   await wallet.callContract({
@@ -825,7 +840,7 @@ test("LSWallet.callContract - change the state", async () => {
   });
 });
 
-test("LSWallet.callContract failure", async () => {
+test.concurrent("LSWallet.callContract failure", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   await expect(
@@ -842,20 +857,23 @@ test("LSWallet.callContract failure", async () => {
   });
 });
 
-test("LSWallet.callContract.assertFail - correct parameters", async () => {
-  using world = await startWorld();
-  const { wallet, contract } = await createAccounts(world);
-  await wallet
-    .callContract({
-      callee: contract,
-      funcName: "require_positive",
-      funcArgs: [e.U64(0)],
-      gasLimit: 10_000_000,
-    })
-    .assertFail({ code: 4, message: "Amount is not positive." });
-});
+test.concurrent(
+  "LSWallet.callContract.assertFail - correct parameters",
+  async () => {
+    using world = await startWorld();
+    const { wallet, contract } = await createAccounts(world);
+    await wallet
+      .callContract({
+        callee: contract,
+        funcName: "require_positive",
+        funcArgs: [e.U64(0)],
+        gasLimit: 10_000_000,
+      })
+      .assertFail({ code: 4, message: "Amount is not positive." });
+  },
+);
 
-test("LSWallet.callContract.assertFail - Wrong code", async () => {
+test.concurrent("LSWallet.callContract.assertFail - Wrong code", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   await expect(
@@ -872,51 +890,57 @@ test("LSWallet.callContract.assertFail - Wrong code", async () => {
   );
 });
 
-test("LSWallet.callContract.assertFail - Wrong message", async () => {
-  using world = await startWorld();
-  const { wallet, contract } = await createAccounts(world);
-  await expect(
-    wallet
-      .callContract({
-        callee: contract,
-        funcName: "require_positive",
-        funcArgs: [e.U64(0)],
-        gasLimit: 10_000_000,
-      })
-      .assertFail({ message: "" }),
-  ).rejects.toThrow(
-    "Failed with unexpected error message.\nExpected message: \nReceived message: Amount is not positive.",
-  );
-});
+test.concurrent(
+  "LSWallet.callContract.assertFail - Wrong message",
+  async () => {
+    using world = await startWorld();
+    const { wallet, contract } = await createAccounts(world);
+    await expect(
+      wallet
+        .callContract({
+          callee: contract,
+          funcName: "require_positive",
+          funcArgs: [e.U64(0)],
+          gasLimit: 10_000_000,
+        })
+        .assertFail({ message: "" }),
+    ).rejects.toThrow(
+      "Failed with unexpected error message.\nExpected message: \nReceived message: Amount is not positive.",
+    );
+  },
+);
 
-test("LSWallet.callContract.assertFail - Transaction not failing", async () => {
-  using world = await startWorld();
-  const { wallet, contract } = await createAccounts(world);
-  await expect(
-    wallet
-      .callContract({
-        callee: contract,
-        funcName: "require_positive",
-        funcArgs: [e.U64(1)],
-        gasLimit: 10_000_000,
-      })
-      .assertFail(),
-  ).rejects.toThrow("No failure.");
-});
+test.concurrent(
+  "LSWallet.callContract.assertFail - Transaction not failing",
+  async () => {
+    using world = await startWorld();
+    const { wallet, contract } = await createAccounts(world);
+    await expect(
+      wallet
+        .callContract({
+          callee: contract,
+          funcName: "require_positive",
+          funcArgs: [e.U64(1)],
+          gasLimit: 10_000_000,
+        })
+        .assertFail(),
+    ).rejects.toThrow("No failure.");
+  },
+);
 
-test("LSContract.getAccountNonce", async () => {
+test.concurrent("LSContract.getAccountNonce", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   expect(await contract.getAccountNonce()).toEqual(0);
 });
 
-test("LSContract.getAccountBalance", async () => {
+test.concurrent("LSContract.getAccountBalance", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   expect(await contract.getAccountBalance()).toEqual(10n ** 18n);
 });
 
-test("LSContract.getAccountKvs", async () => {
+test.concurrent("LSContract.getAccountKvs", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   expect(await contract.getAccountKvs()).toEqual(
@@ -927,7 +951,7 @@ test("LSContract.getAccountKvs", async () => {
   );
 });
 
-test("LSContract.getAccountWithoutKvs", async () => {
+test.concurrent("LSContract.getAccountWithoutKvs", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   assertAccount(await contract.getAccountWithoutKvs(), {
@@ -936,7 +960,7 @@ test("LSContract.getAccountWithoutKvs", async () => {
   });
 });
 
-test("LSContract.getAccount", async () => {
+test.concurrent("LSContract.getAccount", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   assertAccount(await contract.getAccount(), {
@@ -951,7 +975,7 @@ test("LSContract.getAccount", async () => {
   });
 });
 
-test("LSContract.setAccount - LSContract.getAccount", async () => {
+test.concurrent("LSContract.setAccount - LSContract.getAccount", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   const before = await contract.getAccount();
@@ -960,7 +984,7 @@ test("LSContract.setAccount - LSContract.getAccount", async () => {
   expect(after).toEqual(before);
 });
 
-test("LSContract.query", async () => {
+test.concurrent("LSContract.query", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   const { returnData } = await contract.query({
