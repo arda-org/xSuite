@@ -52,7 +52,7 @@
     "rimraf": "5.0.5",
     "tsx": "4.7.0",
     "typescript": "5.4.5",
-    "vitest": "^1.2.2"
+    "vitest": "^1.6.0"
   },
   "engines": {
     "node": ">=18.0.0"

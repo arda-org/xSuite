@@ -7,7 +7,6 @@ import {
   zeroU8AAddress,
 } from "../data/address";
 import { getAddressShard, getAddressType } from "../data/utils";
-import { childProcesses } from "./childProcesses";
 import { FSWorld } from "./fsworld";
 import { createAddressLike } from "./utils";
 import { expandCode } from "./world";
@@ -26,82 +25,100 @@ const emptyAccount = {
 };
 const baseExplorerUrl = "http://explorer.local";
 
-test("FSWorld.proxy.getAccountNonce on empty bech address", async () => {
-  using world = await startWorld();
-  expect(await world.proxy.getAccountNonce(zeroBechAddress)).toEqual(0);
-});
+test.concurrent(
+  "FSWorld.proxy.getAccountNonce on empty bech address",
+  async () => {
+    using world = await startWorld();
+    expect(await world.proxy.getAccountNonce(zeroBechAddress)).toEqual(0);
+  },
+);
 
-test("FSWorld.proxy.getAccountNonce on empty hex address", async () => {
-  using world = await startWorld();
-  expect(await world.proxy.getAccountNonce(zeroHexAddress)).toEqual(0);
-});
+test.concurrent(
+  "FSWorld.proxy.getAccountNonce on empty hex address",
+  async () => {
+    using world = await startWorld();
+    expect(await world.proxy.getAccountNonce(zeroHexAddress)).toEqual(0);
+  },
+);
 
-test("FSWorld.proxy.getAccountNonce on empty U8A address", async () => {
-  using world = await startWorld();
-  expect(await world.proxy.getAccountNonce(zeroU8AAddress)).toEqual(0);
-});
+test.concurrent(
+  "FSWorld.proxy.getAccountNonce on empty U8A address",
+  async () => {
+    using world = await startWorld();
+    expect(await world.proxy.getAccountNonce(zeroU8AAddress)).toEqual(0);
+  },
+);
 
-test("FSWorld.proxy.getAccountBalance on empty bech address", async () => {
-  using world = await startWorld();
-  expect(await world.proxy.getAccountBalance(zeroBechAddress)).toEqual(0n);
-});
+test.concurrent(
+  "FSWorld.proxy.getAccountBalance on empty bech address",
+  async () => {
+    using world = await startWorld();
+    expect(await world.proxy.getAccountBalance(zeroBechAddress)).toEqual(0n);
+  },
+);
 
-test("FSWorld.proxy.getAccountBalance on empty hex address", async () => {
-  using world = await startWorld();
-  expect(await world.proxy.getAccountBalance(zeroHexAddress)).toEqual(0n);
-});
+test.concurrent(
+  "FSWorld.proxy.getAccountBalance on empty hex address",
+  async () => {
+    using world = await startWorld();
+    expect(await world.proxy.getAccountBalance(zeroHexAddress)).toEqual(0n);
+  },
+);
 
-test("FSWorld.proxy.getAccountBalance on empty U8A address", async () => {
-  using world = await startWorld();
-  expect(await world.proxy.getAccountBalance(zeroU8AAddress)).toEqual(0n);
-});
+test.concurrent(
+  "FSWorld.proxy.getAccountBalance on empty U8A address",
+  async () => {
+    using world = await startWorld();
+    expect(await world.proxy.getAccountBalance(zeroU8AAddress)).toEqual(0n);
+  },
+);
 
-test("FSWorld.proxy.getAccount on empty bech address", async () => {
+test.concurrent("FSWorld.proxy.getAccount on empty bech address", async () => {
   using world = await startWorld();
   assertAccount(await world.proxy.getAccount(zeroBechAddress), emptyAccount);
 });
 
-test("FSWorld.proxy.getAccount on empty hex address", async () => {
+test.concurrent("FSWorld.proxy.getAccount on empty hex address", async () => {
   using world = await startWorld();
   assertAccount(await world.proxy.getAccount(zeroHexAddress), emptyAccount);
 });
 
-test("FSWorld.proxy.getAccount on empty U8A address", async () => {
+test.concurrent("FSWorld.proxy.getAccount on empty U8A address", async () => {
   using world = await startWorld();
   assertAccount(await world.proxy.getAccount(zeroU8AAddress), emptyAccount);
 });
 
-test("FSWorld.new with defined chainId", () => {
+test.concurrent("FSWorld.new with defined chainId", () => {
   expect(() => FSWorld.new({ chainId: "D" })).toThrow(
     "chainId is not undefined.",
   );
 });
 
-test("FSWorld.newDevnet", () => {
+test.concurrent("FSWorld.newDevnet", () => {
   expect(() => FSWorld.newDevnet()).toThrow("newDevnet is not implemented.");
 });
 
-test("FSWorld.newTestnet", () => {
+test.concurrent("FSWorld.newTestnet", () => {
   expect(() => FSWorld.newTestnet()).toThrow("newTestnet is not implemented.");
 });
 
-test("FSWorld.newMainnet", () => {
+test.concurrent("FSWorld.newMainnet", () => {
   expect(() => FSWorld.newMainnet()).toThrow("newMainnet is not implemented.");
 });
 
-test("FSWorld.newWallet", async () => {
+test.concurrent("FSWorld.newWallet", async () => {
   using world = await startWorld();
   const wallet = world.newWallet(zeroU8AAddress);
   expect(wallet.toTopU8A()).toEqual(zeroU8AAddress);
 });
 
-test("FSWorld.newContract", async () => {
+test.concurrent("FSWorld.newContract", async () => {
   using world = await startWorld();
   const wallet = world.newWallet(zeroU8AAddress);
   expect(wallet.toTopU8A()).toEqual(zeroU8AAddress);
 });
 
-test("FSWorld.createWallet - empty wallet", async () => {
+test.concurrent("FSWorld.createWallet - empty wallet", async () => {
   using world = await startWorld();
   const wallet = await world.createWallet();
   expect(wallet.explorerUrl).toEqual(`${baseExplorerUrl}/accounts/${wallet}`);
@@ -109,20 +126,20 @@ test("FSWorld.createWallet - empty wallet", async () => {
   assertAccount(await wallet.getAccount(), {});
 });
 
-test("FSWorld.createWallet - with balance", async () => {
+test.concurrent("FSWorld.createWallet - with balance", async () => {
   using world = await startWorld();
   const wallet = await world.createWallet({ balance: 10n });
   assertAccount(await wallet.getAccount(), { balance: 10n });
 });
 
-test("FSWorld.createWallet - with address & balance", async () => {
+test.concurrent("FSWorld.createWallet - with address & balance", async () => {
   using world = await startWorld();
   const address = createAddressLike("wallet");
   const wallet = await world.createWallet({ address, balance: 10n });
   assertAccount(await wallet.getAccount(), { address, balance: 10n });
 });
 
-test("FSWorld.createWallet - with shard", async () => {
+test.concurrent("FSWorld.createWallet - with shard", async () => {
   using world = await startWorld();
   const wallet0 = await world.createWallet({ address: { shard: 0 } });
   const wallet1 = await world.createWallet({ address: { shard: 1 } });
@@ -135,7 +152,7 @@ test("FSWorld.createWallet - with shard", async () => {
   expect(getAddressShard(wallet2)).toEqual(2);
 });
 
-test("FSWorld.createContract - empty contract", async () => {
+test.concurrent("FSWorld.createContract - empty contract", async () => {
   using world = await startWorld();
   const contract = await world.createContract();
   expect(contract.explorerUrl).toEqual(
@@ -145,26 +162,26 @@ test("FSWorld.createContract - empty contract", async () => {
   assertAccount(await contract.getAccount(), { code: "" });
 });
 
-test("FSWorld.createContract - with balance", async () => {
+test.concurrent("FSWorld.createContract - with balance", async () => {
   using world = await startWorld();
   const contract = await world.createContract({ balance: 10n });
   assertAccount(await contract.getAccount(), { balance: 10n });
 });
 
-test("FSWorld.createContract - with file:", async () => {
+test.concurrent("FSWorld.createContract - with file:", async () => {
   using world = await startWorld();
   const contract = await world.createContract({ code: worldCode });
   assertAccount(await contract.getAccount(), { code: worldCode });
 });
 
-test("FSWorld.createContract - with address & file:", async () => {
+test.concurrent("FSWorld.createContract - with address & file:", async () => {
   using world = await startWorld();
   const address = createAddressLike("vmContract");
   const contract = await world.createContract({ address, code: worldCode });
   assertAccount(await contract.getAccount(), { address, code: worldCode });
 });
 
-test("FSWorld.createContract - with shard", async () => {
+test.concurrent("FSWorld.createContract - with shard", async () => {
   using world = await startWorld();
   const contract0 = await world.createContract({ address: { shard: 0 } });
   const contract1 = await world.createContract({ address: { shard: 1 } });
@@ -177,19 +194,19 @@ test("FSWorld.createContract - with shard", async () => {
   expect(getAddressShard(contract2)).toEqual(2);
 });
 
-test("FSWorld.getAccountNonce", async () => {
+test.concurrent("FSWorld.getAccountNonce", async () => {
   using world = await startWorld();
   const wallet = await world.createWallet({ nonce: 10 });
   expect(await world.getAccountNonce(wallet)).toEqual(10);
 });
 
-test("FSWorld.getAccountBalance", async () => {
+test.concurrent("FSWorld.getAccountBalance", async () => {
   using world = await startWorld();
   const wallet = await world.createWallet({ balance: 1234 });
   expect(await world.getAccountBalance(wallet)).toEqual(1234n);
 });
 
-test("FSWorld.getAccountKvs", async () => {
+test.concurrent("FSWorld.getAccountKvs", async () => {
   using world = await startWorld();
   const wallet = await world.createWallet({ kvs: [[e.Str("n"), e.U(1)]] });
   expect(await world.getAccountKvs(wallet)).toEqual(
@@ -197,13 +214,13 @@ test("FSWorld.getAccountKvs", async () => {
   );
 });
 
-test("FSWorld.getAccountWithoutKvs", async () => {
+test.concurrent("FSWorld.getAccountWithoutKvs", async () => {
   using world = await startWorld();
   const wallet = await world.createWallet({ kvs: [[e.Str("n"), e.U(1)]] });
   assertAccount(await world.getAccountWithoutKvs(wallet), { kvs: {} });
 });
 
-test("FSWorld.getAccount", async () => {
+test.concurrent("FSWorld.getAccount", async () => {
   using world = await startWorld();
   const wallet = await world.createWallet({ kvs: [[e.Str("n"), e.U(1)]] });
   assertAccount(await world.getAccount(wallet), {
@@ -211,7 +228,7 @@ test("FSWorld.getAccount", async () => {
   });
 });
 
-test("FSWorld.getInitialWallets", async () => {
+test.concurrent("FSWorld.getInitialWallets", async () => {
   using world = await startWorld();
   const initialAddresses = await world.getInitialAddresses();
   const walletWithBalance = world.newWallet(initialAddresses.withBalance[0]);
@@ -224,7 +241,7 @@ test("FSWorld.getInitialWallets", async () => {
   });
 });
 
-test("FSWorld.setAccounts", async () => {
+test.concurrent("FSWorld.setAccounts", async () => {
   using world = await startWorld();
   const walletAddress = createAddressLike("wallet");
   const contractAddress = createAddressLike("vmContract");
@@ -262,7 +279,7 @@ test("FSWorld.setAccounts", async () => {
   });
 });
 
-test("FSWorld.setAccount", async () => {
+test.concurrent("FSWorld.setAccount", async () => {
   using world = await startWorld();
   const walletAddress = createAddressLike("wallet");
   const contractAddress = createAddressLike("vmContract");
@@ -286,7 +303,7 @@ test("FSWorld.setAccount", async () => {
   });
 });
 
-test("FSWorld.query - basic", async () => {
+test.concurrent("FSWorld.query - basic", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   const { returnData } = await world.query({
@@ -297,7 +314,7 @@ test("FSWorld.query - basic", async () => {
   assertVs(returnData, [e.U64(20n)]);
 });
 
-test("FSWorld.query - sender", async () => {
+test.concurrent("FSWorld.query - sender", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   const { returnData } = await world.query({
@@ -308,7 +325,7 @@ test("FSWorld.query - sender", async () => {
   assertVs(returnData, [wallet]);
 });
 
-test("FSWorld.query - value", async () => {
+test.concurrent("FSWorld.query - value", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   const { returnData } = await world.query({
@@ -319,7 +336,7 @@ test("FSWorld.query - value", async () => {
   assertVs(returnData, [e.U(10)]);
 });
 
-test("FSWorld.query.assertFail - correct parameters", async () => {
+test.concurrent("FSWorld.query.assertFail - correct parameters", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   await world
@@ -331,27 +348,30 @@ test("FSWorld.query.assertFail - correct parameters", async () => {
     .assertFail({ code: "user error", message: "Amount is not positive." });
 });
 
-test("FSWorld.sendTx & FSWorld.resolveTx.assertPending & FSWorld.resolveTx.assertSucceed", async () => {
-  using world = await startWorld();
-  const { wallet, wallet2 } = await createAccounts(world);
-  const txHash = await world.sendTx({
-    sender: wallet,
-    receiver: wallet2,
-    value: 10n ** 17n,
-    gasLimit: 10_000_000,
-  });
-  await world.resolveTx(txHash).assertPending();
-  await world.generateBlocks(4); // TODO-MvX: bug here
-  const { fee } = await world.resolveTx(txHash).assertSucceed();
-  assertAccount(await wallet.getAccount(), {
-    balance: 9n * 10n ** 17n - fee,
-  });
-  assertAccount(await wallet2.getAccount(), {
-    balance: 10n ** 17n,
-  });
-});
+test.concurrent(
+  "FSWorld.sendTx & FSWorld.resolveTx.assertPending & FSWorld.resolveTx.assertSucceed",
+  async () => {
+    using world = await startWorld();
+    const { wallet, wallet2 } = await createAccounts(world);
+    const txHash = await world.sendTx({
+      sender: wallet,
+      receiver: wallet2,
+      value: 10n ** 17n,
+      gasLimit: 10_000_000,
+    });
+    await world.resolveTx(txHash).assertPending();
+    await world.generateBlocks(4); // TODO-MvX: bug here
+    const { fee } = await world.resolveTx(txHash).assertSucceed();
+    assertAccount(await wallet.getAccount(), {
+      balance: 9n * 10n ** 17n - fee,
+    });
+    assertAccount(await wallet2.getAccount(), {
+      balance: 10n ** 17n,
+    });
+  },
+);
 
-test("FSWorld.executeTxs", async () => {
+test.concurrent("FSWorld.executeTxs", async () => {
   using world = await startWorld();
   const { wallet, wallet2, wallet3 } = await createAccounts(world);
   const [{ fee: fee1 }, { fee: fee2 }] = await world.executeTxs([
@@ -379,7 +399,7 @@ test("FSWorld.executeTxs", async () => {
   });
 });
 
-test("FSWorld.executeTx", async () => {
+test.concurrent("FSWorld.executeTx", async () => {
   using world = await startWorld();
   const { wallet, wallet2 } = await createAccounts(world);
   const { hash, explorerUrl, gasUsed, fee } = await world.executeTx({
@@ -399,7 +419,7 @@ test("FSWorld.executeTx", async () => {
   });
 });
 
-test("FSWorld.transfer", async () => {
+test.concurrent("FSWorld.transfer", async () => {
   using world = await startWorld();
   const { wallet, wallet2 } = await createAccounts(world);
   const { fee } = await world.transfer({
@@ -416,7 +436,7 @@ test("FSWorld.transfer", async () => {
   });
 });
 
-test("FSWorld.deployContract", async () => {
+test.concurrent("FSWorld.deployContract", async () => {
   using world = await startWorld();
   const { wallet } = await createAccounts(world);
   const { contract } = await world.deployContract({
@@ -437,7 +457,7 @@ test("FSWorld.deployContract", async () => {
   });
 });
 
-test("FSWorld.upgradeContract", async () => {
+test.concurrent("FSWorld.upgradeContract", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   await contract.setAccount({
@@ -460,7 +480,7 @@ test("FSWorld.upgradeContract", async () => {
   });
 });
 
-test("FSWorld.callContract", async () => {
+test.concurrent("FSWorld.callContract", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   const { fee } = await world.callContract({
@@ -478,16 +498,14 @@ test("FSWorld.callContract", async () => {
   });
 });
 
-test("FSWorld.terminate", async () => {
+test.concurrent("FSWorld.terminate", async () => {
   using world = await startWorld();
-  expect(childProcesses.size).toEqual(1);
-  const childProcess = [...childProcesses][0];
+  expect(world.server?.killed).toEqual(false);
   world.terminate();
-  expect(childProcesses.size).toEqual(0);
-  expect(childProcess.killed);
+  expect(world.server?.killed).toEqual(true);
 });
 
-test("FSWallet.query", async () => {
+test.concurrent("FSWallet.query", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   const { returnData } = await wallet.query({
@@ -497,7 +515,7 @@ test("FSWallet.query", async () => {
   assertVs(returnData, [wallet]);
 });
 
-test("FSWallet.query - try to change the state", async () => {
+test.concurrent("FSWallet.query - try to change the state", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   assertAccount(await wallet.getAccount(), {
@@ -543,7 +561,7 @@ test.todo("FSWallet.query - esdts", async () => {
   ]);
 });
 
-test("FSWallet.callContract failure", async () => {
+test.concurrent("FSWallet.callContract failure", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   await expect(
@@ -559,19 +577,19 @@ test("FSWallet.callContract failure", async () => {
   });
 });
 
-test("FSWallet.getAccountNonce", async () => {
+test.concurrent("FSWallet.getAccountNonce", async () => {
   using world = await startWorld();
   const { wallet } = await createAccounts(world);
   expect(await wallet.getAccountNonce()).toEqual(0);
 });
 
-test("FSWallet.getAccountBalance", async () => {
+test.concurrent("FSWallet.getAccountBalance", async () => {
   using world = await startWorld();
   const { wallet } = await createAccounts(world);
   expect(await wallet.getAccountBalance()).toEqual(10n ** 18n);
 });
 
-test("FSWallet.getAccountKvs", async () => {
+test.concurrent("FSWallet.getAccountKvs", async () => {
   using world = await startWorld();
   const { wallet } = await createAccounts(world);
   expect(await wallet.getAccountKvs()).toEqual(
@@ -579,7 +597,7 @@ test("FSWallet.getAccountKvs", async () => {
   );
 });
 
-test("FSWallet.getAccountWithoutKvs", async () => {
+test.concurrent("FSWallet.getAccountWithoutKvs", async () => {
   using world = await startWorld();
   const { wallet } = await createAccounts(world);
   assertAccount(await wallet.getAccountWithoutKvs(), {
@@ -592,7 +610,7 @@ test("FSWallet.getAccountWithoutKvs", async () => {
   });
 });
 
-test("FSWallet.getAccount", async () => {
+test.concurrent("FSWallet.getAccount", async () => {
   using world = await startWorld();
   const { wallet } = await createAccounts(world);
   assertAccount(await wallet.getAccount(), {
@@ -606,7 +624,7 @@ test("FSWallet.getAccount", async () => {
   });
 });
 
-test("FSWallet.setAccount - FSWallet.getAccount", async () => {
+test.concurrent("FSWallet.setAccount - FSWallet.getAccount", async () => {
   using world = await startWorld();
   const { wallet } = await createAccounts(world);
   const before = await wallet.getAccount();
@@ -615,7 +633,7 @@ test("FSWallet.setAccount - FSWallet.getAccount", async () => {
   expect(after).toEqual(before);
 });
 
-test("FSWallet.executeTx", async () => {
+test.concurrent("FSWallet.executeTx", async () => {
   using world = await startWorld();
   const { wallet, wallet2 } = await createAccounts(world);
   const { hash, explorerUrl, gasUsed, fee } = await wallet.executeTx({
@@ -634,7 +652,7 @@ test("FSWallet.executeTx", async () => {
   });
 });
 
-test("FSWallet.transfer - EGLD", async () => {
+test.concurrent("FSWallet.transfer - EGLD", async () => {
   using world = await startWorld();
   const { wallet, wallet2 } = await createAccounts(world);
   const { fee } = await wallet.transfer({
@@ -650,7 +668,7 @@ test("FSWallet.transfer - EGLD", async () => {
   });
 });
 
-test("FSWallet.transfer - ESDTs", async () => {
+test.concurrent("FSWallet.transfer - ESDTs", async () => {
   using world = await startWorld();
   const { wallet, wallet2 } = await createAccounts(world);
   await wallet.transfer({
@@ -666,7 +684,7 @@ test("FSWallet.transfer - ESDTs", async () => {
   });
 });
 
-test("FSWallet.deployContract", async () => {
+test.concurrent("FSWallet.deployContract", async () => {
   using world = await startWorld();
   const { wallet } = await createAccounts(world);
   const { contract } = await wallet.deployContract({
@@ -686,7 +704,7 @@ test("FSWallet.deployContract", async () => {
   });
 });
 
-test("FSWallet.upgradeContract", async () => {
+test.concurrent("FSWallet.upgradeContract", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   await contract.setAccount({
@@ -708,7 +726,7 @@ test("FSWallet.upgradeContract", async () => {
   });
 });
 
-test("FSWallet.callContract with EGLD", async () => {
+test.concurrent("FSWallet.callContract with EGLD", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   const { fee } = await wallet.callContract({
@@ -725,7 +743,7 @@ test("FSWallet.callContract with EGLD", async () => {
   });
 });
 
-test("FSWallet.callContract with ESDT", async () => {
+test.concurrent("FSWallet.callContract with ESDT", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   await wallet.callContract({
@@ -742,7 +760,7 @@ test("FSWallet.callContract with ESDT", async () => {
   });
 });
 
-test("FSWallet.callContract with return", async () => {
+test.concurrent("FSWallet.callContract with return", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   const { returnData } = await wallet.callContract({
@@ -754,7 +772,7 @@ test("FSWallet.callContract with return", async () => {
   assertVs(returnData, [e.U64(20)]);
 });
 
-test("FSWallet.callContract - change the state", async () => {
+test.concurrent("FSWallet.callContract - change the state", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   await wallet.callContract({
@@ -771,7 +789,7 @@ test("FSWallet.callContract - change the state", async () => {
   });
 });
 
-test("FSWallet.callContract failure", async () => {
+test.concurrent("FSWallet.callContract failure", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   await expect(
@@ -788,20 +806,23 @@ test("FSWallet.callContract failure", async () => {
   });
 });
 
-test("FSWallet.callContract.assertFail - correct parameters", async () => {
-  using world = await startWorld();
-  const { wallet, contract } = await createAccounts(world);
-  await wallet
-    .callContract({
-      callee: contract,
-      funcName: "require_positive",
-      funcArgs: [e.U64(0)],
-      gasLimit: 10_000_000,
-    })
-    .assertFail({ code: "signalError", message: "Amount is not positive." });
-});
+test.concurrent(
+  "FSWallet.callContract.assertFail - correct parameters",
+  async () => {
+    using world = await startWorld();
+    const { wallet, contract } = await createAccounts(world);
+    await wallet
+      .callContract({
+        callee: contract,
+        funcName: "require_positive",
+        funcArgs: [e.U64(0)],
+        gasLimit: 10_000_000,
+      })
+      .assertFail({ code: "signalError", message: "Amount is not positive." });
+  },
+);
 
-test("FSWallet.callContract.assertFail - Wrong code", async () => {
+test.concurrent("FSWallet.callContract.assertFail - Wrong code", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   await expect(
@@ -818,51 +839,57 @@ test("FSWallet.callContract.assertFail - Wrong code", async () => {
   );
 });
 
-test("FSWallet.callContract.assertFail - Wrong message", async () => {
-  using world = await startWorld();
-  const { wallet, contract } = await createAccounts(world);
-  await expect(
-    wallet
-      .callContract({
-        callee: contract,
-        funcName: "require_positive",
-        funcArgs: [e.U64(0)],
-        gasLimit: 10_000_000,
-      })
-      .assertFail({ message: "" }),
-  ).rejects.toThrow(
-    "Failed with unexpected error message.\nExpected message: \nReceived message: Amount is not positive.",
-  );
-});
+test.concurrent(
+  "FSWallet.callContract.assertFail - Wrong message",
+  async () => {
+    using world = await startWorld();
+    const { wallet, contract } = await createAccounts(world);
+    await expect(
+      wallet
+        .callContract({
+          callee: contract,
+          funcName: "require_positive",
+          funcArgs: [e.U64(0)],
+          gasLimit: 10_000_000,
+        })
+        .assertFail({ message: "" }),
+    ).rejects.toThrow(
+      "Failed with unexpected error message.\nExpected message: \nReceived message: Amount is not positive.",
+    );
+  },
+);
 
-test("FSWallet.callContract.assertFail - Transaction not failing", async () => {
-  using world = await startWorld();
-  const { wallet, contract } = await createAccounts(world);
-  await expect(
-    wallet
-      .callContract({
-        callee: contract,
-        funcName: "require_positive",
-        funcArgs: [e.U64(1)],
-        gasLimit: 10_000_000,
-      })
-      .assertFail(),
-  ).rejects.toThrow("No failure.");
-});
+test.concurrent(
+  "FSWallet.callContract.assertFail - Transaction not failing",
+  async () => {
+    using world = await startWorld();
+    const { wallet, contract } = await createAccounts(world);
+    await expect(
+      wallet
+        .callContract({
+          callee: contract,
+          funcName: "require_positive",
+          funcArgs: [e.U64(1)],
+          gasLimit: 10_000_000,
+        })
+        .assertFail(),
+    ).rejects.toThrow("No failure.");
+  },
+);
 
-test("FSContract.getAccountNonce", async () => {
+test.concurrent("FSContract.getAccountNonce", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   expect(await contract.getAccountNonce()).toEqual(0);
 });
 
-test("FSContract.getAccountBalance", async () => {
+test.concurrent("FSContract.getAccountBalance", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   expect(await contract.getAccountBalance()).toEqual(10n ** 18n);
 });
 
-test("FSContract.getAccountKvs", async () => {
+test.concurrent("FSContract.getAccountKvs", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   expect(await contract.getAccountKvs()).toEqual(
@@ -873,7 +900,7 @@ test("FSContract.getAccountKvs", async () => {
   );
 });
 
-test("FSContract.getAccountWithoutKvs", async () => {
+test.concurrent("FSContract.getAccountWithoutKvs", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   assertAccount(await contract.getAccountWithoutKvs(), {
@@ -882,7 +909,7 @@ test("FSContract.getAccountWithoutKvs", async () => {
   });
 });
 
-test("FSContract.getAccount", async () => {
+test.concurrent("FSContract.getAccount", async () => {
   using world = await startWorld();
   const { wallet, contract } = await createAccounts(world);
   assertAccount(await contract.getAccount(), {
@@ -897,7 +924,7 @@ test("FSContract.getAccount", async () => {
   });
 });
 
-test("FSContract.setAccount - FSContract.getAccount", async () => {
+test.concurrent("FSContract.setAccount - FSContract.getAccount", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   const before = await contract.getAccount();
@@ -906,7 +933,7 @@ test("FSContract.setAccount - FSContract.getAccount", async () => {
   expect(after).toEqual(before);
 });
 
-test("FSContract.query", async () => {
+test.concurrent("FSContract.query", async () => {
   using world = await startWorld();
   const { contract } = await createAccounts(world);
   const { returnData } = await contract.query({
