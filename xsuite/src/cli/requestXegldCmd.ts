@@ -57,8 +57,8 @@ const action = async ({
   const initialBalance = await devnetProxy.getAccountBalance(address);
   let balance = initialBalance;
   while (balance <= initialBalance) {
-    balance = await devnetProxy.getAccountBalance(address);
     await new Promise((r) => setTimeout(r, 1000));
+    balance = await devnetProxy.getAccountBalance(address);
   }
 
   log();
