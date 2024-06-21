@@ -18,7 +18,7 @@
   </a>
 </p>
 
-xSuite is the full suite for efficiently developing high-quality MultiversX smart contracts. Init, build, test, deploy contracts in seconds.
+xSuite is the complete suite for efficiently developing high-quality MultiversX smart contracts. Init, build, test, deploy contracts in seconds.
 
 xSuite is made by [the Arda team](https://arda.run) and is the result of their deep expertise from building numerous dApps and auditing [35+ contracts](https://arda.run/audits). xSuite is extensively tested with 450+ tests and 100% test coverage of critical parts, to ensure it is always safe and reliable.
 
