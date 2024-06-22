@@ -1,12 +1,12 @@
 import { ChildProcess } from "node:child_process";
 import { AddressLike, isAddressLike } from "../data/addressLike";
 import { EncodableAccount } from "../data/encoding";
-import { Prettify } from "../helpers";
+import { Prettify, Replace } from "../helpers";
 import { FSProxy } from "../proxy";
 import { killChildProcess } from "./childProcesses";
 import { startFsproxyBin } from "./fsproxyBin";
 import { DummySigner, Signer } from "./signer";
-import { createU8AAddress } from "./utils";
+import { AddressLikeParams, createAddressLike } from "./utils";
 import {
   World,
   Contract,
@@ -83,39 +83,41 @@ export class FSWorld extends World {
     return new FSContract({ address, world: this });
   }
 
-  async createWallet({ address, ...params }: FSWorldCreateAccountParams = {}) {
-    if (
-      address === undefined ||
-      (typeof address === "object" && "shard" in address)
-    ) {
-      address = createU8AAddress({ type: "wallet", shard: address?.shard });
-    }
-    await this.setAccount({ address, ...params });
-    return this.newWallet(new DummySigner(address));
+  async createWallets(createAccountsParams: FSWorldCreateAccountParams[]) {
+    const setAccountsParams = createAccountsParams.map(
+      ({ address, ...params }) => ({
+        address: createAddressLike("wallet", address),
+        ...params,
+      }),
+    );
+    await this.setAccounts(setAccountsParams);
+    return setAccountsParams.map((a) => this.newWallet(a.address));
   }
 
-  async createContract({
-    address,
-    ...params
-  }: FSWorldCreateAccountParams = {}) {
-    if (
-      address === undefined ||
-      (typeof address === "object" && "shard" in address)
-    ) {
-      address = createU8AAddress({
-        type: "vmContract",
-        shard: address?.shard,
-      });
-    }
-    await this.setAccount({ address, ...params });
-    return this.newContract(address);
+  async createWallet(params: FSWorldCreateAccountParams = {}) {
+    return this.createWallets([params]).then((wallets) => wallets[0]);
+  }
+
+  async createContracts(createAccountsParams: FSWorldCreateAccountParams[]) {
+    const setAccountsParams = createAccountsParams.map(
+      ({ address, ...params }) => ({
+        address: createAddressLike("vmContract", address),
+        ...params,
+      }),
+    );
+    await this.setAccounts(setAccountsParams);
+    return setAccountsParams.map((a) => this.newContract(a.address));
+  }
+
+  async createContract(params: FSWorldCreateAccountParams = {}) {
+    return this.createContracts([params]).then((contracts) => contracts[0]);
   }
 
   getInitialAddresses() {
     return this.proxy.getInitialAddresses();
   }
 
-  async setAccounts(params: FSWorldSetAccountsParams) {
+  setAccounts(params: FSWorldSetAccountsParams) {
     for (const _params of params) {
       if (_params.code !== undefined) {
         _params.code = expandCode(_params.code);
@@ -128,77 +130,58 @@ export class FSWorld extends World {
     return this.setAccounts([params]);
   }
 
-  async generateBlocks(numBlocks: number) {
+  generateBlocks(numBlocks: number) {
     return this.proxy.generateBlocks(numBlocks);
   }
 
-  async generateBlock() {
-    return this.proxy.generateBlock();
+  advanceToEpoch(epoch: number) {
+    return this.proxy.advanceToEpoch(epoch);
   }
 
-  // TODO-MvX: replace by the new one that will force skip the epoch
-  async generateBlocksUntilEpochReached(epoch: number) {
-    return this.proxy.generateBlocksUntilEpochReached(epoch);
+  async advanceEpoch(epochs: number) {
+    const status = await this.proxy.getNetworkStatus(0);
+    return this.advanceToEpoch(status.epoch + epochs);
   }
 
-  // TODO-MvX: to be removed when built-in in chain simulator
-  async generateBlocksUntilTxCompleted(txHash: string) {
-    let res = await this.proxy.getTxProcessStatus(txHash);
-    while (res === "pending") {
-      await this.generateBlock();
-      res = await this.proxy.getTxProcessStatus(txHash);
-    }
+  processTx(txHash: string) {
+    return this.proxy.processTx(txHash);
   }
 
-  awaitTx(txHash: string) {
-    return this.generateBlocksUntilTxCompleted(txHash);
+  resolveDeployContracts(txHashes: string[]) {
+    return super
+      .resolveDeployContracts(txHashes)
+      .then((rs) => rs.map((r) => this.addContractPostTx(r)));
   }
 
-  async sendTx(...[tx]: Parameters<typeof World.prototype.sendTx>) {
-    const txHash = await super.sendTx(tx);
-    await new Promise((r) => setTimeout(r, 250)); // TODO-MvX: to be removed once they fix this
-    return txHash;
+  resolveDeployContract(txHash: string) {
+    return super
+      .resolveDeployContract(txHash)
+      .then((r) => this.addContractPostTx(r));
   }
 
-  async sendTransfer(...[tx]: Parameters<typeof World.prototype.sendTransfer>) {
-    const txHash = await super.sendTransfer(tx);
-    await new Promise((r) => setTimeout(r, 250)); // TODO-MvX: to be removed once they fix this
-    return txHash;
+  protected addContractPostTx<T extends { address: string }>(
+    res: T,
+  ): Prettify<Replace<T, { contract: FSContract }>> {
+    return { ...res, contract: this.newContract(res.address) };
   }
 
-  async sendDeployContract(
-    ...[tx]: Parameters<typeof World.prototype.sendDeployContract>
-  ) {
-    const txHash = await super.sendDeployContract(tx);
-    await new Promise((r) => setTimeout(r, 250)); // TODO-MvX: to be removed once they fix this
-    return txHash;
-  }
-
-  async sendCallContract(
-    ...[tx]: Parameters<typeof World.prototype.sendCallContract>
-  ) {
-    const txHash = await super.sendCallContract(tx);
-    await new Promise((r) => setTimeout(r, 250)); // TODO-MvX: to be removed once they fix this
-    return txHash;
-  }
-
-  async sendUpgradeContract(
-    ...[tx]: Parameters<typeof World.prototype.sendUpgradeContract>
-  ) {
-    const txHash = await super.sendUpgradeContract(tx);
-    await new Promise((r) => setTimeout(r, 250)); // TODO-MvX: to be removed once they fix this
-    return txHash;
+  deployContracts(txs: WorldDeployContractTx[]) {
+    return super
+      .deployContracts(txs)
+      .then((rs) => rs.map((r) => this.addContractPostTx(r)));
   }
 
   deployContract(tx: WorldDeployContractTx) {
-    return super
-      .deployContract(tx)
-      .then((res) => ({ ...res, contract: this.newContract(res.address) }));
+    return super.deployContract(tx).then((r) => this.addContractPostTx(r));
   }
 
   terminate() {
     if (!this.server) throw new Error("No server defined.");
     killChildProcess(this.server);
+  }
+
+  [Symbol.dispose]() {
+    this.terminate();
   }
 }
 
@@ -247,11 +230,7 @@ type FSWorldNewOptions =
   | WorldNewOptions;
 
 type FSWorldCreateAccountParams = Prettify<
-  Partial<
-    Omit<EncodableAccount, "address"> & {
-      address: AddressLike | { shard: number };
-    }
-  >
+  Replace<EncodableAccount, { address?: AddressLikeParams }>
 >;
 
 type FSWorldSetAccountsParams = EncodableAccount[];

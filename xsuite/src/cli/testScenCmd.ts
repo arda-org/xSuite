@@ -3,10 +3,10 @@ import path from "node:path";
 import { Command } from "commander";
 import tar from "tar";
 import { pkgPath } from "../_pkg";
-import { log } from "../_stdio";
+import { log } from "../context";
 import { logTitle, logAndRunCommand, downloadArchive } from "./helpers";
 
-export const registerTestScenCmd = (cmd: Command) => {
+export const addTestScenCmd = (cmd: Command) => {
   cmd
     .command("test-scen")
     .description("Test contract with scenarios.")

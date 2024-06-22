@@ -4,7 +4,7 @@ import {
   UserSigner as BaseUserSigner,
   UserWallet,
 } from "@multiversx/sdk-wallet";
-import { input, log } from "../_stdio";
+import { log, readHidden } from "../context";
 import { Account } from "./account";
 
 export abstract class Signer extends Account {
@@ -67,7 +67,7 @@ export class Keystore {
     filePath = path.resolve(filePath);
     log(`Loading keystore wallet at "${filePath}"...`);
     const keystore = JSON.parse(fs.readFileSync(filePath, "utf8"));
-    const password = await input.hidden("Enter password: ");
+    const password = await readHidden("Enter password: ");
     return new Keystore(keystore, password);
   }
 

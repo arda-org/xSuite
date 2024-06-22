@@ -38,108 +38,59 @@ export class Proxy {
   }
 
   async fetch(path: string, data?: any) {
-    return unrawRes(await this.fetchRaw(path, data));
-  }
-
-  async sendTxRaw(tx: BroadTx) {
-    return this.fetchRaw("/transaction/send", await broadTxToRawTx(tx));
-  }
-
-  async sendTx(tx: BroadTx) {
-    const res = unrawRes(await this.sendTxRaw(tx));
-    return res.txHash as string;
-  }
-
-  sendTransfer({ receiver: _receiver, sender, esdts, ...tx }: TransferTx) {
-    let receiver: AddressLike;
-    let data: string | undefined;
-    if (esdts?.length) {
-      receiver = sender;
-      const dataParts: string[] = [];
-      dataParts.push("MultiESDTNFTTransfer");
-      dataParts.push(addressLikeToHexAddress(_receiver));
-      dataParts.push(e.U(esdts.length).toTopHex());
-      for (const esdt of esdts) {
-        dataParts.push(e.Str(esdt.id).toTopHex());
-        dataParts.push(e.U(esdt.nonce ?? 0).toTopHex());
-        dataParts.push(e.U(esdt.amount).toTopHex());
-      }
-      data = dataParts.join("@");
+    const res = await this.fetchRaw(path, data);
+    if (res.code === "successful") {
+      return res.data;
     } else {
-      receiver = _receiver;
+      const resStr = JSON.stringify(res, null, 2);
+      throw new Error(`Unsuccessful proxy request. Response: ${resStr}`);
     }
-    return this.sendTx({ receiver, sender, data, ...tx });
   }
 
-  sendDeployContract({
-    code,
-    codeMetadata,
-    codeArgs,
-    ...tx
-  }: DeployContractTx) {
-    return this.sendTx({
-      receiver: zeroBechAddress,
-      data: [
-        code,
-        "0500",
-        eCodeMetadata(codeMetadata),
-        ...e.vs(codeArgs ?? []),
-      ].join("@"),
-      ...tx,
-    });
-  }
-
-  sendCallContract({
-    callee,
-    sender,
-    funcName,
-    funcArgs,
-    esdts,
-    ...tx
-  }: CallContractTx) {
-    const dataParts: string[] = [];
-    let receiver: AddressLike;
-    if (esdts?.length) {
-      receiver = sender;
-      dataParts.push("MultiESDTNFTTransfer");
-      dataParts.push(addressLikeToHexAddress(callee));
-      dataParts.push(e.U(esdts.length).toTopHex());
-      for (const esdt of esdts) {
-        dataParts.push(e.Str(esdt.id).toTopHex());
-        dataParts.push(e.U(esdt.nonce ?? 0).toTopHex());
-        dataParts.push(e.U(esdt.amount).toTopHex());
-      }
-      dataParts.push(e.Str(funcName).toTopHex());
-    } else {
-      receiver = callee;
-      dataParts.push(funcName);
+  async sendTxs(txs: BroadTx[]) {
+    const rawTxs: RawTx[] = [];
+    for (const tx of txs) {
+      rawTxs.push(await broadTxToRawTx(tx));
     }
-    dataParts.push(...e.vs(funcArgs ?? []));
-    return this.sendTx({
-      receiver,
-      sender,
-      data: dataParts.join("@"),
-      ...tx,
-    });
+    const res = await this.fetch("/transaction/send-multiple", rawTxs);
+    await new Promise((r) => setTimeout(r, 250)); // TODO-MvX: to be removed once they fix this
+    return getValuesInOrder(res.txsHashes) as string[];
   }
 
-  sendUpgradeContract({
-    callee,
-    code,
-    codeMetadata,
-    codeArgs,
-    ...tx
-  }: UpgradeContractTx) {
-    return this.sendTx({
-      receiver: callee,
-      data: [
-        "upgradeContract",
-        code,
-        eCodeMetadata(codeMetadata),
-        ...e.vs(codeArgs ?? []),
-      ].join("@"),
-      ...tx,
-    });
+  sendTx(tx: BroadTx) {
+    return this.sendTxs([tx]).then((r) => r[0]);
+  }
+
+  sendTransfers(txs: TransferTx[]) {
+    return this.sendTxs(txs.map(transferTxToTx));
+  }
+
+  sendTransfer(tx: TransferTx) {
+    return this.sendTransfers([tx]).then((r) => r[0]);
+  }
+
+  sendDeployContracts(txs: DeployContractTx[]) {
+    return this.sendTxs(txs.map(deployContractTxToTx));
+  }
+
+  sendDeployContract(tx: DeployContractTx) {
+    return this.sendDeployContracts([tx]).then((r) => r[0]);
+  }
+
+  sendCallContracts(txs: CallContractTx[]) {
+    return this.sendTxs(txs.map(callContractTxToTx));
+  }
+
+  sendCallContract(tx: CallContractTx) {
+    return this.sendCallContracts([tx]).then((r) => r[0]);
+  }
+
+  sendUpgradeContracts(txs: UpgradeContractTx[]) {
+    return this.sendTxs(txs.map(upgradeContractTxToTx));
+  }
+
+  sendUpgradeContract(tx: UpgradeContractTx) {
+    return this.sendUpgradeContracts([tx]).then((r) => r[0]);
   }
 
   async awaitTx(txHash: string) {
@@ -147,6 +98,12 @@ export class Proxy {
     while (res === "pending") {
       await new Promise((r) => setTimeout(r, 1000));
       res = await this.getTxProcessStatus(txHash);
+    }
+  }
+
+  async awaitTxs(txHashes: string[]) {
+    for (const txHash of txHashes) {
+      await this.awaitTx(txHash);
     }
   }
 
@@ -177,8 +134,16 @@ export class Proxy {
     return { explorerUrl, hash, gasUsed, fee, tx };
   }
 
+  resolveTxs(txHashes: string[]) {
+    return Promise.all(txHashes.map((h) => this.resolveTx(h)));
+  }
+
   resolveTransfer(txHash: string) {
     return this.resolveTx(txHash);
+  }
+
+  resolveTransfers(txHashes: string[]) {
+    return this.resolveTxs(txHashes);
   }
 
   async resolveDeployContract(txHash: string): Promise<DeployContractResult> {
@@ -190,52 +155,83 @@ export class Proxy {
     return { ...res, returnData, address };
   }
 
+  resolveDeployContracts(txHashes: string[]) {
+    return Promise.all(txHashes.map((h) => this.resolveDeployContract(h)));
+  }
+
   async resolveCallContract(txHash: string): Promise<CallContractResult> {
     const res = await this.resolveTx(txHash);
     const returnData = getTxReturnData(res.tx);
     return { ...res, returnData };
   }
 
+  resolveCallContracts(txHashes: string[]) {
+    return Promise.all(txHashes.map((h) => this.resolveCallContract(h)));
+  }
+
   resolveUpgradeContract(txHash: string) {
     return this.resolveCallContract(txHash);
   }
 
-  async executeTx(tx: BroadTx) {
-    const txHash = await this.sendTx(tx);
-    await this.awaitTx(txHash);
-    return this.resolveTx(txHash);
+  resolveUpgradeContracts(txHashes: string[]) {
+    return this.resolveCallContracts(txHashes);
   }
 
-  async transfer(tx: TransferTx) {
-    const txHash = await this.sendTransfer(tx);
-    await this.awaitTx(txHash);
-    return this.resolveTransfer(txHash);
+  async executeTxs(txs: BroadTx[]) {
+    const txHashes = await this.sendTxs(txs);
+    await this.awaitTxs(txHashes);
+    return this.resolveTxs(txHashes);
   }
 
-  async deployContract(tx: DeployContractTx) {
-    const txHash = await this.sendDeployContract(tx);
-    await this.awaitTx(txHash);
-    return this.resolveDeployContract(txHash);
+  executeTx(tx: BroadTx) {
+    return this.executeTxs([tx]).then((r) => r[0]);
   }
 
-  async callContract(tx: CallContractTx) {
-    const txHash = await this.sendCallContract(tx);
-    await this.awaitTx(txHash);
-    return this.resolveCallContract(txHash);
+  async doTransfers(txs: TransferTx[]) {
+    const txHashs = await this.sendTransfers(txs);
+    await this.awaitTxs(txHashs);
+    return this.resolveTransfers(txHashs);
   }
 
-  async upgradeContract(tx: UpgradeContractTx) {
-    const txHash = await this.sendUpgradeContract(tx);
-    await this.awaitTx(txHash);
-    return this.resolveUpgradeContract(txHash);
+  transfer(tx: TransferTx) {
+    return this.doTransfers([tx]).then((r) => r[0]);
   }
 
-  queryRaw(query: BroadQuery) {
-    return this.fetchRaw("/vm-values/query", broadQueryToRawQuery(query));
+  async deployContracts(txs: DeployContractTx[]) {
+    const txHashes = await this.sendDeployContracts(txs);
+    await this.awaitTxs(txHashes);
+    return this.resolveDeployContracts(txHashes);
+  }
+
+  deployContract(tx: DeployContractTx) {
+    return this.deployContracts([tx]).then((r) => r[0]);
+  }
+
+  async callContracts(txs: CallContractTx[]) {
+    const txHashes = await this.sendCallContracts(txs);
+    await this.awaitTxs(txHashes);
+    return this.resolveCallContracts(txHashes);
+  }
+
+  callContract(tx: CallContractTx) {
+    return this.callContracts([tx]).then((r) => r[0]);
+  }
+
+  async upgradeContracts(txs: UpgradeContractTx[]) {
+    const txHashes = await this.sendUpgradeContracts(txs);
+    await this.awaitTxs(txHashes);
+    return this.resolveUpgradeContracts(txHashes);
+  }
+
+  upgradeContract(tx: UpgradeContractTx) {
+    return this.upgradeContracts([tx]).then((r) => r[0]);
   }
 
   async query(query: BroadQuery): Promise<QueryResult> {
-    const { data } = unrawRes(await this.queryRaw(query));
+    const { data } = await this.fetch(
+      "/vm-values/query",
+      broadQueryToRawQuery(query),
+    );
     if (![0, "ok"].includes(data.returnCode)) {
       throw new QueryError(data.returnCode, data.returnMessage, data);
     }
@@ -245,10 +241,21 @@ export class Proxy {
     };
   }
 
-  getTxRaw(txHash: string, { withResults }: TxRequestOptions = {}) {
-    let path = `/transaction/${txHash}`;
-    if (withResults) path += "?withResults=true";
-    return this.fetchRaw(path);
+  async getNetworkStatus(shard: number): Promise<NetworkStatus> {
+    const { status } = await this.fetch(`/network/status/${shard}`);
+    return {
+      blockTimestamp: status.erd_block_timestamp,
+      crossCheckBlockHeight: status.erd_cross_check_block_height,
+      round: status.erd_current_round,
+      epoch: status.erd_epoch_number,
+      highestFinalNonce: status.erd_highest_final_nonce,
+      nonce: status.erd_nonce,
+      nonceAtEpochStart: status.erd_nonce_at_epoch_start,
+      noncesPassedInCurrentEpoch: status.erd_nonces_passed_in_current_epoch,
+      roundAtEpochStart: status.erd_round_at_epoch_start,
+      roundsPassedInCurrentEpoch: status.erd_rounds_passed_in_current_epoch,
+      roundsPerEpoch: status.erd_rounds_per_epoch,
+    };
   }
 
   getTx(txHash: string) {
@@ -256,86 +263,68 @@ export class Proxy {
   }
 
   getTxWithoutResults(txHash: string) {
-    return this._getTx(txHash, { withResults: false });
+    return this._getTx(txHash);
   }
 
-  private async _getTx(txHash: string, options?: TxRequestOptions) {
-    const res = unrawRes(await this.getTxRaw(txHash, options));
+  private async _getTx(txHash: string, { withResults }: GetTxRawOptions = {}) {
+    const res = await this.fetch(
+      makePath(`/transaction/${txHash}`, { withResults }),
+    );
     return res.transaction as Record<string, any>;
   }
 
-  getTxProcessStatusRaw(txHash: string) {
-    return this.fetchRaw(`/transaction/${txHash}/process-status`);
-  }
-
   async getTxProcessStatus(txHash: string) {
-    const res = unrawRes(await this.getTxProcessStatusRaw(txHash));
+    const res = await this.fetch(`/transaction/${txHash}/process-status`);
     return res.status as string;
   }
 
-  getAccountNonceRaw(
+  async getAccountNonce(
     address: AddressLike,
-    { shardId }: AccountRequestOptions = {},
+    { shardId }: GetAccountOptions = {},
   ) {
-    let path = `/address/${addressLikeToBechAddress(address)}/nonce`;
-    if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
-    return this.fetchRaw(path);
-  }
-
-  async getAccountNonce(address: AddressLike, options?: AccountRequestOptions) {
-    const res = unrawRes(await this.getAccountNonceRaw(address, options));
+    const res = await this.fetch(
+      makePath(`/address/${addressLikeToBechAddress(address)}/nonce`, {
+        "forced-shard-id": shardId,
+      }),
+    );
     return res.nonce as number;
-  }
-
-  getAccountBalanceRaw(
-    address: AddressLike,
-    { shardId }: AccountRequestOptions = {},
-  ) {
-    let path = `/address/${addressLikeToBechAddress(address)}/balance`;
-    if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
-    return this.fetchRaw(path);
   }
 
   async getAccountBalance(
     address: AddressLike,
-    options?: AccountRequestOptions,
+    { shardId }: GetAccountOptions = {},
   ) {
-    const res = unrawRes(await this.getAccountBalanceRaw(address, options));
+    const res = await this.fetch(
+      makePath(`/address/${addressLikeToBechAddress(address)}/balance`, {
+        "forced-shard-id": shardId,
+      }),
+    );
     return BigInt(res.balance);
   }
 
-  getAccountKvsRaw(
+  async getAccountKvs(
     address: AddressLike,
-    { shardId }: AccountRequestOptions = {},
+    { shardId }: GetAccountOptions = {},
   ) {
-    let path = `/address/${addressLikeToBechAddress(address)}/keys`;
-    if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
-    return this.fetchRaw(path);
-  }
-
-  async getAccountKvs(address: AddressLike, options?: AccountRequestOptions) {
-    const res = unrawRes(await this.getAccountKvsRaw(address, options));
+    const res = await this.fetch(
+      makePath(`/address/${addressLikeToBechAddress(address)}/keys`, {
+        "forced-shard-id": shardId,
+      }),
+    );
     return res.pairs as Kvs;
-  }
-
-  getAccountRaw(address: AddressLike, { shardId }: AccountRequestOptions = {}) {
-    let path = `/address/${addressLikeToBechAddress(address)}`;
-    if (shardId !== undefined) path += `?forced-shard-id=${shardId}`;
-    return this.fetchRaw(path);
   }
 
   async getSerializableAccountWithoutKvs(
     address: AddressLike,
-    options?: AccountRequestOptions,
+    options?: GetAccountOptions,
   ) {
-    const res = unrawRes(await this.getAccountRaw(address, options));
+    const res = await this.fetch(
+      makePath(`/address/${addressLikeToBechAddress(address)}`, options),
+    );
     return getSerializableAccount(res.account);
   }
 
-  getSerializableAccount(
-    address: AddressLike,
-    options?: AccountRequestOptions,
-  ) {
+  getSerializableAccount(address: AddressLike, options?: GetAccountOptions) {
     // TODO-MvX: When ?withKeys=true out, rewrite this part
     return Promise.all([
       this.getSerializableAccountWithoutKvs(address, options),
@@ -345,7 +334,7 @@ export class Proxy {
 
   async getAccountWithoutKvs(
     address: AddressLike,
-    options?: AccountRequestOptions,
+    options?: GetAccountOptions,
   ) {
     const { balance, ...account } = await this.getSerializableAccountWithoutKvs(
       address,
@@ -354,7 +343,7 @@ export class Proxy {
     return { balance: BigInt(balance), ...account };
   }
 
-  getAccount(address: AddressLike, options?: AccountRequestOptions) {
+  getAccount(address: AddressLike, options?: GetAccountOptions) {
     // TODO-MvX: When ?withKeys=true out, rewrite this part
     return Promise.all([
       this.getAccountWithoutKvs(address, options),
@@ -412,13 +401,119 @@ class QueryError extends InteractionError {
   }
 }
 
-export const unrawRes = (res: any) => {
-  if (res.code === "successful") {
-    return res.data;
+const transferTxToTx = ({
+  receiver: _receiver,
+  sender,
+  esdts,
+  ...tx
+}: TransferTx): Tx => {
+  let receiver: AddressLike;
+  let data: string | undefined;
+  if (esdts?.length) {
+    receiver = sender;
+    const dataParts: string[] = [];
+    dataParts.push("MultiESDTNFTTransfer");
+    dataParts.push(addressLikeToHexAddress(_receiver));
+    dataParts.push(e.U(esdts.length).toTopHex());
+    for (const esdt of esdts) {
+      dataParts.push(e.Str(esdt.id).toTopHex());
+      dataParts.push(e.U(esdt.nonce ?? 0).toTopHex());
+      dataParts.push(e.U(esdt.amount).toTopHex());
+    }
+    data = dataParts.join("@");
   } else {
-    const resStr = JSON.stringify(res, null, 2);
-    throw new Error(`Unsuccessful proxy request. Response: ${resStr}`);
+    receiver = _receiver;
   }
+  return { receiver, sender, data, ...tx };
+};
+
+const deployContractTxToTx = ({
+  code,
+  codeMetadata,
+  codeArgs,
+  ...tx
+}: DeployContractTx): Tx => {
+  return {
+    receiver: zeroBechAddress,
+    data: [
+      code,
+      "0500",
+      eCodeMetadata(codeMetadata),
+      ...e.vs(codeArgs ?? []),
+    ].join("@"),
+    ...tx,
+  };
+};
+
+const callContractTxToTx = ({
+  callee,
+  sender,
+  funcName,
+  funcArgs,
+  esdts,
+  ...tx
+}: CallContractTx): Tx => {
+  const dataParts: string[] = [];
+  let receiver: AddressLike;
+  if (esdts?.length) {
+    receiver = sender;
+    dataParts.push("MultiESDTNFTTransfer");
+    dataParts.push(addressLikeToHexAddress(callee));
+    dataParts.push(e.U(esdts.length).toTopHex());
+    for (const esdt of esdts) {
+      dataParts.push(e.Str(esdt.id).toTopHex());
+      dataParts.push(e.U(esdt.nonce ?? 0).toTopHex());
+      dataParts.push(e.U(esdt.amount).toTopHex());
+    }
+    dataParts.push(e.Str(funcName).toTopHex());
+  } else {
+    receiver = callee;
+    dataParts.push(funcName);
+  }
+  dataParts.push(...e.vs(funcArgs ?? []));
+  return {
+    receiver,
+    sender,
+    data: dataParts.join("@"),
+    ...tx,
+  };
+};
+
+const upgradeContractTxToTx = ({
+  callee,
+  code,
+  codeMetadata,
+  codeArgs,
+  ...tx
+}: UpgradeContractTx): Tx => {
+  return {
+    receiver: callee,
+    data: [
+      "upgradeContract",
+      code,
+      eCodeMetadata(codeMetadata),
+      ...e.vs(codeArgs ?? []),
+    ].join("@"),
+    ...tx,
+  };
+};
+
+const makePath = (
+  basePath: string,
+  params: Record<string, { toString: () => string } | undefined> = {},
+) => {
+  let path = basePath;
+  let first = true;
+  for (const [k, v] of Object.entries(params)) {
+    if (v !== undefined) {
+      if (first) {
+        path += "?";
+        first = false;
+      }
+      path += `${k}=${v}`;
+    }
+  }
+  return path;
 };
 
 const broadTxToRawTx = async (tx: BroadTx): Promise<RawTx> => {
@@ -496,6 +591,14 @@ const getTxReturnData = (tx: any): string[] => {
     return scr.data.split("@").slice(2);
   }
   return [];
+};
+
+export const getValuesInOrder = <T>(o: Record<string, T>) => {
+  const values: T[] = [];
+  for (let i = 0; i < Object.keys(o).length; i++) {
+    values.push(o[i]);
+  }
+  return values;
 };
 
 export const pendingErrorMessage = "Transaction still pending.";
@@ -604,9 +707,9 @@ type RawQuery = {
   value?: string;
 };
 
-type TxRequestOptions = { withResults?: boolean };
+type GetTxRawOptions = { withResults?: boolean };
 
-type AccountRequestOptions = { shardId?: number };
+type GetAccountOptions = { shardId?: number };
 
 type TxResult = Prettify<{
   hash: string;
@@ -628,4 +731,18 @@ type CallContractResult = Prettify<TxResult & { returnData: string[] }>;
 type QueryResult = {
   returnData: string[];
   query: { [x: string]: any };
+};
+
+type NetworkStatus = {
+  blockTimestamp: number;
+  crossCheckBlockHeight: string;
+  round: number;
+  epoch: number;
+  highestFinalNonce: number;
+  nonce: number;
+  nonceAtEpochStart: number;
+  noncesPassedInCurrentEpoch: number;
+  roundAtEpochStart: number;
+  roundsPassedInCurrentEpoch: number;
+  roundsPerEpoch: number;
 };

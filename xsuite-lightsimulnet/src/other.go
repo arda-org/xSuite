@@ -66,7 +66,7 @@ func bech32Decode(input string) ([]byte, error) {
 	bpc, _ := pc.NewBech32PubkeyConverter(addressByteLength, core.DefaultAddressPrefix)
 	res, err := bpc.Decode(input)
 	if err != nil {
-		return []byte{}, err
+		return nil, err
 	}
 	return res, err
 }
@@ -78,6 +78,16 @@ func bech32Encode(input []byte) (string, error) {
 		return "", err
 	}
 	return res, err
+}
+
+func parseBool(input string) (bool, error) {
+	if input == "" || input == "false" {
+		return false, nil
+	} else if input == "true" {
+		return true, nil
+	} else {
+		return false, errors.New("invalid bool")
+	}
 }
 
 var addressByteLength = 32

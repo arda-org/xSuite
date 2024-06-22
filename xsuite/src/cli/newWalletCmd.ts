@@ -3,12 +3,12 @@ import path from "node:path";
 import { UserSecretKey, UserWallet, Mnemonic } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
 import { Command } from "commander";
-import { input, log } from "../_stdio";
+import { readHidden, log, cwd } from "../context";
 import { getAddressShard, numShards } from "../data/utils";
 import { Keystore } from "../world/signer";
 import { logError, logSuccess } from "./helpers";
 
-export const registerNewWalletCmd = (cmd: Command) => {
+export const addNewWalletCmd = (cmd: Command) => {
   cmd
     .command("new-wallet")
     .description("Create a new wallet.")
@@ -33,15 +33,15 @@ const action = async ({
   fromWallet?: string;
   shard?: number;
 }) => {
-  walletPath = path.resolve(walletPath);
+  walletPath = path.resolve(cwd(), walletPath);
   if (fs.existsSync(walletPath)) {
     logError(`Wallet already exists at "${walletPath}".`);
     return;
   }
   if (password === undefined) {
     log(`Creating keystore wallet at "${walletPath}"...`);
-    password = await input.hidden("Enter password: ");
-    const passwordAgain = await input.hidden("Re-enter password: ");
+    password = await readHidden("Enter password: ");
+    const passwordAgain = await readHidden("Re-enter password: ");
     if (password !== passwordAgain) {
       logError("Passwords do not match.");
       return;

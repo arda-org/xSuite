@@ -1,10 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 import { Command } from "commander";
-import { log } from "../_stdio";
+import { cwd, log } from "../context";
 import { logTitle, logAndRunCommand, logError } from "./helpers";
 
-export const registerBuildCmd = (cmd: Command) => {
+export const addBuildCmd = (cmd: Command) => {
   cmd
     .command("build")
     .description("Build contract.")
@@ -41,8 +41,8 @@ const action = ({
   recursive?: boolean;
   targetDir?: string;
 }) => {
-  dir = dir ?? process.cwd();
-  targetDir = targetDir ?? path.join(process.cwd(), "target");
+  dir = dir ?? cwd();
+  targetDir = targetDir ?? path.resolve(cwd(), "target");
   const dirs: string[] = [];
   if (recursive) {
     const ignoreRegex = new RegExp(ignore ?? defaultIgnore);

@@ -2,7 +2,11 @@
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
+  esbuild: {
+    target: "es2022",
+  },
   test: {
+    maxConcurrency: 10,
     typecheck: {
       enabled: true,
     },

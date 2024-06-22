@@ -1,5 +1,5 @@
-import { AddressLike } from "../data/addressLike";
-import { Optional, Prettify } from "../helpers";
+import { AddressLike, addressLikeToBechAddress } from "../data/addressLike";
+import { Optional, Prettify, Replace } from "../helpers";
 import {
   devnetChainId,
   devnetExplorerUrl,
@@ -132,105 +132,185 @@ export class World {
     return this.proxy.getAccount(address);
   }
 
-  async sendTx(tx: WorldTx) {
-    return this.proxy.sendTx(await this.getProxyTx(tx));
+  sendTxs(txs: WorldTx[]) {
+    return this.preTxs(txs).then((txs) => this.proxy.sendTxs(txs));
   }
 
-  async sendTransfer(tx: WorldTransferTx) {
-    return this.proxy.sendTransfer(await this.getProxyTx(tx));
+  sendTx(tx: WorldTx) {
+    return this.preTx(tx).then((tx) => this.proxy.sendTx(tx));
   }
 
-  async sendDeployContract(tx: WorldDeployContractTx) {
-    tx.code = expandCode(tx.code);
-    return this.proxy.sendDeployContract(await this.getProxyTx(tx));
+  sendTransfers(txs: WorldTransferTx[]) {
+    return this.preTxs(txs).then((txs) => this.proxy.sendTransfers(txs));
   }
 
-  async sendCallContract(tx: WorldCallContractTx) {
-    return this.proxy.sendCallContract(await this.getProxyTx(tx));
+  sendTransfer(tx: WorldTransferTx) {
+    return this.preTx(tx).then((tx) => this.proxy.sendTransfer(tx));
   }
 
-  async sendUpgradeContract(tx: WorldUpgradeContractTx) {
-    tx.code = expandCode(tx.code);
-    return this.proxy.sendUpgradeContract(await this.getProxyTx(tx));
+  sendDeployContracts(txs: WorldDeployContractTx[]) {
+    return this.preTxs(txs).then((txs) => this.proxy.sendDeployContracts(txs));
   }
 
-  private async getProxyTx<
-    T extends { sender: AddressLike; gasPrice?: number },
-  >(tx: T) {
-    return {
-      ...tx,
-      nonce: await this.proxy.getAccountNonce(tx.sender),
-      gasPrice: tx.gasPrice ?? this.gasPrice,
-      chainId: this.chainId,
-    };
+  sendDeployContract(tx: WorldDeployContractTx) {
+    return this.preTx(tx).then((tx) => this.proxy.sendDeployContract(tx));
+  }
+
+  sendCallContracts(txs: WorldCallContractTx[]) {
+    return this.preTxs(txs).then((txs) => this.proxy.sendCallContracts(txs));
+  }
+
+  sendCallContract(tx: WorldCallContractTx) {
+    return this.preTx(tx).then((tx) => this.proxy.sendCallContract(tx));
+  }
+
+  sendUpgradeContracts(txs: WorldUpgradeContractTx[]) {
+    return this.preTxs(txs).then((txs) => this.proxy.sendUpgradeContracts(txs));
+  }
+
+  sendUpgradeContract(tx: WorldUpgradeContractTx) {
+    return this.preTx(tx).then((tx) => this.proxy.sendUpgradeContract(tx));
+  }
+
+  private async preTxs<T extends IncompleteTx>(txs: T[]) {
+    const noncePromises: Record<string, Promise<number>> = {};
+    return Promise.all(
+      txs.map(async (tx) => {
+        const address = addressLikeToBechAddress(tx.sender);
+        if (noncePromises[address] === undefined) {
+          noncePromises[address] = this.proxy.getAccountNonce(tx.sender);
+        } else {
+          noncePromises[address] = noncePromises[address].then((n) => n + 1);
+        }
+        if (tx.code !== undefined) {
+          tx.code = expandCode(tx.code);
+        }
+        return {
+          ...tx,
+          nonce: await noncePromises[address],
+          gasPrice: tx.gasPrice ?? this.gasPrice,
+          chainId: this.chainId,
+        };
+      }),
+    );
+  }
+
+  private async preTx<T extends IncompleteTx>(tx: T) {
+    return this.preTxs([tx]).then((r) => r[0]);
+  }
+
+  awaitTxs(txHashes: string[]) {
+    return this.proxy.awaitTxs(txHashes);
   }
 
   awaitTx(txHash: string) {
     return this.proxy.awaitTx(txHash);
   }
 
+  resolveTxs(txHashes: string[]) {
+    return this.proxy.resolveTxs(txHashes);
+  }
+
   resolveTx(txHash: string) {
     return InteractionPromise.from(this.proxy.resolveTx(txHash));
+  }
+
+  resolveTransfers(txHashes: string[]) {
+    return this.proxy.resolveTransfers(txHashes);
   }
 
   resolveTransfer(txHash: string) {
     return InteractionPromise.from(this.proxy.resolveTransfer(txHash));
   }
 
+  resolveDeployContracts(txHashes: string[]) {
+    return this.proxy
+      .resolveDeployContracts(txHashes)
+      .then((rs) => rs.map((r) => this.addContractPostTx(r)));
+  }
+
   resolveDeployContract(txHash: string) {
-    return InteractionPromise.fromFn(async () => {
-      const res = await this.proxy.resolveDeployContract(txHash);
-      const contract = this.newContract(res.address);
-      return { ...res, contract };
-    });
+    return InteractionPromise.from(
+      this.proxy
+        .resolveDeployContract(txHash)
+        .then((r) => this.addContractPostTx(r)),
+    );
+  }
+
+  resolveCallContracts(txHashes: string[]) {
+    return this.proxy.resolveCallContracts(txHashes);
   }
 
   resolveCallContract(txHash: string) {
     return InteractionPromise.from(this.proxy.resolveCallContract(txHash));
   }
 
+  resolveUpgradeContracts(txHashes: string[]) {
+    return this.proxy.resolveUpgradeContracts(txHashes);
+  }
+
   resolveUpgradeContract(txHash: string) {
     return InteractionPromise.from(this.proxy.resolveUpgradeContract(txHash));
   }
 
+  protected addContractPostTx<T extends { address: string }>(
+    res: T,
+  ): Prettify<Replace<T, { contract: Contract }>> {
+    return { ...res, contract: this.newContract(res.address) };
+  }
+
+  executeTxs(txs: WorldTx[]) {
+    return this.preTxs(txs).then((txs) => this.proxy.executeTxs(txs));
+  }
+
   executeTx(tx: WorldTx) {
-    return InteractionPromise.fromFn(async () => {
-      const txHash = await this.sendTx(tx);
-      await this.awaitTx(txHash);
-      return this.resolveTx(txHash);
-    });
+    return InteractionPromise.from(
+      this.preTx(tx).then((tx) => this.proxy.executeTx(tx)),
+    );
+  }
+
+  doTransfers(txs: WorldTransferTx[]) {
+    return this.preTxs(txs).then((txs) => this.proxy.doTransfers(txs));
   }
 
   transfer(tx: WorldTransferTx) {
-    return InteractionPromise.fromFn(async () => {
-      const txHash = await this.sendTransfer(tx);
-      await this.awaitTx(txHash);
-      return this.resolveTransfer(txHash);
-    });
+    return InteractionPromise.from(
+      this.preTx(tx).then((tx) => this.proxy.transfer(tx)),
+    );
+  }
+
+  deployContracts(txs: WorldDeployContractTx[]) {
+    return this.preTxs(txs)
+      .then((txs) => this.proxy.deployContracts(txs))
+      .then((rs) => rs.map((r) => this.addContractPostTx(r)));
   }
 
   deployContract(tx: WorldDeployContractTx) {
-    return InteractionPromise.fromFn(async () => {
-      const txHash = await this.sendDeployContract(tx);
-      await this.awaitTx(txHash);
-      return this.resolveDeployContract(txHash);
-    });
+    return InteractionPromise.from(
+      this.preTx(tx)
+        .then((tx) => this.proxy.deployContract(tx))
+        .then((r) => this.addContractPostTx(r)),
+    );
+  }
+
+  callContracts(txs: WorldCallContractTx[]) {
+    return this.preTxs(txs).then((txs) => this.proxy.callContracts(txs));
   }
 
   callContract(tx: WorldCallContractTx) {
-    return InteractionPromise.fromFn(async () => {
-      const txHash = await this.sendCallContract(tx);
-      await this.awaitTx(txHash);
-      return this.resolveCallContract(txHash);
-    });
+    return InteractionPromise.from(
+      this.preTx(tx).then((tx) => this.proxy.callContract(tx)),
+    );
+  }
+
+  upgradeContracts(txs: WorldUpgradeContractTx[]) {
+    return this.preTxs(txs).then((txs) => this.proxy.upgradeContracts(txs));
   }
 
   upgradeContract(tx: WorldUpgradeContractTx) {
-    return InteractionPromise.fromFn(async () => {
-      const txHash = await this.sendUpgradeContract(tx);
-      await this.awaitTx(txHash);
-      return this.resolveUpgradeContract(txHash);
-    });
+    return InteractionPromise.from(
+      this.preTx(tx).then((tx) => this.proxy.upgradeContract(tx)),
+    );
   }
 
   query(query: WorldQuery) {
@@ -391,6 +471,10 @@ export class Contract extends Account {
     return this.world.getAccount(this);
   }
 
+  query(tx: ContractQuery) {
+    return this.world.query({ ...tx, callee: this });
+  }
+
   /**
    * @deprecated Use `.getSerializableAccount` instead.
    */
@@ -516,6 +600,12 @@ type WorldNewRealnetOptions = {
   explorerUrl?: string;
 };
 
+type IncompleteTx = {
+  sender: AddressLike;
+  code?: string;
+  gasPrice?: number;
+};
+
 type WorldTx = Prettify<Omit<Optional<Tx, "gasPrice">, "chainId" | "nonce">>;
 
 type WorldTransferTx = Prettify<
@@ -549,3 +639,5 @@ type WalletCallContractTx = Prettify<Omit<WorldCallContractTx, "sender">>;
 type WalletUpgradeContractTx = Prettify<Omit<WorldUpgradeContractTx, "sender">>;
 
 type WalletQuery = Prettify<Omit<WorldQuery, "sender">>;
+
+type ContractQuery = Prettify<Omit<WorldQuery, "callee">>;

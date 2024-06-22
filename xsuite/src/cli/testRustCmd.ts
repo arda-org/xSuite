@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import { logTitle, logAndRunCommand } from "./helpers";
 
-export const registerTestRustCmd = (cmd: Command) => {
+export const addTestRustCmd = (cmd: Command) => {
   cmd
     .command("test-rust")
     .description("Test contract with Rust tests.")

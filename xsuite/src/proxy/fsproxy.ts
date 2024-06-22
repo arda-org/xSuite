@@ -1,19 +1,15 @@
 import { EncodableAccount, e } from "../data/encoding";
 import { hexToBase64 } from "../data/utils";
-import { Proxy, unrawRes } from "./proxy";
+import { getValuesInOrder, Proxy } from "./proxy";
 
 export class FSProxy extends Proxy {
-  getInitialWalletsRaw() {
-    return this.fetchRaw("/simulator/initial-wallets");
-  }
-
   async getInitialAddresses() {
-    const res = unrawRes(await this.getInitialWalletsRaw());
+    const res = await this.fetch("/simulator/initial-wallets");
     return {
       withStake: (res.stakeWallets as any[]).map(
         (w) => w.address.bech32 as string,
       ),
-      withBalance: Object.values<any>(res.balanceWallets).map(
+      withBalance: getValuesInOrder<any>(res.balanceWallets).map(
         (w) => w.address.bech32 as string,
       ),
     };
@@ -36,15 +32,22 @@ export class FSProxy extends Proxy {
     );
   }
 
-  generateBlock() {
-    return this.generateBlocks(1);
-  }
-
-  generateBlocksUntilEpochReached(epoch: number) {
+  advanceToEpoch(epoch: number) {
     return this.fetch(
-      `/simulator/generate-blocks-until-epoch-reached/${epoch}`,
+      `/simulator/force-epoch-change?targetEpoch=${epoch}`,
       {},
     ).then(() => {});
+  }
+
+  processTx(txHash: string) {
+    return this.fetch(
+      `/simulator/generate-blocks-until-transaction-processed/${txHash}`,
+      {},
+    ).then(() => {});
+  }
+
+  awaitTx(txHash: string) {
+    return this.processTx(txHash);
   }
 }
 
