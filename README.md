@@ -13,7 +13,7 @@
   <a href="https://arda.run">
     <img src="https://img.shields.io/badge/MADE%20BY%20ARDA-000000.svg?style=for-the-badge">
   </a>
-  <a href="https://t.me/xSuite_js">
+  <a href="https://t.me/xSuite_dev">
     <img src="https://img.shields.io/badge/Join%20on%20telegram-blue.svg?style=for-the-badge&logo=Telegram&logoColor=ffffff">
   </a>
 </p>
@@ -50,4 +50,4 @@ xSuite has been used internally by Arda since more than a year, and has been rel
 
 ## Community
 
-The xSuite community can be found on [xSuite Telegram group](https://t.me/xSuite_js), where you can ask questions, share ideas and meet other community members.
+The xSuite community can be found on [xSuite Telegram group](https://t.me/xSuite_dev), where you can ask questions, share ideas and meet other community members.
