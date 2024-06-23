@@ -38,11 +38,9 @@ jobs:
       - name: Build website
         run: pnpm build-website
 
-      - name: Deploy website
-        uses: cloudflare/pages-action@1
+      - name: Deploy website to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: xsuite
-          directory: website/out
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          command: pages deploy website/out --project-name=xsuite
