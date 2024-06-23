@@ -25,8 +25,8 @@ jobs:
       - name: Cache Next.js .next directory
         uses: actions/cache@v4
         with:
-          path: docs/.next/cache
-          key: ${{ runner.os }}-website-cache-${{ hashFiles('docs/**') }}
+          path: website/.next/cache
+          key: ${{ runner.os }}-website-cache-${{ hashFiles('website/**') }}
           restore-keys: ${{ runner.os }}-website-cache-
 
       - name: Use Node.js & pnpm
@@ -44,5 +44,5 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: xsuite
-          directory: docs/out
+          directory: website/out
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}

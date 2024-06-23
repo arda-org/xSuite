@@ -1,5 +1,5 @@
 packages:
-  - "docs"
+  - "website"
   - "xsuite"
   - "xsuite-fullsimulnet"
   - "xsuite-fullsimulnet-darwin-amd64"
