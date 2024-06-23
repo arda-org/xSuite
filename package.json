@@ -15,7 +15,7 @@
     "ci-main": "pnpm lint && pnpm build-xsuite-fullsimulnet && pnpm build-xsuite-lightsimulnet && pnpm build-xsuite && pnpm test-xsuite && pnpm verify-xsuite-wasms && pnpm build-contracts && pnpm typecheck-contracts && pnpm test-contracts",
     "dev-website": "cd website && pnpm dev",
     "build-website": "cd website && pnpm build",
-    "deploy-website": "cd website && pnpm deploy",
+    "deploy-website": "cd website && pnpm run deploy",
     "release-versions": "node release-versions.mjs",
     "update-contracts-deps": "pnpm up -r commander tsx typescript vitest --latest"
   },
