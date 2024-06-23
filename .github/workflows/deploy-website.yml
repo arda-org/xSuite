@@ -1,0 +1,45 @@
+name: Deploy website
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+    branches:
+      - dev
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04
+
+    permissions:
+      contents: read
+      deployments: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cache Next.js .next directory
+        uses: actions/cache@v4
+        with:
+          path: website/.next/cache
+          key: ${{ runner.os }}-website-cache-${{ hashFiles('website/**') }}
+          restore-keys: ${{ runner.os }}-website-cache-
+
+      - name: Use Node.js & pnpm
+        uses: ./.github/actions/node-pnpm
+
+      - name: Build xsuite
+        run: pnpm build-xsuite
+
+      - name: Build website
+        run: pnpm build-website
+
+      - name: Deploy website
+        run: pnpm deploy-website
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
