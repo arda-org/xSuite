@@ -13,8 +13,8 @@
     "typecheck-contracts": "pnpm --filter \"./contracts/**\" typecheck",
     "test-contracts": "pnpm --filter \"./contracts/**\" test",
     "ci-main": "pnpm lint && pnpm build-xsuite-fullsimulnet && pnpm build-xsuite-lightsimulnet && pnpm build-xsuite && pnpm test-xsuite && pnpm verify-xsuite-wasms && pnpm build-contracts && pnpm typecheck-contracts && pnpm test-contracts",
-    "dev-docs": "cd docs && pnpm dev",
-    "build-docs": "cd docs && pnpm build",
+    "dev-website": "cd docs && pnpm dev",
+    "build-website": "cd docs && pnpm build",
     "release-versions": "node release-versions.mjs",
     "update-contracts-deps": "pnpm up -r commander tsx typescript vitest --latest"
   },
