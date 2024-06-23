@@ -26,7 +26,7 @@ A big thank you to [the Buidly team](https://twitter.com/buidly_) who intensivel
 
 <a href="https://twitter.com/buidly_">
   <p align="center">
-    <img src="./docs/public/Buidly.png" />
+    <img src="./website/public/Buidly.png" />
   </p>
 </a>
 
