@@ -26,8 +26,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: website/.next/cache
-          key: ${{ runner.os }}-website-cache-${{ hashFiles('website/**') }}
-          restore-keys: ${{ runner.os }}-website-cache-
+          key: website-next-cache-${{ hashFiles('website/**') }}
+          restore-keys: website-next-cache-
 
       - name: Use Node.js & pnpm
         uses: ./.github/actions/node-pnpm
