@@ -70,7 +70,7 @@ const assertKvs = (actualKvs: EncodableKvs, expectedKvs: EncodableKvs) => {
 };
 
 const assertHasKvs = (actualKvs: EncodableKvs, hasKvs: EncodableKvs) => {
-  const rawActualKvs = eKvsUnfiltered(actualKvs);
+  const rawActualKvs = structuredClone(eKvsUnfiltered(actualKvs));
   const rawHasKvs = eKvsUnfiltered(hasKvs);
   for (const k of Object.keys(rawActualKvs)) {
     if (!rawActualKvs[k] || !(k in rawHasKvs)) {
