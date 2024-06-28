@@ -107,4 +107,5 @@ OverridableConfigTomlValues = [
     { File = "enableEpochs.toml", Path = "EnableEpochs.AlwaysMergeContextsInEEIEnableEpoch", Value = "0" },
 
     { File = "enableEpochs.toml", Path = "EnableEpochs.StakeLimitsEnableEpoch", Value = "1000000" },
+    { File = "systemSmartContractsConfig.toml", Path = "ESDTSystemSCConfig.BaseIssuingCost", Value = "50000000000000000" }, # 0.05 EGLD as on mainnet
 ]
