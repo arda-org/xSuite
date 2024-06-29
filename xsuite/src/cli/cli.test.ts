@@ -347,12 +347,23 @@ test.concurrent(
   async () => {
     using c = newContext();
 
+    // Switch to a rust version compatible with sample contracts on main branch.
+    await c.cmd('install-rust --toolchain "nightly-2023-12-11"');
+
     const dir = "contract";
     await c.cmd(`new --dir ${dir}`);
     expect(fs.readdirSync(c.cwd()).length).toEqual(1);
     const starterChalk = chalk.magenta("blank");
     const absDirPath = path.resolve(c.cwd(), dir);
     expect(c.flushStdout().split("\n")).toEqual([
+      //// Must be removed when removing rust version switch ////
+      chalk.blue(
+        'Installing Rust: toolchain "nightly-2023-12-11" & target wasm32-unknown-unknown...',
+      ),
+      chalk.cyan(
+        '$ curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain "nightly-2023-12-11" -t wasm32-unknown-unknown -y',
+      ),
+      ///////////////////////////////////////////////////////////
       chalk.blue(`Downloading contract ${starterChalk} in "${absDirPath}"...`),
       "",
       chalk.blue("Installing packages..."),
@@ -426,6 +437,9 @@ test.concurrent(
       chalk.cyan(`$ ${binaryPath} .`),
       "",
     ]);
+
+    // Switch back to the default rust version.
+    await c.cmd("install-rust");
   },
   100_000,
 );
