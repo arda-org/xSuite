@@ -84,6 +84,19 @@ test("assertAccount - not matching - kvs - value not matching", () => {
   ).toThrow();
 });
 
+test("assertAccount - no side effect", () => {
+  const acc = {
+    kvs: {
+      "01": "01",
+      "02": "02",
+    },
+  };
+  const accStrBefore = JSON.stringify(acc);
+  assertAccount(acc, { hasKvs: [] });
+  const accStrAfter = JSON.stringify(acc);
+  expect(accStrAfter).toEqual(accStrBefore);
+});
+
 test("assertAccount - not matching - kvs - key missing", () => {
   expect(() =>
     assertAccount(
