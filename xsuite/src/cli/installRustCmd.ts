@@ -15,15 +15,12 @@ export const addInstallRustCmd = (cmd: Command) => {
     .option(
       "--toolchain <TOOLCHAIN>",
       `Rust toolchain version (default: ${defaultRustToolchain}).`,
+      defaultRustToolchain,
     )
     .action(action);
 };
 
-const action = ({
-  toolchain = defaultRustToolchain,
-}: {
-  toolchain: string;
-}) => {
+const action = ({ toolchain }: { toolchain: string }) => {
   logTitle(`Installing Rust: toolchain ${toolchain} & target ${rustTarget}...`);
   logAndRunCommand("curl", [
     "--proto",
