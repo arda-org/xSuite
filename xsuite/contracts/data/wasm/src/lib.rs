@@ -5,13 +5,12 @@
 ////////////////////////////////////////////////////
 
 // Init:                                 1
-// Endpoints:                           16
+// Upgrade:                              1
+// Endpoints:                           10
 // Async Callback (empty):               1
-// Total number of exported functions:  18
+// Total number of exported functions:  13
 
 #![no_std]
-#![allow(internal_features)]
-#![feature(lang_items)]
 
 multiversx_sc_wasm_adapter::allocator!();
 multiversx_sc_wasm_adapter::panic_handler!();
@@ -21,17 +20,12 @@ multiversx_sc_wasm_adapter::endpoints! {
     (
         init => init
         upgrade => upgrade
-        single_add => single_add
-        single_remove => single_remove
-        unordered_set_add => unordered_set_add
-        unordered_set_remove => unordered_set_remove
-        set_add => set_add
-        set_remove => set_remove
-        map_add => map_add
-        map_remove => map_remove
-        vec_add => vec_add
-        vec_remove => vec_remove
-        user_add => user_add
+        value_set => value_set
+        vec_push => vec_push
+        unordered_set_insert => unordered_set_insert
+        set_insert => set_insert
+        map_insert => map_insert
+        user_create => user_create
         esdt_local_mint => esdt_local_mint
         esdt_nft_create => esdt_nft_create
         esdt_nft_create_compact => esdt_nft_create_compact

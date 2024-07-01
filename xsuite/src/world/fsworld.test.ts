@@ -296,7 +296,7 @@ test.concurrent("FSWorld.setAccount", async () => {
     balance: 1234,
     code: worldCode,
     codeHash:
-      "d8c9ddd83e614eaefd0a0c9d4f350bc3bb6368281ff71e030fc9d3d65b6ef2ae",
+      "fbde44d539751cc120619685577ac3c62752339881863b250baee10fe4f0f1eb",
     codeMetadata: ["upgradeable"],
     kvs: [[e.Str("n"), e.U64(10)]],
     owner: walletAddress,
@@ -917,7 +917,7 @@ test.concurrent("FSContract.getAccount", async () => {
     balance: 10n ** 18n,
     code: worldCode,
     codeHash:
-      "d8c9ddd83e614eaefd0a0c9d4f350bc3bb6368281ff71e030fc9d3d65b6ef2ae",
+      "fbde44d539751cc120619685577ac3c62752339881863b250baee10fe4f0f1eb",
     codeMetadata: ["readable"],
     owner: wallet,
     hasKvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },

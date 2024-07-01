@@ -819,7 +819,7 @@ test("e.account", async () => {
       balance: 10,
       code: readFileHex("contracts/data/output/data.wasm"),
       codeHash:
-        "8a698500ab8961cab5ce309a208f30d91cb031d4e9145312acc138ff20eaeca5",
+        "4b580fff10fb09e1641bc639d01d128224f9c7207fcf11ed7ecd2cd0b045a35f",
       codeMetadata: ["readable", "upgradeable"],
       kvs: complexContractState.kvs,
       owner: wallet,
@@ -1345,7 +1345,7 @@ test("d.account", () => {
     balance: 10n,
     code: readFileHex("contracts/data/output/data.wasm"),
     codeHash:
-      "8a698500ab8961cab5ce309a208f30d91cb031d4e9145312acc138ff20eaeca5",
+      "4b580fff10fb09e1641bc639d01d128224f9c7207fcf11ed7ecd2cd0b045a35f",
     codeMetadata: ["upgradeable", "readable"],
     kvs: expect.anything(),
     owner: wallet,
