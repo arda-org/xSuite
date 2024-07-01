@@ -9,7 +9,7 @@ import { Context } from "../context";
 import { getAddressShard } from "../data/utils";
 import { Keystore } from "../world/signer";
 import { getCli } from "./cli";
-import { rustToolchain, rustTarget, rustKey } from "./helpers";
+import { defaultRustToolchain, rustTarget, rustKey } from "./helpers";
 
 const pemPath = path.resolve("wallets", "wallet.pem");
 const keyKeystorePath = path.resolve("wallets", "keystore_key.json");
@@ -333,10 +333,10 @@ test.concurrent("install-rust", async () => {
   await c.cmd("install-rust");
   expect(c.flushStdout().split("\n")).toEqual([
     chalk.blue(
-      `Installing Rust: toolchain ${rustToolchain} & target ${rustTarget}...`,
+      `Installing Rust: toolchain ${defaultRustToolchain} & target ${rustTarget}...`,
     ),
     chalk.cyan(
-      `$ curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain ${rustToolchain} -t ${rustTarget} -y`,
+      `$ curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain ${defaultRustToolchain} -t ${rustTarget} -y`,
     ),
     "",
   ]);
@@ -347,6 +347,7 @@ test.concurrent(
   async () => {
     using c = newContext();
 
+    // TO BE REMOVED!
     // Switch to a rust version compatible with sample contracts on main branch.
     await c.cmd('install-rust --toolchain "nightly-2023-12-11"');
 
@@ -356,14 +357,14 @@ test.concurrent(
     const starterChalk = chalk.magenta("blank");
     const absDirPath = path.resolve(c.cwd(), dir);
     expect(c.flushStdout().split("\n")).toEqual([
-      //// Must be removed when removing rust version switch ////
+      //// Must be removed when removing rust version switch (line 350) ////
       chalk.blue(
         'Installing Rust: toolchain "nightly-2023-12-11" & target wasm32-unknown-unknown...',
       ),
       chalk.cyan(
         '$ curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain "nightly-2023-12-11" -t wasm32-unknown-unknown -y',
       ),
-      ///////////////////////////////////////////////////////////
+      //////////////////////////////////////////////////////////////////////
       chalk.blue(`Downloading contract ${starterChalk} in "${absDirPath}"...`),
       "",
       chalk.blue("Installing packages..."),
@@ -438,6 +439,7 @@ test.concurrent(
       "",
     ]);
 
+    // Must be removed when removing rust version switch (line 350).
     // Switch back to the default rust version.
     await c.cmd("install-rust");
   },

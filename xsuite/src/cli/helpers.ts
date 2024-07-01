@@ -48,8 +48,8 @@ export const downloadArchive = async (url: string) => {
   return archivePath;
 };
 
-export const rustToolchain = "1.79.0";
+export const defaultRustToolchain = "1.79.0";
 
 export const rustTarget = "wasm32-unknown-unknown";
 
-export const rustKey = `${rustToolchain}-${rustTarget}`;
+export const rustKey = `${defaultRustToolchain}-${rustTarget}`;

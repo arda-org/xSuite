@@ -2,7 +2,7 @@ import { Command } from "commander";
 import {
   logTitle,
   logAndRunCommand,
-  rustToolchain,
+  defaultRustToolchain,
   rustTarget,
 } from "./helpers";
 
@@ -10,20 +10,21 @@ export const addInstallRustCmd = (cmd: Command) => {
   cmd
     .command("install-rust")
     .description(
-      `Install Rust with rustup: toolchain ${rustToolchain} & target ${rustTarget}.`,
+      `Install Rust with rustup: toolchain ${defaultRustToolchain} & target ${rustTarget}.`,
     )
     .option(
       "--toolchain <TOOLCHAIN>",
-      `Rust toolchain version, defaults to ${rustToolchain}`,
+      `Rust toolchain version (default: ${defaultRustToolchain}).`,
     )
     .action(action);
 };
 
-const action = ({ toolchain }: { toolchain?: string }) => {
-  const toolchain2Install = toolchain ? toolchain : rustToolchain;
-  logTitle(
-    `Installing Rust: toolchain ${toolchain2Install} & target ${rustTarget}...`,
-  );
+const action = ({
+  toolchain = defaultRustToolchain,
+}: {
+  toolchain: string;
+}) => {
+  logTitle(`Installing Rust: toolchain ${toolchain} & target ${rustTarget}...`);
   logAndRunCommand("curl", [
     "--proto",
     "=https",
@@ -35,7 +36,7 @@ const action = ({ toolchain }: { toolchain?: string }) => {
     "-s",
     "--",
     "--default-toolchain",
-    toolchain2Install,
+    toolchain,
     "-t",
     rustTarget,
     "-y",
