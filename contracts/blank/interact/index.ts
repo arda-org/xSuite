@@ -17,7 +17,7 @@ program.command("deploy").action(async () => {
     codeMetadata: ["upgradeable"],
     gasLimit: 20_000_000,
   });
-  console.log("Transaction:", result.tx.explorerUrl);
+  console.log("Transaction:", result.explorerUrl);
   console.log("Contract:", result.contract.explorerUrl);
 });
 
@@ -29,7 +29,7 @@ program.command("upgrade").action(async () => {
     codeMetadata: ["upgradeable"],
     gasLimit: 20_000_000,
   });
-  console.log("Transaction:", result.tx.explorerUrl);
+  console.log("Transaction:", result.explorerUrl);
 });
 
 program.command("ClaimDeveloperRewards").action(async () => {
@@ -39,7 +39,7 @@ program.command("ClaimDeveloperRewards").action(async () => {
     funcName: "ClaimDeveloperRewards",
     gasLimit: 10_000_000,
   });
-  console.log("Transaction:", result.tx.explorerUrl);
+  console.log("Transaction:", result.explorerUrl);
 });
 
 program.parse(process.argv);
