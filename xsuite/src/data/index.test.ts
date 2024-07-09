@@ -717,6 +717,7 @@ test("e.kvs - complex kvs", () => {
           id: sft1Id,
           variants: range(1, 11).map((i) => ({
             nonce: i,
+            amount: i,
             name: `SFT1 ${i}`,
             royalties: i,
             hash: e.U(i),
@@ -729,6 +730,7 @@ test("e.kvs - complex kvs", () => {
           id: sft2Id,
           variants: range(1, 11).map((i) => ({
             nonce: i,
+            amount: i,
             attrs: e.Tuple(e.Str(`${i}`), e.U(i)),
             creator: contract,
           })),
@@ -736,6 +738,7 @@ test("e.kvs - complex kvs", () => {
         {
           id: sft3Id,
           nonce: 1,
+          amount: 1,
           creator: contract,
         },
       ],
@@ -1307,6 +1310,7 @@ test("d.kvs", async () => {
         id: sft1Id,
         variants: range(1, 11).map((i) => ({
           nonce: i,
+          amount: BigInt(i),
           name: `SFT1 ${i}`,
           royalties: i,
           hash: e.U(i).toTopHex(),
@@ -1319,11 +1323,12 @@ test("d.kvs", async () => {
         id: sft2Id,
         variants: range(1, 11).map((i) => ({
           nonce: i,
+          amount: BigInt(i),
           attrs: [`${i}`, BigInt(i)],
           creator: contract,
         })),
       },
-      { id: sft3Id, variants: [{ nonce: 1, creator: contract }] },
+      { id: sft3Id, variants: [{ nonce: 1, amount: 1n, creator: contract }] },
     ],
   });
 });

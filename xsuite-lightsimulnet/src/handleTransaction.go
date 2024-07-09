@@ -29,7 +29,10 @@ func (e *Executor) HandleTransactionSendMultiple(r *http.Request) (interface{}, 
 		e.txCounter += 1
 		txHash := uint64ToString(e.txCounter)
 		txsHashes[strconv.Itoa(i)] = txHash
-		e.executeTx(txHash, rawTx)
+		err := e.executeTx(txHash, rawTx)
+		if err != nil {
+			return nil, err
+		}
 	}
 	jOutput := map[string]interface{}{
 		"data": map[string]interface{}{
