@@ -1,1 +1,1 @@
-export declare function getLsproxyBinPath(): string;
+export declare const lsproxyBinaryPath: string;

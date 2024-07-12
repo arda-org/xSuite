@@ -1,10 +1,9 @@
-import { ChildProcess } from "node:child_process";
+import { ChildProcess, spawn } from "node:child_process";
+import { fsproxyBinaryPath, fsproxyConfigsPath } from "@xsuite/full-simulnet";
 import { AddressLike, isAddressLike } from "../data/addressLike";
 import { EncodableAccount } from "../data/encoding";
 import { Prettify, Replace } from "../helpers";
 import { FSProxy } from "../proxy";
-import { killChildProcess } from "./childProcesses";
-import { startFsproxyBin } from "./fsproxyBin";
 import { DummySigner, Signer } from "./signer";
 import { AddressLikeParams, createAddressLike } from "./utils";
 import {
@@ -65,8 +64,76 @@ export class FSWorld extends World {
   static async start({
     gasPrice,
     explorerUrl,
-  }: { gasPrice?: number; explorerUrl?: string } = {}): Promise<FSWorld> {
-    const { server, proxyUrl } = await startFsproxyBin();
+    binaryPath,
+    binaryPort,
+    binaryConfigPath,
+    proxyConfigsPath,
+    nodeConfigsPath,
+    nodeOverrideConfigPath,
+    nodeOverrideConfigPaths,
+    downloadConfigs,
+  }: {
+    gasPrice?: number;
+    explorerUrl?: string;
+    binaryPath?: string;
+    binaryPort?: number;
+    binaryConfigPath?: string;
+    proxyConfigsPath?: string;
+    nodeConfigsPath?: string;
+    nodeOverrideConfigPath?: string;
+    nodeOverrideConfigPaths?: string[];
+    downloadConfigs?: boolean;
+  } = {}): Promise<FSWorld> {
+    binaryPath ??= fsproxyBinaryPath;
+    binaryPort ??= 0;
+    binaryConfigPath ??= `${fsproxyConfigsPath}/config.toml`;
+    proxyConfigsPath ??= `${fsproxyConfigsPath}/proxy/config`;
+    nodeConfigsPath ??= `${fsproxyConfigsPath}/node/config`;
+    nodeOverrideConfigPaths ??= [
+      `${fsproxyConfigsPath}/nodeOverrideDefault.toml`,
+      `${fsproxyConfigsPath}/nodeOverride.toml`,
+    ];
+    if (nodeOverrideConfigPath !== undefined) {
+      nodeOverrideConfigPaths.push(nodeOverrideConfigPath);
+    }
+
+    const args: string[] = [
+      "--server-port",
+      `${binaryPort}`,
+      "--config",
+      binaryConfigPath,
+      "--proxy-configs",
+      proxyConfigsPath,
+      "--node-configs",
+      nodeConfigsPath,
+    ];
+    if (nodeOverrideConfigPaths.length > 0) {
+      args.push("--node-override-config", nodeOverrideConfigPaths.join(","));
+    }
+    if (!downloadConfigs) {
+      args.push("--skip-configs-download");
+    }
+    const server = spawn(binaryPath, args);
+
+    server.stderr.on("data", (data: Buffer) => {
+      throw new Error(data.toString());
+    });
+
+    server.on("error", (error) => {
+      throw error;
+    });
+
+    const proxyUrl = await new Promise<string>((resolve) => {
+      server.stdout.on("data", (data: Buffer) => {
+        const addressRegex =
+          /chain simulator's is accessible through the URL ([\w\d.:]+)/;
+        const match = data.toString().match(addressRegex);
+        if (match) {
+          resolve(`http://${match[1]}`);
+        }
+      });
+    });
+
     return FSWorld.new({ proxyUrl, gasPrice, explorerUrl, server });
   }
 
@@ -177,7 +244,7 @@ export class FSWorld extends World {
 
   terminate() {
     if (!this.server) throw new Error("No server defined.");
-    killChildProcess(this.server);
+    this.server.kill();
   }
 
   [Symbol.dispose]() {

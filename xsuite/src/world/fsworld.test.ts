@@ -25,6 +25,11 @@ const emptyAccount = {
 };
 const baseExplorerUrl = "http://explorer.local";
 
+test.concurrent("FSWorld.start - port 3000", async () => {
+  using world = await FSWorld.start({ binaryPort: 3000 });
+  expect(world.proxy.proxyUrl).toEqual("http://localhost:3000");
+});
+
 test.concurrent(
   "FSWorld.proxy.getAccountNonce on empty bech address",
   async () => {

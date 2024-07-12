@@ -25,6 +25,11 @@ const emptyAccount = {
 };
 const baseExplorerUrl = "http://explorer.local";
 
+test.concurrent("LSWorld.start - port 3000", async () => {
+  using world = await LSWorld.start({ binaryPort: 3000 });
+  expect(world.proxy.proxyUrl).toEqual("http://127.0.0.1:3000");
+});
+
 test.concurrent(
   "LSWorld.proxy.getAccountNonce on empty bech address",
   async () => {

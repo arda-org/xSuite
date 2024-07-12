@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net"
 	"net/http"
@@ -10,7 +11,10 @@ import (
 )
 
 func main() {
-	listener, err := net.Listen("tcp", "localhost:0")
+	port := flag.Int("server-port", 8085, "Port to start the server on (default: 8085)")
+	flag.Parse()
+
+	listener, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
 	if err != nil {
 		panic(err)
 	}
