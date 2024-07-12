@@ -436,6 +436,44 @@ test.concurrent("FSWorld.transfer", async () => {
   });
 });
 
+test.todo.concurrent(
+  "FSWorld.transfer - invalid tx - cannot pay fee",
+  async () => {
+    using world = await FSWorld.start();
+    const wallet = await world.createWallet();
+    await expect(
+      world.transfer({
+        sender: wallet,
+        receiver: wallet,
+        value: 0,
+        gasLimit: 100_000,
+      }),
+    ).rejects.toThrow(
+      `insufficient funds for address ${(await wallet.getAccount()).address}`,
+    );
+  },
+);
+
+test.todo.concurrent(
+  "FSWorld.doTransfers - invalid tx - cannot pay fee",
+  async () => {
+    using world = await FSWorld.start();
+    const wallet = await world.createWallet();
+    await expect(
+      world.doTransfers([
+        {
+          sender: wallet,
+          receiver: wallet,
+          value: 0,
+          gasLimit: 100_000,
+        },
+      ]),
+    ).rejects.toThrow(
+      "Only 0 of 1 transactions were sent. The other ones were invalid.",
+    );
+  },
+);
+
 test.concurrent("FSWorld.deployContract", async () => {
   using world = await FSWorld.start({ explorerUrl: baseExplorerUrl });
   const { wallet } = await createAccounts(world);
