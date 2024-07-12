@@ -487,33 +487,34 @@ test.concurrent("LSWorld.transfer", async () => {
   });
 });
 
-test.concurrent("LSWorld.transfer - invalid tx - cannot pay fee", async () => {
-  using world = await LSWorld.start({ gasPrice: 1_000_000 });
-  const wallet = await world.createWallet();
-  await expect(
-    world.transfer({
-      sender: wallet,
-      receiver: wallet,
-      value: 0,
-      gasLimit: 100_000,
-    }),
-  ).rejects.toThrow(
-    "could not set up tx : not enough balance to pay gas upfront",
-  );
-});
+test.concurrent(
+  "LSWorld.transfer - invalid tx - gasLimit too low",
+  async () => {
+    using world = await LSWorld.start();
+    const { wallet } = await createAccounts(world);
+    await expect(
+      world.transfer({
+        sender: wallet,
+        receiver: wallet,
+        value: 0,
+        gasLimit: 0,
+      }),
+    ).rejects.toThrow("insufficient gas limit");
+  },
+);
 
 test.concurrent(
-  "LSWorld.doTransfers - invalid tx - cannot pay fee",
+  "LSWorld.doTransfers - invalid tx - gasLimit too low",
   async () => {
-    using world = await LSWorld.start({ gasPrice: 1_000_000 });
-    const wallet = await world.createWallet();
+    using world = await LSWorld.start();
+    const { wallet } = await createAccounts(world);
     await expect(
       world.doTransfers([
         {
           sender: wallet,
           receiver: wallet,
           value: 0,
-          gasLimit: 100_000,
+          gasLimit: 0,
         },
       ]),
     ).rejects.toThrow(

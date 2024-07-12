@@ -436,36 +436,36 @@ test.concurrent("FSWorld.transfer", async () => {
   });
 });
 
-test.todo.concurrent(
-  "FSWorld.transfer - invalid tx - cannot pay fee",
+test.concurrent(
+  "FSWorld.transfer - invalid tx - gasLimit too low",
   async () => {
     using world = await FSWorld.start();
-    const wallet = await world.createWallet();
+    const { wallet } = await createAccounts(world);
     await expect(
       world.transfer({
         sender: wallet,
         receiver: wallet,
         value: 0,
-        gasLimit: 100_000,
+        gasLimit: 0,
       }),
     ).rejects.toThrow(
-      `insufficient funds for address ${(await wallet.getAccount()).address}`,
+      "transaction generation failed: insufficient gas limit in tx",
     );
   },
 );
 
-test.todo.concurrent(
-  "FSWorld.doTransfers - invalid tx - cannot pay fee",
+test.concurrent(
+  "FSWorld.doTransfers - invalid tx - gasLimit too low",
   async () => {
     using world = await FSWorld.start();
-    const wallet = await world.createWallet();
+    const { wallet } = await createAccounts(world);
     await expect(
       world.doTransfers([
         {
           sender: wallet,
           receiver: wallet,
           value: 0,
-          gasLimit: 100_000,
+          gasLimit: 0,
         },
       ]),
     ).rejects.toThrow(
