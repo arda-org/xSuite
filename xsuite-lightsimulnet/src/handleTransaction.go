@@ -39,7 +39,6 @@ func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
 	return jOutput, nil
 }
 
-
 func (e *Executor) HandleTransactionSendMultiple(r *http.Request) (interface{}, error) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var rawTxs []RawTx
@@ -101,6 +100,9 @@ func (e *Executor) executeTx(txHash string, rawTx RawTx) (error) {
 	}
 	if rawTx.Version != 1 {
 		return errors.New("invalid version")
+	}
+	if rawTx.GasLimit < 50_000 {
+		return errors.New("insufficient gas limit")
 	}
 	tx := &model.TxStep{
 		Tx: &model.Transaction{
