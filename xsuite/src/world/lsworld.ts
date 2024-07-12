@@ -1,12 +1,11 @@
-import { ChildProcess } from "node:child_process";
+import { ChildProcess, spawn } from "node:child_process";
+import { lsproxyBinaryPath } from "@xsuite/light-simulnet";
 import { fullU8AAddress } from "../data/address";
 import { AddressLike, isAddressLike } from "../data/addressLike";
 import { EncodableAccount } from "../data/encoding";
 import { Prettify, Replace } from "../helpers";
 import { LSProxy } from "../proxy";
 import { Block } from "../proxy/lsproxy";
-import { killChildProcess } from "./childProcesses";
-import { startLsproxyBin } from "./lsproxyBin";
 import { DummySigner, Signer } from "./signer";
 import { AddressLikeParams, createAddressLike } from "./utils";
 import {
@@ -69,8 +68,37 @@ export class LSWorld extends World {
   static async start({
     gasPrice,
     explorerUrl,
-  }: { gasPrice?: number; explorerUrl?: string } = {}): Promise<LSWorld> {
-    const { server, proxyUrl } = await startLsproxyBin();
+    binaryPath,
+    binaryPort,
+  }: {
+    gasPrice?: number;
+    explorerUrl?: string;
+    binaryPath?: string;
+    binaryPort?: number;
+  } = {}): Promise<LSWorld> {
+    binaryPath ??= lsproxyBinaryPath;
+    binaryPort ??= 0;
+
+    const server = spawn(binaryPath, ["--server-port", `${binaryPort}`]);
+
+    server.stderr.on("data", (data: Buffer) => {
+      throw new Error(data.toString());
+    });
+
+    server.on("error", (error) => {
+      throw error;
+    });
+
+    const proxyUrl = await new Promise<string>((resolve) => {
+      server.stdout.on("data", (data: Buffer) => {
+        const addressRegex = /Server running on (http:\/\/[\w\d.:]+)/;
+        const match = data.toString().match(addressRegex);
+        if (match) {
+          resolve(match[1]);
+        }
+      });
+    });
+
     return LSWorld.new({ proxyUrl, gasPrice, explorerUrl, server });
   }
 
@@ -172,7 +200,7 @@ export class LSWorld extends World {
 
   terminate() {
     if (!this.server) throw new Error("No server defined.");
-    killChildProcess(this.server);
+    this.server.kill();
   }
 
   [Symbol.dispose]() {
