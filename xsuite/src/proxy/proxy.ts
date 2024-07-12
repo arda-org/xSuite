@@ -53,11 +53,18 @@ export class Proxy {
       rawTxs.push(await broadTxToRawTx(tx));
     }
     const res = await this.fetch("/transaction/send-multiple", rawTxs);
-    return getValuesInOrder(res.txsHashes) as string[];
+    const txsHashesSent = getValuesInOrder(res.txsHashes) as string[];
+    if (txsHashesSent.length !== rawTxs.length) {
+      throw new Error(
+        `Only ${txsHashesSent.length} of ${rawTxs.length} transactions were sent. The other ones were invalid.`,
+      );
+    }
+    return txsHashesSent;
   }
 
-  sendTx(tx: BroadTx) {
-    return this.sendTxs([tx]).then((r) => r[0]);
+  async sendTx(tx: BroadTx) {
+    const res = await this.fetch("/transaction/send", await broadTxToRawTx(tx));
+    return res.txHash as string;
   }
 
   sendTransfers(txs: TransferTx[]) {
@@ -65,7 +72,7 @@ export class Proxy {
   }
 
   sendTransfer(tx: TransferTx) {
-    return this.sendTransfers([tx]).then((r) => r[0]);
+    return this.sendTx(transferTxToTx(tx));
   }
 
   sendDeployContracts(txs: DeployContractTx[]) {
@@ -73,7 +80,7 @@ export class Proxy {
   }
 
   sendDeployContract(tx: DeployContractTx) {
-    return this.sendDeployContracts([tx]).then((r) => r[0]);
+    return this.sendTx(deployContractTxToTx(tx));
   }
 
   sendCallContracts(txs: CallContractTx[]) {
@@ -81,7 +88,7 @@ export class Proxy {
   }
 
   sendCallContract(tx: CallContractTx) {
-    return this.sendCallContracts([tx]).then((r) => r[0]);
+    return this.sendTx(callContractTxToTx(tx));
   }
 
   sendUpgradeContracts(txs: UpgradeContractTx[]) {
@@ -89,7 +96,7 @@ export class Proxy {
   }
 
   sendUpgradeContract(tx: UpgradeContractTx) {
-    return this.sendUpgradeContracts([tx]).then((r) => r[0]);
+    return this.sendTx(upgradeContractTxToTx(tx));
   }
 
   async awaitTx(txHash: string) {
@@ -182,8 +189,10 @@ export class Proxy {
     return this.resolveTxs(txHashes);
   }
 
-  executeTx(tx: BroadTx) {
-    return this.executeTxs([tx]).then((r) => r[0]);
+  async executeTx(tx: BroadTx) {
+    const txHash = await this.sendTx(tx);
+    await this.awaitTx(txHash);
+    return this.resolveTx(txHash);
   }
 
   async doTransfers(txs: TransferTx[]) {
@@ -192,8 +201,10 @@ export class Proxy {
     return this.resolveTransfers(txHashs);
   }
 
-  transfer(tx: TransferTx) {
-    return this.doTransfers([tx]).then((r) => r[0]);
+  async transfer(tx: TransferTx) {
+    const txHash = await this.sendTransfer(tx);
+    await this.awaitTx(txHash);
+    return this.resolveTransfer(txHash);
   }
 
   async deployContracts(txs: DeployContractTx[]) {
@@ -202,8 +213,10 @@ export class Proxy {
     return this.resolveDeployContracts(txHashes);
   }
 
-  deployContract(tx: DeployContractTx) {
-    return this.deployContracts([tx]).then((r) => r[0]);
+  async deployContract(tx: DeployContractTx) {
+    const txHash = await this.sendDeployContract(tx);
+    await this.awaitTx(txHash);
+    return this.resolveDeployContract(txHash);
   }
 
   async callContracts(txs: CallContractTx[]) {
@@ -212,8 +225,10 @@ export class Proxy {
     return this.resolveCallContracts(txHashes);
   }
 
-  callContract(tx: CallContractTx) {
-    return this.callContracts([tx]).then((r) => r[0]);
+  async callContract(tx: CallContractTx) {
+    const txHash = await this.sendCallContract(tx);
+    await this.awaitTx(txHash);
+    return this.resolveCallContract(txHash);
   }
 
   async upgradeContracts(txs: UpgradeContractTx[]) {
@@ -222,8 +237,10 @@ export class Proxy {
     return this.resolveUpgradeContracts(txHashes);
   }
 
-  upgradeContract(tx: UpgradeContractTx) {
-    return this.upgradeContracts([tx]).then((r) => r[0]);
+  async upgradeContract(tx: UpgradeContractTx) {
+    const txHash = await this.sendUpgradeContract(tx);
+    await this.awaitTx(txHash);
+    return this.resolveUpgradeContract(txHash);
   }
 
   async query(query: BroadQuery): Promise<QueryResult> {

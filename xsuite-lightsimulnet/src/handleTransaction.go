@@ -17,6 +17,28 @@ import (
 	worldmock "github.com/multiversx/mx-chain-scenario-go/worldmock"
 )
 
+func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
+	reqBody, _ := io.ReadAll(r.Body)
+	var rawTx RawTx
+	err := json.Unmarshal(reqBody, &rawTx)
+	if err != nil {
+		return nil, err
+	}
+	e.txCounter += 1
+	txHash := uint64ToString(e.txCounter)
+	err = e.executeTx(txHash, rawTx)
+	if err != nil {
+		return nil, err
+	}
+	jOutput := map[string]interface{}{
+		"data": map[string]interface{}{
+			"txHash": txHash,
+		},
+		"code": "successful",
+	}
+	return jOutput, nil
+}
+
 func (e *Executor) HandleTransactionSendMultiple(r *http.Request) (interface{}, error) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var rawTxs []RawTx
@@ -28,10 +50,9 @@ func (e *Executor) HandleTransactionSendMultiple(r *http.Request) (interface{}, 
 	for i, rawTx := range rawTxs {
 		e.txCounter += 1
 		txHash := uint64ToString(e.txCounter)
-		txsHashes[strconv.Itoa(i)] = txHash
 		err := e.executeTx(txHash, rawTx)
-		if err != nil {
-			return nil, err
+		if err == nil {
+			txsHashes[strconv.Itoa(i)] = txHash
 		}
 	}
 	jOutput := map[string]interface{}{
@@ -79,6 +100,9 @@ func (e *Executor) executeTx(txHash string, rawTx RawTx) (error) {
 	}
 	if rawTx.Version != 1 {
 		return errors.New("invalid version")
+	}
+	if rawTx.GasLimit < 50_000 {
+		return errors.New("insufficient gas limit")
 	}
 	tx := &model.TxStep{
 		Tx: &model.Transaction{

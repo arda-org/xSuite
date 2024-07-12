@@ -492,6 +492,42 @@ test.concurrent("LSWorld.transfer", async () => {
   });
 });
 
+test.concurrent(
+  "LSWorld.transfer - invalid tx - gasLimit too low",
+  async () => {
+    using world = await LSWorld.start();
+    const { wallet } = await createAccounts(world);
+    await expect(
+      world.transfer({
+        sender: wallet,
+        receiver: wallet,
+        value: 0,
+        gasLimit: 0,
+      }),
+    ).rejects.toThrow("insufficient gas limit");
+  },
+);
+
+test.concurrent(
+  "LSWorld.doTransfers - invalid tx - gasLimit too low",
+  async () => {
+    using world = await LSWorld.start();
+    const { wallet } = await createAccounts(world);
+    await expect(
+      world.doTransfers([
+        {
+          sender: wallet,
+          receiver: wallet,
+          value: 0,
+          gasLimit: 0,
+        },
+      ]),
+    ).rejects.toThrow(
+      "Only 0 of 1 transactions were sent. The other ones were invalid.",
+    );
+  },
+);
+
 test.concurrent("LSWorld.deployContract", async () => {
   using world = await LSWorld.start({ explorerUrl: baseExplorerUrl });
   const { wallet } = await createAccounts(world);

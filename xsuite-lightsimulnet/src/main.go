@@ -47,6 +47,11 @@ func main() {
 		respond(w, resBody, err)
 	})
 
+	router.Post("/transaction/send", func(w http.ResponseWriter, r *http.Request) {
+		resBody, err := executor.HandleTransactionSend(r)
+		respond(w, resBody, err)
+	})
+
 	router.Post("/transaction/send-multiple", func(w http.ResponseWriter, r *http.Request) {
 		resBody, err := executor.HandleTransactionSendMultiple(r)
 		respond(w, resBody, err)
