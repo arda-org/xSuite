@@ -51,10 +51,9 @@ func (e *Executor) HandleTransactionSendMultiple(r *http.Request) (interface{}, 
 	for i, rawTx := range rawTxs {
 		e.txCounter += 1
 		txHash := uint64ToString(e.txCounter)
-		txsHashes[strconv.Itoa(i)] = txHash
 		err := e.executeTx(txHash, rawTx)
-		if err != nil {
-			return nil, err
+		if err == nil {
+			txsHashes[strconv.Itoa(i)] = txHash
 		}
 	}
 	jOutput := map[string]interface{}{

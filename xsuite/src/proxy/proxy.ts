@@ -53,7 +53,13 @@ export class Proxy {
       rawTxs.push(await broadTxToRawTx(tx));
     }
     const res = await this.fetch("/transaction/send-multiple", rawTxs);
-    return getValuesInOrder(res.txsHashes) as string[];
+    const txsHashesSent = getValuesInOrder(res.txsHashes) as string[];
+    if (txsHashesSent.length !== rawTxs.length) {
+      throw new Error(
+        `Only ${txsHashesSent.length} of ${rawTxs.length} transactions were sent. The other ones were invalid.`,
+      );
+    }
+    return txsHashesSent;
   }
 
   async sendTx(tx: BroadTx) {
