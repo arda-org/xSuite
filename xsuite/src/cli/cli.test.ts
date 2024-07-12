@@ -343,12 +343,12 @@ test.concurrent("install-rust", async () => {
 });
 
 test.concurrent(
-  "new --dir contract && build --locked && build -r && test-rust && test-scen",
+  "new contract && build --locked && build -r && test-rust && test-scen",
   async () => {
     using c = newContext();
 
     const dir = "contract";
-    await c.cmd(`new --dir ${dir}`);
+    await c.cmd(`new ${dir}`);
     expect(fs.readdirSync(c.cwd()).length).toEqual(1);
     const starterChalk = chalk.magenta("blank");
     const absDirPath = path.resolve(c.cwd(), dir);
@@ -431,12 +431,12 @@ test.concurrent(
 );
 
 test.concurrent(
-  "new --starter vested-transfers --dir contract --no-git --no-install",
+  "new contract --starter vested-transfers --no-git --no-install",
   async () => {
     using c = newContext();
     const starter = "vested-transfers";
     const dir = "contract";
-    await c.cmd(`new --starter ${starter} --dir ${dir} --no-git --no-install`);
+    await c.cmd(`new ${dir} --starter ${starter} --no-git --no-install`);
     expect(fs.readdirSync(c.cwd()).length).toEqual(1);
     const starterChalk = chalk.magenta(starter);
     const absDirPath = path.resolve(c.cwd(), dir);
@@ -466,11 +466,11 @@ test.concurrent(
   100_000,
 );
 
-test.concurrent("new --dir contract | error: already exists", async () => {
+test.concurrent("new contract | error: already exists", async () => {
   using c = newContext();
   const absDirPath = path.resolve(c.cwd(), "contract");
   fs.mkdirSync(absDirPath);
-  await c.cmd("new --dir contract");
+  await c.cmd("new contract");
   expect(c.flushStdout()).toEqual(
     chalk.red(`Directory already exists at "${absDirPath}".`) + "\n",
   );

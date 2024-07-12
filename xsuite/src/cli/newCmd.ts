@@ -11,30 +11,53 @@ import {
   logCommand,
   logError,
   downloadArchive,
+  logWarning,
 } from "./helpers";
 
 export const addNewCmd = (cmd: Command) => {
   cmd
     .command("new")
     .description("Create a new blank contract.")
-    .requiredOption("--dir <DIR>", "Contract dir")
+    .argument("[DIR]", "Contract dir")
+    .option("--dir <DIR>", "[DEPRECATED] Contract dir")
     .option("--starter <STARTER>", "Contract to start from")
     .option("--no-install", "Skip package installation")
     .option("--no-git", "Skip git initialization")
     .action(action);
 };
 
-const action = async ({
-  dir: dirPath,
-  starter = "blank",
-  install,
-  git,
-}: {
-  dir: string;
-  starter?: string;
-  install?: boolean;
-  git?: boolean;
-}) => {
+const action = async (
+  dirArgument: string | undefined,
+  {
+    dir: dirOption,
+    starter = "blank",
+    install,
+    git,
+  }: {
+    dir?: string;
+    starter?: string;
+    install?: boolean;
+    git?: boolean;
+  },
+) => {
+  let dirPath: string;
+  if (dirArgument !== undefined) {
+    if (dirOption !== undefined) {
+      logError(
+        "Cannot use both the DIR argument and the --dir option. You should use only the DIR argument as the --dir option is deprecated.",
+      );
+      return;
+    }
+    dirPath = dirArgument;
+  } else if (dirOption !== undefined) {
+    logWarning(
+      "The --dir option is deprecated, you should use the DIR argument instead.",
+    );
+    dirPath = dirOption;
+  } else {
+    logError("The DIR argument is required.");
+    return;
+  }
   const absDirPath = path.resolve(cwd(), dirPath);
   if (fs.existsSync(absDirPath)) {
     logError(`Directory already exists at "${absDirPath}".`);

@@ -2,12 +2,16 @@ import fs from "node:fs";
 import path from "node:path";
 import { Command } from "commander";
 import { cwd, log } from "../context";
-import { logTitle, logAndRunCommand, logError } from "./helpers";
+import { logTitle, logAndRunCommand, logError, logWarning } from "./helpers";
 
 export const addBuildCmd = (cmd: Command) => {
   cmd
     .command("build")
     .description("Build contract.")
+    .argument(
+      "[DIR]",
+      "Directory in which the command is executed (default: $(PWD))",
+    )
     .option(
       "--ignore <IGNORE>",
       `Ignore all directories matching the RegExp (default: ${defaultIgnore})`,
@@ -18,7 +22,7 @@ export const addBuildCmd = (cmd: Command) => {
     )
     .option(
       "--dir <DIR>",
-      "Directory in which the command is executed (default: $(PWD))",
+      "[DEPRECATED] Directory in which the command is executed (default: $(PWD))",
     )
     .option("-r, --recursive", "Build all contracts under the directory")
     .option(
@@ -28,20 +32,39 @@ export const addBuildCmd = (cmd: Command) => {
     .action(action);
 };
 
-const action = ({
-  ignore,
-  locked,
-  dir,
-  recursive,
-  targetDir,
-}: {
-  ignore?: string;
-  locked?: boolean;
-  dir?: string;
-  recursive?: boolean;
-  targetDir?: string;
-}) => {
-  dir = dir ?? cwd();
+const action = (
+  dirArgument: string | undefined,
+  {
+    ignore,
+    locked,
+    dir: dirOption,
+    recursive,
+    targetDir,
+  }: {
+    ignore?: string;
+    locked?: boolean;
+    dir?: string;
+    recursive?: boolean;
+    targetDir?: string;
+  },
+) => {
+  let dir: string;
+  if (dirArgument !== undefined) {
+    if (dirOption !== undefined) {
+      logError(
+        "Cannot use both the DIR argument and the --dir option. You should use only the DIR argument as the --dir option is deprecated.",
+      );
+      return;
+    }
+    dir = dirArgument;
+  } else if (dirOption !== undefined) {
+    logWarning(
+      "The --dir option is deprecated, you should use the DIR argument instead.",
+    );
+    dir = dirOption;
+  } else {
+    dir = cwd();
+  }
   targetDir = targetDir ?? path.resolve(cwd(), "target");
   const dirs: string[] = [];
   if (recursive) {
