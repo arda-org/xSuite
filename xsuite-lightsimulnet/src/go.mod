@@ -8,7 +8,7 @@ require (
 	github.com/multiversx/mx-chain-logger-go v1.0.14
 	github.com/multiversx/mx-chain-scenario-go v1.4.4-0.20240708183543-61f6e1880d1d
 	github.com/multiversx/mx-chain-vm-common-go v1.5.12
-	github.com/multiversx/mx-chain-vm-go v1.5.29
+	github.com/multiversx/mx-chain-vm-go v1.5.30-0.20240713084912-93532045748c
 )
 
 require (
