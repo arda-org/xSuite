@@ -88,6 +88,8 @@ github.com/multiversx/mx-chain-vm-common-go v1.5.12 h1:Q8F6DE7XhgHtWgg2rozSv4Tv5
 github.com/multiversx/mx-chain-vm-common-go v1.5.12/go.mod h1:Sv6iS1okB6gy3HAsW6KHYtAxShNAfepKLtu//AURI8c=
 github.com/multiversx/mx-chain-vm-go v1.5.29 h1:Ovz5/WM9KbD3YKRafdKI4RwtsNN36AGeNw81LZAhE70=
 github.com/multiversx/mx-chain-vm-go v1.5.29/go.mod h1:n0SbVEAhIflreAGi7BnfWg4p4VHh4G8ArbvYQZsZsKQ=
+github.com/multiversx/mx-chain-vm-go v1.5.30-0.20240713084912-93532045748c h1:Cj4smHBKeHB346IeRFcEVIMsoxeT80HEn3zIMruEY+I=
+github.com/multiversx/mx-chain-vm-go v1.5.30-0.20240713084912-93532045748c/go.mod h1:n0SbVEAhIflreAGi7BnfWg4p4VHh4G8ArbvYQZsZsKQ=
 github.com/multiversx/mx-components-big-int v1.0.0 h1:Wkr8lSzK2nDqixOrrBa47VNuqdhV1m/aJhaP1EMaiS8=
 github.com/multiversx/mx-components-big-int v1.0.0/go.mod h1:maIEMgHlNE2u78JaDD0oLzri+ShgU4okHfzP3LWGdQM=
 github.com/nxadm/tail v1.4.4/go.mod h1:kenIhsEOeOJmVchQTgglprH7qJGnHDVpk1VPCcaMI8A=
