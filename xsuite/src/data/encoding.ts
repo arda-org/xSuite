@@ -238,7 +238,7 @@ export const e = {
       account.code = encodableAccount.code;
     }
     if (encodableAccount.codeHash !== undefined) {
-      account.codeHash = eCodeMetadata(encodableAccount.codeHash);
+      account.codeHash = encodableAccount.codeHash;
     }
     if (encodableAccount.codeMetadata !== undefined) {
       account.codeMetadata = eCodeMetadata(encodableAccount.codeMetadata);
