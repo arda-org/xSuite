@@ -30,6 +30,18 @@ test.concurrent("FSWorld.start - port 3000", async () => {
   expect(world.proxy.proxyUrl).toEqual("http://localhost:3000");
 });
 
+test.concurrent("FSWorld.start - epoch, round, blockNonce", async () => {
+  const epoch = 12;
+  const round = 34;
+  const blockNonce = 56;
+  using world = await FSWorld.start({ epoch, round, blockNonce });
+  expect(await world.proxy.getNetworkStatus(0)).toMatchObject({
+    epoch,
+    round,
+    nonce: blockNonce,
+  });
+});
+
 test.concurrent(
   "FSWorld.proxy.getAccountNonce on empty bech address",
   async () => {

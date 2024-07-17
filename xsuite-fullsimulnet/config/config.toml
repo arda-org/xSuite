@@ -21,8 +21,8 @@
     [config.logs]
         log-file-life-span-in-mb = 1024 # 1GB
         log-file-life-span-in-sec = 432000 # 5 days
-        log-file-prefix = "chain-simulator"
-        logs-path = "logs"
+        log-file-prefix = "fsproxy"
+        logs-path = ""
     [config.blocks-generator]
         # auto-generate-blocks specifies if the chain simulator should auto generate blocks
         auto-generate-blocks = false
