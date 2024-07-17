@@ -72,6 +72,12 @@ export class FSWorld extends World {
     nodeOverrideConfigPath,
     nodeOverrideConfigPaths,
     downloadConfigs,
+    epoch,
+    round,
+    blockNonce,
+    saveLogs,
+    logsLevel,
+    logsPath,
   }: {
     gasPrice?: number;
     explorerUrl?: string;
@@ -83,6 +89,12 @@ export class FSWorld extends World {
     nodeOverrideConfigPath?: string;
     nodeOverrideConfigPaths?: string[];
     downloadConfigs?: boolean;
+    epoch?: number;
+    round?: number;
+    blockNonce?: number;
+    saveLogs?: boolean;
+    logsLevel?: string;
+    logsPath?: string;
   } = {}): Promise<FSWorld> {
     binaryPath ??= fsproxyBinaryPath;
     binaryPort ??= 0;
@@ -96,6 +108,8 @@ export class FSWorld extends World {
     if (nodeOverrideConfigPath !== undefined) {
       nodeOverrideConfigPaths.push(nodeOverrideConfigPath);
     }
+    logsLevel ??= "*:INFO,vm:TRACE";
+    logsPath ??= "fsproxy-logs";
 
     const args: string[] = [
       "--server-port",
@@ -112,6 +126,24 @@ export class FSWorld extends World {
     }
     if (!downloadConfigs) {
       args.push("--skip-configs-download");
+    }
+    if (epoch !== undefined) {
+      args.push("--initial-epoch", `${epoch}`);
+    }
+    if (round !== undefined) {
+      args.push("--initial-round", `${round - 1}`);
+    }
+    if (blockNonce !== undefined) {
+      args.push("--initial-nonce", `${blockNonce - 1}`);
+    }
+    if (saveLogs) {
+      args.push(
+        "-log-save",
+        "-log-level",
+        logsLevel,
+        "--path-log-save",
+        logsPath,
+      );
     }
     const server = spawn(binaryPath, args);
 
