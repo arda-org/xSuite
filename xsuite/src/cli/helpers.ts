@@ -18,6 +18,8 @@ export const logSuccess = (text: string) => log(chalk.green(text));
 
 export const logError = (text: string) => log(chalk.red(text));
 
+export const logWarning = (text: string) => log(chalk.yellow(text));
+
 export const logAndRunCommand = (
   command: string,
   args: string[],

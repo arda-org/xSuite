@@ -25,6 +25,11 @@ const emptyAccount = {
 };
 const baseExplorerUrl = "http://explorer.local";
 
+test.concurrent("LSWorld.start - port 3000", async () => {
+  using world = await LSWorld.start({ binaryPort: 3000 });
+  expect(world.proxy.proxyUrl).toEqual("http://127.0.0.1:3000");
+});
+
 test.concurrent(
   "LSWorld.proxy.getAccountNonce on empty bech address",
   async () => {
@@ -486,6 +491,42 @@ test.concurrent("LSWorld.transfer", async () => {
     balance: 10n ** 17n,
   });
 });
+
+test.concurrent(
+  "LSWorld.transfer - invalid tx - gasLimit too low",
+  async () => {
+    using world = await LSWorld.start();
+    const { wallet } = await createAccounts(world);
+    await expect(
+      world.transfer({
+        sender: wallet,
+        receiver: wallet,
+        value: 0,
+        gasLimit: 0,
+      }),
+    ).rejects.toThrow("insufficient gas limit");
+  },
+);
+
+test.concurrent(
+  "LSWorld.doTransfers - invalid tx - gasLimit too low",
+  async () => {
+    using world = await LSWorld.start();
+    const { wallet } = await createAccounts(world);
+    await expect(
+      world.doTransfers([
+        {
+          sender: wallet,
+          receiver: wallet,
+          value: 0,
+          gasLimit: 0,
+        },
+      ]),
+    ).rejects.toThrow(
+      "Only 0 of 1 transactions were sent. The other ones were invalid.",
+    );
+  },
+);
 
 test.concurrent("LSWorld.deployContract", async () => {
   using world = await LSWorld.start({ explorerUrl: baseExplorerUrl });

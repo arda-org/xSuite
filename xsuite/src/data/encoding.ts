@@ -238,7 +238,7 @@ export const e = {
       account.code = encodableAccount.code;
     }
     if (encodableAccount.codeHash !== undefined) {
-      account.codeHash = eCodeMetadata(encodableAccount.codeHash);
+      account.codeHash = encodableAccount.codeHash;
     }
     if (encodableAccount.codeMetadata !== undefined) {
       account.codeMetadata = eCodeMetadata(encodableAccount.codeMetadata);
@@ -521,8 +521,8 @@ const eKvsEsdt = ({ id, roles, lastNonce, ...rest }: EncodableEsdt): Kvs => {
       }
       if (metadata.length > 0) {
         metadata.push(["Nonce", nonce.toString()]);
-        message["Properties"] = new Uint8Array([1]);
         message["Metadata"] = Object.fromEntries(metadata);
+        message["Reserved"] = new Uint8Array([1]);
       }
     } else {
       for (const [k, v] of Object.entries(rest)) {

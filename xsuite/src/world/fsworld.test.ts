@@ -25,6 +25,23 @@ const emptyAccount = {
 };
 const baseExplorerUrl = "http://explorer.local";
 
+test.concurrent("FSWorld.start - port 3000", async () => {
+  using world = await FSWorld.start({ binaryPort: 3000 });
+  expect(world.proxy.proxyUrl).toEqual("http://localhost:3000");
+});
+
+test.concurrent("FSWorld.start - epoch, round, blockNonce", async () => {
+  const epoch = 12;
+  const round = 34;
+  const blockNonce = 56;
+  using world = await FSWorld.start({ epoch, round, blockNonce });
+  expect(await world.proxy.getNetworkStatus(0)).toMatchObject({
+    epoch,
+    round,
+    nonce: blockNonce,
+  });
+});
+
 test.concurrent(
   "FSWorld.proxy.getAccountNonce on empty bech address",
   async () => {
@@ -435,6 +452,44 @@ test.concurrent("FSWorld.transfer", async () => {
     balance: 10n ** 17n,
   });
 });
+
+test.concurrent(
+  "FSWorld.transfer - invalid tx - gasLimit too low",
+  async () => {
+    using world = await FSWorld.start();
+    const { wallet } = await createAccounts(world);
+    await expect(
+      world.transfer({
+        sender: wallet,
+        receiver: wallet,
+        value: 0,
+        gasLimit: 0,
+      }),
+    ).rejects.toThrow(
+      "transaction generation failed: insufficient gas limit in tx",
+    );
+  },
+);
+
+test.concurrent(
+  "FSWorld.doTransfers - invalid tx - gasLimit too low",
+  async () => {
+    using world = await FSWorld.start();
+    const { wallet } = await createAccounts(world);
+    await expect(
+      world.doTransfers([
+        {
+          sender: wallet,
+          receiver: wallet,
+          value: 0,
+          gasLimit: 0,
+        },
+      ]),
+    ).rejects.toThrow(
+      "Only 0 of 1 transactions were sent. The other ones were invalid.",
+    );
+  },
+);
 
 test.concurrent("FSWorld.deployContract", async () => {
   using world = await FSWorld.start({ explorerUrl: baseExplorerUrl });
