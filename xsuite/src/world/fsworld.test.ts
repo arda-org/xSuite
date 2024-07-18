@@ -23,6 +23,10 @@ const emptyAccount = {
   owner: "",
   kvs: {},
 };
+const dummyContractProps = {
+  code: "00",
+  codeHash: "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314",
+};
 const baseExplorerUrl = "http://explorer.local";
 
 test.concurrent("FSWorld.start - port 3000", async () => {
@@ -303,7 +307,7 @@ test.concurrent("FSWorld.setAccount", async () => {
   await world.setAccount({
     address: contractAddress,
     balance: 1234,
-    code: worldCode,
+    code: dummyContractProps.code,
     codeMetadata: ["upgradeable"],
     kvs: [[e.Str("n"), e.U64(10)]],
     owner: walletAddress,
@@ -311,9 +315,8 @@ test.concurrent("FSWorld.setAccount", async () => {
   assertAccount(await world.getAccount(contractAddress), {
     address: contractAddress,
     balance: 1234,
-    code: worldCode,
-    codeHash:
-      "fbde44d539751cc120619685577ac3c62752339881863b250baee10fe4f0f1eb",
+    code: dummyContractProps.code,
+    codeHash: dummyContractProps.codeHash,
     codeMetadata: ["upgradeable"],
     kvs: [[e.Str("n"), e.U64(10)]],
     owner: walletAddress,
@@ -966,13 +969,14 @@ test.concurrent("FSContract.getAccountWithoutKvs", async () => {
 
 test.concurrent("FSContract.getAccount", async () => {
   using world = await FSWorld.start();
-  const { wallet, contract } = await createAccounts(world);
+  const { wallet, contract } = await createAccounts(world, {
+    withDummyContract: true,
+  });
   assertAccount(await contract.getAccount(), {
     nonce: 0,
     balance: 10n ** 18n,
-    code: worldCode,
-    codeHash:
-      "fbde44d539751cc120619685577ac3c62752339881863b250baee10fe4f0f1eb",
+    code: dummyContractProps.code,
+    codeHash: dummyContractProps.codeHash,
     codeMetadata: ["readable"],
     owner: wallet,
     hasKvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
@@ -998,7 +1002,10 @@ test.concurrent("FSContract.query", async () => {
   assertVs(returnData, [e.U64(20n)]);
 });
 
-const createAccounts = async (world: FSWorld) => {
+const createAccounts = async (
+  world: FSWorld,
+  options: { withDummyContract?: boolean } = {},
+) => {
   const [wallet, wallet2, wallet3] = await world.createWallets([
     {
       address: { shard: 1 },
@@ -1010,7 +1017,7 @@ const createAccounts = async (world: FSWorld) => {
   ]);
   const contract = await wallet.createContract({
     balance: 10n ** 18n,
-    code: worldCode,
+    code: options.withDummyContract ? dummyContractProps.code : worldCode,
     codeMetadata: ["readable"],
     kvs: {
       esdts: [{ id: fftId, amount: 10n ** 18n }],

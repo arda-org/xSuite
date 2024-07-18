@@ -1,6 +1,5 @@
 import { expect, test, beforeAll, afterAll } from "vitest";
 import { LSWorld, LSContract, LSWallet } from "../world";
-import { readFileHex } from "../world/utils";
 import { Account } from "./account";
 import { zeroBechAddress, zeroHexAddress, zeroU8AAddress } from "./address";
 import { EncodableMapper, eKvsUnfiltered } from "./encoding";
@@ -19,6 +18,10 @@ const sft3Id = "SFT3-abcdef";
 let walletState: Account;
 let complexContractState: Account;
 let complexSysAccState: Account;
+const dummyContractProps = {
+  code: "00",
+  codeHash: "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314",
+};
 
 const range = (start: number, end: number) => {
   const output = [];
@@ -159,6 +162,8 @@ beforeAll(async () => {
     gasLimit: 10_000_000,
   });
   complexContractState = await contract.getSerializableAccount();
+  complexContractState.code = dummyContractProps.code;
+  complexContractState.codeHash = dummyContractProps.codeHash;
   complexSysAccState = await world.sysAcc.getSerializableAccount();
 });
 
@@ -820,9 +825,8 @@ test("e.account", async () => {
       address: contract,
       nonce: 0,
       balance: 10,
-      code: readFileHex("contracts/data/output/data.wasm"),
-      codeHash:
-        "4b580fff10fb09e1641bc639d01d128224f9c7207fcf11ed7ecd2cd0b045a35f",
+      code: dummyContractProps.code,
+      codeHash: dummyContractProps.codeHash,
       codeMetadata: ["readable", "upgradeable"],
       kvs: complexContractState.kvs,
       owner: wallet,
@@ -1348,9 +1352,8 @@ test("d.account", () => {
     address: contract,
     nonce: 0,
     balance: 10n,
-    code: readFileHex("contracts/data/output/data.wasm"),
-    codeHash:
-      "4b580fff10fb09e1641bc639d01d128224f9c7207fcf11ed7ecd2cd0b045a35f",
+    code: dummyContractProps.code,
+    codeHash: dummyContractProps.codeHash,
     codeMetadata: ["upgradeable", "readable"],
     kvs: expect.anything(),
     owner: wallet,
