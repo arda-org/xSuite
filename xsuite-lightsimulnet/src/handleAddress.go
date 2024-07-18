@@ -61,6 +61,28 @@ func (e *Executor) HandleAddressBalance(r *http.Request) (interface{}, error) {
 	return jData, nil
 }
 
+func (e *Executor) HandleAddressKey(r *http.Request) (interface{}, error) {
+	bechAddress := chi.URLParam(r, "address")
+	address, err := bech32Decode(bechAddress)
+	if err != nil {
+		return nil, err
+	}
+	key := chi.URLParam(r, "key")
+	_, err = hex.DecodeString(key)
+	if err != nil {
+		return nil, err
+	}
+	worldAccount := e.getWorldAccount(address)
+	value := e.getAccountValueData(worldAccount, key)
+	jData := map[string]interface{}{
+		"data": map[string]interface{}{
+			"value": value,
+		},
+		"code": "successful",
+	}
+	return jData, nil
+}
+
 func (e *Executor) HandleAddressKeys(r *http.Request) (interface{}, error) {
 	bechAddress := chi.URLParam(r, "address")
 	address, err := bech32Decode(bechAddress)
@@ -131,4 +153,13 @@ func (e *Executor) getAccountKvsData(worldAccount *worldmock.Account) interface{
 		}
 	}
 	return data
+}
+
+func (e *Executor) getAccountValueData(worldAccount *worldmock.Account, key string) string {
+	for k, v := range worldAccount.Storage {
+		if hex.EncodeToString([]byte(k)) == key {
+			return hex.EncodeToString(v)
+		}
+	}
+	return ""
 }
