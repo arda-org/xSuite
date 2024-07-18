@@ -463,6 +463,10 @@ export class Contract extends Account {
     return this.world.getAccountBalance(this);
   }
 
+  getAccountValue(key: string) {
+    return this.world.getAccountValue(this, key);
+  }
+
   getAccountKvs() {
     return this.world.getAccountKvs(this);
   }
