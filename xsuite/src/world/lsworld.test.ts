@@ -211,6 +211,30 @@ test.concurrent("LSWorld.getAccountBalance", async () => {
   expect(await world.getAccountBalance(wallet)).toEqual(1234n);
 });
 
+test.concurrent("LSWorld.getAccountValue - Invalid key", async () => {
+  using world = await LSWorld.start();
+  const wallet = await world.createWallet({ kvs: [[e.Str("n"), e.U(1)]] });
+  await expect(world.getAccountValue(wallet, "n")).rejects.toThrow(
+    "invalid byte",
+  );
+});
+
+test.concurrent("LSWorld.getAccountValue - Non-existent key", async () => {
+  using world = await LSWorld.start();
+  const wallet = await world.createWallet();
+  expect(await world.getAccountValue(wallet, e.Str("n").toTopHex())).toEqual(
+    "",
+  );
+});
+
+test.concurrent("LSWorld.getAccountValue", async () => {
+  using world = await LSWorld.start();
+  const wallet = await world.createWallet({ kvs: [[e.Str("n"), e.U(1)]] });
+  expect(await world.getAccountValue(wallet, e.Str("n").toTopHex())).toEqual(
+    e.U(1).toTopHex(),
+  );
+});
+
 test.concurrent("LSWorld.getAccountKvs", async () => {
   using world = await LSWorld.start();
   const wallet = await world.createWallet({ kvs: [[e.Str("n"), e.U(1)]] });
@@ -681,6 +705,15 @@ test.concurrent("LSWallet.getAccountBalance", async () => {
   expect(await wallet.getAccountBalance()).toEqual(10n ** 18n);
 });
 
+test.concurrent("LSWallet.getAccountValue", async () => {
+  using world = await LSWorld.start();
+  const { wallet } = await createAccounts(world);
+  const expectedKvs = e.kvs({ esdts: [{ id: fftId, amount: 10n ** 18n }] });
+  expect(await wallet.getAccountValue(Object.keys(expectedKvs)[0])).toEqual(
+    Object.values(expectedKvs)[0],
+  );
+});
+
 test.concurrent("LSWallet.getAccountKvs", async () => {
   using world = await LSWorld.start();
   const { wallet } = await createAccounts(world);
@@ -979,6 +1012,18 @@ test.concurrent("LSContract.getAccountBalance", async () => {
   using world = await LSWorld.start();
   const { contract } = await createAccounts(world);
   expect(await contract.getAccountBalance()).toEqual(10n ** 18n);
+});
+
+test.concurrent("LSContract.getAccountValue", async () => {
+  using world = await LSWorld.start();
+  const { contract } = await createAccounts(world);
+  const expectedKvs = e.kvs({
+    esdts: [{ id: fftId, amount: 10n ** 18n }],
+    extraKvs: [[e.Str("n"), e.U64(2)]],
+  });
+  for (const [k, v] of Object.entries(expectedKvs)) {
+    expect(await contract.getAccountValue(k)).toEqual(v);
+  }
 });
 
 test.concurrent("LSContract.getAccountKvs", async () => {
