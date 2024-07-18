@@ -1,2 +1,6 @@
 */output/*
-!*/output/*.wasm
+/output-reproducible/*.json
+/output-reproducible/**/*.abi.json
+/output-reproducible/**/*.imports.json
+/output-reproducible/**/*.mxsc.json
+/output-reproducible/**/*.txt

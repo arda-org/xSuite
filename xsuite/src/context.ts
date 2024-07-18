@@ -11,10 +11,15 @@ const defaultCwd = () => process.cwd();
 
 export const readHidden = (s: string) => {
   const ctx = contextStorage.getStore();
-  return ctx ? ctx.readHidden(s) : defaultReadHidden(s);
+  return ctx ? ctx.readHidden(s) : defaultRead(s, true);
 };
 
-const defaultReadHidden = (p: string) => {
+export const readVisible = (s: string) => {
+  const ctx = contextStorage.getStore();
+  return ctx ? ctx.readHidden(s) : defaultRead(s, false);
+};
+
+const defaultRead = (p: string, hidden: boolean) => {
   const muted = { v: false };
 
   const mutableStdout = new Writable({
@@ -35,10 +40,12 @@ const defaultReadHidden = (p: string) => {
   return new Promise<string>((resolve) => {
     rl.question(p, function (password) {
       rl.close();
-      process.stdout.write("\n");
+      if (hidden) {
+        process.stdout.write("\n");
+      }
       resolve(password);
     });
-    muted.v = true;
+    muted.v = hidden;
   });
 };
 

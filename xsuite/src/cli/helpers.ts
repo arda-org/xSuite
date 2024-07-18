@@ -8,7 +8,7 @@ import path from "node:path";
 import { Readable } from "node:stream";
 import { finished } from "node:stream/promises";
 import chalk from "chalk";
-import { cwd, log } from "../context";
+import { cwd, log, readVisible } from "../context";
 
 export const logTitle = (title: string) => log(chalk.blue(title));
 
@@ -55,3 +55,79 @@ export const defaultRustToolchain = "1.79.0";
 export const rustTarget = "wasm32-unknown-unknown";
 
 export const rustKey = `${defaultRustToolchain}-${rustTarget}`;
+
+export const regExpSmartContractAddress = /^erd[a-zA-Z0-9]{59}$/;
+
+export const getUid = () => {
+  return process.getuid ? process.getuid() : undefined;
+};
+
+export const getGid = () => {
+  return process.getgid ? process.getgid() : undefined;
+};
+
+export const promptUserWithRetry = async (
+  question: string,
+  defaultAnswer: string | undefined,
+  regex: RegExp,
+  invalidInputText?: string,
+): Promise<string> => {
+  invalidInputText ??= "Invalid input! Please try again.";
+
+  let isValid = false;
+  while (!isValid) {
+    const userInput = await promptUser(question, defaultAnswer);
+    isValid = regex.test(userInput ?? "");
+    if (!isValid) {
+      logError(invalidInputText);
+    } else {
+      return userInput ?? "";
+    }
+  }
+
+  throw Error();
+};
+
+const promptUser = async (
+  question: string,
+  defaultAnswer?: string,
+): Promise<string | undefined> => {
+  const answer = await readVisible(question + " ");
+  let response = answer.length === 0 ? defaultAnswer : answer;
+  response = response?.trim();
+  return response;
+};
+
+export const readJsonFile = (filename: string | path.ParsedPath): any => {
+  const filePath =
+    typeof filename === "string" ? filename : path.format(filename);
+  const fileContent = fs.readFileSync(filePath, "utf-8");
+  return JSON.parse(fileContent);
+};
+
+export const findFileRecursive = (
+  directoryPath: string,
+  filePattern: RegExp,
+): string | null => {
+  const files = fs.readdirSync(directoryPath);
+
+  for (const file of files) {
+    const filePath = path.join(directoryPath, file);
+    const fileStat = fs.statSync(filePath);
+
+    if (fileStat.isDirectory()) {
+      const foundFilePath = findFileRecursive(filePath, filePattern);
+      if (foundFilePath) {
+        return foundFilePath;
+      }
+    } else if (filePattern.test(file)) {
+      return filePath;
+    }
+  }
+
+  return null;
+};
+
+export const delay = (ms: number) => {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+};

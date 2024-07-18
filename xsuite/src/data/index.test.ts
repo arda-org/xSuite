@@ -36,7 +36,7 @@ beforeAll(async () => {
   walletState = await wallet.getSerializableAccount();
   contract = await wallet.createContract({
     balance: 10n,
-    code: "file:contracts/data/output/data.wasm",
+    code: "file:contracts/output-reproducible/data/data.wasm",
     codeMetadata: ["readable", "upgradeable"],
     kvs: {
       esdts: [
@@ -821,7 +821,7 @@ test("e.account", async () => {
       address: contract,
       nonce: 0,
       balance: 10,
-      code: readFileHex("contracts/data/output/data.wasm"),
+      code: readFileHex("contracts/output-reproducible/data/data.wasm"),
       codeHash: "some code hash",
       codeMetadata: ["readable", "upgradeable"],
       kvs: complexContractState.kvs,
@@ -1348,7 +1348,7 @@ test("d.account", () => {
     address: contract,
     nonce: 0,
     balance: 10n,
-    code: readFileHex("contracts/data/output/data.wasm"),
+    code: readFileHex("contracts/output-reproducible/data/data.wasm"),
     codeHash: "some code hash",
     codeMetadata: ["upgradeable", "readable"],
     kvs: expect.anything(),

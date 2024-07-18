@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { Context, cwd, log, readHidden } from "./context";
+import { Context, cwd, log, readHidden, readVisible } from "./context";
 
 test("cwd inside context", () => {
   const ctx = new Context({ cwd: "/tmp" });
@@ -33,6 +33,17 @@ test("readHidden inside context", async () => {
   );
 });
 
+test("readVisible inside context", async () => {
+  const ctx = new Context();
+  ctx.input("test");
+  const result = await ctx.run(() => readVisible("Query: "));
+  expect(ctx.flushStdout()).toEqual("Query: \n");
+  expect(result).toEqual("test");
+  expect(() => ctx.run(() => readVisible("Query: "))).toThrow(
+    "Undefined input.",
+  );
+});
+
 test("readHidden outside context", async () => {
   const int = new StdoutInterceptor();
   process.nextTick(() => {
@@ -40,6 +51,16 @@ test("readHidden outside context", async () => {
   });
   const result = await readHidden("Query: ");
   expect(int.stdout).toEqual("\u001b[1G\u001b[0JQuery: \u001b[8G\n");
+  expect(result).toEqual("test");
+});
+
+test("readVisible outside context", async () => {
+  const int = new StdoutInterceptor();
+  process.nextTick(() => {
+    process.stdin.emit("data", "test\n");
+  });
+  const result = await readVisible("Query: ");
+  expect(int.stdout).toEqual("\u001b[1G\u001b[0JQuery: \u001b[8Gtest\r\n");
   expect(result).toEqual("test");
 });
 
