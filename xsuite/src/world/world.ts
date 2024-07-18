@@ -116,6 +116,10 @@ export class World {
     return this.proxy.getAccountBalance(address);
   }
 
+  getAccountValue(address: AddressLike, key: string) {
+    return this.proxy.getAccountValue(address, key);
+  }
+
   getAccountKvs(address: AddressLike) {
     return this.proxy.getAccountKvs(address);
   }
@@ -357,6 +361,10 @@ export class Wallet extends Signer {
 
   getAccountBalance() {
     return this.world.getAccountBalance(this);
+  }
+
+  getAccountValue(key: string) {
+    return this.world.getAccountValue(this, key);
   }
 
   getAccountKvs() {
