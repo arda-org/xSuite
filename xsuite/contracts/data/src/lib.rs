@@ -9,7 +9,9 @@ pub trait Data {
     fn init(&self) {}
 
     #[upgrade]
-    fn upgrade(&self) {}
+    fn upgrade(&self) {
+        self.init();
+    }
 
     #[endpoint]
     fn value_set(&self, entries: MultiValueEncoded<MultiValue2<ManagedBuffer, u64>>) {
@@ -30,7 +32,10 @@ pub trait Data {
     }
 
     #[endpoint]
-    fn unordered_set_insert(&self, entries: MultiValueEncoded<MultiValue2<u64, ManagedVec<BigUint>>>) {
+    fn unordered_set_insert(
+        &self,
+        entries: MultiValueEncoded<MultiValue2<u64, ManagedVec<BigUint>>>,
+    ) {
         for entry in entries {
             let (key, values) = entry.into_tuple();
             for value in values.into_iter() {
@@ -50,7 +55,10 @@ pub trait Data {
     }
 
     #[endpoint]
-    fn map_insert(&self, entries: MultiValueEncoded<MultiValue2<BigUint, ManagedVec<MapKeyValue<Self::Api>>>>) {
+    fn map_insert(
+        &self,
+        entries: MultiValueEncoded<MultiValue2<BigUint, ManagedVec<MapKeyValue<Self::Api>>>>,
+    ) {
         for entry in entries {
             let (key, items) = entry.into_tuple();
             for item in items.into_iter() {
@@ -60,7 +68,10 @@ pub trait Data {
     }
 
     #[endpoint]
-    fn user_create(&self, entries: MultiValueEncoded<MultiValue2<ManagedBuffer, ManagedVec<ManagedAddress>>>) {
+    fn user_create(
+        &self,
+        entries: MultiValueEncoded<MultiValue2<ManagedBuffer, ManagedVec<ManagedAddress>>>,
+    ) {
         for entry in entries {
             let (key, addresses) = entry.into_tuple();
             for address in addresses.into_iter() {
@@ -70,24 +81,33 @@ pub trait Data {
     }
 
     #[endpoint]
-    fn esdt_local_mint(
-        &self,
-        token_identifier: TokenIdentifier,
-        nonce: u64,
-        amount: BigUint,
-    ) {
-        self.send().esdt_local_mint(&token_identifier, nonce, &amount);
+    fn esdt_local_mint(&self, token_identifier: TokenIdentifier, nonce: u64, amount: BigUint) {
+        self.send()
+            .esdt_local_mint(&token_identifier, nonce, &amount);
     }
 
     #[endpoint]
     fn esdt_nft_create(
         &self,
-        tokens: MultiValueEncoded<MultiValue7<TokenIdentifier, BigUint, ManagedBuffer, BigUint, ManagedBuffer, ManagedBuffer, ManagedVec<ManagedBuffer>>>,
+        tokens: MultiValueEncoded<
+            MultiValue7<
+                TokenIdentifier,
+                BigUint,
+                ManagedBuffer,
+                BigUint,
+                ManagedBuffer,
+                ManagedBuffer,
+                ManagedVec<ManagedBuffer>,
+            >,
+        >,
     ) -> MultiValueEncoded<u64> {
         let mut nonces = MultiValueEncoded::new();
         for token in tokens {
             let t = token.into_tuple();
-            nonces.push(self.send().esdt_nft_create(&t.0, &t.1, &t.2, &t.3, &t.4, &t.5, &t.6));
+            nonces.push(
+                self.send()
+                    .esdt_nft_create(&t.0, &t.1, &t.2, &t.3, &t.4, &t.5, &t.6),
+            );
         }
         nonces
     }
@@ -106,13 +126,13 @@ pub trait Data {
     }
 
     #[endpoint]
-    fn direct_send(
-        &self,
-        token_identifier: TokenIdentifier,
-        nonce: u64,
-        amount: BigUint,
-    ) {
-        self.send().direct_esdt(&self.blockchain().get_caller(), &token_identifier, nonce, &amount);
+    fn direct_send(&self, token_identifier: TokenIdentifier, nonce: u64, amount: BigUint) {
+        self.send().direct_esdt(
+            &self.blockchain().get_caller(),
+            &token_identifier,
+            nonce,
+            &amount,
+        );
     }
 
     #[storage_mapper("value")]
