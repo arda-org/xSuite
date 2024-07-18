@@ -318,6 +318,19 @@ export class Proxy {
     return BigInt(res.balance);
   }
 
+  async getAccountValue(
+    address: AddressLike,
+    key: string,
+    { shardId }: GetAccountOptions = {},
+  ): Promise<string> {
+    const res = await this.fetch(
+      makePath(`/address/${addressLikeToBechAddress(address)}/key/${key}`, {
+        "forced-shard-id": shardId,
+      }),
+    );
+    return res.value;
+  }
+
   async getAccountKvs(
     address: AddressLike,
     { shardId }: GetAccountOptions = {},
