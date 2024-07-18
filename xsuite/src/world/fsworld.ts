@@ -64,109 +64,20 @@ export class FSWorld extends World {
   static async start({
     gasPrice,
     explorerUrl,
-    binaryPath,
-    binaryPort,
-    binaryConfigPath,
-    proxyConfigsPath,
-    nodeConfigsPath,
-    nodeOverrideConfigPath,
-    nodeOverrideConfigPaths,
-    downloadConfigs,
-    epoch,
-    round,
-    blockNonce,
-    saveLogs,
-    logsLevel,
-    logsPath,
+    ...proxyParams
   }: {
     gasPrice?: number;
     explorerUrl?: string;
-    binaryPath?: string;
-    binaryPort?: number;
-    binaryConfigPath?: string;
-    proxyConfigsPath?: string;
-    nodeConfigsPath?: string;
-    nodeOverrideConfigPath?: string;
-    nodeOverrideConfigPaths?: string[];
-    downloadConfigs?: boolean;
-    epoch?: number;
-    round?: number;
-    blockNonce?: number;
-    saveLogs?: boolean;
-    logsLevel?: string;
-    logsPath?: string;
-  } = {}): Promise<FSWorld> {
-    binaryPath ??= fsproxyBinaryPath;
-    binaryPort ??= 0;
-    binaryConfigPath ??= `${fsproxyConfigsPath}/config.toml`;
-    proxyConfigsPath ??= `${fsproxyConfigsPath}/proxy/config`;
-    nodeConfigsPath ??= `${fsproxyConfigsPath}/node/config`;
-    nodeOverrideConfigPaths ??= [
-      `${fsproxyConfigsPath}/nodeOverrideDefault.toml`,
-      `${fsproxyConfigsPath}/nodeOverride.toml`,
-    ];
-    if (nodeOverrideConfigPath !== undefined) {
-      nodeOverrideConfigPaths.push(nodeOverrideConfigPath);
-    }
-    logsLevel ??= "*:INFO,vm:TRACE";
-    logsPath ??= "fsproxy-logs";
-
-    const args: string[] = [
-      "--server-port",
-      `${binaryPort}`,
-      "--config",
-      binaryConfigPath,
-      "--proxy-configs",
-      proxyConfigsPath,
-      "--node-configs",
-      nodeConfigsPath,
-    ];
-    if (nodeOverrideConfigPaths.length > 0) {
-      args.push("--node-override-config", nodeOverrideConfigPaths.join(","));
-    }
-    if (!downloadConfigs) {
-      args.push("--skip-configs-download");
-    }
-    if (epoch !== undefined) {
-      args.push("--initial-epoch", `${epoch}`);
-    }
-    if (round !== undefined) {
-      args.push("--initial-round", `${round - 1}`);
-    }
-    if (blockNonce !== undefined) {
-      args.push("--initial-nonce", `${blockNonce - 1}`);
-    }
-    if (saveLogs) {
-      args.push(
-        "-log-save",
-        "-log-level",
-        logsLevel,
-        "--path-log-save",
-        logsPath,
-      );
-    }
-    const server = spawn(binaryPath, args);
-
-    server.stderr.on("data", (data: Buffer) => {
-      throw new Error(data.toString());
-    });
-
-    server.on("error", (error) => {
-      throw error;
-    });
-
-    const proxyUrl = await new Promise<string>((resolve) => {
-      server.stdout.on("data", (data: Buffer) => {
-        const addressRegex =
-          /chain simulator's is accessible through the URL ([\w\d.:]+)/;
-        const match = data.toString().match(addressRegex);
-        if (match) {
-          resolve(`http://${match[1]}`);
-        }
-      });
-    });
-
+  } & ProxyParams = {}): Promise<FSWorld> {
+    const { server, proxyUrl } = await startProxy(proxyParams);
     return FSWorld.new({ proxyUrl, gasPrice, explorerUrl, server });
+  }
+
+  async restartProxy(proxyParams: ProxyParams = {}) {
+    this.server?.kill();
+    const { proxyUrl, server } = await startProxy(proxyParams);
+    this.proxy.proxyUrl = proxyUrl;
+    this.server = server;
   }
 
   newWallet(addressOrSigner: AddressLike | Signer): FSWallet {
@@ -318,6 +229,95 @@ export class FSContract extends Contract {
   }
 }
 
+const startProxy = async ({
+  binaryPath,
+  binaryPort,
+  binaryConfigPath,
+  proxyConfigsPath,
+  nodeConfigsPath,
+  nodeOverrideConfigPath,
+  nodeOverrideConfigPaths,
+  downloadConfigs,
+  epoch,
+  round,
+  nonce,
+  saveLogs,
+  logsLevel,
+  logsPath,
+}: ProxyParams) => {
+  binaryPath ??= fsproxyBinaryPath;
+  binaryPort ??= 0;
+  binaryConfigPath ??= `${fsproxyConfigsPath}/config.toml`;
+  proxyConfigsPath ??= `${fsproxyConfigsPath}/proxy/config`;
+  nodeConfigsPath ??= `${fsproxyConfigsPath}/node/config`;
+  nodeOverrideConfigPaths ??= [
+    `${fsproxyConfigsPath}/nodeOverrideDefault.toml`,
+    `${fsproxyConfigsPath}/nodeOverride.toml`,
+  ];
+  if (nodeOverrideConfigPath !== undefined) {
+    nodeOverrideConfigPaths.push(nodeOverrideConfigPath);
+  }
+  logsLevel ??= "*:INFO,process:TRACE,vm:TRACE";
+  logsPath ??= "fsproxy-logs";
+
+  const args: string[] = [
+    "--server-port",
+    `${binaryPort}`,
+    "--config",
+    binaryConfigPath,
+    "--proxy-configs",
+    proxyConfigsPath,
+    "--node-configs",
+    nodeConfigsPath,
+  ];
+  if (nodeOverrideConfigPaths.length > 0) {
+    args.push("--node-override-config", nodeOverrideConfigPaths.join(","));
+  }
+  if (!downloadConfigs) {
+    args.push("--skip-configs-download");
+  }
+  if (epoch !== undefined) {
+    args.push("--initial-epoch", `${epoch}`);
+  }
+  if (round !== undefined) {
+    args.push("--initial-round", `${round - 1}`);
+  }
+  if (nonce !== undefined) {
+    args.push("--initial-nonce", `${nonce - 1}`);
+  }
+  if (saveLogs) {
+    args.push(
+      "-log-save",
+      "-log-level",
+      logsLevel,
+      "--path-log-save",
+      logsPath,
+    );
+  }
+  const server = spawn(binaryPath, args);
+
+  server.stderr.on("data", (data: Buffer) => {
+    throw new Error(data.toString());
+  });
+
+  server.on("error", (error) => {
+    throw error;
+  });
+
+  const proxyUrl = await new Promise<string>((resolve) => {
+    server.stdout.on("data", (data: Buffer) => {
+      const addressRegex =
+        /chain simulator's is accessible through the URL ([\w\d.:]+)/;
+      const match = data.toString().match(addressRegex);
+      if (match) {
+        resolve(`http://${match[1]}`);
+      }
+    });
+  });
+
+  return { proxyUrl, server };
+};
+
 type FSWorldNewOptions =
   | {
       chainId?: undefined;
@@ -343,3 +343,20 @@ type FSAccountSetAccountParams = Prettify<
 type FSWalletCreateContractParams = Prettify<
   Omit<FSWorldCreateAccountParams, "owner">
 >;
+
+type ProxyParams = {
+  binaryPath?: string;
+  binaryPort?: number;
+  binaryConfigPath?: string;
+  proxyConfigsPath?: string;
+  nodeConfigsPath?: string;
+  nodeOverrideConfigPath?: string;
+  nodeOverrideConfigPaths?: string[];
+  downloadConfigs?: boolean;
+  epoch?: number;
+  round?: number;
+  nonce?: number;
+  saveLogs?: boolean;
+  logsLevel?: string;
+  logsPath?: string;
+};
