@@ -525,6 +525,8 @@ const makePath = (
       if (first) {
         path += "?";
         first = false;
+      } else {
+        path += "&";
       }
       path += `${k}=${v}`;
     }
