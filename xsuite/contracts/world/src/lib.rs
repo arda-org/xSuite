@@ -6,7 +6,7 @@ multiversx_sc::imports!();
 pub trait World {
     #[init]
     fn init(&self, n: u64) {
-        self.n().set_if_empty(n);
+        self.n().set(n);
     }
 
     #[upgrade]
