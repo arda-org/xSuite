@@ -68,12 +68,12 @@ func (e *Executor) HandleAddressKey(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 	key := chi.URLParam(r, "key")
-	_, err = hex.DecodeString(key)
+	bytesKey, err := hex.DecodeString(key)
 	if err != nil {
 		return nil, err
 	}
 	worldAccount := e.getWorldAccount(address)
-	value := e.getAccountValueData(worldAccount, key)
+	value := e.getAccountValueData(worldAccount, bytesKey)
 	jData := map[string]interface{}{
 		"data": map[string]interface{}{
 			"value": value,
@@ -155,11 +155,7 @@ func (e *Executor) getAccountKvsData(worldAccount *worldmock.Account) interface{
 	return data
 }
 
-func (e *Executor) getAccountValueData(worldAccount *worldmock.Account, key string) string {
-	for k, v := range worldAccount.Storage {
-		if hex.EncodeToString([]byte(k)) == key {
-			return hex.EncodeToString(v)
-		}
-	}
-	return ""
+func (e *Executor) getAccountValueData(worldAccount *worldmock.Account, bytesKey []byte) string {
+	value := worldAccount.Storage[string(bytesKey)]
+	return hex.EncodeToString(value)
 }
