@@ -23,10 +23,6 @@ const emptyAccount = {
   owner: "",
   kvs: {},
 };
-const dummyContractProps = {
-  code: "00",
-  codeHash: "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314",
-};
 const baseExplorerUrl = "http://explorer.local";
 
 test.concurrent("LSWorld.start - port 3000", async () => {
@@ -239,8 +235,19 @@ test.concurrent("LSWorld.getAccount", async () => {
 
 test.concurrent("LSWorld.getAllSerializableAccounts", async () => {
   using world = await LSWorld.start();
-  const { wallet, wallet2, wallet3, contract } = await createAccounts(world, {
-    withDummyContract: true,
+  const wallet = await world.createWallet({
+    address: { shard: 1 },
+    balance: 10n ** 18n,
+    kvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
+  });
+  const contract = await wallet.createContract({
+    balance: 10n ** 18n,
+    code: "00",
+    codeMetadata: ["readable"],
+    kvs: {
+      esdts: [{ id: fftId, amount: 10n ** 18n }],
+      mappers: [{ key: "n", value: e.U64(2) }],
+    },
   });
   expect(await world.getAllSerializableAccounts()).toEqual(
     [
@@ -257,30 +264,11 @@ test.concurrent("LSWorld.getAllSerializableAccounts", async () => {
         owner: "",
       }),
       e.account({
-        address: wallet2,
-        balance: "0",
-        code: "",
-        codeHash: "",
-        codeMetadata: ["readable"],
-        kvs: {},
-        nonce: 0,
-        owner: "",
-      }),
-      e.account({
-        address: wallet3,
-        balance: "0",
-        code: "",
-        codeHash: "",
-        codeMetadata: ["readable"],
-        kvs: {},
-        nonce: 0,
-        owner: "",
-      }),
-      e.account({
         address: contract,
         balance: 10n ** 18n,
-        code: dummyContractProps.code,
-        codeHash: dummyContractProps.codeHash,
+        code: "00",
+        codeHash:
+          "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314",
         codeMetadata: ["readable"],
         kvs: {
           esdts: [{ id: fftId, amount: 10n ** 18n }],
@@ -338,7 +326,7 @@ test.concurrent("LSWorld.setAccount", async () => {
   await world.setAccount({
     address: contractAddress,
     balance: 1234,
-    code: dummyContractProps.code,
+    code: "00",
     codeMetadata: ["upgradeable"],
     kvs: [[e.Str("n"), e.U64(10)]],
     owner: walletAddress,
@@ -346,8 +334,9 @@ test.concurrent("LSWorld.setAccount", async () => {
   assertAccount(await world.getAccount(contractAddress), {
     address: contractAddress,
     balance: 1234,
-    code: dummyContractProps.code,
-    codeHash: dummyContractProps.codeHash,
+    code: "00",
+    codeHash:
+      "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314",
     codeMetadata: ["upgradeable"],
     kvs: [[e.Str("n"), e.U64(10)]],
     owner: walletAddress,
@@ -1007,14 +996,26 @@ test.concurrent("LSContract.getAccountWithoutKvs", async () => {
 
 test.concurrent("LSContract.getAccount", async () => {
   using world = await LSWorld.start();
-  const { wallet, contract } = await createAccounts(world, {
-    withDummyContract: true,
+  const wallet = await world.createWallet({
+    address: { shard: 1 },
+    balance: 10n ** 18n,
+    kvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
+  });
+  const contract = await wallet.createContract({
+    balance: 10n ** 18n,
+    code: "00",
+    codeMetadata: ["readable"],
+    kvs: {
+      esdts: [{ id: fftId, amount: 10n ** 18n }],
+      mappers: [{ key: "n", value: e.U64(2) }],
+    },
   });
   assertAccount(await contract.getAccount(), {
     nonce: 0,
     balance: 10n ** 18n,
-    code: dummyContractProps.code,
-    codeHash: dummyContractProps.codeHash,
+    code: "00",
+    codeHash:
+      "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314",
     codeMetadata: ["readable"],
     owner: wallet,
     hasKvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
@@ -1040,10 +1041,7 @@ test.concurrent("LSContract.query", async () => {
   assertVs(returnData, [e.U64(20n)]);
 });
 
-const createAccounts = async (
-  world: LSWorld,
-  options: { withDummyContract?: boolean } = {},
-) => {
+const createAccounts = async (world: LSWorld) => {
   const [wallet, wallet2, wallet3] = await world.createWallets([
     {
       address: { shard: 1 },
@@ -1055,7 +1053,7 @@ const createAccounts = async (
   ]);
   const contract = await wallet.createContract({
     balance: 10n ** 18n,
-    code: options.withDummyContract ? dummyContractProps.code : worldCode,
+    code: worldCode,
     codeMetadata: ["readable"],
     kvs: {
       esdts: [{ id: fftId, amount: 10n ** 18n }],
