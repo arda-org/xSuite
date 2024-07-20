@@ -1,4 +1,5 @@
 import { AddressLike, addressLikeToBechAddress } from "../data/addressLike";
+import { BytesLike } from "../data/bytesLike";
 import { Optional, Prettify, Replace } from "../helpers";
 import {
   devnetChainId,
@@ -114,6 +115,10 @@ export class World {
 
   getAccountBalance(address: AddressLike) {
     return this.proxy.getAccountBalance(address);
+  }
+
+  getAccountValue(address: AddressLike, key: BytesLike) {
+    return this.proxy.getAccountValue(address, key);
   }
 
   getAccountKvs(address: AddressLike) {
@@ -359,6 +364,10 @@ export class Wallet extends Signer {
     return this.world.getAccountBalance(this);
   }
 
+  getAccountValue(key: BytesLike) {
+    return this.world.getAccountValue(this, key);
+  }
+
   getAccountKvs() {
     return this.world.getAccountKvs(this);
   }
@@ -453,6 +462,10 @@ export class Contract extends Account {
 
   getAccountBalance() {
     return this.world.getAccountBalance(this);
+  }
+
+  getAccountValue(key: BytesLike) {
+    return this.world.getAccountValue(this, key);
   }
 
   getAccountKvs() {
