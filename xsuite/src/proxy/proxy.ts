@@ -121,9 +121,6 @@ export class Proxy {
     const hash: string = tx.hash;
     const explorerUrl = `${this.explorerUrl}/transactions/${hash}`;
     tx = { explorerUrl, hash, ...tx };
-    if (tx.status !== "success") {
-      throw new TxError("errorStatus", tx.status, tx);
-    }
     if (tx.executionReceipt?.returnCode) {
       const { returnCode, returnMessage } = tx.executionReceipt;
       throw new TxError(returnCode, returnMessage, tx);
@@ -134,6 +131,9 @@ export class Proxy {
     if (signalErrorEvent) {
       const error = atob(signalErrorEvent.topics[1]);
       throw new TxError("signalError", error, tx);
+    }
+    if (tx.status !== "success") {
+      throw new TxError("errorStatus", tx.status, tx);
     }
     const gasUsed: number = tx.gasUsed;
     const fee: bigint = BigInt(tx.fee);
