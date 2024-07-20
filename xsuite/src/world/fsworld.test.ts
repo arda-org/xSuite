@@ -7,6 +7,7 @@ import {
   zeroU8AAddress,
 } from "../data/address";
 import { getAddressShard, getAddressType } from "../data/utils";
+import { FSProxy } from "../proxy";
 import { FSWorld } from "./fsworld";
 import { createAddressLike } from "./utils";
 import { expandCode } from "./world";
@@ -103,6 +104,24 @@ test.concurrent("FSWorld.proxy.getAccount on empty hex address", async () => {
 test.concurrent("FSWorld.proxy.getAccount on empty U8A address", async () => {
   using world = await FSWorld.start();
   assertAccount(await world.proxy.getAccount(zeroU8AAddress), emptyAccount);
+});
+
+test.concurrent("FSWorld.proxy.blockNonce", async () => {
+  using world = await FSWorld.start();
+  const wallet = await world.createWallet({
+    balance: 10n ** 18n,
+  });
+  await wallet.setAccount({
+    balance: 2n * 10n ** 18n,
+  });
+  const proxy = new FSProxy({ proxyUrl: world.proxy.proxyUrl, blockNonce: 2 });
+  assertAccount(await proxy.getAccount(wallet), {
+    balance: 10n ** 18n,
+  });
+  proxy.blockNonce = null;
+  assertAccount(await proxy.getAccount(wallet), {
+    balance: 2n * 10n ** 18n,
+  });
 });
 
 test.concurrent("FSWorld.new with defined chainId", () => {
