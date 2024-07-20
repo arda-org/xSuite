@@ -5,7 +5,7 @@ import {
   addressLikeToBechAddress,
   addressLikeToHexAddress,
 } from "../data/addressLike";
-import { BytesLike } from "../data/bytesLike";
+import { BytesLike, bytesLikeToHex } from "../data/bytesLike";
 import {
   Encodable,
   EncodableCodeMetadata,
@@ -320,13 +320,18 @@ export class Proxy {
 
   async getAccountValue(
     address: AddressLike,
-    key: string,
+    key: BytesLike,
     { shardId }: GetAccountOptions = {},
   ): Promise<string> {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBechAddress(address)}/key/${key}`, {
-        "forced-shard-id": shardId,
-      }),
+      makePath(
+        `/address/${addressLikeToBechAddress(address)}/key/${bytesLikeToHex(
+          key,
+        )}`,
+        {
+          "forced-shard-id": shardId,
+        },
+      ),
     );
     return res.value;
   }
