@@ -251,6 +251,10 @@ export const e = {
     }
     return account as PreserveDefinedness<T, Account>;
   },
+  MapperKey: (...args: EncodableMapperKeyArgs) => {
+    const [name, ...vars] = args;
+    return e.Tuple(e.TopStr(name), ...vars);
+  },
   /**
    * @deprecated Use `.TopBuffer` instead.
    */
@@ -581,7 +585,7 @@ const newEncodable = (
 function curryEKvsMapper<T2, R>(fn: (baseKey: Encodable, data: T2) => R) {
   return function ([name, ...vars]: EncodableMapperKeyArgs): (data: T2) => R {
     return function (data: T2): R {
-      return fn(e.Tuple(e.TopStr(name), ...vars), data);
+      return fn(e.MapperKey(name, ...vars), data);
     };
   };
 }
