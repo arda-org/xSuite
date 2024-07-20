@@ -105,6 +105,23 @@ test.concurrent("FSWorld.proxy.getAccount on empty U8A address", async () => {
   assertAccount(await world.proxy.getAccount(zeroU8AAddress), emptyAccount);
 });
 
+test.concurrent("FSWorld.proxy.blockNonce", async () => {
+  using world = await FSWorld.start();
+  const wallet = await world.createWallet({
+    balance: 10n ** 18n,
+  });
+  await wallet.setAccount({
+    balance: 2n * 10n ** 18n,
+  });
+  assertAccount(await wallet.getAccount(), {
+    balance: 2n * 10n ** 18n,
+  });
+  world.proxy.blockNonce = 2;
+  assertAccount(await wallet.getAccount(), {
+    balance: 10n ** 18n,
+  });
+});
+
 test.concurrent("FSWorld.new with defined chainId", () => {
   expect(() => FSWorld.new({ chainId: "D" })).toThrow(
     "chainId is not undefined.",
