@@ -7,6 +7,7 @@ import {
   zeroU8AAddress,
 } from "../data/address";
 import { getAddressShard, getAddressType } from "../data/utils";
+import { FSProxy } from "../proxy";
 import { FSWorld } from "./fsworld";
 import { createAddressLike } from "./utils";
 import { expandCode } from "./world";
@@ -113,12 +114,13 @@ test.concurrent("FSWorld.proxy.blockNonce", async () => {
   await wallet.setAccount({
     balance: 2n * 10n ** 18n,
   });
-  assertAccount(await wallet.getAccount(), {
-    balance: 2n * 10n ** 18n,
-  });
-  world.proxy.blockNonce = 2;
-  assertAccount(await wallet.getAccount(), {
+  const proxy = new FSProxy({ proxyUrl: world.proxy.proxyUrl, blockNonce: 2 });
+  assertAccount(await proxy.getAccount(wallet), {
     balance: 10n ** 18n,
+  });
+  proxy.blockNonce = null;
+  assertAccount(await proxy.getAccount(wallet), {
+    balance: 2n * 10n ** 18n,
   });
 });
 
