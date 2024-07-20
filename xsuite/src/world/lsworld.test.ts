@@ -1001,10 +1001,7 @@ test.concurrent("LSContract.getAccountBalance", async () => {
 
 test.concurrent("LSContract.getAccountValue", async () => {
   using world = await LSWorld.start();
-  const { wallet } = await createAccounts(world);
-  const contract = await wallet.createContract({
-    code: worldCode,
-    codeMetadata: ["readable"],
+  const contract = await world.createContract({
     kvs: { "01": "11" },
   });
   expect(await contract.getAccountValue("01")).toEqual("11");

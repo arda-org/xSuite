@@ -964,10 +964,7 @@ test.concurrent("FSContract.getAccountBalance", async () => {
 
 test.concurrent("FSContract.getAccountValue", async () => {
   using world = await FSWorld.start();
-  const { wallet } = await createAccounts(world);
-  const contract = await wallet.createContract({
-    code: worldCode,
-    codeMetadata: ["readable"],
+  const contract = await world.createContract({
     kvs: { "01": "11" },
   });
   expect(await contract.getAccountValue("01")).toEqual("11");
