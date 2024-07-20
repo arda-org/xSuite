@@ -966,11 +966,7 @@ test.concurrent("FSContract.getAccountWithoutKvs", async () => {
 
 test.concurrent("FSContract.getAccount", async () => {
   using world = await FSWorld.start();
-  const wallet = await world.createWallet({
-    address: { shard: 1 },
-    balance: 10n ** 18n,
-    kvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
-  });
+  const wallet = await world.createWallet();
   const contract = await wallet.createContract({
     balance: 10n ** 18n,
     code: "00",

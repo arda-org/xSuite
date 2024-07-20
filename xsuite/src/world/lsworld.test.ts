@@ -996,11 +996,7 @@ test.concurrent("LSContract.getAccountWithoutKvs", async () => {
 
 test.concurrent("LSContract.getAccount", async () => {
   using world = await LSWorld.start();
-  const wallet = await world.createWallet({
-    address: { shard: 1 },
-    balance: 10n ** 18n,
-    kvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
-  });
+  const wallet = await world.createWallet();
   const contract = await wallet.createContract({
     balance: 10n ** 18n,
     code: "00",
