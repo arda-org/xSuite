@@ -247,7 +247,20 @@ test.concurrent("LSWorld.getAccount", async () => {
 
 test.concurrent("LSWorld.getAllSerializableAccounts", async () => {
   using world = await LSWorld.start();
-  const { wallet, wallet2, wallet3, contract } = await createAccounts(world);
+  const wallet = await world.createWallet({
+    address: { shard: 1 },
+    balance: 10n ** 18n,
+    kvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
+  });
+  const contract = await wallet.createContract({
+    balance: 10n ** 18n,
+    code: "00",
+    codeMetadata: ["readable"],
+    kvs: {
+      esdts: [{ id: fftId, amount: 10n ** 18n }],
+      mappers: [{ key: "n", value: e.U64(2) }],
+    },
+  });
   expect(await world.getAllSerializableAccounts()).toEqual(
     [
       e.account({
@@ -263,31 +276,11 @@ test.concurrent("LSWorld.getAllSerializableAccounts", async () => {
         owner: "",
       }),
       e.account({
-        address: wallet2,
-        balance: "0",
-        code: "",
-        codeHash: "",
-        codeMetadata: ["readable"],
-        kvs: {},
-        nonce: 0,
-        owner: "",
-      }),
-      e.account({
-        address: wallet3,
-        balance: "0",
-        code: "",
-        codeHash: "",
-        codeMetadata: ["readable"],
-        kvs: {},
-        nonce: 0,
-        owner: "",
-      }),
-      e.account({
         address: contract,
         balance: 10n ** 18n,
-        code: expandCode(worldCode),
+        code: "00",
         codeHash:
-          "fbde44d539751cc120619685577ac3c62752339881863b250baee10fe4f0f1eb",
+          "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314",
         codeMetadata: ["readable"],
         kvs: {
           esdts: [{ id: fftId, amount: 10n ** 18n }],
@@ -345,7 +338,7 @@ test.concurrent("LSWorld.setAccount", async () => {
   await world.setAccount({
     address: contractAddress,
     balance: 1234,
-    code: worldCode,
+    code: "00",
     codeMetadata: ["upgradeable"],
     kvs: [[e.Str("n"), e.U64(10)]],
     owner: walletAddress,
@@ -353,9 +346,9 @@ test.concurrent("LSWorld.setAccount", async () => {
   assertAccount(await world.getAccount(contractAddress), {
     address: contractAddress,
     balance: 1234,
-    code: worldCode,
+    code: "00",
     codeHash:
-      "fbde44d539751cc120619685577ac3c62752339881863b250baee10fe4f0f1eb",
+      "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314",
     codeMetadata: ["upgradeable"],
     kvs: [[e.Str("n"), e.U64(10)]],
     owner: walletAddress,
@@ -1029,13 +1022,22 @@ test.concurrent("LSContract.getAccountWithoutKvs", async () => {
 
 test.concurrent("LSContract.getAccount", async () => {
   using world = await LSWorld.start();
-  const { wallet, contract } = await createAccounts(world);
+  const wallet = await world.createWallet();
+  const contract = await wallet.createContract({
+    balance: 10n ** 18n,
+    code: "00",
+    codeMetadata: ["readable"],
+    kvs: {
+      esdts: [{ id: fftId, amount: 10n ** 18n }],
+      mappers: [{ key: "n", value: e.U64(2) }],
+    },
+  });
   assertAccount(await contract.getAccount(), {
     nonce: 0,
     balance: 10n ** 18n,
-    code: worldCode,
+    code: "00",
     codeHash:
-      "fbde44d539751cc120619685577ac3c62752339881863b250baee10fe4f0f1eb",
+      "03170a2e7597b7b7e3d84c05391d139a62b157e78786d8c082f29dcf4c111314",
     codeMetadata: ["readable"],
     owner: wallet,
     hasKvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },

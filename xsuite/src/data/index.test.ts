@@ -159,6 +159,7 @@ beforeAll(async () => {
     gasLimit: 10_000_000,
   });
   complexContractState = await contract.getSerializableAccount();
+  complexContractState.codeHash = "some code hash";
   complexSysAccState = await world.sysAcc.getSerializableAccount();
 });
 
@@ -821,8 +822,7 @@ test("e.account", async () => {
       nonce: 0,
       balance: 10,
       code: readFileHex("contracts/data/output/data.wasm"),
-      codeHash:
-        "4b580fff10fb09e1641bc639d01d128224f9c7207fcf11ed7ecd2cd0b045a35f",
+      codeHash: "some code hash",
       codeMetadata: ["readable", "upgradeable"],
       kvs: complexContractState.kvs,
       owner: wallet,
@@ -1349,8 +1349,7 @@ test("d.account", () => {
     nonce: 0,
     balance: 10n,
     code: readFileHex("contracts/data/output/data.wasm"),
-    codeHash:
-      "4b580fff10fb09e1641bc639d01d128224f9c7207fcf11ed7ecd2cd0b045a35f",
+    codeHash: "some code hash",
     codeMetadata: ["upgradeable", "readable"],
     kvs: expect.anything(),
     owner: wallet,
