@@ -255,31 +255,12 @@ export const e = {
     const [name, ...vars] = args;
     return e.Tuple(e.TopStr(name), ...vars);
   },
-  EsdtKey: <T extends "roles" | "lastNonce" | "variant">(
-    type: T,
-    options: T extends "variant"
-      ? { id: string; nonce?: number | bigint }
-      : { id: string },
-  ) => {
-    if (type === "roles") {
-      return e.Str(`ELRONDroleesdt${options.id}`);
-    } else if (type === "lastNonce") {
-      return e.Str(`ELRONDnonce${options.id}`);
-    } else if (type === "variant") {
-      if ("nonce" in options) {
-        return e.Tuple(
-          e.TopStr("ELRONDesdt"),
-          ...(options.nonce
-            ? [e.TopStr(options.id), e.TopU(options.nonce)]
-            : [e.TopStr(options.id)]),
-        );
-      } else {
-        return e.Tuple(e.TopStr(`ELRONDesdt${options.id}`));
-      }
-    } else {
-      throw new Error("Invalid esdt key type.");
-    }
-  },
+  EsdtRolesKey: (id: string) => e.TopStr(`ELRONDroleesdt${id}`),
+  EsdtLastNonceKey: (id: string) => e.TopStr(`ELRONDnonce${id}`),
+  EsdtKey: (id: string, nonce?: number | bigint) =>
+    nonce
+      ? e.Tuple(e.TopStr(`ELRONDesdt${id}`), e.TopU(nonce))
+      : e.TopStr(`ELRONDesdt${id}`),
   /**
    * @deprecated Use `.TopBuffer` instead.
    */
@@ -496,10 +477,10 @@ const eKvsEsdt = ({ id, roles, lastNonce, ...rest }: EncodableEsdt): Kvs => {
   const kvs: EncodableKv[] = [];
   if (roles !== undefined) {
     const messageBytes = ESDTRolesMessage.encode({ Roles: roles }).finish();
-    kvs.push([e.EsdtKey("roles", { id }), e.Buffer(messageBytes)]);
+    kvs.push([e.EsdtRolesKey(id), e.Buffer(messageBytes)]);
   }
   if (lastNonce !== undefined) {
-    kvs.push([e.EsdtKey("lastNonce", { id }), e.U(lastNonce)]);
+    kvs.push([e.EsdtLastNonceKey(id), e.U(lastNonce)]);
   }
   let variants: EncodableEsdtVariant[];
   if ("variants" in rest) {
@@ -562,7 +543,7 @@ const eKvsEsdt = ({ id, roles, lastNonce, ...rest }: EncodableEsdt): Kvs => {
       message["Value"] = new Uint8Array([0, ...bytes]);
     }
     const messageBytes = ESDTSystemMessage.encode(message).finish();
-    kvs.push([e.EsdtKey("variant", { id, nonce }), messageBytes]);
+    kvs.push([e.EsdtKey(id, nonce), messageBytes]);
   }
   return eKvsUnfiltered(kvs);
 };
