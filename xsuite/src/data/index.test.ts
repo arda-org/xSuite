@@ -842,6 +842,52 @@ test("e.account", async () => {
   );
 });
 
+test("e.MapperKey - simple key", () => {
+  expect(e.MapperKey("key").toTopHex()).toEqual("6b6579");
+  expect(e.MapperKey("key").toNestHex()).toEqual("6b6579");
+});
+
+test("e.MapperKey - complex key", () => {
+  expect(e.MapperKey("key", e.U32(1)).toTopHex()).toEqual("6b657900000001");
+  expect(e.MapperKey("key", e.U32(1)).toNestHex()).toEqual("6b657900000001");
+});
+
+test("e.EsdtRolesKey", () => {
+  expect(e.EsdtRolesKey("TOKEN-123456").toTopHex()).toEqual(
+    "454c524f4e44726f6c6565736474544f4b454e2d313233343536",
+  );
+  expect(e.EsdtRolesKey("TOKEN-123456").toNestHex()).toEqual(
+    "454c524f4e44726f6c6565736474544f4b454e2d313233343536",
+  );
+});
+
+test("e.EsdtLastNonceKey", () => {
+  expect(e.EsdtLastNonceKey("TOKEN-123456").toTopHex()).toEqual(
+    "454c524f4e446e6f6e6365544f4b454e2d313233343536",
+  );
+  expect(e.EsdtLastNonceKey("TOKEN-123456").toNestHex()).toEqual(
+    "454c524f4e446e6f6e6365544f4b454e2d313233343536",
+  );
+});
+
+test("e.EsdtKey - without nonce", () => {
+  expect(e.EsdtKey("TOKEN-123456").toTopHex()).toEqual(
+    "454c524f4e4465736474544f4b454e2d313233343536",
+  );
+  expect(e.EsdtKey("TOKEN-123456").toNestHex()).toEqual(
+    "454c524f4e4465736474544f4b454e2d313233343536",
+  );
+});
+
+test("e.EsdtKey - with nonce", () => {
+  expect(e.EsdtKey("TOKEN-123456", 1).toTopHex()).toEqual(
+    "454c524f4e4465736474544f4b454e2d31323334353601",
+  );
+  expect(e.EsdtKey("TOKEN-123456", 1).toNestHex()).toEqual(
+    "454c524f4e4465736474544f4b454e2d31323334353601",
+  );
+});
+
 test("e.Bytes.toNestHex", () => {
   expect(e.Bytes(new Uint8Array([65, 66, 67])).toNestHex()).toEqual("414243");
 });
