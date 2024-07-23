@@ -201,6 +201,16 @@ export const e = {
     }
     return newEncodable(() => new Uint8Array([1, ...optEncodable.toNestU8A()]));
   },
+  MapperKey: (...args: EncodableMapperKeyArgs) => {
+    const [name, ...vars] = args;
+    return e.Tuple(e.TopStr(name), ...vars);
+  },
+  EsdtKey: (id: string, nonce?: number | bigint) =>
+    nonce
+      ? e.Tuple(e.TopStr(`ELRONDesdt${id}`), e.TopU(nonce))
+      : e.TopStr(`ELRONDesdt${id}`),
+  EsdtRolesKey: (id: string) => e.TopStr(`ELRONDroleesdt${id}`),
+  EsdtLastNonceKey: (id: string) => e.TopStr(`ELRONDnonce${id}`),
   vs: (encodableVs: EncodableVs): Vs => {
     return encodableVs.map(bytesLikeToHex);
   },
@@ -251,16 +261,6 @@ export const e = {
     }
     return account as PreserveDefinedness<T, Account>;
   },
-  MapperKey: (...args: EncodableMapperKeyArgs) => {
-    const [name, ...vars] = args;
-    return e.Tuple(e.TopStr(name), ...vars);
-  },
-  EsdtRolesKey: (id: string) => e.TopStr(`ELRONDroleesdt${id}`),
-  EsdtLastNonceKey: (id: string) => e.TopStr(`ELRONDnonce${id}`),
-  EsdtKey: (id: string, nonce?: number | bigint) =>
-    nonce
-      ? e.Tuple(e.TopStr(`ELRONDesdt${id}`), e.TopU(nonce))
-      : e.TopStr(`ELRONDesdt${id}`),
   /**
    * @deprecated Use `.TopBuffer` instead.
    */
