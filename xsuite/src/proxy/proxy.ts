@@ -29,22 +29,38 @@ export class Proxy {
     this.blockNonce = params.blockNonce ?? null;
   }
 
-  fetchRaw(path: string, data?: any) {
-    const baseUrl = this.proxyUrl;
-    const init: RequestInit = { headers: this.headers };
-    const url = new URL(`${baseUrl}${path}`);
-    if (this.blockNonce !== null) {
-      url.searchParams.append("blockNonce", this.blockNonce.toString());
+  private makeUrl(
+    path: string | URL,
+    params: Record<string, { toString: () => string } | undefined | null> = {},
+    override: boolean = false,
+  ) {
+    const url = new URL(path, this.proxyUrl);
+    for (const [k, v] of Object.entries(params)) {
+      if (v !== undefined && v !== null) {
+        if (override) {
+          url.searchParams.set(k, v.toString());
+        } else {
+          url.searchParams.append(k, v.toString());
+        }
+      }
     }
+    return url;
+  }
+
+  fetchRaw(url: URL, data?: any) {
+    const init: RequestInit = { headers: this.headers };
     if (data !== undefined) {
       init.method = "POST";
       init.body = JSON.stringify(data);
     }
-    return fetch(url.toString(), init).then((r) => r.json());
+    return fetch(url, init).then((r) => r.json());
   }
 
-  async fetch(path: string, data?: any) {
-    const res = await this.fetchRaw(path, data);
+  async fetch(url: string | URL, data?: any) {
+    const res = await this.fetchRaw(
+      this.makeUrl(url, { blockNonce: this.blockNonce }, true),
+      data,
+    );
     if (res.code === "successful") {
       return res.data;
     } else {
@@ -290,7 +306,7 @@ export class Proxy {
 
   private async _getTx(txHash: string, { withResults }: GetTxRawOptions = {}) {
     const res = await this.fetch(
-      makePath(`/transaction/${txHash}`, { withResults }),
+      this.makeUrl(`/transaction/${txHash}`, { withResults }),
     );
     return res.transaction as Record<string, any>;
   }
@@ -305,7 +321,7 @@ export class Proxy {
     { shardId }: GetAccountOptions = {},
   ) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBechAddress(address)}/nonce`, {
+      this.makeUrl(`/address/${addressLikeToBechAddress(address)}/nonce`, {
         "forced-shard-id": shardId,
       }),
     );
@@ -317,7 +333,7 @@ export class Proxy {
     { shardId }: GetAccountOptions = {},
   ) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBechAddress(address)}/balance`, {
+      this.makeUrl(`/address/${addressLikeToBechAddress(address)}/balance`, {
         "forced-shard-id": shardId,
       }),
     );
@@ -330,7 +346,7 @@ export class Proxy {
     { shardId }: GetAccountOptions = {},
   ): Promise<string> {
     const res = await this.fetch(
-      makePath(
+      this.makeUrl(
         `/address/${addressLikeToBechAddress(address)}/key/${bytesLikeToHex(
           key,
         )}`,
@@ -347,7 +363,7 @@ export class Proxy {
     { shardId }: GetAccountOptions = {},
   ) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBechAddress(address)}/keys`, {
+      this.makeUrl(`/address/${addressLikeToBechAddress(address)}/keys`, {
         "forced-shard-id": shardId,
       }),
     );
@@ -359,7 +375,7 @@ export class Proxy {
     options?: GetAccountOptions,
   ) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBechAddress(address)}`, options),
+      this.makeUrl(`/address/${addressLikeToBechAddress(address)}`, options),
     );
     return getSerializableAccount(res.account);
   }
@@ -536,26 +552,6 @@ const upgradeContractTxToTx = ({
     ].join("@"),
     ...tx,
   };
-};
-
-const makePath = (
-  basePath: string,
-  params: Record<string, { toString: () => string } | undefined> = {},
-) => {
-  let path = basePath;
-  let first = true;
-  for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined) {
-      if (first) {
-        path += "?";
-        first = false;
-      } else {
-        path += "&";
-      }
-      path += `${k}=${v}`;
-    }
-  }
-  return path;
 };
 
 const broadTxToRawTx = async (tx: BroadTx): Promise<RawTx> => {
