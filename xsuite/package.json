@@ -1,6 +1,6 @@
 {
   "name": "xsuite",
-  "version": "0.0.73",
+  "version": "0.0.74",
   "license": "MIT",
   "bin": {
     "xsuite": "cli.js"
