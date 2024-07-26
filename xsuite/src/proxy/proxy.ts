@@ -19,48 +19,43 @@ export class Proxy {
   proxyUrl: string;
   headers: HeadersInit;
   explorerUrl: string;
-  blockNonce: number | null;
+  blockNonce?: number;
 
   constructor(params: ProxyParams) {
     params = typeof params === "string" ? { proxyUrl: params } : params;
     this.proxyUrl = params.proxyUrl;
     this.headers = params.headers ?? {};
     this.explorerUrl = params.explorerUrl ?? "";
-    this.blockNonce = params.blockNonce ?? null;
+    this.blockNonce = params.blockNonce;
   }
 
   private makeUrl(
-    path: string | URL,
-    params: Record<string, { toString: () => string } | undefined | null> = {},
-    override: boolean = false,
+    path: string,
+    params: Record<string, { toString: () => string } | undefined> = {},
   ) {
     const url = new URL(path, this.proxyUrl);
     for (const [k, v] of Object.entries(params)) {
       if (v !== undefined && v !== null) {
-        if (override) {
-          url.searchParams.set(k, v.toString());
-        } else {
-          url.searchParams.append(k, v.toString());
-        }
+        url.searchParams.set(k, v.toString());
       }
     }
-    return url;
+    return url.toString();
   }
 
-  fetchRaw(url: URL, data?: any) {
+  fetchRaw(path: string, data?: any) {
     const init: RequestInit = { headers: this.headers };
     if (data !== undefined) {
       init.method = "POST";
       init.body = JSON.stringify(data);
     }
-    return fetch(url, init).then((r) => r.json());
+    return fetch(
+      this.makeUrl(path, { blockNonce: this.blockNonce }),
+      init,
+    ).then((r) => r.json());
   }
 
-  async fetch(url: string | URL, data?: any) {
-    const res = await this.fetchRaw(
-      this.makeUrl(url, { blockNonce: this.blockNonce }, true),
-      data,
-    );
+  async fetch(path: string, data?: any) {
+    const res = await this.fetchRaw(path, data);
     if (res.code === "successful") {
       return res.data;
     } else {
