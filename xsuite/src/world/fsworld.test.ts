@@ -118,7 +118,7 @@ test.concurrent("FSWorld.proxy.blockNonce", async () => {
   assertAccount(await proxy.getAccount(wallet), {
     balance: 10n ** 18n,
   });
-  proxy.blockNonce = null;
+  proxy.blockNonce = undefined;
   assertAccount(await proxy.getAccount(wallet), {
     balance: 2n * 10n ** 18n,
   });

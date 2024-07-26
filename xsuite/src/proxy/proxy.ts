@@ -19,28 +19,39 @@ export class Proxy {
   proxyUrl: string;
   headers: HeadersInit;
   explorerUrl: string;
-  blockNonce: number | null;
+  blockNonce?: number;
 
   constructor(params: ProxyParams) {
     params = typeof params === "string" ? { proxyUrl: params } : params;
     this.proxyUrl = params.proxyUrl;
     this.headers = params.headers ?? {};
     this.explorerUrl = params.explorerUrl ?? "";
-    this.blockNonce = params.blockNonce ?? null;
+    this.blockNonce = params.blockNonce;
+  }
+
+  private makeUrl(
+    path: string,
+    params: Record<string, { toString: () => string } | undefined> = {},
+  ) {
+    const url = new URL(path, this.proxyUrl);
+    for (const [k, v] of Object.entries(params)) {
+      if (v !== undefined && v !== null) {
+        url.searchParams.set(k, v.toString());
+      }
+    }
+    return url.toString();
   }
 
   fetchRaw(path: string, data?: any) {
-    const baseUrl = this.proxyUrl;
     const init: RequestInit = { headers: this.headers };
-    const url = new URL(`${baseUrl}${path}`);
-    if (this.blockNonce !== null) {
-      url.searchParams.append("blockNonce", this.blockNonce.toString());
-    }
     if (data !== undefined) {
       init.method = "POST";
       init.body = JSON.stringify(data);
     }
-    return fetch(url.toString(), init).then((r) => r.json());
+    return fetch(
+      this.makeUrl(path, { blockNonce: this.blockNonce }),
+      init,
+    ).then((r) => r.json());
   }
 
   async fetch(path: string, data?: any) {
@@ -290,7 +301,7 @@ export class Proxy {
 
   private async _getTx(txHash: string, { withResults }: GetTxRawOptions = {}) {
     const res = await this.fetch(
-      makePath(`/transaction/${txHash}`, { withResults }),
+      this.makeUrl(`/transaction/${txHash}`, { withResults }),
     );
     return res.transaction as Record<string, any>;
   }
@@ -305,7 +316,7 @@ export class Proxy {
     { shardId }: GetAccountOptions = {},
   ) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBechAddress(address)}/nonce`, {
+      this.makeUrl(`/address/${addressLikeToBechAddress(address)}/nonce`, {
         "forced-shard-id": shardId,
       }),
     );
@@ -317,7 +328,7 @@ export class Proxy {
     { shardId }: GetAccountOptions = {},
   ) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBechAddress(address)}/balance`, {
+      this.makeUrl(`/address/${addressLikeToBechAddress(address)}/balance`, {
         "forced-shard-id": shardId,
       }),
     );
@@ -330,7 +341,7 @@ export class Proxy {
     { shardId }: GetAccountOptions = {},
   ): Promise<string> {
     const res = await this.fetch(
-      makePath(
+      this.makeUrl(
         `/address/${addressLikeToBechAddress(address)}/key/${bytesLikeToHex(
           key,
         )}`,
@@ -347,7 +358,7 @@ export class Proxy {
     { shardId }: GetAccountOptions = {},
   ) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBechAddress(address)}/keys`, {
+      this.makeUrl(`/address/${addressLikeToBechAddress(address)}/keys`, {
         "forced-shard-id": shardId,
       }),
     );
@@ -359,7 +370,7 @@ export class Proxy {
     options?: GetAccountOptions,
   ) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBechAddress(address)}`, options),
+      this.makeUrl(`/address/${addressLikeToBechAddress(address)}`, options),
     );
     return getSerializableAccount(res.account);
   }
@@ -536,26 +547,6 @@ const upgradeContractTxToTx = ({
     ].join("@"),
     ...tx,
   };
-};
-
-const makePath = (
-  basePath: string,
-  params: Record<string, { toString: () => string } | undefined> = {},
-) => {
-  let path = basePath;
-  let first = true;
-  for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined) {
-      if (first) {
-        path += "?";
-        first = false;
-      } else {
-        path += "&";
-      }
-      path += `${k}=${v}`;
-    }
-  }
-  return path;
 };
 
 const broadTxToRawTx = async (tx: BroadTx): Promise<RawTx> => {
