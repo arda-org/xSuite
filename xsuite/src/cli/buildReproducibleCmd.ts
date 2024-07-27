@@ -2,14 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { Command } from "commander";
 import { cwd, log } from "../context";
-import { isDirBuildable } from "./buildCmd";
-import {
-  getGid,
-  getUid,
-  logAndRunCommand,
-  logError,
-  promptUserWithRetry,
-} from "./helpers";
+import { logAndRunCommand, logError } from "./helpers";
 
 const defaultReproducibleDockerImage =
   "multiversx/sdk-rust-contract-builder:v8.0.0";
@@ -24,13 +17,15 @@ export const addBuildReproducibleCmd = (cmd: Command) => {
     )
     .option(
       "--image <IMAGE_TAG>",
-      `Specify the tag of the docker image, that is used to build the contract (e. g. ${defaultReproducibleDockerImage})`,
+      `Docker image used to build the contract (e.g. ${defaultReproducibleDockerImage})`,
     )
+    .option("--contract <CONTRACT>", "Contract to be built")
+    .option("-r, --recursive", "Build all contracts under the directory")
+    .option("-d, --delete", "Cleans the output-dir, if it is not empty")
     .option(
       "--output-dir <OUTPUT_DIR>",
-      "Specify the directory where the built artifacts will be saved",
+      "Directory where the build artifacts will be saved (default: [DIR]/output-reproducible)",
     )
-    .option("-r, --recursive", "Build all contracts under the directory")
     .action(buildReproducible);
 };
 
@@ -38,53 +33,58 @@ export const buildReproducible = async (
   dirArgument: string | undefined,
   {
     image,
-    outputDir,
+    contract,
     recursive,
+    delete: cleanOutputDir,
+    outputDir,
   }: {
     image?: string;
-    outputDir?: string;
+    contract?: string;
     recursive?: boolean;
+    delete?: boolean;
+    outputDir?: string;
   },
 ) => {
   let sourceDir: string;
   if (dirArgument !== undefined) {
-    sourceDir = dirArgument;
+    sourceDir = path.resolve(dirArgument);
   } else {
     sourceDir = cwd();
   }
-  outputDir = outputDir ?? path.join(cwd(), "output-reproducible");
+  outputDir = outputDir ?? path.join(sourceDir, "output-reproducible");
 
   if (!image) {
-    const promptResult = await askForImage();
-    image = promptResult;
+    logError("You did not provide '--image <IMAGE>'.");
+    logError(
+      `A build needs to be done inside a Docker image in order to be reproducible. (e.g. ${defaultReproducibleDockerImage})`,
+    );
+    return;
   }
 
-  buildContract(image, sourceDir, outputDir, recursive);
+  if (!recursive && !contract) {
+    logError("Either --recursive or --contract has to be provided");
+    return;
+  }
+
+  ensureOutputDirIsEmpty(outputDir, cleanOutputDir);
+  ensureDockerInstalled();
+
+  buildContract(image, contract, sourceDir, outputDir);
 };
 
 const buildContract = (
   image: string,
+  contract: string | undefined,
   sourcePath: string,
   outputDir: string,
-  recursive?: boolean,
 ) => {
-  log(`Building project ${sourcePath}...`);
-
-  ensureDockerInstalled();
-  ensureOutputDirIsEmpty(outputDir);
-
-  if (!recursive) {
-    if (!isDirBuildable(sourcePath)) {
-      logError("No valid contract found.");
-      return;
-    }
-  }
+  log(`Building... (${sourcePath})`);
 
   // Prepare general docker arguments
   const dockerGeneralArgs: string[] = ["run"];
 
-  const userId = getUid();
-  const groupId = getGid();
+  const userId = process.getuid?.();
+  const groupId = process.getgid?.();
   if (userId && groupId) {
     dockerGeneralArgs.push("--user", `${userId}:${groupId}`);
   }
@@ -119,6 +119,9 @@ const buildContract = (
   // Prepare entrypoint arguments
   const entrypointArgs: string[] = [];
   entrypointArgs.push("--project", "project");
+  if (contract) {
+    entrypointArgs.push("--contract", contract);
+  }
 
   const args = [
     ...dockerGeneralArgs,
@@ -136,29 +139,23 @@ const ensureDockerInstalled = () => {
   logAndRunCommand("command", ["-v", "docker"]);
 };
 
-const ensureOutputDirIsEmpty = (parentOutputDir: fs.PathLike) => {
-  if (!fs.existsSync(parentOutputDir)) {
-    fs.mkdirSync(parentOutputDir, { recursive: true });
+const ensureOutputDirIsEmpty = (
+  outputDir: fs.PathLike,
+  cleanOutputDir: boolean | undefined,
+) => {
+  if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir, { recursive: true });
     return;
   }
 
-  const is_empty = fs.readdirSync(parentOutputDir).length === 0;
-  if (!is_empty) {
-    logError(`output-dir must be empty: ${parentOutputDir}`);
-    throw new Error(`output-dir must be empty: ${parentOutputDir}`);
+  const is_empty = fs.readdirSync(outputDir).length === 0;
+  if (!is_empty && cleanOutputDir) {
+    fs.rmSync(outputDir, { recursive: true });
+    fs.mkdirSync(outputDir, { recursive: true });
+    return;
   }
-};
-
-const askForImage = () => {
-  log("You did not provide '--image <IMAGE>'.");
-  log(
-    "A build needs to be done inside a Docker image in order to be reproducible.",
-  );
-
-  return promptUserWithRetry(
-    `Please enter the image to be used (default: ${defaultReproducibleDockerImage}):`,
-    defaultReproducibleDockerImage,
-    /^\S+:\S+$/,
-    "The image needs to have the following format: 'imagename:tag'",
-  );
+  if (!is_empty) {
+    logError(`output-dir must be empty: ${outputDir}`);
+    throw new Error(`output-dir must be empty: ${outputDir}`);
+  }
 };

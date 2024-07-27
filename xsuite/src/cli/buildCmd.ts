@@ -109,7 +109,7 @@ const findBuildableDirs = (startDir: string, ignoreRegex: RegExp) => {
   return results;
 };
 
-export const isDirBuildable = (p: string) => {
+const isDirBuildable = (p: string) => {
   const mvxJsonPath = path.join(p, "multiversx.json");
   const mvxJsonFileExists =
     fs.existsSync(mvxJsonPath) && fs.statSync(mvxJsonPath).isFile();

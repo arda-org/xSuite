@@ -1,36 +1,26 @@
+import fs from "node:fs";
 import path from "node:path";
 import { Command } from "commander";
+import { globSync } from "glob";
 import { cwd, log } from "../context";
 import { Proxy } from "../proxy/proxy";
-import {
-  delay,
-  findFileRecursive,
-  logError,
-  promptUserWithRetry,
-  readJsonFile,
-  regExpSmartContractAddress,
-} from "./helpers";
+import { pause, logError } from "./helpers";
+
+const defaultVerifierUrl = "https://devnet-play-api.multiversx.com";
+const pollDelay = process.env.VITEST_WORKER_ID ? 1 : 5000;
 
 export const addVerifyReproducibleCmd = (cmd: Command) => {
   cmd
     .command("verify-reproducible")
-    .description(
-      "Verifies a contract, that has been built in a reproducible way.",
-    )
+    .description("Verify a contract built in a reproducible way.")
     .argument(
       "[DIR]",
       "Directory in which the command is executed (default: $(PWD))",
     )
-    .option("--sc <SC>", "The smart contract to be verified")
+    .requiredOption("--sc <SC>", "Address of the smart contract to be verified")
     .option(
       "--verifier-url <VERIFIIER_URL>",
-      `Verifier Url (Default: ${defaultVerifierUrl}`,
-    )
-    .option<number>(
-      "--poll-delay <POLL_DELAY>",
-      "Delay between each poll request, that goes to the mvx api (default: 5000)",
-      parseInt,
-      5000,
+      `Verifier URL (default: ${defaultVerifierUrl})`,
     )
     .action(publishReproducible);
 };
@@ -40,45 +30,40 @@ export const publishReproducible = async (
   {
     sc,
     verifierUrl,
-    pollDelay,
   }: {
-    sc?: string;
+    sc: string;
     verifierUrl?: string;
-    pollDelay: number;
   },
 ) => {
   let dir: string;
   if (dirArgument !== undefined) {
-    dir = dirArgument;
+    dir = path.resolve(dirArgument);
   } else {
     dir = cwd();
   }
   verifierUrl = verifierUrl ?? defaultVerifierUrl;
 
-  if (sc && !regExpSmartContractAddress.test(sc)) {
-    logError("The smart contract address you passed is invalid. Aborting...");
-    return;
-  }
-
-  if (!sc) {
-    const promptResult = await askForSmartContract();
-    sc = promptResult;
-  }
-
   log("Verification started...");
-  const sourceCodePath = findFileRecursive(dir, /^.+\.source\.json$/);
-  if (!sourceCodePath) {
+  const foundSourceFiles = globSync(`${dir}/**/*.source.json`);
+  if (foundSourceFiles.length == 0) {
     logError(
-      `Cannot find sourcecode file to verify in ${dir}, which is required to verify a smart contract.`,
+      `Cannot find any source file to verify in ${dir}, which is required to verify a smart contract.`,
     );
     return;
   }
+  if (foundSourceFiles.length !== 1) {
+    logError(
+      `Found more than one source file to verify in ${dir}. Source files found:`,
+    );
+    foundSourceFiles.forEach((f) => logError(f));
+    return;
+  }
 
-  log(`Found smart contract at ${path.dirname(sourceCodePath)}`);
-  const sourceCode = readJsonFile(sourceCodePath);
+  log(`Found smart contract at ${path.dirname(foundSourceFiles[0])}`);
+  const sourceCode = JSON.parse(fs.readFileSync(foundSourceFiles[0], "utf-8"));
   const image = sourceCode.metadata.buildMetadata.builderName;
   if (!image) {
-    logError(`Could not read image name from ${sourceCodePath}.`);
+    logError(`Could not read image name from ${foundSourceFiles[0]}.`);
     return;
   }
 
@@ -89,14 +74,10 @@ export const publishReproducible = async (
     "",
     image,
   ).toDictionary();
-  await verifyAndWait(verifierUrl, request, pollDelay);
+  await verifyAndWait(verifierUrl, request);
 };
 
-const verifyAndWait = async (
-  baseUrl: string,
-  request: any,
-  pollDelay: number,
-) => {
+const verifyAndWait = async (baseUrl: string, request: any) => {
   const startTime = new Date().getTime();
   const proxy = new Proxy({
     proxyUrl: baseUrl,
@@ -139,21 +120,8 @@ const verifyAndWait = async (
       oldStatus = status;
     }
 
-    await delay(pollDelay);
+    await pause(pollDelay);
   }
-};
-
-const askForSmartContract = () => {
-  log(
-    "You are trying to verify a smart contract, but did't provide a smart contract using '--sc <SC>.",
-  );
-
-  return promptUserWithRetry(
-    "Please enter a smart contract address:",
-    undefined,
-    regExpSmartContractAddress,
-    "Invalid smart contract address",
-  );
 };
 
 class ContractVerificationRequest {
@@ -189,5 +157,3 @@ class ContractVerificationRequest {
     };
   }
 }
-
-const defaultVerifierUrl = "https://devnet-play-api.multiversx.com";

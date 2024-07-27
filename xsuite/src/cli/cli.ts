@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import { pkgVersion } from "../_pkg";
 import { addBuildCmd } from "./buildCmd";
-import { addBuildReproducibleCmd } from "./buildReproducible";
+import { addBuildReproducibleCmd } from "./buildReproducibleCmd";
 import { addInstallRustCmd } from "./installRustCmd";
 import { addInstallRustKeyCmd } from "./installRustKeyCmd";
 import { addNewCmd } from "./newCmd";
@@ -10,7 +10,7 @@ import { addRequestXegldCmd } from "./requestXegldCmd";
 import { addTestRustCmd } from "./testRustCmd";
 import { addTestScenCmd } from "./testScenCmd";
 import { addUninstallRustCmd } from "./uninstallRustCmd";
-import { addVerifyReproducibleCmd } from "./verifyReproducible";
+import { addVerifyReproducibleCmd } from "./verifyReproducibleCmd";
 
 export const getCli = () => {
   const cmd = new Command();

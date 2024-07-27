@@ -9,13 +9,7 @@ import { Context } from "../context";
 import { getAddressShard } from "../data/utils";
 import { Keystore } from "../world/signer";
 import { getCli } from "./cli";
-import {
-  defaultRustToolchain,
-  getGid,
-  getUid,
-  rustTarget,
-  rustKey,
-} from "./helpers";
+import { defaultRustToolchain, rustTarget, rustKey } from "./helpers";
 
 const pemPath = path.resolve("wallets", "wallet.pem");
 const keyKeystorePath = path.resolve("wallets", "keystore_key.json");
@@ -506,16 +500,16 @@ test.concurrent(
 
     const sourceCode = path.resolve("./contracts/data");
     await c.cmd(
-      `build-reproducible ${sourceCode} --image multiversx/sdk-rust-contract-builder:v8.0.0 --output-dir ${tmpDir}/output`,
+      `build-reproducible ${sourceCode} --image multiversx/sdk-rust-contract-builder:v8.0.0 --output-dir ${tmpDir}/output -r`,
     );
 
-    const userId = getUid();
-    const groupId = getGid();
+    const userId = process.getuid?.();
+    const groupId = process.getgid?.();
     const userArg = userId && groupId ? `--user ${userId}:${groupId} ` : "";
 
     expect(c.flushStdout().split("\n")).toEqual([
-      `Building project ${sourceCode}...`,
       chalk.cyan("$ command -v docker"),
+      `Building... (${sourceCode})`,
       "Running docker...",
       chalk.cyan(
         `$ docker run ${userArg}--rm --volume ${tmpDir}/output:/output --volume ${sourceCode}:/project --volume /tmp/multiversx_sdk_rust_contract_builder/cargo-target-dir:/rust/cargo-target-dir --volume /tmp/multiversx_sdk_rust_contract_builder/cargo-registry:/rust/registry --volume /tmp/multiversx_sdk_rust_contract_builder/cargo-git:/rust/git multiversx/sdk-rust-contract-builder:v8.0.0 --project project`,
@@ -527,7 +521,7 @@ test.concurrent(
   180_000,
 );
 
-test.concurrent("verify-reproducible succeeds", async () => {
+test.concurrent("verify-reproducible", async () => {
   using c = newContext();
   let hasBeenQueued = false;
   let hasBeenStarted = false;
@@ -557,13 +551,12 @@ test.concurrent("verify-reproducible succeeds", async () => {
         });
       }),
     );
-    c.input("erd1qqqqqqqqqqqqqpgqttw0lt0plk7zyq27jss5ntgkvrkn8vx3v5ys9e7l6n");
-    await c.cmd("verify-reproducible --poll-delay 1");
+    await c.cmd(
+      "verify-reproducible --sc erd1qqqqqqqqqqqqqpgqttw0lt0plk7zyq27jss5ntgkvrkn8vx3v5ys9e7l6n",
+    );
   })();
 
   expect(c.flushStdout().split("\n")).toEqual([
-    "You are trying to verify a smart contract, but did't provide a smart contract using '--sc <SC>.",
-    "Please enter a smart contract address: ",
     "Verification started...",
     `Found smart contract at ${tmpDir}`,
     "Smart contract was built with image: multiversx/sdk-rust-contract-builder:v8.0.0.",
@@ -579,43 +572,40 @@ test.concurrent("verify-reproducible succeeds", async () => {
   ]);
 });
 
-test.concurrent(
-  "verify-reproducible - An error occured during verification",
-  async () => {
-    using c = newContext();
-    const sourceCode = path.resolve("./contracts/output-reproducible/data");
-    const tmpDir = c.cwd();
-    fs.cpSync(sourceCode, tmpDir, { recursive: true });
+test.concurrent("verify-reproducible | error: verification fails", async () => {
+  using c = newContext();
+  const sourceCode = path.resolve("./contracts/output-reproducible/data");
+  const tmpDir = c.cwd();
+  fs.cpSync(sourceCode, tmpDir, { recursive: true });
 
-    await server.boundary(async () => {
-      server.use(
-        http.get("https://devnet-play-api.multiversx.com/tasks/12345", () => {
-          return Response.json({
-            status: "finished",
-            result: { status: "error", message: "message from proxy" },
-          });
-        }),
-      );
+  await server.boundary(async () => {
+    server.use(
+      http.get("https://devnet-play-api.multiversx.com/tasks/12345", () => {
+        return Response.json({
+          status: "finished",
+          result: { status: "error", message: "message from proxy" },
+        });
+      }),
+    );
 
-      await c.cmd(
-        "verify-reproducible --sc erd1qqqqqqqqqqqqqpgqttw0lt0plk7zyq27jss5ntgkvrkn8vx3v5ys9e7l6n --poll-delay 1",
-      );
-    })();
+    await c.cmd(
+      "verify-reproducible --sc erd1qqqqqqqqqqqqqpgqttw0lt0plk7zyq27jss5ntgkvrkn8vx3v5ys9e7l6n",
+    );
+  })();
 
-    expect(c.flushStdout().split("\n")).toEqual([
-      "Verification started...",
-      `Found smart contract at ${tmpDir}`,
-      "Smart contract was built with image: multiversx/sdk-rust-contract-builder:v8.0.0.",
-      "Requesting verification...",
-      "Verification in process (taskId: 12345)...",
-      "Please wait while we verify your contract. This may take a while.",
-      chalk.red(
-        "An error occured during verification. Message: message from proxy",
-      ),
-      "",
-    ]);
-  },
-);
+  expect(c.flushStdout().split("\n")).toEqual([
+    "Verification started...",
+    `Found smart contract at ${tmpDir}`,
+    "Smart contract was built with image: multiversx/sdk-rust-contract-builder:v8.0.0.",
+    "Requesting verification...",
+    "Verification in process (taskId: 12345)...",
+    "Please wait while we verify your contract. This may take a while.",
+    chalk.red(
+      "An error occured during verification. Message: message from proxy",
+    ),
+    "",
+  ]);
+});
 
 const newContext = () => {
   const ctx = new Context({ cwd: fs.mkdtempSync("/tmp/xsuite-tests-") });
