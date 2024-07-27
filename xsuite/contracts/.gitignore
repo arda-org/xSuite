@@ -1,6 +1,3 @@
-*/output/*
-/output-reproducible/*.json
-/output-reproducible/**/*.abi.json
-/output-reproducible/**/*.imports.json
-/output-reproducible/**/*.mxsc.json
-/output-reproducible/**/*.txt
+/output-reproducible/**/*
+!/output-reproducible/**/
+!/output-reproducible/**/*.wasm
