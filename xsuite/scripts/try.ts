@@ -1,15 +1,14 @@
-import { LSWorld } from "../src";
+import { FSWorld } from "../src";
 
 const main = async () => {
-  const world = await LSWorld.start();
-  const sender = await world.createWallet({ balance: 100 });
-  const receiver = await world.createWallet({ balance: 100 });
+  using world = await FSWorld.start();
+  const sender = await world.createWallet({ balance: 10n ** 18n });
+  const receiver = await world.createWallet({ balance: 1 });
   await sender.transfer({
     receiver,
-    value: 100,
+    value: 1,
     gasLimit: 100_000,
   });
-  world.terminate();
 };
 
 main();
