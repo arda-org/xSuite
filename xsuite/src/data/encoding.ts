@@ -201,6 +201,16 @@ export const e = {
     }
     return newEncodable(() => new Uint8Array([1, ...optEncodable.toNestU8A()]));
   },
+  MapperKey: (...args: EncodableMapperKeyArgs) => {
+    const [name, ...vars] = args;
+    return e.Tuple(e.TopStr(name), ...vars);
+  },
+  EsdtKey: (id: string, nonce?: number | bigint) =>
+    nonce
+      ? e.Tuple(e.TopStr(`ELRONDesdt${id}`), e.TopU(nonce))
+      : e.TopStr(`ELRONDesdt${id}`),
+  EsdtRolesKey: (id: string) => e.TopStr(`ELRONDroleesdt${id}`),
+  EsdtLastNonceKey: (id: string) => e.TopStr(`ELRONDnonce${id}`),
   vs: (encodableVs: EncodableVs): Vs => {
     return encodableVs.map(bytesLikeToHex);
   },
@@ -467,10 +477,10 @@ const eKvsEsdt = ({ id, roles, lastNonce, ...rest }: EncodableEsdt): Kvs => {
   const kvs: EncodableKv[] = [];
   if (roles !== undefined) {
     const messageBytes = ESDTRolesMessage.encode({ Roles: roles }).finish();
-    kvs.push([e.Str(`ELRONDroleesdt${id}`), e.Buffer(messageBytes)]);
+    kvs.push([e.EsdtRolesKey(id), e.Buffer(messageBytes)]);
   }
   if (lastNonce !== undefined) {
-    kvs.push([e.Str(`ELRONDnonce${id}`), e.U(lastNonce)]);
+    kvs.push([e.EsdtLastNonceKey(id), e.U(lastNonce)]);
   }
   let variants: EncodableEsdtVariant[];
   if ("variants" in rest) {
@@ -483,10 +493,6 @@ const eKvsEsdt = ({ id, roles, lastNonce, ...rest }: EncodableEsdt): Kvs => {
     variants = [];
   }
   for (const { nonce, amount, ...rest } of variants) {
-    const keyEncs: Encodable[] = [e.TopStr("ELRONDesdt"), e.TopStr(id)];
-    if (nonce) {
-      keyEncs.push(e.TopU(nonce));
-    }
     const message: Record<string, any> = {};
     const metadata: [string, any][] = [];
     if (nonce) {
@@ -537,7 +543,7 @@ const eKvsEsdt = ({ id, roles, lastNonce, ...rest }: EncodableEsdt): Kvs => {
       message["Value"] = new Uint8Array([0, ...bytes]);
     }
     const messageBytes = ESDTSystemMessage.encode(message).finish();
-    kvs.push([e.Tuple(...keyEncs), messageBytes]);
+    kvs.push([e.EsdtKey(id, nonce), messageBytes]);
   }
   return eKvsUnfiltered(kvs);
 };
@@ -581,7 +587,7 @@ const newEncodable = (
 function curryEKvsMapper<T2, R>(fn: (baseKey: Encodable, data: T2) => R) {
   return function ([name, ...vars]: EncodableMapperKeyArgs): (data: T2) => R {
     return function (data: T2): R {
-      return fn(e.Tuple(e.TopStr(name), ...vars), data);
+      return fn(e.MapperKey(name, ...vars), data);
     };
   };
 }

@@ -6,7 +6,6 @@ export default defineConfig({
     target: "es2022",
   },
   test: {
-    maxConcurrency: 10,
     typecheck: {
       enabled: true,
     },

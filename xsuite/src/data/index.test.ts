@@ -618,6 +618,70 @@ test("e.Option.toNestHex - e.U(256)", () => {
   expect(e.Option(e.U(256)).toNestHex()).toEqual("01000000020100");
 });
 
+test("e.MapperKey.toTopHex - simple key", () => {
+  expect(e.MapperKey("key").toTopHex()).toEqual("6b6579");
+});
+
+test("e.MapperKey.toNestHex - simple key", () => {
+  expect(e.MapperKey("key").toNestHex()).toEqual("6b6579");
+});
+
+test("e.MapperKey.toTopHex - complex key", () => {
+  expect(e.MapperKey("key", e.U32(1)).toTopHex()).toEqual("6b657900000001");
+});
+
+test("e.MapperKey.toNestHex - complex key", () => {
+  expect(e.MapperKey("key", e.U32(1)).toNestHex()).toEqual("6b657900000001");
+});
+
+test("e.EsdtKey.toTopHex - without nonce", () => {
+  expect(e.EsdtKey("TOKEN-123456").toTopHex()).toEqual(
+    "454c524f4e4465736474544f4b454e2d313233343536",
+  );
+});
+
+test("e.EsdtKey.toNestHex - without nonce", () => {
+  expect(e.EsdtKey("TOKEN-123456").toNestHex()).toEqual(
+    "454c524f4e4465736474544f4b454e2d313233343536",
+  );
+});
+
+test("e.EsdtKey.toTopHex - with nonce", () => {
+  expect(e.EsdtKey("TOKEN-123456", 1).toTopHex()).toEqual(
+    "454c524f4e4465736474544f4b454e2d31323334353601",
+  );
+});
+
+test("e.EsdtKey.toNestHex - with nonce", () => {
+  expect(e.EsdtKey("TOKEN-123456", 1).toNestHex()).toEqual(
+    "454c524f4e4465736474544f4b454e2d31323334353601",
+  );
+});
+
+test("e.EsdtRolesKey.toTopHex", () => {
+  expect(e.EsdtRolesKey("TOKEN-123456").toTopHex()).toEqual(
+    "454c524f4e44726f6c6565736474544f4b454e2d313233343536",
+  );
+});
+
+test("e.EsdtRolesKey.toNestHex", () => {
+  expect(e.EsdtRolesKey("TOKEN-123456").toNestHex()).toEqual(
+    "454c524f4e44726f6c6565736474544f4b454e2d313233343536",
+  );
+});
+
+test("e.EsdtLastNonceKey.toTopHex", () => {
+  expect(e.EsdtLastNonceKey("TOKEN-123456").toTopHex()).toEqual(
+    "454c524f4e446e6f6e6365544f4b454e2d313233343536",
+  );
+});
+
+test("e.EsdtLastNonceKey.toNestHex", () => {
+  expect(e.EsdtLastNonceKey("TOKEN-123456").toNestHex()).toEqual(
+    "454c524f4e446e6f6e6365544f4b454e2d313233343536",
+  );
+});
+
 test("e.vs", () => {
   expect(e.vs(["0102", "0304", new Uint8Array([5, 6]), e.U8(10)])).toEqual(vs);
 });
