@@ -1,2 +1,4 @@
-*/output/*
-!*/output/*.wasm
+/output-reproducible/**/*
+!/output-reproducible/**/
+!/output-reproducible/**/*.wasm
+!/output-reproducible/**/*.source.json

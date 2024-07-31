@@ -11,6 +11,13 @@ xSuite utility provides the following commands:
     - `--no-git` - skip git initialization
 - `xsuite build` - builds a contract; currently it has the following options:
     - `-r, --recursive` - builds all contracts under the directory
+- `xsuite build-reproducible` - builds a contract in a reproducible way
+    - `[DIR]` - specify the directory, which contains one or multiple smart contracts to be built
+    - `--image <IMAGE>` - specify the image, that is used to build the contract (e.g. multiversx/sdk-rust-contract-builder:v8.0.0)
+- `xsuite verify-reproducible` - verifies a contract, that has been built in a reproducible way
+   - `[DIR]` - specify the contract, which should be verified
+   - `--sc <SMART_CONTRACT>` - specifies the smart contract address (erd...), which should be verified
+   - `--verifier-url <VERIFIER_URL>` - specifies the verifier url, which will be used to verify the smart contract. (default: https://devnet-play-api.multiversx.com)
 - `xsuite test-rust` - runs contract Rust tests
 - `xsuite test-scen` - runs contract scenarios tests
 - `xsuite new-wallet` - creates a new wallet file; currently it has the following options:
