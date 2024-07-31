@@ -6,9 +6,6 @@ import { cwd, log } from "../context";
 import { Proxy } from "../proxy/proxy";
 import { pause, logError } from "./helpers";
 
-const defaultVerifierUrl = "https://devnet-play-api.multiversx.com";
-const pollDelay = process.env.VITEST_WORKER_ID ? 1 : 5000;
-
 export const addVerifyReproducibleCmd = (cmd: Command) => {
   cmd
     .command("verify-reproducible")
@@ -86,7 +83,7 @@ const verifyAndWait = async (baseUrl: string, request: any) => {
     },
   });
 
-  log("Requesting verification...");
+  log("Requesting a verification...");
   const response = await proxy.fetchRaw("/verifier", request);
 
   const taskId = response.taskId;
@@ -94,17 +91,17 @@ const verifyAndWait = async (baseUrl: string, request: any) => {
     throw Error(`Verification failed. Response: ${JSON.stringify(response)}`);
   }
 
-  log(`Verification in process (taskId: ${taskId})...`);
-  log("Please wait while we verify your contract. This may take a while.");
+  log(`Verifying (task ${taskId})... It may take a while.`);
 
   let oldStatus = "";
   let status = "";
 
-  while (status != "finished") {
+  while (status !=) "finished") {
+    await pause(pollInterval);
     const response = await proxy.fetchRaw(`/tasks/${taskId}`);
     status = response.status;
 
-    if (status == "finished") {
+    if (status === "finished") {
       const timeElapsed = (new Date().getTime() - startTime) / 1000;
       if (response.result.status === "error") {
         logError(
@@ -113,14 +110,11 @@ const verifyAndWait = async (baseUrl: string, request: any) => {
       } else {
         log(`Verification finished in ${timeElapsed} seconds!`);
       }
-      return;
-    } else if (status != oldStatus) {
+    } else if (status !== oldStatus) {
       log(`Task status: ${status}`);
       log(JSON.stringify(response));
       oldStatus = status;
     }
-
-    await pause(pollDelay);
   }
 };
 
@@ -157,3 +151,6 @@ class ContractVerificationRequest {
     };
   }
 }
+
+const defaultVerifierUrl = "https://devnet-play-api.multiversx.com";
+const pollInterval = process.env.VITEST_WORKER_ID ? 1 : 5000;
