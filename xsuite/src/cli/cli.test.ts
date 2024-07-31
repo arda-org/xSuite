@@ -508,13 +508,10 @@ test.concurrent(
     const userArg = userId && groupId ? `--user ${userId}:${groupId} ` : "";
 
     expect(c.flushStdout().split("\n")).toEqual([
-      chalk.cyan("$ command -v docker"),
       `Building... (${sourceCode})`,
-      "Running docker...",
       chalk.cyan(
         `$ docker run ${userArg}--rm --volume ${tmpDir}/output:/output --volume ${sourceCode}:/project --volume /tmp/multiversx_sdk_rust_contract_builder/cargo-target-dir:/rust/cargo-target-dir --volume /tmp/multiversx_sdk_rust_contract_builder/cargo-registry:/rust/registry --volume /tmp/multiversx_sdk_rust_contract_builder/cargo-git:/rust/git multiversx/sdk-rust-contract-builder:v8.0.0 --project project`,
       ),
-      `Reproducible build succeeded for ${sourceCode}...`,
       "",
     ]);
   },
@@ -557,12 +554,10 @@ test.concurrent("verify-reproducible", async () => {
   })();
 
   expect(c.flushStdout().split("\n")).toEqual([
-    "Verification started...",
-    `Found smart contract at ${tmpDir}`,
-    "Smart contract was built with image: multiversx/sdk-rust-contract-builder:v8.0.0.",
-    "Requesting verification...",
-    "Verification in process (taskId: 12345)...",
-    "Please wait while we verify your contract. This may take a while.",
+    `Source file found: ${tmpDir}/data-0.0.0.source.json.`,
+    "Image used for the reproducible build: multiversx/sdk-rust-contract-builder:v8.0.0.",
+    "Requesting a verification...",
+    "Verifying (task 12345)... It may take a while.",
     "Task status: queued",
     '{"status":"queued"}',
     "Task status: started",
@@ -594,12 +589,10 @@ test.concurrent("verify-reproducible | error: verification fails", async () => {
   })();
 
   expect(c.flushStdout().split("\n")).toEqual([
-    "Verification started...",
-    `Found smart contract at ${tmpDir}`,
-    "Smart contract was built with image: multiversx/sdk-rust-contract-builder:v8.0.0.",
-    "Requesting verification...",
-    "Verification in process (taskId: 12345)...",
-    "Please wait while we verify your contract. This may take a while.",
+    `Source file found: ${tmpDir}/data-0.0.0.source.json.`,
+    "Image used for the reproducible build: multiversx/sdk-rust-contract-builder:v8.0.0.",
+    "Requesting a verification...",
+    "Verifying (task 12345)... It may take a while.",
     chalk.red(
       "An error occured during verification. Message: message from proxy",
     ),

@@ -4,9 +4,6 @@ import { Command } from "commander";
 import { cwd, log } from "../context";
 import { logAndRunCommand, logError } from "./helpers";
 
-const defaultReproducibleDockerImage =
-  "multiversx/sdk-rust-contract-builder:v8.0.0";
-
 export const addBuildReproducibleCmd = (cmd: Command) => {
   cmd
     .command("build-reproducible")
@@ -21,21 +18,24 @@ export const addBuildReproducibleCmd = (cmd: Command) => {
     )
     .option("--contract <CONTRACT>", "Contract to be built")
     .option("-r, --recursive", "Build all contracts under the directory")
-    .option("-d, --delete", "Cleans the output-dir, if it is not empty")
+    .option(
+      "-d, --delete",
+      "Delete the output directory in case it already exists.",
+    )
     .option(
       "--output-dir <OUTPUT_DIR>",
       "Directory where the build artifacts will be saved (default: [DIR]/output-reproducible)",
     )
-    .action(buildReproducible);
+    .action(action);
 };
 
-export const buildReproducible = async (
+const action = async (
   dirArgument: string | undefined,
   {
     image,
     contract,
     recursive,
-    delete: cleanOutputDir,
+    delete: deleteOutputDir,
     outputDir,
   }: {
     image?: string;
@@ -66,19 +66,9 @@ export const buildReproducible = async (
     return;
   }
 
-  ensureOutputDirIsEmpty(outputDir, cleanOutputDir);
-  ensureDockerInstalled();
+  ensureEmptyOutputDir(outputDir, deleteOutputDir);
 
-  buildContract(image, contract, sourceDir, outputDir);
-};
-
-const buildContract = (
-  image: string,
-  contract: string | undefined,
-  sourcePath: string,
-  outputDir: string,
-) => {
-  log(`Building... (${sourcePath})`);
+  log(`Building... (${sourceDir})`);
 
   // Prepare general docker arguments
   const dockerGeneralArgs: string[] = ["run"];
@@ -93,8 +83,8 @@ const buildContract = (
   // Prepare docker arguments related to mounting volumes
   const dockerMountArgs: string[] = ["--volume", `${outputDir}:/output`];
 
-  if (sourcePath) {
-    dockerMountArgs.push("--volume", `${sourcePath}:/project`);
+  if (sourceDir) {
+    dockerMountArgs.push("--volume", `${sourceDir}:/project`);
   }
 
   const mountedTemporaryRoot = "/tmp/multiversx_sdk_rust_contract_builder";
@@ -126,36 +116,23 @@ const buildContract = (
   const args = [
     ...dockerGeneralArgs,
     ...dockerMountArgs,
-    `${image}`,
+    image,
     ...entrypointArgs,
   ];
 
-  log("Running docker...");
   logAndRunCommand("docker", args);
-  log(`Reproducible build succeeded for ${sourcePath}...`);
 };
 
-const ensureDockerInstalled = () => {
-  logAndRunCommand("command", ["-v", "docker"]);
-};
-
-const ensureOutputDirIsEmpty = (
+const ensureEmptyOutputDir = (
   outputDir: fs.PathLike,
-  cleanOutputDir: boolean | undefined,
+  deleteOutputDir: boolean | undefined,
 ) => {
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir, { recursive: true });
-    return;
+  if (deleteOutputDir) {
+    fs.rmSync(outputDir, { recursive: true, force: true });
   }
 
-  const is_empty = fs.readdirSync(outputDir).length === 0;
-  if (!is_empty && cleanOutputDir) {
-    fs.rmSync(outputDir, { recursive: true });
-    fs.mkdirSync(outputDir, { recursive: true });
-    return;
-  }
-  if (!is_empty) {
-    logError(`output-dir must be empty: ${outputDir}`);
-    throw new Error(`output-dir must be empty: ${outputDir}`);
-  }
+  fs.mkdirSync(outputDir, { recursive: true });
 };
+
+const defaultReproducibleDockerImage =
+  "multiversx/sdk-rust-contract-builder:v8.0.0";

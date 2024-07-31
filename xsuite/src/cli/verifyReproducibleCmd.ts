@@ -19,10 +19,10 @@ export const addVerifyReproducibleCmd = (cmd: Command) => {
       "--verifier-url <VERIFIIER_URL>",
       `Verifier URL (default: ${defaultVerifierUrl})`,
     )
-    .action(publishReproducible);
+    .action(action);
 };
 
-export const publishReproducible = async (
+const action = async (
   dirArgument: string | undefined,
   {
     sc,
@@ -38,57 +38,57 @@ export const publishReproducible = async (
   } else {
     dir = cwd();
   }
+
   verifierUrl = verifierUrl ?? defaultVerifierUrl;
 
-  log("Verification started...");
   const foundSourceFiles = globSync(`${dir}/**/*.source.json`);
   if (foundSourceFiles.length == 0) {
-    logError(
-      `Cannot find any source file to verify in ${dir}, which is required to verify a smart contract.`,
-    );
+    logError(`No file of type *.source.json found in ${dir}.`);
     return;
   }
   if (foundSourceFiles.length !== 1) {
     logError(
-      `Found more than one source file to verify in ${dir}. Source files found:`,
+      `More than one file of type *.source.json found in ${dir}: ${foundSourceFiles.map(
+        (f) => `\n- ${f}`,
+      )}`,
     );
-    foundSourceFiles.forEach((f) => logError(f));
     return;
   }
 
-  log(`Found smart contract at ${path.dirname(foundSourceFiles[0])}`);
-  const sourceCode = JSON.parse(fs.readFileSync(foundSourceFiles[0], "utf-8"));
-  const image = sourceCode.metadata.buildMetadata.builderName;
+  const sourceFile = foundSourceFiles[0];
+  log(`Source file found: ${sourceFile}.`);
+
+  const sourceCode = JSON.parse(fs.readFileSync(sourceFile, "utf-8"));
+  const image = sourceCode?.metadata?.buildMetadata?.builderName;
   if (!image) {
-    logError(`Could not read image name from ${foundSourceFiles[0]}.`);
+    logError(`No image name found in "${sourceFile}".`);
     return;
   }
 
-  log(`Smart contract was built with image: ${image}.`);
-  const request = new ContractVerificationRequest(
-    sc,
-    sourceCode,
-    "",
-    image,
-  ).toDictionary();
-  await verifyAndWait(verifierUrl, request);
-};
-
-const verifyAndWait = async (baseUrl: string, request: any) => {
+  log(`Image used for the reproducible build: ${image}.`);
   const startTime = new Date().getTime();
   const proxy = new Proxy({
-    proxyUrl: baseUrl,
+    proxyUrl: verifierUrl,
     headers: {
       "Content-Type": "application/json",
     },
   });
 
   log("Requesting a verification...");
-  const response = await proxy.fetchRaw("/verifier", request);
+  const response = await proxy.fetchRaw("/verifier", {
+    signature: "",
+    payload: {
+      contract: sc,
+      dockerImage: image,
+      sourceCode,
+      contractVariant: null,
+    },
+  });
 
   const taskId = response.taskId;
   if (!taskId) {
-    throw Error(`Verification failed. Response: ${JSON.stringify(response)}`);
+    logError(`Verification failed. Response: ${JSON.stringify(response)}`);
+    return;
   }
 
   log(`Verifying (task ${taskId})... It may take a while.`);
@@ -96,7 +96,7 @@ const verifyAndWait = async (baseUrl: string, request: any) => {
   let oldStatus = "";
   let status = "";
 
-  while (status !=) "finished") {
+  while (status !== "finished") {
     await pause(pollInterval);
     const response = await proxy.fetchRaw(`/tasks/${taskId}`);
     status = response.status;
@@ -117,40 +117,6 @@ const verifyAndWait = async (baseUrl: string, request: any) => {
     }
   }
 };
-
-class ContractVerificationRequest {
-  contractAddress: string;
-  sourceCode: any;
-  signature: string;
-  dockerImage: string;
-  contractVariant?: string | null;
-
-  constructor(
-    contractAddress: string,
-    sourceCode: any,
-    signature: string,
-    dockerImage: string,
-    contractVariant?: string | null,
-  ) {
-    this.contractAddress = contractAddress;
-    this.sourceCode = sourceCode;
-    this.signature = signature;
-    this.dockerImage = dockerImage;
-    this.contractVariant = contractVariant;
-  }
-
-  toDictionary(): any {
-    return {
-      signature: this.signature,
-      payload: {
-        contract: this.contractAddress,
-        dockerImage: this.dockerImage,
-        sourceCode: this.sourceCode,
-        contractVariant: this.contractVariant,
-      },
-    };
-  }
-}
 
 const defaultVerifierUrl = "https://devnet-play-api.multiversx.com";
 const pollInterval = process.env.VITEST_WORKER_ID ? 1 : 5000;
