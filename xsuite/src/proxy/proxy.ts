@@ -142,12 +142,18 @@ export class Proxy {
       const { returnCode, returnMessage } = tx.executionReceipt;
       throw new TxError(returnCode, returnMessage, tx);
     }
-    const signalErrorEvent = tx?.logs?.events.find(
+    const signalErrorEvent = tx?.logs?.events?.find(
       (e: any) => e.identifier === "signalError",
     );
     if (signalErrorEvent) {
       const error = atob(signalErrorEvent.topics[1]);
       throw new TxError("signalError", error, tx);
+    }
+    const errorScr = tx?.smartContractResults?.find(
+      (scrs: any) => scrs.returnMessage,
+    );
+    if (errorScr) {
+      throw new TxError("returnMessage", errorScr.returnMessage, tx);
     }
     if (tx.status !== "success") {
       throw new TxError("errorStatus", tx.status, tx);
