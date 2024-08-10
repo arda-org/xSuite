@@ -64,6 +64,27 @@ pub trait World {
         self.n().set(n);
     }
 
+    #[payable("EGLD")]
+    #[endpoint]
+    fn issue_token_with_failing_callback(&self) {
+        self.token().issue(
+            self.call_value().egld_value().clone_value(),
+            ManagedBuffer::new_from_bytes(b"TEST"),
+            ManagedBuffer::new_from_bytes(b"TEST"),
+            BigUint::zero(),
+            0,
+            Some(self.callbacks().failing_callback()),
+        );
+    }
+
+    #[callback]
+    fn failing_callback(&self) {
+        require!(false, "Fail");
+    }
+
     #[storage_mapper("n")]
     fn n(&self) -> SingleValueMapper<u64>;
+
+    #[storage_mapper("token")]
+    fn token(&self) -> FungibleTokenMapper;
 }

@@ -530,7 +530,7 @@ test.concurrent("FSWorld.deployContract", async () => {
     code: worldCode,
     codeMetadata: ["readable"],
     codeArgs: [e.U64(1)],
-    gasLimit: 10_000_000,
+    gasLimit: 30_000_000,
   });
   expect(getAddressType(contract)).toEqual("vmContract");
   expect(contract.explorerUrl).toEqual(
@@ -557,7 +557,7 @@ test.concurrent("FSWorld.upgradeContract", async () => {
     code: worldCode,
     codeMetadata: ["readable"],
     codeArgs: [e.U64(2)],
-    gasLimit: 10_000_000,
+    gasLimit: 30_000_000,
   });
   assertAccount(await contract.getAccount(), {
     code: worldCode,
@@ -716,7 +716,7 @@ test.concurrent("FSWallet.getAccount", async () => {
   });
 });
 
-test.concurrent("FSWallet.setAccount - FSWallet.getAccount", async () => {
+test.concurrent("FSWallet.setAccount & FSWallet.getAccount", async () => {
   using world = await FSWorld.start();
   const { wallet } = await createAccounts(world);
   const before = await wallet.getAccount();
@@ -783,7 +783,7 @@ test.concurrent("FSWallet.deployContract", async () => {
     code: worldCode,
     codeMetadata: ["readable"],
     codeArgs: [e.U64(1)],
-    gasLimit: 10_000_000,
+    gasLimit: 30_000_000,
   });
   expect(getAddressType(contract)).toEqual("vmContract");
   expect(contract.explorerUrl).toEqual(
@@ -809,7 +809,7 @@ test.concurrent("FSWallet.upgradeContract", async () => {
     code: worldCode,
     codeMetadata: ["readable"],
     codeArgs: [e.U64(2)],
-    gasLimit: 10_000_000,
+    gasLimit: 30_000_000,
   });
   assertAccount(await contract.getAccount(), {
     code: worldCode,
@@ -818,7 +818,7 @@ test.concurrent("FSWallet.upgradeContract", async () => {
   });
 });
 
-test.concurrent("FSWallet.callContract with EGLD", async () => {
+test.concurrent("FSWallet.callContract - with EGLD", async () => {
   using world = await FSWorld.start();
   const { wallet, contract } = await createAccounts(world);
   const { fee } = await wallet.callContract({
@@ -835,7 +835,7 @@ test.concurrent("FSWallet.callContract with EGLD", async () => {
   });
 });
 
-test.concurrent("FSWallet.callContract with ESDT", async () => {
+test.concurrent("FSWallet.callContract - with ESDT", async () => {
   using world = await FSWorld.start();
   const { wallet, contract } = await createAccounts(world);
   await wallet.callContract({
@@ -852,7 +852,7 @@ test.concurrent("FSWallet.callContract with ESDT", async () => {
   });
 });
 
-test.concurrent("FSWallet.callContract with return", async () => {
+test.concurrent("FSWallet.callContract - with return", async () => {
   using world = await FSWorld.start();
   const { wallet, contract } = await createAccounts(world);
   const { returnData } = await wallet.callContract({
@@ -881,7 +881,7 @@ test.concurrent("FSWallet.callContract - change the state", async () => {
   });
 });
 
-test.concurrent("FSWallet.callContract failure", async () => {
+test.concurrent("FSWallet.callContract - failure", async () => {
   using world = await FSWorld.start();
   const { wallet, contract } = await createAccounts(world);
   await expect(
@@ -899,7 +899,7 @@ test.concurrent("FSWallet.callContract failure", async () => {
 });
 
 test.concurrent(
-  "FSWallet.callContract.assertFail - correct parameters",
+  "FSWallet.callContract.assertFail - error in sync call",
   async () => {
     using world = await FSWorld.start();
     const { wallet, contract } = await createAccounts(world);
@@ -914,7 +914,44 @@ test.concurrent(
   },
 );
 
-test.concurrent("FSWallet.callContract.assertFail - Wrong code", async () => {
+test.concurrent(
+  "FSWallet.callContract.assertFail - error in async call",
+  async () => {
+    using world = await FSWorld.start();
+    const { wallet, contract } = await createAccounts(world);
+    await wallet
+      .callContract({
+        callee: contract,
+        funcName: "issue_token_with_failing_callback",
+        gasLimit: 100_000_000,
+      })
+      .assertFail({
+        code: "returnMessage",
+        message: "callValue not equals with baseIssuingCost",
+      });
+  },
+);
+
+test.concurrent(
+  "FSWallet.callContract.assertFail - error in async callback",
+  async () => {
+    using world = await FSWorld.start();
+    const { wallet, contract } = await createAccounts(world);
+    await wallet
+      .callContract({
+        callee: contract,
+        funcName: "issue_token_with_failing_callback",
+        value: 5n * 10n ** 16n,
+        gasLimit: 100_000_000,
+      })
+      .assertFail({
+        code: "signalError",
+        message: "Fail",
+      });
+  },
+);
+
+test.concurrent("FSWallet.callContract.assertFail - wrong code", async () => {
   using world = await FSWorld.start();
   const { wallet, contract } = await createAccounts(world);
   await expect(
@@ -932,7 +969,7 @@ test.concurrent("FSWallet.callContract.assertFail - Wrong code", async () => {
 });
 
 test.concurrent(
-  "FSWallet.callContract.assertFail - Wrong message",
+  "FSWallet.callContract.assertFail - wrong message",
   async () => {
     using world = await FSWorld.start();
     const { wallet, contract } = await createAccounts(world);
@@ -952,7 +989,7 @@ test.concurrent(
 );
 
 test.concurrent(
-  "FSWallet.callContract.assertFail - Transaction not failing",
+  "FSWallet.callContract.assertFail - transaction not failing",
   async () => {
     using world = await FSWorld.start();
     const { wallet, contract } = await createAccounts(world);
@@ -1033,7 +1070,7 @@ test.concurrent("FSContract.getAccount", async () => {
   });
 });
 
-test.concurrent("FSContract.setAccount - FSContract.getAccount", async () => {
+test.concurrent("FSContract.setAccount & FSContract.getAccount", async () => {
   using world = await FSWorld.start();
   const { contract } = await createAccounts(world);
   const before = await contract.getAccount();
