@@ -159,6 +159,7 @@ beforeAll(async () => {
     gasLimit: 10_000_000,
   });
   complexContractState = await contract.getSerializableAccount();
+  complexContractState.codeHash = "some code hash";
   complexSysAccState = await world.sysAcc.getSerializableAccount();
 });
 
@@ -617,6 +618,70 @@ test("e.Option.toNestHex - e.U(256)", () => {
   expect(e.Option(e.U(256)).toNestHex()).toEqual("01000000020100");
 });
 
+test("e.MapperKey.toTopHex - simple key", () => {
+  expect(e.MapperKey("key").toTopHex()).toEqual("6b6579");
+});
+
+test("e.MapperKey.toNestHex - simple key", () => {
+  expect(e.MapperKey("key").toNestHex()).toEqual("6b6579");
+});
+
+test("e.MapperKey.toTopHex - complex key", () => {
+  expect(e.MapperKey("key", e.U32(1)).toTopHex()).toEqual("6b657900000001");
+});
+
+test("e.MapperKey.toNestHex - complex key", () => {
+  expect(e.MapperKey("key", e.U32(1)).toNestHex()).toEqual("6b657900000001");
+});
+
+test("e.EsdtKey.toTopHex - without nonce", () => {
+  expect(e.EsdtKey("TOKEN-123456").toTopHex()).toEqual(
+    "454c524f4e4465736474544f4b454e2d313233343536",
+  );
+});
+
+test("e.EsdtKey.toNestHex - without nonce", () => {
+  expect(e.EsdtKey("TOKEN-123456").toNestHex()).toEqual(
+    "454c524f4e4465736474544f4b454e2d313233343536",
+  );
+});
+
+test("e.EsdtKey.toTopHex - with nonce", () => {
+  expect(e.EsdtKey("TOKEN-123456", 1).toTopHex()).toEqual(
+    "454c524f4e4465736474544f4b454e2d31323334353601",
+  );
+});
+
+test("e.EsdtKey.toNestHex - with nonce", () => {
+  expect(e.EsdtKey("TOKEN-123456", 1).toNestHex()).toEqual(
+    "454c524f4e4465736474544f4b454e2d31323334353601",
+  );
+});
+
+test("e.EsdtRolesKey.toTopHex", () => {
+  expect(e.EsdtRolesKey("TOKEN-123456").toTopHex()).toEqual(
+    "454c524f4e44726f6c6565736474544f4b454e2d313233343536",
+  );
+});
+
+test("e.EsdtRolesKey.toNestHex", () => {
+  expect(e.EsdtRolesKey("TOKEN-123456").toNestHex()).toEqual(
+    "454c524f4e44726f6c6565736474544f4b454e2d313233343536",
+  );
+});
+
+test("e.EsdtLastNonceKey.toTopHex", () => {
+  expect(e.EsdtLastNonceKey("TOKEN-123456").toTopHex()).toEqual(
+    "454c524f4e446e6f6e6365544f4b454e2d313233343536",
+  );
+});
+
+test("e.EsdtLastNonceKey.toNestHex", () => {
+  expect(e.EsdtLastNonceKey("TOKEN-123456").toNestHex()).toEqual(
+    "454c524f4e446e6f6e6365544f4b454e2d313233343536",
+  );
+});
+
 test("e.vs", () => {
   expect(e.vs(["0102", "0304", new Uint8Array([5, 6]), e.U8(10)])).toEqual(vs);
 });
@@ -821,8 +886,7 @@ test("e.account", async () => {
       nonce: 0,
       balance: 10,
       code: readFileHex("contracts/data/output/data.wasm"),
-      codeHash:
-        "4b580fff10fb09e1641bc639d01d128224f9c7207fcf11ed7ecd2cd0b045a35f",
+      codeHash: "some code hash",
       codeMetadata: ["readable", "upgradeable"],
       kvs: complexContractState.kvs,
       owner: wallet,
@@ -1349,8 +1413,7 @@ test("d.account", () => {
     nonce: 0,
     balance: 10n,
     code: readFileHex("contracts/data/output/data.wasm"),
-    codeHash:
-      "4b580fff10fb09e1641bc639d01d128224f9c7207fcf11ed7ecd2cd0b045a35f",
+    codeHash: "some code hash",
     codeMetadata: ["upgradeable", "readable"],
     kvs: expect.anything(),
     owner: wallet,

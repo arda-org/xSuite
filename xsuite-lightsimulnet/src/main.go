@@ -47,6 +47,11 @@ func main() {
 		respond(w, resBody, err)
 	})
 
+	router.Get("/address/{address}/key/{key}", func(w http.ResponseWriter, r *http.Request) {
+		resBody, err := executor.HandleAddressKey(r)
+		respond(w, resBody, err)
+	})
+
 	router.Post("/transaction/send", func(w http.ResponseWriter, r *http.Request) {
 		resBody, err := executor.HandleTransactionSend(r)
 		respond(w, resBody, err)

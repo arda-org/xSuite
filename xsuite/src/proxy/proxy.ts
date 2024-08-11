@@ -5,7 +5,7 @@ import {
   addressLikeToBechAddress,
   addressLikeToHexAddress,
 } from "../data/addressLike";
-import { BytesLike } from "../data/bytesLike";
+import { BytesLike, bytesLikeToHex } from "../data/bytesLike";
 import {
   Encodable,
   EncodableCodeMetadata,
@@ -19,22 +19,39 @@ export class Proxy {
   proxyUrl: string;
   headers: HeadersInit;
   explorerUrl: string;
+  blockNonce?: number;
 
   constructor(params: ProxyParams) {
     params = typeof params === "string" ? { proxyUrl: params } : params;
     this.proxyUrl = params.proxyUrl;
     this.headers = params.headers ?? {};
     this.explorerUrl = params.explorerUrl ?? "";
+    this.blockNonce = params.blockNonce;
+  }
+
+  private makeUrl(
+    path: string,
+    params: Record<string, { toString: () => string } | undefined> = {},
+  ) {
+    const url = new URL(path, this.proxyUrl);
+    for (const [k, v] of Object.entries(params)) {
+      if (v !== undefined && v !== null) {
+        url.searchParams.set(k, v.toString());
+      }
+    }
+    return url.toString();
   }
 
   fetchRaw(path: string, data?: any) {
-    const baseUrl = this.proxyUrl;
     const init: RequestInit = { headers: this.headers };
     if (data !== undefined) {
       init.method = "POST";
       init.body = JSON.stringify(data);
     }
-    return fetch(`${baseUrl}${path}`, init).then((r) => r.json());
+    return fetch(
+      this.makeUrl(path, { blockNonce: this.blockNonce }),
+      init,
+    ).then((r) => r.json());
   }
 
   async fetch(path: string, data?: any) {
@@ -121,19 +138,40 @@ export class Proxy {
     const hash: string = tx.hash;
     const explorerUrl = `${this.explorerUrl}/transactions/${hash}`;
     tx = { explorerUrl, hash, ...tx };
-    if (tx.status !== "success") {
-      throw new TxError("errorStatus", tx.status, tx);
-    }
     if (tx.executionReceipt?.returnCode) {
       const { returnCode, returnMessage } = tx.executionReceipt;
       throw new TxError(returnCode, returnMessage, tx);
     }
-    const signalErrorEvent = tx?.logs?.events.find(
-      (e: any) => e.identifier === "signalError",
-    );
-    if (signalErrorEvent) {
-      const error = atob(signalErrorEvent.topics[1]);
-      throw new TxError("signalError", error, tx);
+    const events = tx?.logs?.events;
+    if (events) {
+      for (const event of events) {
+        if (event.identifier === "signalError") {
+          const error = atob(event.topics[1]);
+          throw new TxError("signalError", error, tx);
+        }
+      }
+    }
+    const scrs = tx?.smartContractResults;
+    if (scrs) {
+      for (const scr of scrs) {
+        if (scr.returnMessage) {
+          throw new TxError("returnMessage", scr.returnMessage, tx);
+        }
+      }
+      for (const scr of scrs) {
+        const events = scr?.logs?.events;
+        if (events) {
+          for (const event of events) {
+            if (event.identifier === "signalError") {
+              const error = atob(event.topics[1]);
+              throw new TxError("signalError", error, tx);
+            }
+          }
+        }
+      }
+    }
+    if (tx.status !== "success") {
+      throw new TxError("errorStatus", tx.status, tx);
     }
     const gasUsed: number = tx.gasUsed;
     const fee: bigint = BigInt(tx.fee);
@@ -284,7 +322,7 @@ export class Proxy {
 
   private async _getTx(txHash: string, { withResults }: GetTxRawOptions = {}) {
     const res = await this.fetch(
-      makePath(`/transaction/${txHash}`, { withResults }),
+      this.makeUrl(`/transaction/${txHash}`, { withResults }),
     );
     return res.transaction as Record<string, any>;
   }
@@ -299,7 +337,7 @@ export class Proxy {
     { shardId }: GetAccountOptions = {},
   ) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBechAddress(address)}/nonce`, {
+      this.makeUrl(`/address/${addressLikeToBechAddress(address)}/nonce`, {
         "forced-shard-id": shardId,
       }),
     );
@@ -311,11 +349,29 @@ export class Proxy {
     { shardId }: GetAccountOptions = {},
   ) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBechAddress(address)}/balance`, {
+      this.makeUrl(`/address/${addressLikeToBechAddress(address)}/balance`, {
         "forced-shard-id": shardId,
       }),
     );
     return BigInt(res.balance);
+  }
+
+  async getAccountValue(
+    address: AddressLike,
+    key: BytesLike,
+    { shardId }: GetAccountOptions = {},
+  ): Promise<string> {
+    const res = await this.fetch(
+      this.makeUrl(
+        `/address/${addressLikeToBechAddress(address)}/key/${bytesLikeToHex(
+          key,
+        )}`,
+        {
+          "forced-shard-id": shardId,
+        },
+      ),
+    );
+    return res.value;
   }
 
   async getAccountKvs(
@@ -323,7 +379,7 @@ export class Proxy {
     { shardId }: GetAccountOptions = {},
   ) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBechAddress(address)}/keys`, {
+      this.makeUrl(`/address/${addressLikeToBechAddress(address)}/keys`, {
         "forced-shard-id": shardId,
       }),
     );
@@ -335,7 +391,7 @@ export class Proxy {
     options?: GetAccountOptions,
   ) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBechAddress(address)}`, options),
+      this.makeUrl(`/address/${addressLikeToBechAddress(address)}`, options),
     );
     return getSerializableAccount(res.account);
   }
@@ -514,24 +570,6 @@ const upgradeContractTxToTx = ({
   };
 };
 
-const makePath = (
-  basePath: string,
-  params: Record<string, { toString: () => string } | undefined> = {},
-) => {
-  let path = basePath;
-  let first = true;
-  for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined) {
-      if (first) {
-        path += "?";
-        first = false;
-      }
-      path += `${k}=${v}`;
-    }
-  }
-  return path;
-};
-
 const broadTxToRawTx = async (tx: BroadTx): Promise<RawTx> => {
   if (isRawTx(tx)) {
     return tx;
@@ -621,7 +659,12 @@ export const pendingErrorMessage = "Transaction still pending.";
 
 export type ProxyParams =
   | string
-  | { proxyUrl: string; headers?: HeadersInit; explorerUrl?: string };
+  | {
+      proxyUrl: string;
+      headers?: HeadersInit;
+      explorerUrl?: string;
+      blockNonce?: number;
+    };
 
 type BroadTx = Tx | RawTx;
 
