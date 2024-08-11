@@ -915,14 +915,14 @@ test.concurrent(
 );
 
 test.concurrent(
-  "FSWallet.callContract.assertFail - error in async call",
+  "FSWallet.callContract.assertFail - failing async call without callback",
   async () => {
     using world = await FSWorld.start();
     const { wallet, contract } = await createAccounts(world);
     await wallet
       .callContract({
         callee: contract,
-        funcName: "issue_token_with_failing_callback",
+        funcName: "issue_token_without_callback",
         gasLimit: 100_000_000,
       })
       .assertFail({
@@ -933,7 +933,25 @@ test.concurrent(
 );
 
 test.concurrent(
-  "FSWallet.callContract.assertFail - error in async callback",
+  "FSWallet.callContract.assertFail - failing async call with succeeding callback",
+  async () => {
+    using world = await FSWorld.start();
+    const { wallet, contract } = await createAccounts(world);
+    await wallet
+      .callContract({
+        callee: contract,
+        funcName: "issue_token_with_succeeding_callback",
+        gasLimit: 100_000_000,
+      })
+      .assertFail({
+        code: "returnMessage",
+        message: "callValue not equals with baseIssuingCost",
+      });
+  },
+);
+
+test.concurrent(
+  "FSWallet.callContract.assertFail - succeeding async call with failing callback",
   async () => {
     using world = await FSWorld.start();
     const { wallet, contract } = await createAccounts(world);
@@ -947,6 +965,24 @@ test.concurrent(
       .assertFail({
         code: "signalError",
         message: "Fail",
+      });
+  },
+);
+
+test.concurrent(
+  "FSWallet.callContract.assertFail - failing async call with failing callback",
+  async () => {
+    using world = await FSWorld.start();
+    const { wallet, contract } = await createAccounts(world);
+    await wallet
+      .callContract({
+        callee: contract,
+        funcName: "issue_token_with_failing_callback",
+        gasLimit: 100_000_000,
+      })
+      .assertFail({
+        code: "returnMessage",
+        message: "callValue not equals with baseIssuingCost",
       });
   },
 );

@@ -66,15 +66,54 @@ pub trait World {
 
     #[payable("EGLD")]
     #[endpoint]
+    fn issue_token_without_callback(&self) {
+        self.send()
+            .esdt_system_sc_proxy()
+            .issue_fungible(
+                self.call_value().egld_value().clone_value(),
+                &ManagedBuffer::new_from_bytes(b"TEST"),
+                &ManagedBuffer::new_from_bytes(b"TEST"),
+                &BigUint::zero(),
+                FungibleTokenProperties::default(),
+            )
+            .async_call_and_exit();
+    }
+
+    #[payable("EGLD")]
+    #[endpoint]
+    fn issue_token_with_succeeding_callback(&self) {
+        self.send()
+            .esdt_system_sc_proxy()
+            .issue_fungible(
+                self.call_value().egld_value().clone_value(),
+                &ManagedBuffer::new_from_bytes(b"TEST"),
+                &ManagedBuffer::new_from_bytes(b"TEST"),
+                &BigUint::zero(),
+                FungibleTokenProperties::default(),
+            )
+            .with_callback(self.callbacks().succeeding_callback())
+            .async_call_and_exit();
+    }
+
+    #[payable("EGLD")]
+    #[endpoint]
     fn issue_token_with_failing_callback(&self) {
-        self.token().issue(
-            self.call_value().egld_value().clone_value(),
-            ManagedBuffer::new_from_bytes(b"TEST"),
-            ManagedBuffer::new_from_bytes(b"TEST"),
-            BigUint::zero(),
-            0,
-            Some(self.callbacks().failing_callback()),
-        );
+        self.send()
+            .esdt_system_sc_proxy()
+            .issue_fungible(
+                self.call_value().egld_value().clone_value(),
+                &ManagedBuffer::new_from_bytes(b"TEST"),
+                &ManagedBuffer::new_from_bytes(b"TEST"),
+                &BigUint::zero(),
+                FungibleTokenProperties::default(),
+            )
+            .with_callback(self.callbacks().failing_callback())
+            .async_call_and_exit();
+    }
+
+    #[callback]
+    fn succeeding_callback(&self) {
+        require!(false, "Fail");
     }
 
     #[callback]
