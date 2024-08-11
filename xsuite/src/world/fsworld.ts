@@ -186,8 +186,7 @@ export class FSWorld extends World {
   }
 
   terminate() {
-    if (!this.server) throw new Error("No server defined.");
-    this.server.kill();
+    this.server?.kill();
   }
 
   [Symbol.dispose]() {
