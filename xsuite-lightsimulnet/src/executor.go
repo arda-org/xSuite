@@ -25,7 +25,7 @@ func NewExecutor() (*Executor, error) {
 	}
 	e := Executor{
 		scenexec: scenexec,
-		numberOfTxsToKeep: 20,
+		numberOfTxsToKeep: 200,
 		hashesOfTxsToKeep: []string{},
 		txResps: map[string]interface{}{},
 		txProcessStatusResps: map[string]interface{}{},

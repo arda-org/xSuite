@@ -513,6 +513,36 @@ test.concurrent(
   },
 );
 
+test.concurrent("LSWorld.doTransfers - 100 transfers", async () => {
+  using world = await LSWorld.start();
+  const wallet1 = await world.createWallet({
+    address: { shard: 0 },
+    balance: 10n ** 18n,
+    kvs: {
+      esdts: [{ id: fftId, amount: 100 }],
+    },
+  });
+  const wallet2 = await world.createWallet({
+    address: { shard: 0 },
+  });
+  await world.doTransfers(
+    Array.from({ length: 100 }, () => ({
+      sender: wallet1,
+      receiver: wallet2,
+      esdts: [{ id: fftId, amount: 1 }],
+      gasLimit: 10_000_000,
+    })),
+  );
+  assertAccount(await wallet1.getAccount(), {
+    kvs: {},
+  });
+  assertAccount(await wallet2.getAccount(), {
+    kvs: {
+      esdts: [{ id: fftId, amount: 100 }],
+    },
+  });
+});
+
 test.concurrent(
   "LSWorld.doTransfers - invalid tx - gasLimit too low",
   async () => {
