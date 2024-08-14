@@ -675,6 +675,7 @@ export type ProxyParams =
       headers?: HeadersInit;
       explorerUrl?: string;
       blockNonce?: number;
+      // TODO-MvX: remove this when blockchain fixed
       pauseAfterSend?: number;
     };
 
