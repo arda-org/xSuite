@@ -3,18 +3,6 @@ import { hexToBase64 } from "../data/utils";
 import { getValuesInOrder, Proxy } from "./proxy";
 
 export class FSProxy extends Proxy {
-  async sendTxs(...[txs]: Parameters<typeof Proxy.prototype.sendTxs>) {
-    const r = await super.sendTxs(txs);
-    await new Promise((r) => setTimeout(r, 250)); // TODO-MvX: to be removed once they fix this
-    return r;
-  }
-
-  async sendTx(...[tx]: Parameters<typeof Proxy.prototype.sendTx>) {
-    const r = await super.sendTx(tx);
-    await new Promise((r) => setTimeout(r, 250)); // TODO-MvX: to be removed once they fix this
-    return r;
-  }
-
   async getInitialAddresses() {
     const res = await this.fetch("/simulator/initial-wallets");
     return {
