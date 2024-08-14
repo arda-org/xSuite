@@ -2,3 +2,4 @@
 /target/
 /Todo.txt
 /wallet.json
+tsconfig.vitest-temp.json

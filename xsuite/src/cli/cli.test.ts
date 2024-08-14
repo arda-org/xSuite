@@ -430,7 +430,7 @@ test.concurrent(
       "",
     ]);
   },
-  100_000,
+  180_000,
 );
 
 test.concurrent(
@@ -466,7 +466,7 @@ test.concurrent(
       "",
     ]);
   },
-  100_000,
+  180_000,
 );
 
 test.concurrent("new contract | error: already exists", async () => {
@@ -479,6 +479,123 @@ test.concurrent("new contract | error: already exists", async () => {
   );
 });
 
+test.concurrent(
+  "build-reproducible",
+  async () => {
+    using c = newContext();
+    const tmpDir = c.cwd();
+
+    const sourceCode = path.resolve("./contracts/data");
+    await c.cmd(
+      `build-reproducible ${sourceCode} --image multiversx/sdk-rust-contract-builder:v8.0.0 --output-dir ${tmpDir}/output -r`,
+    );
+
+    const userId = process.getuid?.();
+    const groupId = process.getgid?.();
+    const userArg = userId && groupId ? `--user ${userId}:${groupId} ` : "";
+
+    expect(c.flushStdout().split("\n")).toEqual([
+      `Building contract(s) in "${sourceCode}"...`,
+      chalk.cyan(
+        `$ docker run ${userArg}--rm --volume ${tmpDir}/output:/output --volume ${sourceCode}:/project --volume /tmp/multiversx_sdk_rust_contract_builder/rust-cargo-target-dir:/rust/cargo-target-dir --volume /tmp/multiversx_sdk_rust_contract_builder/rust-registry:/rust/registry --volume /tmp/multiversx_sdk_rust_contract_builder/rust-git:/rust/git multiversx/sdk-rust-contract-builder:v8.0.0 --project project`,
+      ),
+      "",
+    ]);
+  },
+  180_000,
+);
+
+test.concurrent("verify-reproducible", async () => {
+  using c = newContext();
+  let hasBeenQueued = false;
+  let hasBeenStarted = false;
+
+  const sourceCode = path.resolve("./contracts/output-reproducible/data");
+  const tmpDir = c.cwd();
+  fs.cpSync(sourceCode, tmpDir, { recursive: true });
+
+  using server = setupServerAndListen();
+  await server.boundary(async () => {
+    server.use(
+      http.post("https://devnet-play-api.multiversx.com/verifier", () => {
+        return Response.json({ taskId: "12345" });
+      }),
+      http.get("https://devnet-play-api.multiversx.com/tasks/12345", () => {
+        console.log("LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL");
+        if (!hasBeenQueued) {
+          hasBeenQueued = true;
+          return Response.json({
+            status: "queued",
+          });
+        }
+        if (!hasBeenStarted) {
+          hasBeenStarted = true;
+          return Response.json({
+            status: "started",
+          });
+        }
+        return Response.json({
+          status: "finished",
+          result: { status: "success" },
+        });
+      }),
+    );
+    await c.cmd(
+      "verify-reproducible --sc erd1qqqqqqqqqqqqqpgqttw0lt0plk7zyq27jss5ntgkvrkn8vx3v5ys9e7l6n",
+    );
+  })();
+
+  expect(c.flushStdout().split("\n")).toEqual([
+    `Source file found: "${tmpDir}/data-0.0.0.source.json".`,
+    "Image used for the reproducible build: multiversx/sdk-rust-contract-builder:v8.0.0.",
+    "Requesting a verification...",
+    "Verifying (task 12345)... It may take a while.",
+    "Task status: queued",
+    '{"status":"queued"}',
+    "Task status: started",
+    '{"status":"started"}',
+    expect.stringMatching(/^Verification finished in \d+(\.\d+)? seconds!$/),
+    "",
+  ]);
+});
+
+test.concurrent("verify-reproducible | error: verification fails", async () => {
+  using c = newContext();
+  const sourceCode = path.resolve("./contracts/output-reproducible/data");
+  const tmpDir = c.cwd();
+  fs.cpSync(sourceCode, tmpDir, { recursive: true });
+
+  using server = setupServerAndListen();
+  await server.boundary(async () => {
+    server.use(
+      http.post("https://devnet-play-api.multiversx.com/verifier", () => {
+        return Response.json({ taskId: "12345" });
+      }),
+      http.get("https://devnet-play-api.multiversx.com/tasks/12345", () => {
+        return Response.json({
+          status: "finished",
+          result: { status: "error", message: "message from proxy" },
+        });
+      }),
+    );
+
+    await c.cmd(
+      "verify-reproducible --sc erd1qqqqqqqqqqqqqpgqttw0lt0plk7zyq27jss5ntgkvrkn8vx3v5ys9e7l6n",
+    );
+  })();
+
+  expect(c.flushStdout().split("\n")).toEqual([
+    `Source file found: "${tmpDir}/data-0.0.0.source.json".`,
+    "Image used for the reproducible build: multiversx/sdk-rust-contract-builder:v8.0.0.",
+    "Requesting a verification...",
+    "Verifying (task 12345)... It may take a while.",
+    chalk.red(
+      "An error occured during verification. Message: message from proxy",
+    ),
+    "",
+  ]);
+});
+
 const newContext = () => {
   const ctx = new Context({ cwd: fs.mkdtempSync("/tmp/xsuite-tests-") });
   return Object.assign(ctx, {
@@ -486,6 +603,16 @@ const newContext = () => {
       ctx.run(() => getCli().parseAsync(c.split(" "), { from: "user" })),
     [Symbol.dispose]() {
       fs.rmSync(ctx.cwd(), { recursive: true, force: true });
+    },
+  });
+};
+
+const setupServerAndListen = () => {
+  const server = setupServer();
+  server.listen();
+  return Object.assign(server, {
+    [Symbol.dispose]() {
+      server.close();
     },
   });
 };

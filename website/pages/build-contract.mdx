@@ -19,3 +19,14 @@ You can also add the script `"build": "xsuite build"` to the `package.json` of y
 ```
 npm run build
 ```
+
+# Reproducible Builds
+
+For advanced use cases where you need reproducible builds, xSuite provides the build-reproducible command.
+This command allows you to build contracts in a reproducible manner using Docker:
+
+```
+xsuite build-reproducible --image multiversx/sdk-rust-contract-builder:v8.0.0
+```
+
+You can customize the reproducible build process further by specifying options such as the directory to be built and the output directory.
