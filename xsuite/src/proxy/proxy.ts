@@ -20,6 +20,8 @@ export class Proxy {
   headers: HeadersInit;
   explorerUrl: string;
   blockNonce?: number;
+  // TODO-MvX: remove this when blockchain fixed
+  pauseAfterSend?: number;
 
   constructor(params: ProxyParams) {
     params = typeof params === "string" ? { proxyUrl: params } : params;
@@ -27,6 +29,7 @@ export class Proxy {
     this.headers = params.headers ?? {};
     this.explorerUrl = params.explorerUrl ?? "";
     this.blockNonce = params.blockNonce;
+    this.pauseAfterSend = params.pauseAfterSend;
   }
 
   private makeUrl(
@@ -76,11 +79,19 @@ export class Proxy {
         `Only ${txsHashesSent.length} of ${rawTxs.length} transactions were sent. The other ones were invalid.`,
       );
     }
+    // TODO-MvX: remove this when blockchain fixed
+    if (this.pauseAfterSend) {
+      await new Promise((r) => setTimeout(r, this.pauseAfterSend));
+    }
     return txsHashesSent;
   }
 
   async sendTx(tx: BroadTx) {
     const res = await this.fetch("/transaction/send", await broadTxToRawTx(tx));
+    // TODO-MvX: remove this when blockchain fixed
+    if (this.pauseAfterSend) {
+      await new Promise((r) => setTimeout(r, this.pauseAfterSend));
+    }
     return res.txHash as string;
   }
 
@@ -664,6 +675,7 @@ export type ProxyParams =
       headers?: HeadersInit;
       explorerUrl?: string;
       blockNonce?: number;
+      pauseAfterSend?: number;
     };
 
 type BroadTx = Tx | RawTx;
