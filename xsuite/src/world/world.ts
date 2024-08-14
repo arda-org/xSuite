@@ -75,7 +75,7 @@ export class World {
     }
     return new World({
       chainId,
-      proxy: new Proxy({ proxyUrl, explorerUrl }),
+      proxy: new Proxy({ proxyUrl, explorerUrl, pauseAfterSend: 1_000 }),
       gasPrice,
       explorerUrl,
     });
