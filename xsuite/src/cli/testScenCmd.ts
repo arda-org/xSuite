@@ -35,7 +35,7 @@ const action = async () => {
   logAndRunCommand(binaryPath, ["."]);
 };
 
-function getBinaryOs() {
+export function getBinaryOs() {
   switch (process.platform) {
     case "linux":
       return "ubuntu-20.04";

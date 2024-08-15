@@ -10,6 +10,7 @@ import { getAddressShard } from "../data/utils";
 import { Keystore } from "../world/signer";
 import { getCli } from "./cli";
 import { defaultRustToolchain, rustTarget, rustKey } from "./helpers";
+import { getBinaryOs } from "./testScenCmd";
 
 const pemPath = path.resolve("wallets", "wallet.pem");
 const keyKeystorePath = path.resolve("wallets", "keystore_key.json");
@@ -410,19 +411,14 @@ test.concurrent(
       "",
     ]);
 
-    const extractPath = path.resolve(
-      __dirname,
-      "..",
-      "..",
-      "bin",
-      "scenexec-v1.5.22-ubuntu-20.04",
-    );
+    const binaryName = `scenexec-v1.5.22-${getBinaryOs()}`;
+    const extractPath = path.resolve(__dirname, "..", "..", "bin", binaryName);
     const binaryPath = path.resolve(extractPath, "scenexec");
     fs.rmSync(extractPath, { recursive: true, force: true });
     await c.cmd("test-scen");
     expect(c.flushStdout().split("\n")).toEqual([
       chalk.blue("Testing contract with scenarios..."),
-      "Downloading scenexec-v1.5.22-ubuntu-20.04...",
+      `Downloading ${binaryName}...`,
       chalk.cyan(`$ ${binaryPath} .`),
       "",
     ]);
