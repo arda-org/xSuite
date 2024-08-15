@@ -250,11 +250,6 @@ export class FSWallet extends Wallet {
   addEsdts(esdts: EncodableEsdt[]) {
     return this.world.addEsdts(this, esdts);
   }
-
-  // Do we need the addMappers method for a Wallet?
-  addMappers(mappers: EncodableMapper[]) {
-    return this.world.addMappers(this, mappers);
-  }
 }
 
 export class FSContract extends Contract {

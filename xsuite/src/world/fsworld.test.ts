@@ -1185,33 +1185,6 @@ test.concurrent("FSWallet.addEsdts", async () => {
   });
 });
 
-test.concurrent("FSWallet.addMappers", async () => {
-  using world = await FSWorld.start();
-  const wallet = await world.createWallet({
-    balance: 10n ** 18n,
-    kvs: {
-      mappers: [
-        { key: "01", value: e.Buffer("02") },
-        { key: "03", value: e.Buffer("04") },
-      ],
-    },
-  });
-  await wallet.addMappers([
-    { key: "01", value: e.Buffer("04") },
-    { key: "05", value: e.Buffer("06") },
-  ]);
-  assertAccount(await wallet.getAccount(), {
-    balance: 10n ** 18n,
-    kvs: {
-      mappers: [
-        { key: "01", value: e.Buffer("04") },
-        { key: "03", value: e.Buffer("04") },
-        { key: "05", value: e.Buffer("06") },
-      ],
-    },
-  });
-});
-
 test.concurrent("FSContract.getAccountNonce", async () => {
   using world = await FSWorld.start();
   const { contract } = await createAccounts(world);
