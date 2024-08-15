@@ -625,6 +625,76 @@ test.concurrent("LSWorld.callContract", async () => {
   });
 });
 
+test.concurrent("LSWorld.addKvs", async () => {
+  using world = await LSWorld.start();
+  const wallet = await world.createWallet({
+    balance: 10n ** 18n,
+    kvs: { "01": "02", "03": "04" },
+  });
+  await world.addKvs(wallet, {
+    "01": "05",
+    "06": "07",
+  });
+  assertAccount(await wallet.getAccount(), {
+    balance: 10n ** 18n,
+    kvs: { "01": "05", "03": "04", "06": "07" },
+  });
+});
+
+test.concurrent("LSWorld.addEsdts", async () => {
+  using world = await LSWorld.start();
+  const wallet = await world.createWallet({
+    balance: 10n ** 18n,
+    kvs: {
+      esdts: [
+        { id: "01", amount: 10n ** 18n },
+        { id: "02", amount: 10n ** 18n },
+      ],
+    },
+  });
+  await world.addEsdts(wallet, [
+    { id: "01", amount: 20n ** 18n },
+    { id: "03", amount: 10n ** 18n },
+  ]);
+  assertAccount(await wallet.getAccount(), {
+    balance: 10n ** 18n,
+    kvs: {
+      esdts: [
+        { id: "01", amount: 20n ** 18n },
+        { id: "02", amount: 10n ** 18n },
+        { id: "03", amount: 10n ** 18n },
+      ],
+    },
+  });
+});
+
+test.concurrent("LSWorld.addMappers", async () => {
+  using world = await LSWorld.start();
+  const wallet = await world.createWallet({
+    balance: 10n ** 18n,
+    kvs: {
+      mappers: [
+        { key: "01", value: e.Buffer("02") },
+        { key: "03", value: e.Buffer("04") },
+      ],
+    },
+  });
+  await world.addMappers(wallet, [
+    { key: "01", value: e.Buffer("04") },
+    { key: "05", value: e.Buffer("06") },
+  ]);
+  assertAccount(await wallet.getAccount(), {
+    balance: 10n ** 18n,
+    kvs: {
+      mappers: [
+        { key: "01", value: e.Buffer("04") },
+        { key: "03", value: e.Buffer("04") },
+        { key: "05", value: e.Buffer("06") },
+      ],
+    },
+  });
+});
+
 test.concurrent("LSWorld.terminate", async () => {
   using world = await LSWorld.start();
   expect(world.server?.killed).toEqual(false);

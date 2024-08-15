@@ -1,7 +1,12 @@
 import { ChildProcess, spawn } from "node:child_process";
 import { fsproxyBinaryPath, fsproxyConfigsPath } from "@xsuite/full-simulnet";
 import { AddressLike, isAddressLike } from "../data/addressLike";
-import { EncodableAccount } from "../data/encoding";
+import {
+  EncodableAccount,
+  EncodableEsdt,
+  EncodableKvs,
+  EncodableMapper,
+} from "../data/encoding";
 import { Prettify, Replace } from "../helpers";
 import { FSProxy } from "../proxy";
 import { DummySigner, Signer } from "./signer";
@@ -185,6 +190,30 @@ export class FSWorld extends World {
     return super.deployContract(tx).then((r) => this.addContractPostTx(r));
   }
 
+  async addKvs(address: AddressLike, kvs: EncodableKvs) {
+    const account = await this.getAccount(address);
+    return this.setAccount({
+      ...account,
+      kvs: [account.kvs, kvs],
+    });
+  }
+
+  async addEsdts(address: AddressLike, esdts: EncodableEsdt[]) {
+    const account = await this.getAccount(address);
+    return this.setAccount({
+      ...account,
+      kvs: [account.kvs, { esdts }],
+    });
+  }
+
+  async addMappers(address: AddressLike, mappers: EncodableMapper[]) {
+    const account = await this.getAccount(address);
+    return this.setAccount({
+      ...account,
+      kvs: [account.kvs, { mappers }],
+    });
+  }
+
   terminate() {
     this.server?.kill();
   }
@@ -213,6 +242,19 @@ export class FSWallet extends Wallet {
   deployContract(tx: WalletDeployContractTx) {
     return this.world.deployContract({ ...tx, sender: this });
   }
+
+  addKvs(kvs: EncodableKvs) {
+    return this.world.addKvs(this, kvs);
+  }
+
+  addEsdts(esdts: EncodableEsdt[]) {
+    return this.world.addEsdts(this, esdts);
+  }
+
+  // Do we need the addMappers method for a Wallet?
+  addMappers(mappers: EncodableMapper[]) {
+    return this.world.addMappers(this, mappers);
+  }
 }
 
 export class FSContract extends Contract {
@@ -225,6 +267,18 @@ export class FSContract extends Contract {
 
   setAccount(params: FSAccountSetAccountParams) {
     return this.world.setAccount({ ...params, address: this });
+  }
+
+  addKvs(kvs: EncodableKvs) {
+    return this.world.addKvs(this, kvs);
+  }
+
+  addEsdts(esdts: EncodableEsdt[]) {
+    return this.world.addEsdts(this, esdts);
+  }
+
+  addMappers(mappers: EncodableMapper[]) {
+    return this.world.addMappers(this, mappers);
   }
 }
 
