@@ -145,6 +145,19 @@ export class FSWorld extends World {
     return this.setAccounts([params]);
   }
 
+  updateAccounts(params: FSWorldSetAccountParams[]) {
+    for (const _params of params) {
+      if (_params.code !== undefined) {
+        _params.code = expandCode(_params.code);
+      }
+    }
+    return this.proxy.updateAccounts(params);
+  }
+
+  updateAccount(params: FSWorldSetAccountParams) {
+    return this.updateAccounts([params]);
+  }
+
   generateBlocks(numBlocks: number) {
     return this.proxy.generateBlocks(numBlocks);
   }
@@ -191,26 +204,23 @@ export class FSWorld extends World {
   }
 
   async addKvs(address: AddressLike, kvs: EncodableKvs) {
-    const account = await this.getAccount(address);
-    return this.setAccount({
-      ...account,
-      kvs: [account.kvs, kvs],
+    return this.updateAccount({
+      address,
+      kvs,
     });
   }
 
   async addEsdts(address: AddressLike, esdts: EncodableEsdt[]) {
-    const account = await this.getAccount(address);
-    return this.setAccount({
-      ...account,
-      kvs: [account.kvs, { esdts }],
+    return this.updateAccount({
+      address,
+      kvs: { esdts },
     });
   }
 
   async addMappers(address: AddressLike, mappers: EncodableMapper[]) {
-    const account = await this.getAccount(address);
-    return this.setAccount({
-      ...account,
-      kvs: [account.kvs, { mappers }],
+    return this.updateAccount({
+      address,
+      kvs: { mappers },
     });
   }
 
