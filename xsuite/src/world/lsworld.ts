@@ -167,6 +167,19 @@ export class LSWorld extends World {
     return this.setAccounts([params]);
   }
 
+  updateAccounts(params: LSWorldSetAccountParams[]) {
+    for (const _params of params) {
+      if (_params.code !== undefined) {
+        _params.code = expandCode(_params.code);
+      }
+    }
+    return this.proxy.updateAccounts(params);
+  }
+
+  updateAccount(params: LSWorldSetAccountParams) {
+    return this.updateAccounts([params]);
+  }
+
   setCurrentBlockInfo(block: Block) {
     return this.proxy.setCurrentBlockInfo(block);
   }
@@ -204,26 +217,23 @@ export class LSWorld extends World {
   }
 
   async addKvs(address: AddressLike, kvs: EncodableKvs) {
-    const account = await this.getAccount(address);
-    return this.setAccount({
-      ...account,
-      kvs: [account.kvs, kvs],
+    return this.updateAccount({
+      address,
+      kvs: [kvs],
     });
   }
 
   async addEsdts(address: AddressLike, esdts: EncodableEsdt[]) {
-    const account = await this.getAccount(address);
-    return this.setAccount({
-      ...account,
-      kvs: [account.kvs, { esdts }],
+    return this.updateAccount({
+      address,
+      kvs: [{ esdts }],
     });
   }
 
   async addMappers(address: AddressLike, mappers: EncodableMapper[]) {
-    const account = await this.getAccount(address);
-    return this.setAccount({
-      ...account,
-      kvs: [account.kvs, { mappers }],
+    return this.updateAccount({
+      address,
+      kvs: [{ mappers }],
     });
   }
 
@@ -255,6 +265,10 @@ export class LSWallet extends Wallet {
     return this.world.setAccount({ ...params, address: this });
   }
 
+  updateAccount(params: LSAccountSetAccountParams) {
+    return this.world.updateAccount({ ...params, address: this });
+  }
+
   createContract(params?: LSWalletCreateContractParams) {
     return this.world.createContract({ ...params, owner: this });
   }
@@ -282,6 +296,10 @@ export class LSContract extends Contract {
 
   setAccount(params: LSAccountSetAccountParams) {
     return this.world.setAccount({ ...params, address: this });
+  }
+
+  updateAccount(params: LSAccountSetAccountParams) {
+    return this.world.updateAccount({ ...params, address: this });
   }
 
   addKvs(kvs: EncodableKvs) {

@@ -20,6 +20,17 @@ export class LSProxy extends Proxy {
     return this.setAccounts([account]);
   }
 
+  updateAccounts(accounts: EncodableAccount[]) {
+    return this.fetch(
+      "/admin/update-accounts",
+      accounts.map((a) => e.account(a)),
+    ).then(() => {});
+  }
+
+  updateAccount(account: EncodableAccount) {
+    return this.updateAccounts([account]);
+  }
+
   setCurrentBlockInfo(block: Block) {
     return this.fetch("/admin/set-current-block-info", block).then(() => {});
   }

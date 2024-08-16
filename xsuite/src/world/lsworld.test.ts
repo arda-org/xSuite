@@ -355,6 +355,35 @@ test.concurrent("LSWorld.setAccount", async () => {
   });
 });
 
+test.concurrent("LSWorld.updateAccount", async () => {
+  using world = await LSWorld.start();
+  const { wallet, wallet2, contract } = await createAccounts(world);
+  assertAccount(await contract.getAccount(), {
+    balance: 10n ** 18n,
+    code: worldCode,
+    codeMetadata: ["readable"],
+    kvs: {
+      esdts: [{ id: fftId, amount: 10n ** 18n }],
+      mappers: [{ key: "n", value: e.U64(2) }],
+    },
+    owner: wallet,
+  });
+  await world.updateAccount({
+    address: contract,
+    owner: wallet2,
+  });
+  assertAccount(await contract.getAccount(), {
+    balance: 10n ** 18n,
+    code: worldCode,
+    codeMetadata: ["readable"],
+    kvs: {
+      esdts: [{ id: fftId, amount: 10n ** 18n }],
+      mappers: [{ key: "n", value: e.U64(2) }],
+    },
+    owner: wallet2,
+  });
+});
+
 test.concurrent("LSWorld.setCurrentBlockInfo", async () => {
   using world = await LSWorld.start();
   const { contract } = await createAccounts(world);
@@ -836,6 +865,15 @@ test.concurrent("LSWallet.setAccount & LSWallet.getAccount", async () => {
   expect(after).toEqual(before);
 });
 
+test.only.concurrent("LSWallet.updateAccount", async () => {
+  using world = await LSWorld.start();
+  const { wallet } = await createAccounts(world);
+  const before = await wallet.getAccount();
+  await wallet.updateAccount({ balance: 10n ** 17n });
+  const after = await wallet.getAccount();
+  expect(after).toEqual({ ...before, balance: 10n ** 17n });
+});
+
 test.concurrent("LSWallet.executeTx", async () => {
   using world = await LSWorld.start({ explorerUrl: baseExplorerUrl });
   const { wallet, wallet2 } = await createAccounts(world);
@@ -1194,6 +1232,15 @@ test.concurrent("LSContract.setAccount & LSContract.getAccount", async () => {
   await contract.setAccount(before);
   const after = await contract.getAccount();
   expect(after).toEqual(before);
+});
+
+test.concurrent("LSContract.updateAccount", async () => {
+  using world = await LSWorld.start();
+  const { contract } = await createAccounts(world);
+  const before = await contract.getAccount();
+  await contract.updateAccount({ balance: 10n ** 17n });
+  const after = await contract.getAccount();
+  expect(after).toEqual({ ...before, balance: 10n ** 17n });
 });
 
 test.concurrent("LSContract.query", async () => {
