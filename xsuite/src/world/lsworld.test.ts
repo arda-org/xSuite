@@ -369,6 +369,82 @@ test.concurrent("LSWorld.setPreviousBlockInfo", async () => {
   assertVs(returnData, [e.U64(10), e.U64(20), e.U64(30), e.U64(40)]);
 });
 
+test.concurrent("LSWorld.advanceTimestamp", async () => {
+  using world = await LSWorld.start();
+  await world.advanceTimestamp(10);
+  const networkStatus = await world.proxy.getNetworkStatus(0);
+  expect(networkStatus).toEqual({
+    blockTimestamp: 10,
+    crossCheckBlockHeight: "-1",
+    round: 0,
+    epoch: 0,
+    highestFinalNonce: -1,
+    nonce: 0,
+    nonceAtEpochStart: -1,
+    noncesPassedInCurrentEpoch: -1,
+    roundAtEpochStart: -1,
+    roundsPassedInCurrentEpoch: -1,
+    roundsPerEpoch: -1,
+  });
+});
+
+test.concurrent("LSWorld.advanceNonce", async () => {
+  using world = await LSWorld.start();
+  await world.advanceNonce(10);
+  const networkStatus = await world.proxy.getNetworkStatus(0);
+  expect(networkStatus).toEqual({
+    blockTimestamp: 0,
+    crossCheckBlockHeight: "-1",
+    round: 0,
+    epoch: 0,
+    highestFinalNonce: -1,
+    nonce: 10,
+    nonceAtEpochStart: -1,
+    noncesPassedInCurrentEpoch: -1,
+    roundAtEpochStart: -1,
+    roundsPassedInCurrentEpoch: -1,
+    roundsPerEpoch: -1,
+  });
+});
+
+test.concurrent("LSWorld.advanceRound", async () => {
+  using world = await LSWorld.start();
+  await world.advanceRound(10);
+  const networkStatus = await world.proxy.getNetworkStatus(0);
+  expect(networkStatus).toEqual({
+    blockTimestamp: 0,
+    crossCheckBlockHeight: "-1",
+    round: 10,
+    epoch: 0,
+    highestFinalNonce: -1,
+    nonce: 0,
+    nonceAtEpochStart: -1,
+    noncesPassedInCurrentEpoch: -1,
+    roundAtEpochStart: -1,
+    roundsPassedInCurrentEpoch: -1,
+    roundsPerEpoch: -1,
+  });
+});
+
+test.concurrent("LSWorld.advanceEpoch", async () => {
+  using world = await LSWorld.start();
+  await world.advanceEpoch(10);
+  const networkStatus = await world.proxy.getNetworkStatus(0);
+  expect(networkStatus).toEqual({
+    blockTimestamp: 0,
+    crossCheckBlockHeight: "-1",
+    round: 0,
+    epoch: 10,
+    highestFinalNonce: -1,
+    nonce: 0,
+    nonceAtEpochStart: -1,
+    noncesPassedInCurrentEpoch: -1,
+    roundAtEpochStart: -1,
+    roundsPassedInCurrentEpoch: -1,
+    roundsPerEpoch: -1,
+  });
+});
+
 test.concurrent("LSWorld.query - basic", async () => {
   using world = await LSWorld.start();
   const { contract } = await createAccounts(world);

@@ -174,6 +174,47 @@ export class LSWorld extends World {
     return this.proxy.setPreviousBlockInfo(block);
   }
 
+  private async updateCurrentBlockInfo(
+    updateFn: (block: Required<Block>) => Required<Block>,
+  ) {
+    const networkStatus = await this.proxy.getNetworkStatus(0);
+    const updatedBlock = updateFn({
+      timestamp: networkStatus.blockTimestamp,
+      nonce: networkStatus.nonce,
+      round: networkStatus.round,
+      epoch: networkStatus.epoch,
+    });
+    return this.setCurrentBlockInfo(updatedBlock);
+  }
+
+  advanceTimestamp(amount: number) {
+    return this.updateCurrentBlockInfo((block) => ({
+      ...block,
+      timestamp: block.timestamp + amount,
+    }));
+  }
+
+  advanceNonce(amount: number) {
+    return this.updateCurrentBlockInfo((block) => ({
+      ...block,
+      nonce: block.nonce + amount,
+    }));
+  }
+
+  advanceRound(amount: number) {
+    return this.updateCurrentBlockInfo((block) => ({
+      ...block,
+      round: block.round + amount,
+    }));
+  }
+
+  advanceEpoch(amount: number) {
+    return this.updateCurrentBlockInfo((block) => ({
+      ...block,
+      epoch: block.epoch + amount,
+    }));
+  }
+
   resolveDeployContracts(txHashes: string[]) {
     return super
       .resolveDeployContracts(txHashes)
