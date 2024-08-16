@@ -865,7 +865,7 @@ test.concurrent("LSWallet.setAccount & LSWallet.getAccount", async () => {
   expect(after).toEqual(before);
 });
 
-test.only.concurrent("LSWallet.updateAccount", async () => {
+test.concurrent("LSWallet.updateAccount", async () => {
   using world = await LSWorld.start();
   const { wallet } = await createAccounts(world);
   const before = await wallet.getAccount();
