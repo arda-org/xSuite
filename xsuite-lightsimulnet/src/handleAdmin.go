@@ -54,6 +54,24 @@ func (e *Executor) HandleAdminSetAccounts(r *http.Request) (interface{}, error) 
 	return jData, err
 }
 
+func (e *Executor) HandleAdminUpdateAccounts(r *http.Request) (interface{}, error) {
+	reqBody, _ := io.ReadAll(r.Body)
+	var rawAccounts []UpdateRawAccount
+	err := json.Unmarshal(reqBody, &rawAccounts)
+	if err != nil {
+		return nil, err
+	}
+	for _, rawAccount := range rawAccounts {
+		err = e.updateAccount(rawAccount)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return map[string]interface{}{
+		"code": "successful",
+	}, nil
+}
+
 func (e *Executor) HandleAdminSetCurrentBlockInfo(r *http.Request) (interface{}, error) {
 	reqBody, _ := io.ReadAll(r.Body)
 	var block Block
@@ -148,10 +166,75 @@ func (e *Executor) setAccount(rawAccount RawAccount) error {
 	return nil
 }
 
+func (e *Executor) updateAccount(rawAccount UpdateRawAccount) error {
+	address, err := bech32Decode(rawAccount.Address)
+	if err != nil {
+		return err
+	}
+	worldAccount := e.getWorldAccount(address)
+	if rawAccount.Nonce != nil {
+		worldAccount.Nonce = *rawAccount.Nonce
+	}
+	if rawAccount.Balance != nil {
+		worldAccount.Balance, err = stringToBigint(*rawAccount.Balance)
+		if err != nil {
+			return err
+		}
+	}
+	if rawAccount.Kvs != nil {
+		for key, value := range *rawAccount.Kvs {
+			_key, err := hex.DecodeString(key)
+			if err != nil {
+				return err
+			}
+			worldAccount.Storage[string(_key)], err = hex.DecodeString(value)
+			if err != nil {
+				return err
+			}
+		}
+	}
+	// Do we want to update the code if rawAccount.Code == ""
+	if rawAccount.Code != nil && *rawAccount.Code != "" {
+		worldAccount.Code, err = hex.DecodeString(*rawAccount.Code)
+		if err != nil {
+			return err
+		}
+		worldAccount.IsSmartContract = true
+	}
+	// Do we want to update the code metadata if rawAccount.CodeMetadata == ""
+	if rawAccount.CodeMetadata != nil && *rawAccount.CodeMetadata != "" {
+		worldAccount.CodeMetadata, err = hex.DecodeString(*rawAccount.CodeMetadata)
+		if err != nil {
+			return err
+		}
+	// Do we want to overwrite in any case the code metadata of a non-smart contract?
+	} else if !worldAccount.IsSmartContract {
+		worldAccount.CodeMetadata = (&vmcommon.CodeMetadata{ Readable: true }).ToBytes();
+	}
+	if rawAccount.Owner != nil && *rawAccount.Owner != "" {
+		worldAccount.OwnerAddress, err = bech32Decode(*rawAccount.Owner)
+		if err != nil {
+			return err
+		}
+	}
+	e.scenexec.World.AcctMap.PutAccount(worldAccount)
+	return nil
+}
+
 type RawAccount struct {
 	Address 			string
 	Nonce 				uint64
 	Balance 			string
+	Kvs   			  *map[string]string
+	Code 					*string
+	CodeMetadata	*string
+	Owner					*string
+}
+
+type UpdateRawAccount struct {
+	Address 			string
+	Nonce 				*uint64
+	Balance 			*string
 	Kvs   			  *map[string]string
 	Code 					*string
 	CodeMetadata	*string
