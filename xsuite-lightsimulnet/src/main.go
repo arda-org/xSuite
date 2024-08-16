@@ -97,6 +97,11 @@ func main() {
 		respond(w, resBody, err)
 	})
 
+	router.Get("/network/status/{shard}", func(w http.ResponseWriter, r *http.Request) {
+		resBody, err := executor.HandleNetworkStatus()
+		respond(w, resBody, err)
+	})
+
 	fmt.Printf("Server running on http://%s\n", listener.Addr().String())
 	if err := http.Serve(listener, router); err != nil {
 		panic(err)
