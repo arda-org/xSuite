@@ -351,6 +351,35 @@ test.concurrent("FSWorld.setAccount", async () => {
   });
 });
 
+test.concurrent("FSWorld.updateAccount", async () => {
+  using world = await FSWorld.start();
+  const { wallet, wallet2, contract } = await createAccounts(world);
+  assertAccount(await contract.getAccount(), {
+    balance: 10n ** 18n,
+    code: worldCode,
+    codeMetadata: ["readable"],
+    kvs: {
+      esdts: [{ id: fftId, amount: 10n ** 18n }],
+      mappers: [{ key: "n", value: e.U64(2) }],
+    },
+    owner: wallet,
+  });
+  await world.updateAccount({
+    address: contract,
+    owner: wallet2,
+  });
+  assertAccount(await contract.getAccount(), {
+    balance: 10n ** 18n,
+    code: worldCode,
+    codeMetadata: ["readable"],
+    kvs: {
+      esdts: [{ id: fftId, amount: 10n ** 18n }],
+      mappers: [{ key: "n", value: e.U64(2) }],
+    },
+    owner: wallet2,
+  });
+});
+
 test.concurrent("FSWorld.query - basic", async () => {
   using world = await FSWorld.start();
   const { contract } = await createAccounts(world);
@@ -825,6 +854,15 @@ test.concurrent("FSWallet.setAccount & FSWallet.getAccount", async () => {
   expect(after).toEqual(before);
 });
 
+test.concurrent("FSWallet.updateAccount", async () => {
+  using world = await FSWorld.start();
+  const { wallet } = await createAccounts(world);
+  const before = await wallet.getAccount();
+  await wallet.updateAccount({ balance: 10n ** 17n });
+  const after = await wallet.getAccount();
+  expect(after).toEqual({ ...before, balance: 10n ** 17n });
+});
+
 test.concurrent("FSWallet.executeTx", async () => {
   using world = await FSWorld.start({ explorerUrl: baseExplorerUrl });
   const { wallet, wallet2 } = await createAccounts(world);
@@ -1256,6 +1294,15 @@ test.concurrent("FSContract.setAccount & FSContract.getAccount", async () => {
   await contract.setAccount(before);
   const after = await contract.getAccount();
   expect(after).toEqual(before);
+});
+
+test.concurrent("FSContract.updateAccount", async () => {
+  using world = await FSWorld.start();
+  const { contract } = await createAccounts(world);
+  const before = await contract.getAccount();
+  await contract.updateAccount({ balance: 10n ** 17n });
+  const after = await contract.getAccount();
+  expect(after).toEqual({ ...before, balance: 10n ** 17n });
 });
 
 test.concurrent("FSContract.query", async () => {

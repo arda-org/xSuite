@@ -245,6 +245,10 @@ export class FSWallet extends Wallet {
     return this.world.setAccount({ ...params, address: this });
   }
 
+  updateAccount(params: FSAccountSetAccountParams) {
+    return this.world.updateAccount({ ...params, address: this });
+  }
+
   createContract(params?: FSWalletCreateContractParams) {
     return this.world.createContract({ ...params, owner: this });
   }
@@ -272,6 +276,10 @@ export class FSContract extends Contract {
 
   setAccount(params: FSAccountSetAccountParams) {
     return this.world.setAccount({ ...params, address: this });
+  }
+
+  updateAccount(params: FSAccountSetAccountParams) {
+    return this.world.updateAccount({ ...params, address: this });
   }
 
   addKvs(kvs: EncodableKvs) {
