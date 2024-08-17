@@ -272,6 +272,53 @@ export const d = {
       },
     );
   },
+  EsdtValue: (attrsDecoder?: Decoder) =>
+    newDecoder((consumer) => {
+      const result: Omit<DecodedEsdtVariant, "nonce"> = {};
+      const message = ESDTSystemMessage.decode(
+        d.Buffer().fromTop(consumer.consumeRemaining()),
+      );
+      const object = ESDTSystemMessage.toObject(message);
+      result.amount = d.U().fromTop(object.Value);
+      if (object?.Metadata?.Attributes !== undefined) {
+        if (attrsDecoder !== undefined) {
+          result.attrs = attrsDecoder.fromTop(object.Metadata.Attributes);
+        } else {
+          result.attrs = u8aToHex(object.Metadata.Attributes);
+        }
+      }
+      if (object?.Metadata?.Creator !== undefined) {
+        result.creator = d.Addr().fromTop(object.Metadata.Creator);
+      }
+      if (object?.Metadata?.Name !== undefined) {
+        result.name = d.Str().fromTop(object.Metadata.Name);
+      }
+      if (object?.Metadata?.Hash !== undefined) {
+        result.hash = u8aToHex(object.Metadata.Hash);
+      }
+      if (
+        object?.Metadata?.URIs !== undefined &&
+        (object.Metadata.URIs.length !== 1 || object.Metadata.URIs[0] !== "")
+      ) {
+        result.uris = object.Metadata.URIs;
+      }
+      if (object?.Metadata?.Royalties) {
+        const royalties = parseInt(object.Metadata.Royalties, 10);
+        if (royalties > 0) {
+          result.royalties = royalties;
+        }
+      }
+      return result;
+    }),
+  EsdtRolesValue: () =>
+    newDecoder((consumer): Role[] | undefined => {
+      const message = ESDTRolesMessage.decode(
+        d.Buffer().fromTop(consumer.consumeRemaining()),
+      );
+      const object = ESDTRolesMessage.toObject(message);
+      return object?.Roles;
+    }),
+  EsdtLastNonceValue: () => d.U32().toNum(),
   vs: <const T extends VsDecoderParams>(params: T) => {
     return {
       from: (vs: DecodableVs): DecodersToValues<T> => {
@@ -493,19 +540,18 @@ const dKvsEsdts = (params: EsdtDecoderParams[]): KvsDecoder<DecodedEsdt[]> => ({
         if (data[id] === undefined) {
           data[id] = {};
         }
-        data[id].lastNonce = d.U32().toNum().fromTop(consumer.consumeV(k));
+        data[id].lastNonce = d
+          .EsdtLastNonceValue()
+          .fromTop(consumer.consumeV(k));
       }
       if (decK.startsWith("ELRONDroleesdt")) {
         const id = decK.slice("ELRONDroleesdt".length);
         if (data[id] === undefined) {
           data[id] = {};
         }
-        const message = ESDTRolesMessage.decode(
-          d.Buffer().fromTop(consumer.consumeV(k)),
-        );
-        const object = ESDTRolesMessage.toObject(message);
-        if (object?.Roles !== undefined) {
-          data[id].roles = object.Roles;
+        const roles = d.EsdtRolesValue().fromTop(consumer.consumeV(k));
+        if (roles !== undefined) {
+          data[id].roles = roles;
         }
       }
       if (decK.startsWith("ELRONDesdt")) {
@@ -514,67 +560,30 @@ const dKvsEsdts = (params: EsdtDecoderParams[]): KvsDecoder<DecodedEsdt[]> => ({
         if (data[id] === undefined) {
           data[id] = {};
         }
-        const message = ESDTSystemMessage.decode(
-          d.Buffer().fromTop(consumer.consumeV(k)),
-        );
-        const object = ESDTSystemMessage.toObject(message);
         const encNonce = k.slice(("ELRONDesdt".length + id.length) * 2);
         const nonce = d.U().toNum().fromTop(encNonce);
-        const amount = d.U().fromTop(object.Value);
+        let attrsDecoder: Decoder | undefined;
+        for (const { id: _id, nonce: _nonce, attrs } of params) {
+          if (
+            _id === id &&
+            (_nonce === undefined ||
+              (typeof _nonce === "function" && _nonce(nonce)) ||
+              (typeof _nonce !== "function" && _nonce == nonce))
+          ) {
+            attrsDecoder = typeof attrs === "function" ? attrs(nonce) : attrs;
+            break;
+          }
+        }
+        const esdtValue = d
+          .EsdtValue(attrsDecoder)
+          .fromTop(consumer.consumeV(k));
         if (nonce === 0) {
-          if (amount > 0) {
-            data[id].amount = amount;
+          if (esdtValue.amount !== undefined && esdtValue.amount > 0) {
+            data[id].amount = esdtValue.amount;
           }
         } else {
-          const variant: DecodedEsdtVariant = { nonce };
-          if (amount > 0) {
-            variant.amount = amount;
-          }
-          if (object?.Metadata?.Attributes !== undefined) {
-            let attrsDecoder: Decoder | undefined;
-            for (const { id: _id, nonce: _nonce, attrs } of params) {
-              if (_id !== id) {
-                continue;
-              }
-              if (
-                _nonce !== undefined &&
-                ((typeof _nonce === "function" && !_nonce(nonce)) ||
-                  (typeof _nonce !== "function" && _nonce != nonce))
-              ) {
-                continue;
-              }
-              attrsDecoder = typeof attrs === "function" ? attrs(nonce) : attrs;
-            }
-            if (attrsDecoder !== undefined) {
-              variant.attrs = attrsDecoder.fromTop(object.Metadata.Attributes);
-            } else {
-              variant.attrs = u8aToHex(object.Metadata.Attributes);
-            }
-          }
-          if (object?.Metadata?.Creator !== undefined) {
-            variant.creator = d.Addr().fromTop(object.Metadata.Creator);
-          }
-          if (object?.Metadata?.Name !== undefined) {
-            variant.name = d.Str().fromTop(object.Metadata.Name);
-          }
-          if (object?.Metadata?.Hash !== undefined) {
-            variant.hash = u8aToHex(object.Metadata.Hash);
-          }
-          if (
-            object?.Metadata?.URIs !== undefined &&
-            (object.Metadata.URIs.length !== 1 ||
-              object.Metadata.URIs[0] !== "")
-          ) {
-            variant.uris = object.Metadata.URIs;
-          }
-          if (object?.Metadata?.Royalties) {
-            const royalties = parseInt(object.Metadata.Royalties, 10);
-            if (royalties > 0) {
-              variant.royalties = royalties;
-            }
-          }
           const variants = data[id].variants ?? [];
-          variants.push(variant);
+          variants.push({ nonce, ...esdtValue });
           data[id].variants = variants;
         }
       }

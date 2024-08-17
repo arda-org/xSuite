@@ -1,3 +1,4 @@
+import { d, e } from "../data";
 import { AddressLike, addressLikeToBechAddress } from "../data/addressLike";
 import { BytesLike } from "../data/bytesLike";
 import { Optional, Prettify, Replace } from "../helpers";
@@ -139,6 +140,12 @@ export class World {
 
   getAccount(address: AddressLike) {
     return this.proxy.getAccount(address);
+  }
+
+  async getEsdtBalance(address: AddressLike, id: string, nonce?: number) {
+    const encV = await this.getAccountValue(address, e.EsdtKey(id, nonce));
+    if (encV === "") return 0n;
+    return d.EsdtValue().fromTop(encV).amount ?? 0n;
   }
 
   sendTxs(txs: WorldTx[]) {
@@ -388,6 +395,10 @@ export class Wallet extends Signer {
     return this.world.getAccount(this);
   }
 
+  getEsdtBalance(id: string, nonce?: number) {
+    return this.world.getEsdtBalance(this, id, nonce);
+  }
+
   sendTx(tx: WalletTx) {
     return this.world.sendTx({ ...tx, sender: this });
   }
@@ -486,6 +497,10 @@ export class Contract extends Account {
 
   getAccount() {
     return this.world.getAccount(this);
+  }
+
+  getEsdtBalance(id: string, nonce?: number) {
+    return this.world.getEsdtBalance(this, id, nonce);
   }
 
   query(tx: ContractQuery) {

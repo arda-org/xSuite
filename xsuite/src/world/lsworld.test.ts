@@ -227,6 +227,13 @@ test.concurrent("LSWorld.getAccount", async () => {
   });
 });
 
+test.concurrent("LSWorld.getEsdtBalance", async () => {
+  using world = await LSWorld.start();
+  const { wallet } = await createAccounts(world);
+  const balance = await world.getEsdtBalance(wallet, fftId);
+  expect(balance).toEqual(10n ** 18n);
+});
+
 test.concurrent("LSWorld.getAllSerializableAccounts", async () => {
   using world = await LSWorld.start();
   const wallet = await world.createWallet({
@@ -748,6 +755,13 @@ test.concurrent("LSWallet.setAccount & LSWallet.getAccount", async () => {
   expect(after).toEqual(before);
 });
 
+test.concurrent("LSWallet.getEsdtBalance", async () => {
+  using world = await LSWorld.start();
+  const { wallet } = await createAccounts(world);
+  const balance = await wallet.getEsdtBalance(fftId);
+  expect(balance).toEqual(10n ** 18n);
+});
+
 test.concurrent("LSWallet.executeTx", async () => {
   using world = await LSWorld.start({ explorerUrl: baseExplorerUrl });
   const { wallet, wallet2 } = await createAccounts(world);
@@ -1063,6 +1077,13 @@ test.concurrent("LSContract.setAccount & LSContract.getAccount", async () => {
   await contract.setAccount(before);
   const after = await contract.getAccount();
   expect(after).toEqual(before);
+});
+
+test.concurrent("LSContract.getEsdtBalance", async () => {
+  using world = await LSWorld.start();
+  const { contract } = await createAccounts(world);
+  const balance = await contract.getEsdtBalance(fftId);
+  expect(balance).toEqual(10n ** 18n);
 });
 
 test.concurrent("LSContract.query", async () => {
