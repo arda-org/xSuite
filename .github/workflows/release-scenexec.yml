@@ -48,7 +48,7 @@ jobs:
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
-          name: scenexec
+          name: scenexec-${{ matrix.os }}
           path: scenexec-${{ env.TAG }}-${{ matrix.os }}.tar.gz
 
   test:
@@ -64,7 +64,8 @@ jobs:
       - name: Download binaries
         uses: actions/download-artifact@v4
         with:
-          name: scenexec
+          pattern: scenexec-*
+          merge-multiple: true
 
       - name: Unpackage binary
         run: tar -xzvf scenexec-${{ env.TAG }}-${{ matrix.os }}.tar.gz
@@ -80,7 +81,8 @@ jobs:
       - name: Download binaries
         uses: actions/download-artifact@v4
         with:
-          name: scenexec
+          pattern: scenexec-*
+          merge-multiple: true
 
       - name: Create release
         uses: ncipollo/release-action@v1
