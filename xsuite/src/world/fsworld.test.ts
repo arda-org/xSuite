@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { assertAccount, assertVs } from "../assert";
-import { e } from "../data";
+import { d, e } from "../data";
 import {
   zeroBechAddress,
   zeroHexAddress,
@@ -560,7 +560,7 @@ test.concurrent("FSWorld.deployContract", async () => {
     code: worldCode,
     codeMetadata: ["readable"],
     codeArgs: [e.U64(1)],
-    gasLimit: 30_000_000,
+    gasLimit: 40_000_000,
   });
   expect(getAddressType(contract)).toEqual("vmContract");
   expect(contract.explorerUrl).toEqual(
@@ -587,7 +587,7 @@ test.concurrent("FSWorld.upgradeContract", async () => {
     code: worldCode,
     codeMetadata: ["readable"],
     codeArgs: [e.U64(2)],
-    gasLimit: 30_000_000,
+    gasLimit: 40_000_000,
   });
   assertAccount(await contract.getAccount(), {
     code: worldCode,
@@ -813,7 +813,7 @@ test.concurrent("FSWallet.deployContract", async () => {
     code: worldCode,
     codeMetadata: ["readable"],
     codeArgs: [e.U64(1)],
-    gasLimit: 30_000_000,
+    gasLimit: 40_000_000,
   });
   expect(getAddressType(contract)).toEqual("vmContract");
   expect(contract.explorerUrl).toEqual(
@@ -839,7 +839,7 @@ test.concurrent("FSWallet.upgradeContract", async () => {
     code: worldCode,
     codeMetadata: ["readable"],
     codeArgs: [e.U64(2)],
-    gasLimit: 30_000_000,
+    gasLimit: 40_000_000,
   });
   assertAccount(await contract.getAccount(), {
     code: worldCode,
@@ -894,6 +894,17 @@ test.concurrent("FSWallet.callContract - with return", async () => {
   assertVs(returnData, [e.U64(20)]);
 });
 
+test.concurrent("FSWallet.callContract - with return (writeLog)", async () => {
+  using world = await FSWorld.start();
+  const { wallet, contract } = await createAccounts(world);
+  const { returnData } = await wallet.callContract({
+    callee: contract,
+    funcName: "get_back_transfers",
+    gasLimit: 10_000_000,
+  });
+  assertVs(returnData, [e.Tuple(e.U(0), e.List())]);
+});
+
 test.concurrent("FSWallet.callContract - change the state", async () => {
   using world = await FSWorld.start();
   const { wallet, contract } = await createAccounts(world);
@@ -910,6 +921,68 @@ test.concurrent("FSWallet.callContract - change the state", async () => {
     },
   });
 });
+
+test.concurrent(
+  "FSWallet.callContract - succeeding async call v2",
+  async () => {
+    using world = await FSWorld.start();
+    const { wallet, contract } = await createAccounts(world);
+    const { returnData } = await wallet.callContract({
+      callee: contract,
+      funcName: "issue_token_with_succeeding_callback_v2",
+      value: 5n * 10n ** 16n,
+      gasLimit: 100_000_000,
+    });
+    expect(returnData.length).toEqual(1);
+    expect(d.Tuple(d.Str(), d.U()).fromTop(returnData[0])).toEqual([
+      expect.stringContaining("TEST"),
+      1n,
+    ]);
+  },
+);
+
+test.concurrent(
+  "FSWallet.callContract - succeeding async call v1",
+  async () => {
+    using world = await FSWorld.start();
+    const { wallet, contract } = await createAccounts(world);
+    const { returnData } = await wallet.callContract({
+      callee: contract,
+      funcName: "issue_token_with_succeeding_callback_v1",
+      value: 5n * 10n ** 16n,
+      gasLimit: 100_000_000,
+    });
+    expect(returnData.length).toEqual(1);
+    expect(d.Tuple(d.Str(), d.U()).fromTop(returnData[0])).toEqual([
+      expect.stringContaining("TEST"),
+      1n,
+    ]);
+  },
+);
+
+test.concurrent(
+  "FSWallet.callContract - succeeding async calls v2 with return",
+  async () => {
+    using world = await FSWorld.start();
+    const { wallet, contract } = await createAccounts(world);
+    const { returnData } = await wallet.callContract({
+      callee: contract,
+      funcName: "issue_tokens_with_return_and_succeeding_callback_v2",
+      value: 5n * 10n ** 16n,
+      gasLimit: 150_000_000,
+    });
+    expect(returnData.length).toEqual(3);
+    expect(d.Str().fromTop(returnData[0])).toEqual("call");
+    expect(d.Tuple(d.Str(), d.U()).fromTop(returnData[1])).toEqual([
+      expect.stringContaining("TEST"),
+      1n,
+    ]);
+    expect(d.Tuple(d.Str(), d.U()).fromTop(returnData[2])).toEqual([
+      expect.stringContaining("TEST"),
+      1n,
+    ]);
+  },
+);
 
 test.concurrent("FSWallet.callContract - failure", async () => {
   using world = await FSWorld.start();
@@ -929,7 +1002,7 @@ test.concurrent("FSWallet.callContract - failure", async () => {
 });
 
 test.concurrent(
-  "FSWallet.callContract.assertFail - error in sync call",
+  "FSWallet.callContract.assertFail - failing sync call",
   async () => {
     using world = await FSWorld.start();
     const { wallet, contract } = await createAccounts(world);
@@ -945,14 +1018,14 @@ test.concurrent(
 );
 
 test.concurrent(
-  "FSWallet.callContract.assertFail - failing async call without callback",
+  "FSWallet.callContract.assertFail - failing async call v2 without callback",
   async () => {
     using world = await FSWorld.start();
     const { wallet, contract } = await createAccounts(world);
     await wallet
       .callContract({
         callee: contract,
-        funcName: "issue_token_without_callback",
+        funcName: "issue_token_without_callback_v2",
         gasLimit: 100_000_000,
       })
       .assertFail({
@@ -963,14 +1036,14 @@ test.concurrent(
 );
 
 test.concurrent(
-  "FSWallet.callContract.assertFail - failing async call with succeeding callback",
+  "FSWallet.callContract.assertFail - failing async call v1 without callback",
   async () => {
     using world = await FSWorld.start();
     const { wallet, contract } = await createAccounts(world);
     await wallet
       .callContract({
         callee: contract,
-        funcName: "issue_token_with_succeeding_callback",
+        funcName: "issue_token_without_callback_v1",
         gasLimit: 100_000_000,
       })
       .assertFail({
@@ -981,14 +1054,50 @@ test.concurrent(
 );
 
 test.concurrent(
-  "FSWallet.callContract.assertFail - succeeding async call with failing callback",
+  "FSWallet.callContract.assertFail - failing async call v2 with succeeding callback",
   async () => {
     using world = await FSWorld.start();
     const { wallet, contract } = await createAccounts(world);
     await wallet
       .callContract({
         callee: contract,
-        funcName: "issue_token_with_failing_callback",
+        funcName: "issue_token_with_succeeding_callback_v2",
+        gasLimit: 100_000_000,
+      })
+      .assertFail({
+        code: "returnMessage",
+        message: "callValue not equals with baseIssuingCost",
+      });
+  },
+);
+
+test.concurrent(
+  "FSWallet.callContract.assertFail - failing async call v1 with succeeding callback",
+  async () => {
+    using world = await FSWorld.start();
+    const { wallet, contract } = await createAccounts(world);
+    await wallet
+      .callContract({
+        callee: contract,
+        funcName: "issue_token_with_succeeding_callback_v1",
+        gasLimit: 100_000_000,
+      })
+      .assertFail({
+        code: "returnMessage",
+        message: "callValue not equals with baseIssuingCost",
+      });
+  },
+);
+
+test.concurrent(
+  "FSWallet.callContract.assertFail - succeeding async call v2 with failing callback",
+  async () => {
+    using world = await FSWorld.start();
+    const { wallet, contract } = await createAccounts(world);
+    await wallet
+      .callContract({
+        callee: contract,
+        funcName: "issue_token_with_failing_callback_v2",
         value: 5n * 10n ** 16n,
         gasLimit: 100_000_000,
       })
@@ -1000,14 +1109,51 @@ test.concurrent(
 );
 
 test.concurrent(
-  "FSWallet.callContract.assertFail - failing async call with failing callback",
+  "FSWallet.callContract.assertFail - succeeding async call v1 with failing callback",
   async () => {
     using world = await FSWorld.start();
     const { wallet, contract } = await createAccounts(world);
     await wallet
       .callContract({
         callee: contract,
-        funcName: "issue_token_with_failing_callback",
+        funcName: "issue_token_with_failing_callback_v1",
+        value: 5n * 10n ** 16n,
+        gasLimit: 100_000_000,
+      })
+      .assertFail({
+        code: "signalError",
+        message: "Fail",
+      });
+  },
+);
+
+test.concurrent(
+  "FSWallet.callContract.assertFail - failing async call v2 with failing callback",
+  async () => {
+    using world = await FSWorld.start();
+    const { wallet, contract } = await createAccounts(world);
+    await wallet
+      .callContract({
+        callee: contract,
+        funcName: "issue_token_with_failing_callback_v2",
+        gasLimit: 100_000_000,
+      })
+      .assertFail({
+        code: "returnMessage",
+        message: "callValue not equals with baseIssuingCost",
+      });
+  },
+);
+
+test.concurrent(
+  "FSWallet.callContract.assertFail - failing async call v1 with failing callback",
+  async () => {
+    using world = await FSWorld.start();
+    const { wallet, contract } = await createAccounts(world);
+    await wallet
+      .callContract({
+        callee: contract,
+        funcName: "issue_token_with_failing_callback_v1",
         gasLimit: 100_000_000,
       })
       .assertFail({

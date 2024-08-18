@@ -643,19 +643,35 @@ export const getSerializableAccount = (rawAccount: any) => {
 };
 
 const getTxReturnData = (tx: any): string[] => {
+  const returnData: string[] = [];
+  const scrs = tx?.smartContractResults;
   const writeLogEvent = tx?.logs?.events.find(
     (e: any) => e.identifier === "writeLog",
   );
   if (writeLogEvent) {
-    return atob(writeLogEvent.data).split("@").slice(2);
+    const scrReturnData = atob(writeLogEvent.data).split("@").slice(2);
+    returnData.push(...scrReturnData);
   }
-  const scr = tx?.smartContractResults.find(
-    (r: any) => r.data === "@6f6b" || r.data?.startsWith("@6f6b@"),
-  );
-  if (scr) {
-    return scr.data.split("@").slice(2);
+  if (scrs) {
+    for (const scr of scrs) {
+      if (scr.data === "@6f6b" || scr.data?.startsWith("@6f6b@")) {
+        const scrReturnData = scr.data.split("@").slice(2);
+        if (scr.prevTxHash !== scr.originalTxHash) {
+          returnData.push(...scrReturnData);
+        } else {
+          returnData.unshift(...scrReturnData);
+        }
+      }
+      const writeLogEvent = scr?.logs?.events.find(
+        (e: any) => e.identifier === "writeLog",
+      );
+      if (writeLogEvent) {
+        const scrReturnData = atob(writeLogEvent.data).split("@").slice(2);
+        returnData.push(...scrReturnData);
+      }
+    }
   }
-  return [];
+  return returnData;
 };
 
 export const getValuesInOrder = <T>(o: Record<string, T>) => {
