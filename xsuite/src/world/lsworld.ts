@@ -115,6 +115,10 @@ export class LSWorld extends World {
     return new LSContract({ address, world: this });
   }
 
+  getNetworkStatus() {
+    return this.proxy.getNetworkStatus(0);
+  }
+
   async createWallets(createAccountsParams: LSWorldCreateAccountParams[]) {
     const setAccountsParams = createAccountsParams.map(
       ({ address, ...params }) => ({
