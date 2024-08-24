@@ -51,12 +51,12 @@ func (e *Executor) HandleAdminSetAccounts(r *http.Request) (interface{}, error) 
 	jData := map[string]interface{}{
 		"code": "successful",
 	}
-	return jData, err
+	return jData, nil
 }
 
 func (e *Executor) HandleAdminUpdateAccounts(r *http.Request) (interface{}, error) {
 	reqBody, _ := io.ReadAll(r.Body)
-	var rawAccounts []UpdateRawAccount
+	var rawAccounts []RawAccount
 	err := json.Unmarshal(reqBody, &rawAccounts)
 	if err != nil {
 		return nil, err
@@ -67,9 +67,10 @@ func (e *Executor) HandleAdminUpdateAccounts(r *http.Request) (interface{}, erro
 			return nil, err
 		}
 	}
-	return map[string]interface{}{
+	jData := map[string]interface{}{
 		"code": "successful",
-	}, nil
+	}
+	return jData, nil
 }
 
 func (e *Executor) HandleAdminSetCurrentBlockInfo(r *http.Request) (interface{}, error) {
@@ -114,7 +115,8 @@ func (e *Executor) HandleAdminSetPreviousBlockInfo(r *http.Request) (interface{}
 
 func (e *Executor) setAccount(rawAccount RawAccount) error {
 	worldAccount := &worldmock.Account{
-		Nonce:           rawAccount.Nonce,
+		Nonce:           0,
+		Balance:         big.NewInt(0),
 		BalanceDelta:    big.NewInt(0),
 		DeveloperReward: big.NewInt(0),
 		Storage:         map[string][]byte{},
@@ -125,9 +127,14 @@ func (e *Executor) setAccount(rawAccount RawAccount) error {
 	if err != nil {
 		return err
 	}
-	worldAccount.Balance, err = stringToBigint(rawAccount.Balance)
-	if err != nil {
-		return err
+	if rawAccount.Nonce != nil {
+		worldAccount.Nonce = *rawAccount.Nonce
+	}
+	if rawAccount.Balance != nil {
+		worldAccount.Balance, err = stringToBigint(*rawAccount.Balance)
+		if err != nil {
+			return err
+		}
 	}
 	if rawAccount.Kvs != nil {
 		for key, value := range *rawAccount.Kvs {
@@ -166,7 +173,7 @@ func (e *Executor) setAccount(rawAccount RawAccount) error {
 	return nil
 }
 
-func (e *Executor) updateAccount(rawAccount UpdateRawAccount) error {
+func (e *Executor) updateAccount(rawAccount RawAccount) error {
 	address, err := bech32Decode(rawAccount.Address)
 	if err != nil {
 		return err
@@ -193,28 +200,38 @@ func (e *Executor) updateAccount(rawAccount UpdateRawAccount) error {
 			}
 		}
 	}
-	// Do we want to update the code if rawAccount.Code == ""
-	if rawAccount.Code != nil && *rawAccount.Code != "" {
-		worldAccount.Code, err = hex.DecodeString(*rawAccount.Code)
-		if err != nil {
-			return err
+	if rawAccount.Code != nil {
+		if *rawAccount.Code != "" {
+			worldAccount.Code, err = hex.DecodeString(*rawAccount.Code)
+			if err != nil {
+				return err
+			}
+			worldAccount.IsSmartContract = true
+		} else {
+			worldAccount.Code = nil
+			worldAccount.IsSmartContract = false
 		}
-		worldAccount.IsSmartContract = true
 	}
-	// Do we want to update the code metadata if rawAccount.CodeMetadata == ""
-	if rawAccount.CodeMetadata != nil && *rawAccount.CodeMetadata != "" {
-		worldAccount.CodeMetadata, err = hex.DecodeString(*rawAccount.CodeMetadata)
-		if err != nil {
-			return err
+	if rawAccount.CodeMetadata != nil {
+		if *rawAccount.CodeMetadata != "" {
+			worldAccount.CodeMetadata, err = hex.DecodeString(*rawAccount.CodeMetadata)
+			if err != nil {
+				return err
+			}
+		} else {
+			worldAccount.CodeMetadata = nil
 		}
-	// Do we want to overwrite in any case the code metadata of a non-smart contract?
 	} else if !worldAccount.IsSmartContract {
 		worldAccount.CodeMetadata = (&vmcommon.CodeMetadata{ Readable: true }).ToBytes();
 	}
-	if rawAccount.Owner != nil && *rawAccount.Owner != "" {
-		worldAccount.OwnerAddress, err = bech32Decode(*rawAccount.Owner)
-		if err != nil {
-			return err
+	if rawAccount.Owner != nil {
+		if *rawAccount.Owner != "" {
+			worldAccount.OwnerAddress, err = bech32Decode(*rawAccount.Owner)
+			if err != nil {
+				return err
+			}
+		} else {
+			worldAccount.OwnerAddress = nil
 		}
 	}
 	e.scenexec.World.AcctMap.PutAccount(worldAccount)
@@ -222,16 +239,6 @@ func (e *Executor) updateAccount(rawAccount UpdateRawAccount) error {
 }
 
 type RawAccount struct {
-	Address 			string
-	Nonce 				uint64
-	Balance 			string
-	Kvs   			  *map[string]string
-	Code 					*string
-	CodeMetadata	*string
-	Owner					*string
-}
-
-type UpdateRawAccount struct {
 	Address 			string
 	Nonce 				*uint64
 	Balance 			*string
