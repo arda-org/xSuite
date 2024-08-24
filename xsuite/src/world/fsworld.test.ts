@@ -224,6 +224,13 @@ test.concurrent("FSWorld.getAccountBalance", async () => {
   expect(await world.getAccountBalance(wallet)).toEqual(1234n);
 });
 
+test.concurrent("FSWorld.getAccountEsdtBalance", async () => {
+  using world = await FSWorld.start();
+  const { wallet } = await createAccounts(world);
+  const balance = await world.getAccountEsdtBalance(wallet, fftId);
+  expect(balance).toEqual(10n ** 18n);
+});
+
 test.concurrent("FSWorld.getAccountValue - non-present key", async () => {
   using world = await FSWorld.start();
   const wallet = await world.createWallet({ kvs: { "01": "11" } });
@@ -256,13 +263,6 @@ test.concurrent("FSWorld.getAccount", async () => {
   assertAccount(await world.getAccount(wallet), {
     kvs: [[e.Str("n"), e.U(1)]],
   });
-});
-
-test.concurrent("FSWorld.getEsdtBalance", async () => {
-  using world = await FSWorld.start();
-  const { wallet } = await createAccounts(world);
-  const balance = await world.getEsdtBalance(wallet, fftId);
-  expect(balance).toEqual(10n ** 18n);
 });
 
 test.concurrent("FSWorld.getInitialWallets", async () => {
@@ -694,6 +694,13 @@ test.concurrent("FSWallet.getAccountBalance", async () => {
   expect(await wallet.getAccountBalance()).toEqual(10n ** 18n);
 });
 
+test.concurrent("FSWallet.getAccountEsdtBalance", async () => {
+  using world = await FSWorld.start();
+  const { wallet } = await createAccounts(world);
+  const balance = await wallet.getAccountEsdtBalance(fftId);
+  expect(balance).toEqual(10n ** 18n);
+});
+
 test.concurrent("FSWallet.getAccountValue", async () => {
   using world = await FSWorld.start();
   const wallet = await world.createWallet({ kvs: { "01": "11" } });
@@ -742,13 +749,6 @@ test.concurrent("FSWallet.setAccount & FSWallet.getAccount", async () => {
   await wallet.setAccount(before);
   const after = await wallet.getAccount();
   expect(after).toEqual(before);
-});
-
-test.concurrent("FSWallet.getEsdtBalance", async () => {
-  using world = await FSWorld.start();
-  const { wallet } = await createAccounts(world);
-  const balance = await wallet.getEsdtBalance(fftId);
-  expect(balance).toEqual(10n ** 18n);
 });
 
 test.concurrent("FSWallet.executeTx", async () => {
@@ -1226,6 +1226,13 @@ test.concurrent("FSContract.getAccountBalance", async () => {
   expect(await contract.getAccountBalance()).toEqual(10n ** 18n);
 });
 
+test.concurrent("FSContract.getAccountEsdtBalance", async () => {
+  using world = await FSWorld.start();
+  const { contract } = await createAccounts(world);
+  const balance = await contract.getAccountEsdtBalance(fftId);
+  expect(balance).toEqual(10n ** 18n);
+});
+
 test.concurrent("FSContract.getAccountValue", async () => {
   using world = await FSWorld.start();
   const contract = await world.createContract({
@@ -1285,13 +1292,6 @@ test.concurrent("FSContract.setAccount & FSContract.getAccount", async () => {
   await contract.setAccount(before);
   const after = await contract.getAccount();
   expect(after).toEqual(before);
-});
-
-test.concurrent("FSContract.getEsdtBalance", async () => {
-  using world = await FSWorld.start();
-  const { contract } = await createAccounts(world);
-  const balance = await contract.getEsdtBalance(fftId);
-  expect(balance).toEqual(10n ** 18n);
 });
 
 test.concurrent("FSContract.query", async () => {
