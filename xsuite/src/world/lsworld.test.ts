@@ -371,77 +371,57 @@ test.concurrent("LSWorld.setPreviousBlockInfo", async () => {
 
 test.concurrent("LSWorld.advanceTimestamp", async () => {
   using world = await LSWorld.start();
-  await world.advanceTimestamp(10);
-  const networkStatus = await world.proxy.getNetworkStatus(0);
-  expect(networkStatus).toEqual({
+  await world.setCurrentBlockInfo({
+    timestamp: 10,
+  });
+  expect(await world.getNetworkStatus()).toMatchObject({
     blockTimestamp: 10,
-    crossCheckBlockHeight: "-1",
-    round: 0,
-    epoch: 0,
-    highestFinalNonce: -1,
-    nonce: 0,
-    nonceAtEpochStart: -1,
-    noncesPassedInCurrentEpoch: -1,
-    roundAtEpochStart: -1,
-    roundsPassedInCurrentEpoch: -1,
-    roundsPerEpoch: -1,
+  });
+  await world.advanceTimestamp(10);
+  expect(await world.getNetworkStatus()).toMatchObject({
+    blockTimestamp: 20,
   });
 });
 
 test.concurrent("LSWorld.advanceNonce", async () => {
   using world = await LSWorld.start();
-  await world.advanceNonce(10);
-  const networkStatus = await world.proxy.getNetworkStatus(0);
-  expect(networkStatus).toEqual({
-    blockTimestamp: 0,
-    crossCheckBlockHeight: "-1",
-    round: 0,
-    epoch: 0,
-    highestFinalNonce: -1,
+  await world.setCurrentBlockInfo({
     nonce: 10,
-    nonceAtEpochStart: -1,
-    noncesPassedInCurrentEpoch: -1,
-    roundAtEpochStart: -1,
-    roundsPassedInCurrentEpoch: -1,
-    roundsPerEpoch: -1,
+  });
+  expect(await world.getNetworkStatus()).toMatchObject({
+    nonce: 10,
+  });
+  await world.advanceNonce(10);
+  expect(await world.getNetworkStatus()).toMatchObject({
+    nonce: 20,
   });
 });
 
 test.concurrent("LSWorld.advanceRound", async () => {
   using world = await LSWorld.start();
-  await world.advanceRound(10);
-  const networkStatus = await world.proxy.getNetworkStatus(0);
-  expect(networkStatus).toEqual({
-    blockTimestamp: 0,
-    crossCheckBlockHeight: "-1",
+  await world.setCurrentBlockInfo({
     round: 10,
-    epoch: 0,
-    highestFinalNonce: -1,
-    nonce: 0,
-    nonceAtEpochStart: -1,
-    noncesPassedInCurrentEpoch: -1,
-    roundAtEpochStart: -1,
-    roundsPassedInCurrentEpoch: -1,
-    roundsPerEpoch: -1,
+  });
+  expect(await world.getNetworkStatus()).toMatchObject({
+    round: 10,
+  });
+  await world.advanceRound(10);
+  expect(await world.getNetworkStatus()).toMatchObject({
+    round: 20,
   });
 });
 
 test.concurrent("LSWorld.advanceEpoch", async () => {
   using world = await LSWorld.start();
-  await world.advanceEpoch(10);
-  const networkStatus = await world.proxy.getNetworkStatus(0);
-  expect(networkStatus).toEqual({
-    blockTimestamp: 0,
-    crossCheckBlockHeight: "-1",
-    round: 0,
+  await world.setCurrentBlockInfo({
     epoch: 10,
-    highestFinalNonce: -1,
-    nonce: 0,
-    nonceAtEpochStart: -1,
-    noncesPassedInCurrentEpoch: -1,
-    roundAtEpochStart: -1,
-    roundsPassedInCurrentEpoch: -1,
-    roundsPerEpoch: -1,
+  });
+  expect(await world.getNetworkStatus()).toMatchObject({
+    epoch: 10,
+  });
+  await world.advanceEpoch(10);
+  expect(await world.getNetworkStatus()).toMatchObject({
+    epoch: 20,
   });
 });
 

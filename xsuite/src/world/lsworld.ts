@@ -174,45 +174,44 @@ export class LSWorld extends World {
     return this.proxy.setPreviousBlockInfo(block);
   }
 
-  private async updateCurrentBlockInfo(
-    updateFn: (block: Required<Block>) => Required<Block>,
-  ) {
-    const networkStatus = await this.proxy.getNetworkStatus(0);
-    const updatedBlock = updateFn({
-      timestamp: networkStatus.blockTimestamp,
+  async advanceTimestamp(amount: number) {
+    const networkStatus = await this.getNetworkStatus();
+    return this.setCurrentBlockInfo({
+      timestamp: networkStatus.blockTimestamp + amount,
       nonce: networkStatus.nonce,
       round: networkStatus.round,
       epoch: networkStatus.epoch,
     });
-    return this.setCurrentBlockInfo(updatedBlock);
   }
 
-  advanceTimestamp(amount: number) {
-    return this.updateCurrentBlockInfo((block) => ({
-      ...block,
-      timestamp: block.timestamp + amount,
-    }));
+  async advanceNonce(amount: number) {
+    const networkStatus = await this.getNetworkStatus();
+    return this.setCurrentBlockInfo({
+      timestamp: networkStatus.blockTimestamp,
+      nonce: networkStatus.nonce + amount,
+      round: networkStatus.round,
+      epoch: networkStatus.epoch,
+    });
   }
 
-  advanceNonce(amount: number) {
-    return this.updateCurrentBlockInfo((block) => ({
-      ...block,
-      nonce: block.nonce + amount,
-    }));
+  async advanceRound(amount: number) {
+    const networkStatus = await this.getNetworkStatus();
+    return this.setCurrentBlockInfo({
+      timestamp: networkStatus.blockTimestamp,
+      nonce: networkStatus.nonce,
+      round: networkStatus.round + amount,
+      epoch: networkStatus.epoch,
+    });
   }
 
-  advanceRound(amount: number) {
-    return this.updateCurrentBlockInfo((block) => ({
-      ...block,
-      round: block.round + amount,
-    }));
-  }
-
-  advanceEpoch(amount: number) {
-    return this.updateCurrentBlockInfo((block) => ({
-      ...block,
-      epoch: block.epoch + amount,
-    }));
+  async advanceEpoch(amount: number) {
+    const networkStatus = await this.getNetworkStatus();
+    return this.setCurrentBlockInfo({
+      timestamp: networkStatus.blockTimestamp,
+      nonce: networkStatus.nonce,
+      round: networkStatus.round,
+      epoch: networkStatus.epoch + amount,
+    });
   }
 
   resolveDeployContracts(txHashes: string[]) {
