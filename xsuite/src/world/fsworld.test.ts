@@ -36,74 +36,56 @@ test.concurrent("FSWorld.start - epoch, round, nonce", async () => {
   const round = 34;
   const nonce = 56;
   using world = await FSWorld.start({ epoch, round, nonce });
-  expect(await world.proxy.getNetworkStatus(0)).toMatchObject({
+  expect(await world.getNetworkStatus(0)).toMatchObject({
     epoch,
     round,
     nonce,
   });
 });
 
-test.concurrent(
-  "FSWorld.proxy.getAccountNonce on empty bech address",
-  async () => {
-    using world = await FSWorld.start();
-    expect(await world.proxy.getAccountNonce(zeroBechAddress)).toEqual(0);
-  },
-);
-
-test.concurrent(
-  "FSWorld.proxy.getAccountNonce on empty hex address",
-  async () => {
-    using world = await FSWorld.start();
-    expect(await world.proxy.getAccountNonce(zeroHexAddress)).toEqual(0);
-  },
-);
-
-test.concurrent(
-  "FSWorld.proxy.getAccountNonce on empty U8A address",
-  async () => {
-    using world = await FSWorld.start();
-    expect(await world.proxy.getAccountNonce(zeroU8AAddress)).toEqual(0);
-  },
-);
-
-test.concurrent(
-  "FSWorld.proxy.getAccountBalance on empty bech address",
-  async () => {
-    using world = await FSWorld.start();
-    expect(await world.proxy.getAccountBalance(zeroBechAddress)).toEqual(0n);
-  },
-);
-
-test.concurrent(
-  "FSWorld.proxy.getAccountBalance on empty hex address",
-  async () => {
-    using world = await FSWorld.start();
-    expect(await world.proxy.getAccountBalance(zeroHexAddress)).toEqual(0n);
-  },
-);
-
-test.concurrent(
-  "FSWorld.proxy.getAccountBalance on empty U8A address",
-  async () => {
-    using world = await FSWorld.start();
-    expect(await world.proxy.getAccountBalance(zeroU8AAddress)).toEqual(0n);
-  },
-);
-
-test.concurrent("FSWorld.proxy.getAccount on empty bech address", async () => {
+test.concurrent("FSWorld.getAccountNonce on empty bech address", async () => {
   using world = await FSWorld.start();
-  assertAccount(await world.proxy.getAccount(zeroBechAddress), emptyAccount);
+  expect(await world.getAccountNonce(zeroBechAddress)).toEqual(0);
 });
 
-test.concurrent("FSWorld.proxy.getAccount on empty hex address", async () => {
+test.concurrent("FSWorld.getAccountNonce on empty hex address", async () => {
   using world = await FSWorld.start();
-  assertAccount(await world.proxy.getAccount(zeroHexAddress), emptyAccount);
+  expect(await world.getAccountNonce(zeroHexAddress)).toEqual(0);
 });
 
-test.concurrent("FSWorld.proxy.getAccount on empty U8A address", async () => {
+test.concurrent("FSWorld.getAccountNonce on empty U8A address", async () => {
   using world = await FSWorld.start();
-  assertAccount(await world.proxy.getAccount(zeroU8AAddress), emptyAccount);
+  expect(await world.getAccountNonce(zeroU8AAddress)).toEqual(0);
+});
+
+test.concurrent("FSWorld.getAccountBalance on empty bech address", async () => {
+  using world = await FSWorld.start();
+  expect(await world.getAccountBalance(zeroBechAddress)).toEqual(0n);
+});
+
+test.concurrent("FSWorld.getAccountBalance on empty hex address", async () => {
+  using world = await FSWorld.start();
+  expect(await world.getAccountBalance(zeroHexAddress)).toEqual(0n);
+});
+
+test.concurrent("FSWorld.getAccountBalance on empty U8A address", async () => {
+  using world = await FSWorld.start();
+  expect(await world.getAccountBalance(zeroU8AAddress)).toEqual(0n);
+});
+
+test.concurrent("FSWorld.getAccount on empty bech address", async () => {
+  using world = await FSWorld.start();
+  assertAccount(await world.getAccount(zeroBechAddress), emptyAccount);
+});
+
+test.concurrent("FSWorld.getAccount on empty hex address", async () => {
+  using world = await FSWorld.start();
+  assertAccount(await world.getAccount(zeroHexAddress), emptyAccount);
+});
+
+test.concurrent("FSWorld.getAccount on empty U8A address", async () => {
+  using world = await FSWorld.start();
+  assertAccount(await world.getAccount(zeroU8AAddress), emptyAccount);
 });
 
 test.concurrent("FSWorld.proxy.blockNonce", async () => {

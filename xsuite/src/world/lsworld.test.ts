@@ -30,67 +30,49 @@ test.concurrent("LSWorld.start - port 3000", async () => {
   expect(world.proxy.proxyUrl).toEqual("http://127.0.0.1:3000");
 });
 
-test.concurrent(
-  "LSWorld.proxy.getAccountNonce on empty bech address",
-  async () => {
-    using world = await LSWorld.start();
-    expect(await world.proxy.getAccountNonce(zeroBechAddress)).toEqual(0);
-  },
-);
-
-test.concurrent(
-  "LSWorld.proxy.getAccountNonce on empty hex address",
-  async () => {
-    using world = await LSWorld.start();
-    expect(await world.proxy.getAccountNonce(zeroHexAddress)).toEqual(0);
-  },
-);
-
-test.concurrent(
-  "LSWorld.proxy.getAccountNonce on empty U8A address",
-  async () => {
-    using world = await LSWorld.start();
-    expect(await world.proxy.getAccountNonce(zeroU8AAddress)).toEqual(0);
-  },
-);
-
-test.concurrent(
-  "LSWorld.proxy.getAccountBalance on empty bech address",
-  async () => {
-    using world = await LSWorld.start();
-    expect(await world.proxy.getAccountBalance(zeroBechAddress)).toEqual(0n);
-  },
-);
-
-test.concurrent(
-  "LSWorld.proxy.getAccountBalance on empty hex address",
-  async () => {
-    using world = await LSWorld.start();
-    expect(await world.proxy.getAccountBalance(zeroHexAddress)).toEqual(0n);
-  },
-);
-
-test.concurrent(
-  "LSWorld.proxy.getAccountBalance on empty U8A address",
-  async () => {
-    using world = await LSWorld.start();
-    expect(await world.proxy.getAccountBalance(zeroU8AAddress)).toEqual(0n);
-  },
-);
-
-test.concurrent("LSWorld.proxy.getAccount on empty bech address", async () => {
+test.concurrent("LSWorld.getAccountNonce on empty bech address", async () => {
   using world = await LSWorld.start();
-  assertAccount(await world.proxy.getAccount(zeroBechAddress), emptyAccount);
+  expect(await world.getAccountNonce(zeroBechAddress)).toEqual(0);
 });
 
-test.concurrent("LSWorld.proxy.getAccount on empty hex address", async () => {
+test.concurrent("LSWorld.getAccountNonce on empty hex address", async () => {
   using world = await LSWorld.start();
-  assertAccount(await world.proxy.getAccount(zeroHexAddress), emptyAccount);
+  expect(await world.getAccountNonce(zeroHexAddress)).toEqual(0);
 });
 
-test.concurrent("LSWorld.proxy.getAccount on empty U8A address", async () => {
+test.concurrent("LSWorld.getAccountNonce on empty U8A address", async () => {
   using world = await LSWorld.start();
-  assertAccount(await world.proxy.getAccount(zeroU8AAddress), emptyAccount);
+  expect(await world.getAccountNonce(zeroU8AAddress)).toEqual(0);
+});
+
+test.concurrent("LSWorld.getAccountBalance on empty bech address", async () => {
+  using world = await LSWorld.start();
+  expect(await world.getAccountBalance(zeroBechAddress)).toEqual(0n);
+});
+
+test.concurrent("LSWorld.getAccountBalance on empty hex address", async () => {
+  using world = await LSWorld.start();
+  expect(await world.getAccountBalance(zeroHexAddress)).toEqual(0n);
+});
+
+test.concurrent("LSWorld.getAccountBalance on empty U8A address", async () => {
+  using world = await LSWorld.start();
+  expect(await world.getAccountBalance(zeroU8AAddress)).toEqual(0n);
+});
+
+test.concurrent("LSWorld.getAccount on empty bech address", async () => {
+  using world = await LSWorld.start();
+  assertAccount(await world.getAccount(zeroBechAddress), emptyAccount);
+});
+
+test.concurrent("LSWorld.getAccount on empty hex address", async () => {
+  using world = await LSWorld.start();
+  assertAccount(await world.getAccount(zeroHexAddress), emptyAccount);
+});
+
+test.concurrent("LSWorld.getAccount on empty U8A address", async () => {
+  using world = await LSWorld.start();
+  assertAccount(await world.getAccount(zeroU8AAddress), emptyAccount);
 });
 
 test.concurrent("LSWorld.new with defined chainId", () => {

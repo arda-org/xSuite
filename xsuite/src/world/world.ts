@@ -109,6 +109,10 @@ export class World {
     return new Contract({ address, world: this });
   }
 
+  getNetworkStatus(shard: number) {
+    return this.proxy.getNetworkStatus(shard);
+  }
+
   getAccountNonce(address: AddressLike) {
     return this.proxy.getAccountNonce(address);
   }
