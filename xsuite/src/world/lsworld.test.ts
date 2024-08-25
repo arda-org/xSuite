@@ -371,58 +371,34 @@ test.concurrent("LSWorld.setPreviousBlockInfo", async () => {
 
 test.concurrent("LSWorld.advanceTimestamp", async () => {
   using world = await LSWorld.start();
-  await world.setCurrentBlockInfo({
-    timestamp: 10,
-  });
-  expect(await world.getNetworkStatus()).toMatchObject({
-    blockTimestamp: 10,
-  });
+  await world.setCurrentBlockInfo({ timestamp: 10 });
+  expect((await world.getNetworkStatus()).blockTimestamp).toEqual(10);
   await world.advanceTimestamp(10);
-  expect(await world.getNetworkStatus()).toMatchObject({
-    blockTimestamp: 20,
-  });
+  expect((await world.getNetworkStatus()).blockTimestamp).toEqual(20);
 });
 
 test.concurrent("LSWorld.advanceNonce", async () => {
   using world = await LSWorld.start();
-  await world.setCurrentBlockInfo({
-    nonce: 10,
-  });
-  expect(await world.getNetworkStatus()).toMatchObject({
-    nonce: 10,
-  });
+  await world.setCurrentBlockInfo({ nonce: 10 });
+  expect((await world.getNetworkStatus()).nonce).toEqual(10);
   await world.advanceNonce(10);
-  expect(await world.getNetworkStatus()).toMatchObject({
-    nonce: 20,
-  });
+  expect((await world.getNetworkStatus()).nonce).toEqual(20);
 });
 
 test.concurrent("LSWorld.advanceRound", async () => {
   using world = await LSWorld.start();
-  await world.setCurrentBlockInfo({
-    round: 10,
-  });
-  expect(await world.getNetworkStatus()).toMatchObject({
-    round: 10,
-  });
+  await world.setCurrentBlockInfo({ round: 10 });
+  expect((await world.getNetworkStatus()).round).toEqual(10);
   await world.advanceRound(10);
-  expect(await world.getNetworkStatus()).toMatchObject({
-    round: 20,
-  });
+  expect((await world.getNetworkStatus()).round).toEqual(20);
 });
 
 test.concurrent("LSWorld.advanceEpoch", async () => {
   using world = await LSWorld.start();
-  await world.setCurrentBlockInfo({
-    epoch: 10,
-  });
-  expect(await world.getNetworkStatus()).toMatchObject({
-    epoch: 10,
-  });
+  await world.setCurrentBlockInfo({ epoch: 10 });
+  expect((await world.getNetworkStatus()).epoch).toEqual(10);
   await world.advanceEpoch(10);
-  expect(await world.getNetworkStatus()).toMatchObject({
-    epoch: 20,
-  });
+  expect((await world.getNetworkStatus()).epoch).toEqual(20);
 });
 
 test.concurrent("LSWorld.query - basic", async () => {

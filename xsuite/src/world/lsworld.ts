@@ -177,39 +177,31 @@ export class LSWorld extends World {
   async advanceTimestamp(amount: number) {
     const networkStatus = await this.getNetworkStatus();
     return this.setCurrentBlockInfo({
+      ...networkStatus,
       timestamp: networkStatus.blockTimestamp + amount,
-      nonce: networkStatus.nonce,
-      round: networkStatus.round,
-      epoch: networkStatus.epoch,
     });
   }
 
   async advanceNonce(amount: number) {
     const networkStatus = await this.getNetworkStatus();
     return this.setCurrentBlockInfo({
-      timestamp: networkStatus.blockTimestamp,
+      ...networkStatus,
       nonce: networkStatus.nonce + amount,
-      round: networkStatus.round,
-      epoch: networkStatus.epoch,
     });
   }
 
   async advanceRound(amount: number) {
     const networkStatus = await this.getNetworkStatus();
     return this.setCurrentBlockInfo({
-      timestamp: networkStatus.blockTimestamp,
-      nonce: networkStatus.nonce,
+      ...networkStatus,
       round: networkStatus.round + amount,
-      epoch: networkStatus.epoch,
     });
   }
 
   async advanceEpoch(amount: number) {
     const networkStatus = await this.getNetworkStatus();
     return this.setCurrentBlockInfo({
-      timestamp: networkStatus.blockTimestamp,
-      nonce: networkStatus.nonce,
-      round: networkStatus.round,
+      ...networkStatus,
       epoch: networkStatus.epoch + amount,
     });
   }
