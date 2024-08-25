@@ -87,6 +87,11 @@ func main() {
 		respond(w, resBody, err)
 	})
 
+	router.Post("/admin/update-accounts", func(w http.ResponseWriter, r *http.Request) {
+		resBody, err := executor.HandleAdminUpdateAccounts(r)
+		respond(w, resBody, err)
+	})
+
 	router.Post("/admin/set-current-block-info", func(w http.ResponseWriter, r *http.Request) {
 		resBody, err := executor.HandleAdminSetCurrentBlockInfo(r)
 		respond(w, resBody, err)

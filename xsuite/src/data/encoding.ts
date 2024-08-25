@@ -28,7 +28,7 @@ type EncodableCategorizedKvs = {
   mappers?: EncodableMapper[];
   extraKvs?: EncodableKvs;
 };
-type EncodableEsdt = {
+export type EncodableEsdt = {
   id: string;
   roles?: Role[];
   lastNonce?: number | bigint;

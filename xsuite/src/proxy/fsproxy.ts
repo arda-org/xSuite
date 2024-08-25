@@ -26,6 +26,17 @@ export class FSProxy extends Proxy {
     return this.setAccounts([account]);
   }
 
+  updateAccounts(accounts: EncodableAccount[]) {
+    return this.fetch(
+      "/simulator/set-state",
+      accounts.map((a) => encodableAccountToSettableAccount(a)),
+    ).then(() => {});
+  }
+
+  updateAccount(account: EncodableAccount) {
+    return this.updateAccounts([account]);
+  }
+
   generateBlocks(numBlocks: number) {
     return this.fetch(`/simulator/generate-blocks/${numBlocks}`, {}).then(
       () => {},
