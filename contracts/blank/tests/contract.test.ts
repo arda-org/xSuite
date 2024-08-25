@@ -15,7 +15,7 @@ beforeEach(async () => {
   }));
 });
 
-afterEach(async () => {
+afterEach(() => {
   world.terminate();
 });
 

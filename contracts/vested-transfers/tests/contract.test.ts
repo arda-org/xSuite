@@ -40,7 +40,7 @@ beforeEach(async () => {
   executor = await world.createWallet();
 });
 
-afterEach(async () => {
+afterEach(() => {
   world.terminate();
 });
 

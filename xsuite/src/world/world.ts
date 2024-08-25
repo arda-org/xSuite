@@ -196,7 +196,7 @@ export class World {
     return this.preTx(tx).then((tx) => this.proxy.sendUpgradeContract(tx));
   }
 
-  private async preTxs<T extends IncompleteTx>(txs: T[]) {
+  private preTxs<T extends IncompleteTx>(txs: T[]) {
     const noncePromises: Record<string, Promise<number>> = {};
     return Promise.all(
       txs.map(async (tx) => {
@@ -219,7 +219,7 @@ export class World {
     );
   }
 
-  private async preTx<T extends IncompleteTx>(tx: T) {
+  private preTx<T extends IncompleteTx>(tx: T) {
     return this.preTxs([tx]).then((r) => r[0]);
   }
 
