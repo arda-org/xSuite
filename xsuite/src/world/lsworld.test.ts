@@ -376,6 +376,38 @@ test.concurrent("LSWorld.setPreviousBlockInfo", async () => {
   assertVs(returnData, [e.U64(10), e.U64(20), e.U64(30), e.U64(40)]);
 });
 
+test.concurrent("LSWorld.advanceTimestamp", async () => {
+  using world = await LSWorld.start();
+  await world.setCurrentBlockInfo({ timestamp: 10 });
+  expect((await world.getNetworkStatus()).blockTimestamp).toEqual(10);
+  await world.advanceTimestamp(10);
+  expect((await world.getNetworkStatus()).blockTimestamp).toEqual(20);
+});
+
+test.concurrent("LSWorld.advanceNonce", async () => {
+  using world = await LSWorld.start();
+  await world.setCurrentBlockInfo({ nonce: 10 });
+  expect((await world.getNetworkStatus()).nonce).toEqual(10);
+  await world.advanceNonce(10);
+  expect((await world.getNetworkStatus()).nonce).toEqual(20);
+});
+
+test.concurrent("LSWorld.advanceRound", async () => {
+  using world = await LSWorld.start();
+  await world.setCurrentBlockInfo({ round: 10 });
+  expect((await world.getNetworkStatus()).round).toEqual(10);
+  await world.advanceRound(10);
+  expect((await world.getNetworkStatus()).round).toEqual(20);
+});
+
+test.concurrent("LSWorld.advanceEpoch", async () => {
+  using world = await LSWorld.start();
+  await world.setCurrentBlockInfo({ epoch: 10 });
+  expect((await world.getNetworkStatus()).epoch).toEqual(10);
+  await world.advanceEpoch(10);
+  expect((await world.getNetworkStatus()).epoch).toEqual(20);
+});
+
 test.concurrent("LSWorld.query - basic", async () => {
   using world = await LSWorld.start();
   const { contract } = await createAccounts(world);
