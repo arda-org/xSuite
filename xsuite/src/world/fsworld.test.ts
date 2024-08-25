@@ -353,31 +353,18 @@ test.concurrent("FSWorld.setAccount", async () => {
 
 test.concurrent("FSWorld.updateAccount", async () => {
   using world = await FSWorld.start();
-  const { wallet, wallet2, contract } = await createAccounts(world);
-  assertAccount(await contract.getAccount(), {
+  const wallet = await world.createWallet({
+    address: { shard: 1 },
     balance: 10n ** 18n,
-    code: worldCode,
-    codeMetadata: ["readable"],
-    kvs: {
-      esdts: [{ id: fftId, amount: 10n ** 18n }],
-      mappers: [{ key: "n", value: e.U64(2) }],
-    },
-    owner: wallet,
+    kvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
   });
+  const before = await wallet.getAccount();
   await world.updateAccount({
-    address: contract,
-    owner: wallet2,
+    address: wallet,
+    balance: 10n ** 17n,
   });
-  assertAccount(await contract.getAccount(), {
-    balance: 10n ** 18n,
-    code: worldCode,
-    codeMetadata: ["readable"],
-    kvs: {
-      esdts: [{ id: fftId, amount: 10n ** 18n }],
-      mappers: [{ key: "n", value: e.U64(2) }],
-    },
-    owner: wallet2,
-  });
+  const after = await wallet.getAccount();
+  expect(after).toEqual({ ...before, balance: 10n ** 17n });
 });
 
 test.concurrent("FSWorld.query - basic", async () => {
@@ -665,22 +652,22 @@ test.concurrent("FSWorld.addEsdts", async () => {
     balance: 10n ** 18n,
     kvs: {
       esdts: [
-        { id: "01", amount: 10n ** 18n },
-        { id: "02", amount: 10n ** 18n },
+        { id: "TOK1-123456", amount: 10n ** 18n },
+        { id: "TOK2-123456", amount: 10n ** 18n },
       ],
     },
   });
   await world.addEsdts(wallet, [
-    { id: "01", amount: 20n ** 18n },
-    { id: "03", amount: 10n ** 18n },
+    { id: "TOK1-123456", amount: 20n ** 18n },
+    { id: "TOK3-123456", amount: 10n ** 18n },
   ]);
   assertAccount(await wallet.getAccount(), {
     balance: 10n ** 18n,
     kvs: {
       esdts: [
-        { id: "01", amount: 20n ** 18n },
-        { id: "02", amount: 10n ** 18n },
-        { id: "03", amount: 10n ** 18n },
+        { id: "TOK1-123456", amount: 20n ** 18n },
+        { id: "TOK2-123456", amount: 10n ** 18n },
+        { id: "TOK3-123456", amount: 10n ** 18n },
       ],
     },
   });
@@ -692,22 +679,22 @@ test.concurrent("FSWorld.addMappers", async () => {
     balance: 10n ** 18n,
     kvs: {
       mappers: [
-        { key: "01", value: e.Buffer("02") },
-        { key: "03", value: e.Buffer("04") },
+        { key: "key1", value: e.U(2) },
+        { key: "key3", value: e.U(4) },
       ],
     },
   });
   await world.addMappers(wallet, [
-    { key: "01", value: e.Buffer("04") },
-    { key: "05", value: e.Buffer("06") },
+    { key: "key1", value: e.U(4) },
+    { key: "key5", value: e.U(6) },
   ]);
   assertAccount(await wallet.getAccount(), {
     balance: 10n ** 18n,
     kvs: {
       mappers: [
-        { key: "01", value: e.Buffer("04") },
-        { key: "03", value: e.Buffer("04") },
-        { key: "05", value: e.Buffer("06") },
+        { key: "key1", value: e.U(4) },
+        { key: "key3", value: e.U(4) },
+        { key: "key5", value: e.U(6) },
       ],
     },
   });
@@ -856,7 +843,11 @@ test.concurrent("FSWallet.setAccount & FSWallet.getAccount", async () => {
 
 test.concurrent("FSWallet.updateAccount", async () => {
   using world = await FSWorld.start();
-  const { wallet } = await createAccounts(world);
+  const wallet = await world.createWallet({
+    address: { shard: 1 },
+    balance: 10n ** 18n,
+    kvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
+  });
   const before = await wallet.getAccount();
   await wallet.updateAccount({ balance: 10n ** 17n });
   const after = await wallet.getAccount();
@@ -1202,22 +1193,22 @@ test.concurrent("FSWallet.addEsdts", async () => {
     balance: 10n ** 18n,
     kvs: {
       esdts: [
-        { id: "01", amount: 10n ** 18n },
-        { id: "02", amount: 10n ** 18n },
+        { id: "TOK1-123456", amount: 10n ** 18n },
+        { id: "TOK2-123456", amount: 10n ** 18n },
       ],
     },
   });
   await wallet.addEsdts([
-    { id: "01", amount: 20n ** 18n },
-    { id: "03", amount: 10n ** 18n },
+    { id: "TOK1-123456", amount: 20n ** 18n },
+    { id: "TOK3-123456", amount: 10n ** 18n },
   ]);
   assertAccount(await wallet.getAccount(), {
     balance: 10n ** 18n,
     kvs: {
       esdts: [
-        { id: "01", amount: 20n ** 18n },
-        { id: "02", amount: 10n ** 18n },
-        { id: "03", amount: 10n ** 18n },
+        { id: "TOK1-123456", amount: 20n ** 18n },
+        { id: "TOK2-123456", amount: 10n ** 18n },
+        { id: "TOK3-123456", amount: 10n ** 18n },
       ],
     },
   });
@@ -1298,7 +1289,15 @@ test.concurrent("FSContract.setAccount & FSContract.getAccount", async () => {
 
 test.concurrent("FSContract.updateAccount", async () => {
   using world = await FSWorld.start();
-  const { contract } = await createAccounts(world);
+  const contract = await world.createContract({
+    balance: 10n ** 18n,
+    code: worldCode,
+    codeMetadata: ["readable"],
+    kvs: {
+      esdts: [{ id: fftId, amount: 10n ** 18n }],
+      mappers: [{ key: "n", value: e.U64(2) }],
+    },
+  });
   const before = await contract.getAccount();
   await contract.updateAccount({ balance: 10n ** 17n });
   const after = await contract.getAccount();
@@ -1337,22 +1336,22 @@ test.concurrent("FSContract.addEsdts", async () => {
     balance: 10n ** 18n,
     kvs: {
       esdts: [
-        { id: "01", amount: 10n ** 18n },
-        { id: "02", amount: 10n ** 18n },
+        { id: "TOK1-123456", amount: 10n ** 18n },
+        { id: "TOK2-123456", amount: 10n ** 18n },
       ],
     },
   });
   await contract.addEsdts([
-    { id: "01", amount: 20n ** 18n },
-    { id: "03", amount: 10n ** 18n },
+    { id: "TOK1-123456", amount: 20n ** 18n },
+    { id: "TOK3-123456", amount: 10n ** 18n },
   ]);
   assertAccount(await contract.getAccount(), {
     balance: 10n ** 18n,
     kvs: {
       esdts: [
-        { id: "01", amount: 20n ** 18n },
-        { id: "02", amount: 10n ** 18n },
-        { id: "03", amount: 10n ** 18n },
+        { id: "TOK1-123456", amount: 20n ** 18n },
+        { id: "TOK2-123456", amount: 10n ** 18n },
+        { id: "TOK3-123456", amount: 10n ** 18n },
       ],
     },
   });
@@ -1364,22 +1363,22 @@ test.concurrent("FSContract.addMappers", async () => {
     balance: 10n ** 18n,
     kvs: {
       mappers: [
-        { key: "01", value: e.Buffer("02") },
-        { key: "03", value: e.Buffer("04") },
+        { key: "key1", value: e.U(2) },
+        { key: "key3", value: e.U(4) },
       ],
     },
   });
   await contract.addMappers([
-    { key: "01", value: e.Buffer("04") },
-    { key: "05", value: e.Buffer("06") },
+    { key: "key1", value: e.U(4) },
+    { key: "key5", value: e.U(6) },
   ]);
   assertAccount(await contract.getAccount(), {
     balance: 10n ** 18n,
     kvs: {
       mappers: [
-        { key: "01", value: e.Buffer("04") },
-        { key: "03", value: e.Buffer("04") },
-        { key: "05", value: e.Buffer("06") },
+        { key: "key1", value: e.U(4) },
+        { key: "key3", value: e.U(4) },
+        { key: "key5", value: e.U(6) },
       ],
     },
   });

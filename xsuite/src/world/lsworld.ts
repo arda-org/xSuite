@@ -12,12 +12,15 @@ import { Prettify, Replace } from "../helpers";
 import { LSProxy } from "../proxy";
 import { Block } from "../proxy/lsproxy";
 import { DummySigner, Signer } from "./signer";
-import { AddressLikeParams, createAddressLike } from "./utils";
+import {
+  AddressLikeParams,
+  createAddressLike,
+  expandCodeInAccounts,
+} from "./utils";
 import {
   World,
   Contract,
   Wallet,
-  expandCode,
   WalletDeployContractTx,
   WorldNewOptions,
   WorldDeployContractTx,
@@ -155,11 +158,7 @@ export class LSWorld extends World {
   }
 
   setAccounts(params: LSWorldSetAccountsParams) {
-    for (const _params of params) {
-      if (_params.code !== undefined) {
-        _params.code = expandCode(_params.code);
-      }
-    }
+    expandCodeInAccounts(params);
     return this.proxy.setAccounts(params);
   }
 
@@ -168,11 +167,7 @@ export class LSWorld extends World {
   }
 
   updateAccounts(params: LSWorldSetAccountParams[]) {
-    for (const _params of params) {
-      if (_params.code !== undefined) {
-        _params.code = expandCode(_params.code);
-      }
-    }
+    expandCodeInAccounts(params);
     return this.proxy.updateAccounts(params);
   }
 
@@ -216,21 +211,21 @@ export class LSWorld extends World {
     return super.deployContract(tx).then((r) => this.addContractPostTx(r));
   }
 
-  async addKvs(address: AddressLike, kvs: EncodableKvs) {
+  addKvs(address: AddressLike, kvs: EncodableKvs) {
     return this.updateAccount({
       address,
       kvs: [kvs],
     });
   }
 
-  async addEsdts(address: AddressLike, esdts: EncodableEsdt[]) {
+  addEsdts(address: AddressLike, esdts: EncodableEsdt[]) {
     return this.updateAccount({
       address,
       kvs: [{ esdts }],
     });
   }
 
-  async addMappers(address: AddressLike, mappers: EncodableMapper[]) {
+  addMappers(address: AddressLike, mappers: EncodableMapper[]) {
     return this.updateAccount({
       address,
       kvs: [{ mappers }],
