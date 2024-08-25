@@ -1,3 +1,4 @@
+import { d, e } from "../data";
 import { AddressLike, addressLikeToBechAddress } from "../data/addressLike";
 import { BytesLike } from "../data/bytesLike";
 import { Optional, Prettify, Replace } from "../helpers";
@@ -121,8 +122,22 @@ export class World {
     return this.proxy.getAccountBalance(address);
   }
 
+  async getAccountEsdtBalance(
+    address: AddressLike,
+    id: string,
+    nonce?: number,
+  ) {
+    const encV = await this.getAccountEsdtValue(address, id, nonce);
+    if (encV === "") return 0n;
+    return d.EsdtValue().fromTop(encV).amount ?? 0n;
+  }
+
   getAccountValue(address: AddressLike, key: BytesLike) {
     return this.proxy.getAccountValue(address, key);
+  }
+
+  getAccountEsdtValue(address: AddressLike, id: string, nonce?: number) {
+    return this.proxy.getAccountValue(address, e.EsdtKey(id, nonce));
   }
 
   getAccountKvs(address: AddressLike) {
@@ -368,8 +383,16 @@ export class Wallet extends Signer {
     return this.world.getAccountBalance(this);
   }
 
+  getAccountEsdtBalance(id: string, nonce?: number) {
+    return this.world.getAccountEsdtBalance(this, id, nonce);
+  }
+
   getAccountValue(key: BytesLike) {
     return this.world.getAccountValue(this, key);
+  }
+
+  getAccountEsdtValue(id: string, nonce?: number) {
+    return this.world.getAccountEsdtValue(this, id, nonce);
   }
 
   getAccountKvs() {
@@ -468,8 +491,16 @@ export class Contract extends Account {
     return this.world.getAccountBalance(this);
   }
 
+  getAccountEsdtBalance(id: string, nonce?: number) {
+    return this.world.getAccountEsdtBalance(this, id, nonce);
+  }
+
   getAccountValue(key: BytesLike) {
     return this.world.getAccountValue(this, key);
+  }
+
+  getAccountEsdtValue(id: string, nonce?: number) {
+    return this.world.getAccountEsdtValue(this, id, nonce);
   }
 
   getAccountKvs() {

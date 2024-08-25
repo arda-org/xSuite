@@ -193,6 +193,13 @@ test.concurrent("LSWorld.getAccountBalance", async () => {
   expect(await world.getAccountBalance(wallet)).toEqual(1234n);
 });
 
+test.concurrent("LSWorld.getAccountEsdtBalance", async () => {
+  using world = await LSWorld.start();
+  const { wallet } = await createAccounts(world);
+  const balance = await world.getAccountEsdtBalance(wallet, fftId);
+  expect(balance).toEqual(10n ** 18n);
+});
+
 test.concurrent("LSWorld.getAccountValue - non-present key", async () => {
   using world = await LSWorld.start();
   const wallet = await world.createWallet({ kvs: { "01": "11" } });
@@ -698,6 +705,13 @@ test.concurrent("LSWallet.getAccountBalance", async () => {
   expect(await wallet.getAccountBalance()).toEqual(10n ** 18n);
 });
 
+test.concurrent("LSWallet.getAccountEsdtBalance", async () => {
+  using world = await LSWorld.start();
+  const { wallet } = await createAccounts(world);
+  const balance = await wallet.getAccountEsdtBalance(fftId);
+  expect(balance).toEqual(10n ** 18n);
+});
+
 test.concurrent("LSWallet.getAccountValue", async () => {
   using world = await LSWorld.start();
   const wallet = await world.createWallet({ kvs: { "01": "11" } });
@@ -1002,6 +1016,13 @@ test.concurrent("LSContract.getAccountBalance", async () => {
   using world = await LSWorld.start();
   const { contract } = await createAccounts(world);
   expect(await contract.getAccountBalance()).toEqual(10n ** 18n);
+});
+
+test.concurrent("LSContract.getAccountEsdtBalance", async () => {
+  using world = await LSWorld.start();
+  const { contract } = await createAccounts(world);
+  const balance = await contract.getAccountEsdtBalance(fftId);
+  expect(balance).toEqual(10n ** 18n);
 });
 
 test.concurrent("LSContract.getAccountValue", async () => {
