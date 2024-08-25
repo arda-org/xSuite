@@ -136,7 +136,7 @@ export class World {
     return this.proxy.getAccountValue(address, key);
   }
 
-  async getAccountEsdtValue(address: AddressLike, id: string, nonce?: number) {
+  getAccountEsdtValue(address: AddressLike, id: string, nonce?: number) {
     return this.proxy.getAccountValue(address, e.EsdtKey(id, nonce));
   }
 
