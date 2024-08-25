@@ -12,8 +12,8 @@ export abstract class Signer extends Account {
 }
 
 export class DummySigner extends Signer {
-  async sign() {
-    return Buffer.from("00");
+  sign(): Promise<Uint8Array> {
+    return Promise.resolve(Buffer.from("00"));
   }
 }
 

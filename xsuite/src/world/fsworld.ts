@@ -104,7 +104,7 @@ export class FSWorld extends World {
     return setAccountsParams.map((a) => this.newWallet(a.address));
   }
 
-  async createWallet(params: FSWorldCreateAccountParams = {}) {
+  createWallet(params: FSWorldCreateAccountParams = {}) {
     return this.createWallets([params]).then((wallets) => wallets[0]);
   }
 
@@ -119,7 +119,7 @@ export class FSWorld extends World {
     return setAccountsParams.map((a) => this.newContract(a.address));
   }
 
-  async createContract(params: FSWorldCreateAccountParams = {}) {
+  createContract(params: FSWorldCreateAccountParams = {}) {
     return this.createContracts([params]).then((contracts) => contracts[0]);
   }
 

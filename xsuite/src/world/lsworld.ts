@@ -130,7 +130,7 @@ export class LSWorld extends World {
     return setAccountsParams.map((a) => this.newWallet(a.address));
   }
 
-  async createWallet(params: LSWorldCreateAccountParams = {}) {
+  createWallet(params: LSWorldCreateAccountParams = {}) {
     return this.createWallets([params]).then((wallets) => wallets[0]);
   }
 
@@ -145,7 +145,7 @@ export class LSWorld extends World {
     return setAccountsParams.map((a) => this.newContract(a.address));
   }
 
-  async createContract(params: LSWorldCreateAccountParams = {}) {
+  createContract(params: LSWorldCreateAccountParams = {}) {
     return this.createContracts([params]).then((contracts) => contracts[0]);
   }
 

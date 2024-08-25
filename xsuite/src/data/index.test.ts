@@ -163,7 +163,7 @@ beforeAll(async () => {
   complexSysAccState = await world.sysAcc.getSerializableAccount();
 });
 
-afterAll(async () => {
+afterAll(() => {
   world.terminate();
 });
 
@@ -867,7 +867,7 @@ test("eKvsUnfiltered - empty mappers", () => {
   }
 });
 
-test("e.account", async () => {
+test("e.account", () => {
   expect(walletState).toEqual(
     e.account({
       address: wallet,
@@ -1261,7 +1261,7 @@ test("d.vs - number of values and decoders not matching", () => {
   );
 });
 
-test("d.kvs", async () => {
+test("d.kvs", () => {
   expect(
     d
       .kvs({

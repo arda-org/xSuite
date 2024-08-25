@@ -10,13 +10,13 @@ test("cwd outside context", () => {
   expect(cwd()).toEqual(process.cwd());
 });
 
-test("log inside context", async () => {
+test("log inside context", () => {
   const ctx = new Context();
   ctx.run(() => log("hello!"));
   expect(ctx.flushStdout()).toEqual("hello!\n");
 });
 
-test("log outside context", async () => {
+test("log outside context", () => {
   const int = new StdoutInterceptor();
   log("hello!");
   expect(int.stdout).toEqual("hello!\n");
