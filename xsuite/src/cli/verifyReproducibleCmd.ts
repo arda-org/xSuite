@@ -13,23 +13,20 @@ export const addVerifyReproducibleCmd = (cmd: Command) => {
       "[DIR]",
       "Directory in which the command is executed (default: $(PWD))",
     )
-    .requiredOption("--sc <SC>", "Address of the smart contract to be verified")
-    .option(
-      "--verifier-url <VERIFIIER_URL>",
-      `Verifier URL (default: ${defaultVerifierUrl})`,
+    .requiredOption(
+      "--address <ADDRESS>",
+      "Address of the smart contract to be verified",
+    )
+    .requiredOption(
+      "--chain <CHAIN>",
+      `Chain of the smart contract to be verified (${chainsStr})`,
     )
     .action(action);
 };
 
 const action = async (
   dirArgument: string | undefined,
-  {
-    sc,
-    verifierUrl,
-  }: {
-    sc: string;
-    verifierUrl?: string;
-  },
+  { address, chain }: { address: string; chain: string },
 ) => {
   let dir: string;
   if (dirArgument !== undefined) {
@@ -38,27 +35,32 @@ const action = async (
     dir = cwd();
   }
 
-  verifierUrl = verifierUrl ?? defaultVerifierUrl;
+  if (!isValidChain(chain)) {
+    logError("Unknown chain.");
+    return;
+  }
+  const verifierUrl = verifierUrls[chain];
 
-  const foundSourceFiles = globSync(`${dir}/**/*.source.json`);
-  if (foundSourceFiles.length == 0) {
+  const sourceFiles = globSync(`${dir}/**/*.source.json`);
+  if (sourceFiles.length == 0) {
     logError(`No file of type *.source.json found in "${dir}".`);
     return;
   }
-  if (foundSourceFiles.length !== 1) {
+  if (sourceFiles.length !== 1) {
     logError(
-      `More than one file of type *.source.json found in "${dir}": ${foundSourceFiles.map(
+      `More than one file of type *.source.json found in "${dir}": ${sourceFiles.map(
         (f) => `\n- ${f}`,
       )}`,
     );
     return;
   }
 
-  const sourceFile = foundSourceFiles[0];
+  const sourceFile = sourceFiles[0];
   log(`Source file found: "${sourceFile}".`);
 
   const sourceCode = JSON.parse(fs.readFileSync(sourceFile, "utf-8"));
   const image = sourceCode?.metadata?.buildMetadata?.builderName;
+  console.log(sourceCode, image);
   if (!image) {
     logError(`No image name found in "${sourceFile}".`);
     return;
@@ -68,13 +70,13 @@ const action = async (
   const startTime = new Date().getTime();
 
   log("Requesting a verification...");
-  const response = await fetch(`${verifierUrl}/verifier`, {
+  const requestRes = await fetch(`${verifierUrl}/verifier`, {
     method: "post",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       signature: "",
       payload: {
-        contract: sc,
+        contract: address,
         dockerImage: image,
         sourceCode,
         contractVariant: null,
@@ -82,41 +84,51 @@ const action = async (
     }),
   }).then((r) => r.json());
 
-  const taskId = response.taskId;
+  const taskId = requestRes.taskId;
   if (!taskId) {
-    logError(`Verification failed. Response: ${JSON.stringify(response)}`);
+    logError(
+      `Verification request failed. Response: ${JSON.stringify(requestRes)}`,
+    );
     return;
   }
 
-  log(`Verifying (task ${taskId})... It may take a while.`);
+  log(`Verification (task ${taskId})... It may take a while.`);
 
+  let verifRes: any = {};
   let oldStatus = "";
-  let status = "";
 
-  while (status !== "finished") {
+  while (verifRes.status !== "finished") {
     await pause(pollInterval);
-    const response = await fetch(`${verifierUrl}/tasks/${taskId}`, {
-      headers: { "Content-Type": "application/json" },
-    }).then((r) => r.json());
-
-    status = response.status;
-
-    if (status === "finished") {
-      const timeElapsed = (new Date().getTime() - startTime) / 1000;
-      if (response.result.status === "error") {
-        logError(
-          `An error occured during verification. Message: ${response.result.message}`,
-        );
-      } else {
-        log(`Verification finished in ${timeElapsed} seconds!`);
-      }
-    } else if (status !== oldStatus) {
-      log(`Task status: ${status}`);
-      log(JSON.stringify(response));
-      oldStatus = status;
+    verifRes = await fetch(`${verifierUrl}/tasks/${taskId}`).then((r) =>
+      r.json(),
+    );
+    if (verifRes.status !== oldStatus) {
+      log(JSON.stringify(verifRes));
     }
+    oldStatus = verifRes.status;
+  }
+
+  const timeElapsed = (new Date().getTime() - startTime) / 1000;
+  if (verifRes.result.status === "error") {
+    logError(
+      `An error occured during verification. Message: ${verifRes.result.message}`,
+    );
+  } else {
+    log(`Verification finished in ${timeElapsed} seconds!`);
   }
 };
 
-const defaultVerifierUrl = "https://devnet-play-api.multiversx.com";
+const isValidChain = (chain: string): chain is keyof typeof verifierUrls =>
+  chain in verifierUrls;
+
+const verifierUrls = {
+  devnet: "https://devnet-play-api.multiversx.com",
+  testnet: "https://testnet-play-api.multiversx.com",
+  mainnet: "https://play-api.multiversx.com",
+} as const;
+
+const chainsStr = Object.keys(verifierUrls)
+  .map((c) => `"${c}"`)
+  .join(", ");
+
 const pollInterval = process.env.VITEST_WORKER_ID ? 1 : 5000;

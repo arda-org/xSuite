@@ -22,34 +22,27 @@ export const addBuildReproducibleCmd = (cmd: Command) => {
       "-d, --delete",
       "Delete the output directory in case it already exists.",
     )
-    .option(
-      "--output-dir <OUTPUT_DIR>",
-      "Directory where the build artifacts will be saved (default: [DIR]/output-reproducible)",
-    )
     .action(action);
 };
 
-const action = async (
+const action = (
   dirArgument: string | undefined,
   {
     image,
     recursive,
     delete: deleteOutputDir,
-    outputDir,
   }: {
     image?: string;
     recursive?: boolean;
     delete?: boolean;
-    outputDir?: string;
   },
 ) => {
-  let sourceDir: string;
+  let dir: string;
   if (dirArgument !== undefined) {
-    sourceDir = path.resolve(dirArgument);
+    dir = path.resolve(dirArgument);
   } else {
-    sourceDir = cwd();
+    dir = cwd();
   }
-  outputDir = outputDir ?? path.join(sourceDir, "output-reproducible");
 
   if (!image) {
     logError("You did not provide '--image <IMAGE>'.");
@@ -59,89 +52,83 @@ const action = async (
     return;
   }
 
-  let contract;
+  let contract: string | undefined;
   if (recursive) {
-    log(`Building contract(s) in "${sourceDir}"...`);
+    log(`Building contract(s) in "${dir}"...`);
   } else {
-    contract = findContract(sourceDir);
+    contract = findContractName(dir);
     if (!contract) {
-      logError("No contract was found to build.");
+      logError("No contract to build.");
       return;
     }
-
     log(`Building contract "${contract}"...`);
   }
 
-  ensureEmptyOutputDir(outputDir, deleteOutputDir);
-
-  // Prepare general docker arguments
-  const dockerGeneralArgs: string[] = ["run"];
-
-  const userId = process.getuid?.();
-  const groupId = process.getgid?.();
-  if (userId && groupId) {
-    dockerGeneralArgs.push("--user", `${userId}:${groupId}`);
+  if (process.getuid === undefined) {
+    logError("getuid is not defined.");
+    return;
   }
-  dockerGeneralArgs.push("--rm");
+  if (process.getgid === undefined) {
+    logError("getgid is not defined.");
+    return;
+  }
 
-  // Prepare docker arguments related to mounting volumes
-  const dockerMountArgs: string[] = ["--volume", `${outputDir}:/output`];
-  dockerMountArgs.push("--volume", `${sourceDir}:/project`);
-
+  const mountedOutputDir = path.join(dir, "output-reproducible");
   const mountedTemporaryRoot = "/tmp/multiversx_sdk_rust_contract_builder";
   const mountedRustCargoTargetDir = `${mountedTemporaryRoot}/rust-cargo-target-dir`;
   const mountedRustRegistry = `${mountedTemporaryRoot}/rust-registry`;
   const mountedRustGit = `${mountedTemporaryRoot}/rust-git`;
 
-  // permission fix. does not work, when we let docker create these volumes.
+  if (deleteOutputDir) {
+    fs.rmSync(mountedOutputDir, { recursive: true, force: true });
+  }
+  // Create dirs ourselves because Docker fails to create them
+  fs.mkdirSync(mountedOutputDir, { recursive: true });
   fs.mkdirSync(mountedRustCargoTargetDir, { recursive: true });
   fs.mkdirSync(mountedRustRegistry, { recursive: true });
   fs.mkdirSync(mountedRustGit, { recursive: true });
 
-  dockerMountArgs.push(
-    "--volume",
-    `${mountedRustCargoTargetDir}:/rust/cargo-target-dir`,
-  );
-  dockerMountArgs.push("--volume", `${mountedRustRegistry}:/rust/registry`);
-  dockerMountArgs.push("--volume", `${mountedRustGit}:/rust/git`);
-
-  // Prepare entrypoint arguments
-  const entrypointArgs: string[] = [];
-  entrypointArgs.push("--project", "project");
-  if (contract) {
-    entrypointArgs.push("--contract", contract);
-  }
-
-  const args = [
-    ...dockerGeneralArgs,
-    ...dockerMountArgs,
-    image,
-    ...entrypointArgs,
+  // Prepare general Docker arguments
+  const dockerArgs = [
+    "run",
+    "--user",
+    `${process.getuid()}:${process.getgid()}`,
+    "--rm",
   ];
 
-  logAndRunCommand("docker", args);
-};
-
-const ensureEmptyOutputDir = (
-  outputDir: fs.PathLike,
-  deleteOutputDir: boolean | undefined,
-) => {
-  if (deleteOutputDir) {
-    fs.rmSync(outputDir, { recursive: true, force: true });
-  }
-
-  fs.mkdirSync(outputDir, { recursive: true });
-};
-
-const findContract = (sourceDir: string) => {
-  if (!fs.existsSync(`${sourceDir}/Cargo.toml`)) {
-    return undefined;
-  }
-
-  const cargoToml = toml.parse(
-    fs.readFileSync(`${sourceDir}/Cargo.toml`, "utf-8"),
+  // Prepare Docker arguments related to mounting volumes
+  dockerArgs.push(
+    "--volume",
+    `${mountedOutputDir}:/output`,
+    "--volume",
+    `${dir}:/project`,
+    "--volume",
+    `${mountedRustCargoTargetDir}:/rust/cargo-target-dir`,
+    "--volume",
+    `${mountedRustRegistry}:/rust/registry`,
+    "--volume",
+    `${mountedRustGit}:/rust/git`,
   );
-  return cargoToml.package.name;
+
+  dockerArgs.push(image);
+
+  // Prepare image entrypoint arguments
+  dockerArgs.push("--project", "project");
+  if (contract) {
+    dockerArgs.push("--contract", contract);
+  }
+
+  logAndRunCommand("docker", dockerArgs);
+};
+
+const findContractName = (sourceDir: string) => {
+  let content: string | undefined;
+  try {
+    content = fs.readFileSync(`${sourceDir}/Cargo.toml`, "utf8");
+  } catch {
+    return;
+  }
+  return toml.parse(content)?.package?.name;
 };
 
 const defaultReproducibleDockerImage =
