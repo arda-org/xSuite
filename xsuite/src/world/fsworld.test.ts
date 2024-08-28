@@ -14,7 +14,7 @@ import { expandCode } from "./world";
 
 const fftId = "FFT-abcdef";
 const sftId = "SFT-abcdef";
-const worldCode = "file:contracts/world/output/world.wasm";
+const worldCode = "file:contracts/output-reproducible/world/world.wasm";
 const emptyAccount = {
   nonce: 0,
   balance: 0,

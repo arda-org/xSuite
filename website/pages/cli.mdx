@@ -10,7 +10,16 @@ xSuite utility provides the following commands:
     - `--no-install` - skip package installation
     - `--no-git` - skip git initialization
 - `xsuite build` - builds a contract; currently it has the following options:
-    - `-r, --recursive` - builds all contracts under the directory
+    - `[DIR]` - specify the directory that contains the smart contract(s) to build
+    - `-r, --recursive` - build all contracts under the directory
+- `xsuite build-reproducible` - builds a contract in a reproducible way
+    - `[DIR]` - specify the directory that contains the smart contract(s) to build
+    - `--image <IMAGE>` - specify the Docker image used to build the contract (e.g. multiversx/sdk-rust-contract-builder:v8.0.0)
+    - `-r, --recursive` - build all contracts under the directory
+- `xsuite verify-reproducible` - verifies a contract, that has been built in a reproducible way
+   - `[DIR]` - specify the contract, which should be verified
+   - `--address <ADDRESS>` - specify the address (erd...) of the smart contract to be verified
+   - `--chain <CHAIN>` - specify the chain of the smart contract to be verified (devnet, testnet, mainnet)
 - `xsuite test-rust` - runs contract Rust tests
 - `xsuite test-scen` - runs contract scenarios tests
 - `xsuite new-wallet` - creates a new wallet file; currently it has the following options:
