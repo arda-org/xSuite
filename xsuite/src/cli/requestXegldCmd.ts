@@ -7,7 +7,7 @@ import { log } from "../context";
 import { u8aToHex } from "../data/utils";
 import { Proxy } from "../proxy";
 import { KeystoreSigner } from "../world/signer";
-import { logSuccess } from "./helpers";
+import { logSuccess, pause } from "./helpers";
 
 export const addRequestXegldCmd = (cmd: Command) => {
   cmd
@@ -57,7 +57,7 @@ const action = async ({
   const initialBalance = await devnetProxy.getAccountBalance(address);
   let balance = initialBalance;
   while (balance <= initialBalance) {
-    await new Promise((r) => setTimeout(r, 1000));
+    await pause(pollInterval);
     balance = await devnetProxy.getAccountBalance(address);
   }
 
@@ -68,3 +68,5 @@ const action = async ({
 };
 
 const devnetProxy = new Proxy("https://devnet-gateway.multiversx.com");
+
+const pollInterval = process.env.VITEST_WORKER_ID ? 1 : 1000;
