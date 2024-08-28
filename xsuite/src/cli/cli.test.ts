@@ -4,7 +4,7 @@ import { UserSecretKey } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
 import { http } from "msw";
 import { setupServer } from "msw/node";
-import { test, expect } from "vitest";
+import { test, expect, beforeAll, afterAll } from "vitest";
 import { Context } from "../context";
 import { getAddressShard } from "../data/utils";
 import { Keystore } from "../world/signer";
@@ -15,6 +15,10 @@ import { getBinaryOs } from "./testScenCmd";
 const pemPath = path.resolve("wallets", "wallet.pem");
 const keyKeystorePath = path.resolve("wallets", "keystore_key.json");
 const mneKeystorePath = path.resolve("wallets", "keystore_mnemonic.json");
+
+const server = setupServer();
+beforeAll(() => server.listen());
+afterAll(() => server.close());
 
 test.concurrent("new-wallet --wallet wallet.json", async () => {
   using c = newContext();
@@ -278,28 +282,31 @@ test.concurrent(
     const walletPath = mneKeystorePath;
     const signer = Keystore.fromFile_unsafe(walletPath, "1234").newSigner();
     let balances: number[] = [];
-    const server = setupServer(
-      http.get("https://devnet-api.multiversx.com/blocks/latest", () =>
-        Response.json({ hash: "" }),
-      ),
-      http.get("https://devnet-api.multiversx.com/blocks", () =>
-        Response.json([{ hash: "" }]),
-      ),
-      http.get(
-        `https://devnet-gateway.multiversx.com/address/${signer}/balance`,
-        () => {
-          const balance = `${BigInt(balances.shift() ?? 0) * 10n ** 18n}`;
-          return Response.json({ code: "successful", data: { balance } });
-        },
-      ),
-    );
-    server.listen();
-    c.input("1234", "1234");
-    balances = [0, 1];
-    await c.cmd(`request-xegld --wallet ${walletPath}`);
-    balances = [0, 10];
-    await c.cmd(`request-xegld --wallet ${walletPath} --password 1234`);
-    server.close();
+
+    await server.boundary(async () => {
+      server.use(
+        http.get("https://devnet-api.multiversx.com/blocks", () =>
+          Response.json([{ hash: "" }]),
+        ),
+        http.get("https://devnet-api.multiversx.com/blocks/latest", () =>
+          Response.json({ hash: "" }),
+        ),
+        http.get(
+          `https://devnet-gateway.multiversx.com/address/${signer}/balance`,
+          () => {
+            const balance = `${BigInt(balances.shift() ?? 0) * 10n ** 18n}`;
+            return Response.json({ code: "successful", data: { balance } });
+          },
+        ),
+      );
+
+      c.input("1234", "1234");
+      balances = [0, 1];
+      await c.cmd(`request-xegld --wallet ${walletPath}`);
+      balances = [0, 10];
+      await c.cmd(`request-xegld --wallet ${walletPath} --password 1234`);
+    })();
+
     const splittedStdoutData = c.flushStdout().split("\n");
     expect(splittedStdoutData).toEqual([
       `Loading keystore wallet at "${walletPath}"...`,
