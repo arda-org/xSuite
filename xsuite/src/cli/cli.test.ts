@@ -4,7 +4,8 @@ import { UserSecretKey } from "@multiversx/sdk-wallet";
 import chalk from "chalk";
 import { http } from "msw";
 import { setupServer } from "msw/node";
-import { test, expect } from "vitest";
+import { setGlobalDispatcher, Agent } from "undici";
+import { test, expect, beforeAll, afterAll } from "vitest";
 import { Context } from "../context";
 import { getAddressShard } from "../data/utils";
 import { Keystore } from "../world/signer";
@@ -12,9 +13,15 @@ import { getCli } from "./cli";
 import { defaultRustToolchain, rustTarget, rustKey } from "./helpers";
 import { getBinaryOs } from "./testScenCmd";
 
+setGlobalDispatcher(new Agent({ connect: { timeout: 100_000 } }));
+
 const pemPath = path.resolve("wallets", "wallet.pem");
 const keyKeystorePath = path.resolve("wallets", "keystore_key.json");
 const mneKeystorePath = path.resolve("wallets", "keystore_mnemonic.json");
+
+const server = setupServer();
+beforeAll(() => server.listen());
+afterAll(() => server.close());
 
 test.concurrent("new-wallet --wallet wallet.json", async () => {
   using c = newContext();
@@ -278,28 +285,31 @@ test.concurrent(
     const walletPath = mneKeystorePath;
     const signer = Keystore.fromFile_unsafe(walletPath, "1234").newSigner();
     let balances: number[] = [];
-    const server = setupServer(
-      http.get("https://devnet-api.multiversx.com/blocks/latest", () =>
-        Response.json({ hash: "" }),
-      ),
-      http.get("https://devnet-api.multiversx.com/blocks", () =>
-        Response.json([{ hash: "" }]),
-      ),
-      http.get(
-        `https://devnet-gateway.multiversx.com/address/${signer}/balance`,
-        () => {
-          const balance = `${BigInt(balances.shift() ?? 0) * 10n ** 18n}`;
-          return Response.json({ code: "successful", data: { balance } });
-        },
-      ),
-    );
-    server.listen();
-    c.input("1234", "1234");
-    balances = [0, 1];
-    await c.cmd(`request-xegld --wallet ${walletPath}`);
-    balances = [0, 10];
-    await c.cmd(`request-xegld --wallet ${walletPath} --password 1234`);
-    server.close();
+
+    await server.boundary(async () => {
+      server.use(
+        http.get("https://devnet-api.multiversx.com/blocks", () =>
+          Response.json([{ hash: "" }]),
+        ),
+        http.get("https://devnet-api.multiversx.com/blocks/latest", () =>
+          Response.json({ hash: "" }),
+        ),
+        http.get(
+          `https://devnet-gateway.multiversx.com/address/${signer}/balance`,
+          () => {
+            const balance = `${BigInt(balances.shift() ?? 0) * 10n ** 18n}`;
+            return Response.json({ code: "successful", data: { balance } });
+          },
+        ),
+      );
+
+      c.input("1234", "1234");
+      balances = [0, 1];
+      await c.cmd(`request-xegld --wallet ${walletPath}`);
+      balances = [0, 10];
+      await c.cmd(`request-xegld --wallet ${walletPath} --password 1234`);
+    })();
+
     const splittedStdoutData = c.flushStdout().split("\n");
     expect(splittedStdoutData).toEqual([
       `Loading keystore wallet at "${walletPath}"...`,
@@ -470,6 +480,113 @@ test.concurrent("new contract | error: already exists", async () => {
   expect(c.flushStdout()).toEqual(
     chalk.red(`Directory already exists at "${absDirPath}".`) + "\n",
   );
+});
+
+test.concurrent(
+  "build-reproducible",
+  async () => {
+    using c = newContext();
+    const tmpDir = c.cwd();
+
+    fs.cpSync("contracts/data", tmpDir, { recursive: true });
+    await c.cmd(
+      "build-reproducible --image multiversx/sdk-rust-contract-builder:v8.0.0",
+    );
+
+    const userId = process.getuid?.();
+    const groupId = process.getgid?.();
+    const userArg = userId && groupId ? `--user ${userId}:${groupId} ` : "";
+
+    expect(c.flushStdout().split("\n")).toEqual([
+      'Building contract "data"...',
+      chalk.cyan(
+        `$ docker run ${userArg}--rm --volume ${tmpDir}/output-reproducible:/output --volume ${tmpDir}:/project --volume /tmp/multiversx_sdk_rust_contract_builder/rust-cargo-target-dir:/rust/cargo-target-dir --volume /tmp/multiversx_sdk_rust_contract_builder/rust-registry:/rust/registry --volume /tmp/multiversx_sdk_rust_contract_builder/rust-git:/rust/git multiversx/sdk-rust-contract-builder:v8.0.0 --project project --contract data`,
+      ),
+      "",
+    ]);
+  },
+  180_000,
+);
+
+test.concurrent("verify-reproducible", async () => {
+  using c = newContext();
+  const sourcePath = path.resolve(c.cwd(), "contract.source.json");
+  const image = "image";
+  fs.writeFileSync(
+    sourcePath,
+    `{"metadata":{"buildMetadata":{"builderName":"${image}"}}}`,
+  );
+  const responses = [
+    { status: "queued" },
+    { status: "started" },
+    { status: "finished", result: { status: "success" } },
+  ];
+
+  await server.boundary(async () => {
+    server.use(
+      http.post("https://devnet-play-api.multiversx.com/verifier", () => {
+        return Response.json({ taskId: "12345" });
+      }),
+      http.get("https://devnet-play-api.multiversx.com/tasks/12345", () => {
+        return Response.json(responses.shift());
+      }),
+    );
+    await c.cmd(
+      "verify-reproducible --address erd1qqqqqqqqqqqqqpgqttw0lt0plk7zyq27jss5ntgkvrkn8vx3v5ys9e7l6n --chain devnet",
+    );
+  })();
+
+  expect(c.flushStdout().split("\n")).toEqual([
+    `Source file found: "${sourcePath}".`,
+    `Image used for the reproducible build: ${image}.`,
+    "Requesting a verification...",
+    "Verification (task 12345)... It may take a while.",
+    '{"status":"queued"}',
+    '{"status":"started"}',
+    '{"status":"finished","result":{"status":"success"}}',
+    expect.stringMatching(/^Verification finished in \d+(\.\d+)? seconds!$/),
+    "",
+  ]);
+});
+
+test.concurrent("verify-reproducible | error: verification fails", async () => {
+  using c = newContext();
+  const sourcePath = path.resolve(c.cwd(), "contract.source.json");
+  const image = "image";
+  fs.writeFileSync(
+    sourcePath,
+    `{"metadata":{"buildMetadata":{"builderName":"${image}"}}}`,
+  );
+
+  await server.boundary(async () => {
+    server.use(
+      http.post("https://devnet-play-api.multiversx.com/verifier", () => {
+        return Response.json({ taskId: "12345" });
+      }),
+      http.get("https://devnet-play-api.multiversx.com/tasks/12345", () => {
+        return Response.json({
+          status: "finished",
+          result: { status: "error", message: "message from proxy" },
+        });
+      }),
+    );
+
+    await c.cmd(
+      "verify-reproducible --address erd1qqqqqqqqqqqqqpgqttw0lt0plk7zyq27jss5ntgkvrkn8vx3v5ys9e7l6n --chain devnet",
+    );
+  })();
+
+  expect(c.flushStdout().split("\n")).toEqual([
+    `Source file found: "${sourcePath}".`,
+    `Image used for the reproducible build: ${image}.`,
+    "Requesting a verification...",
+    "Verification (task 12345)... It may take a while.",
+    '{"status":"finished","result":{"status":"error","message":"message from proxy"}}',
+    chalk.red(
+      "An error occured during verification. Message: message from proxy",
+    ),
+    "",
+  ]);
 });
 
 const newContext = () => {

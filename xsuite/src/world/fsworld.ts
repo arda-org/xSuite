@@ -1,16 +1,24 @@
 import { ChildProcess, spawn } from "node:child_process";
 import { fsproxyBinaryPath, fsproxyConfigsPath } from "@xsuite/full-simulnet";
 import { AddressLike, isAddressLike } from "../data/addressLike";
-import { EncodableAccount } from "../data/encoding";
+import {
+  EncodableAccount,
+  EncodableEsdt,
+  EncodableKvs,
+  EncodableMapper,
+} from "../data/encoding";
 import { Prettify, Replace } from "../helpers";
 import { FSProxy } from "../proxy";
 import { DummySigner, Signer } from "./signer";
-import { AddressLikeParams, createAddressLike } from "./utils";
+import {
+  AddressLikeParams,
+  createAddressLike,
+  expandCodeInAccounts,
+} from "./utils";
 import {
   World,
   Contract,
   Wallet,
-  expandCode,
   WalletDeployContractTx,
   WorldNewOptions,
   WorldDeployContractTx,
@@ -104,7 +112,7 @@ export class FSWorld extends World {
     return setAccountsParams.map((a) => this.newWallet(a.address));
   }
 
-  async createWallet(params: FSWorldCreateAccountParams = {}) {
+  createWallet(params: FSWorldCreateAccountParams = {}) {
     return this.createWallets([params]).then((wallets) => wallets[0]);
   }
 
@@ -119,7 +127,7 @@ export class FSWorld extends World {
     return setAccountsParams.map((a) => this.newContract(a.address));
   }
 
-  async createContract(params: FSWorldCreateAccountParams = {}) {
+  createContract(params: FSWorldCreateAccountParams = {}) {
     return this.createContracts([params]).then((contracts) => contracts[0]);
   }
 
@@ -128,16 +136,21 @@ export class FSWorld extends World {
   }
 
   setAccounts(params: FSWorldSetAccountsParams) {
-    for (const _params of params) {
-      if (_params.code !== undefined) {
-        _params.code = expandCode(_params.code);
-      }
-    }
+    expandCodeInAccounts(params);
     return this.proxy.setAccounts(params);
   }
 
   setAccount(params: FSWorldSetAccountParams) {
     return this.setAccounts([params]);
+  }
+
+  updateAccounts(params: FSWorldSetAccountParams[]) {
+    expandCodeInAccounts(params);
+    return this.proxy.updateAccounts(params);
+  }
+
+  updateAccount(params: FSWorldSetAccountParams) {
+    return this.updateAccounts([params]);
   }
 
   generateBlocks(numBlocks: number) {
@@ -185,6 +198,27 @@ export class FSWorld extends World {
     return super.deployContract(tx).then((r) => this.addContractPostTx(r));
   }
 
+  addKvs(address: AddressLike, kvs: EncodableKvs) {
+    return this.updateAccount({
+      address,
+      kvs,
+    });
+  }
+
+  addEsdts(address: AddressLike, esdts: EncodableEsdt[]) {
+    return this.updateAccount({
+      address,
+      kvs: { esdts },
+    });
+  }
+
+  addMappers(address: AddressLike, mappers: EncodableMapper[]) {
+    return this.updateAccount({
+      address,
+      kvs: { mappers },
+    });
+  }
+
   terminate() {
     this.server?.kill();
   }
@@ -206,12 +240,24 @@ export class FSWallet extends Wallet {
     return this.world.setAccount({ ...params, address: this });
   }
 
+  updateAccount(params: FSAccountSetAccountParams) {
+    return this.world.updateAccount({ ...params, address: this });
+  }
+
   createContract(params?: FSWalletCreateContractParams) {
     return this.world.createContract({ ...params, owner: this });
   }
 
   deployContract(tx: WalletDeployContractTx) {
     return this.world.deployContract({ ...tx, sender: this });
+  }
+
+  addKvs(kvs: EncodableKvs) {
+    return this.world.addKvs(this, kvs);
+  }
+
+  addEsdts(esdts: EncodableEsdt[]) {
+    return this.world.addEsdts(this, esdts);
   }
 }
 
@@ -225,6 +271,22 @@ export class FSContract extends Contract {
 
   setAccount(params: FSAccountSetAccountParams) {
     return this.world.setAccount({ ...params, address: this });
+  }
+
+  updateAccount(params: FSAccountSetAccountParams) {
+    return this.world.updateAccount({ ...params, address: this });
+  }
+
+  addKvs(kvs: EncodableKvs) {
+    return this.world.addKvs(this, kvs);
+  }
+
+  addEsdts(esdts: EncodableEsdt[]) {
+    return this.world.addEsdts(this, esdts);
+  }
+
+  addMappers(mappers: EncodableMapper[]) {
+    return this.world.addMappers(this, mappers);
   }
 }
 

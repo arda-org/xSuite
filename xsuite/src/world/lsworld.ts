@@ -2,17 +2,25 @@ import { ChildProcess, spawn } from "node:child_process";
 import { lsproxyBinaryPath } from "@xsuite/light-simulnet";
 import { fullU8AAddress } from "../data/address";
 import { AddressLike, isAddressLike } from "../data/addressLike";
-import { EncodableAccount } from "../data/encoding";
+import {
+  EncodableAccount,
+  EncodableEsdt,
+  EncodableKvs,
+  EncodableMapper,
+} from "../data/encoding";
 import { Prettify, Replace } from "../helpers";
 import { LSProxy } from "../proxy";
 import { Block } from "../proxy/lsproxy";
 import { DummySigner, Signer } from "./signer";
-import { AddressLikeParams, createAddressLike } from "./utils";
+import {
+  AddressLikeParams,
+  createAddressLike,
+  expandCodeInAccounts,
+} from "./utils";
 import {
   World,
   Contract,
   Wallet,
-  expandCode,
   WalletDeployContractTx,
   WorldNewOptions,
   WorldDeployContractTx,
@@ -115,6 +123,10 @@ export class LSWorld extends World {
     return new LSContract({ address, world: this });
   }
 
+  getNetworkStatus() {
+    return this.proxy.getNetworkStatus(0);
+  }
+
   async createWallets(createAccountsParams: LSWorldCreateAccountParams[]) {
     const setAccountsParams = createAccountsParams.map(
       ({ address, ...params }) => ({
@@ -126,7 +138,7 @@ export class LSWorld extends World {
     return setAccountsParams.map((a) => this.newWallet(a.address));
   }
 
-  async createWallet(params: LSWorldCreateAccountParams = {}) {
+  createWallet(params: LSWorldCreateAccountParams = {}) {
     return this.createWallets([params]).then((wallets) => wallets[0]);
   }
 
@@ -141,7 +153,7 @@ export class LSWorld extends World {
     return setAccountsParams.map((a) => this.newContract(a.address));
   }
 
-  async createContract(params: LSWorldCreateAccountParams = {}) {
+  createContract(params: LSWorldCreateAccountParams = {}) {
     return this.createContracts([params]).then((contracts) => contracts[0]);
   }
 
@@ -150,16 +162,21 @@ export class LSWorld extends World {
   }
 
   setAccounts(params: LSWorldSetAccountsParams) {
-    for (const _params of params) {
-      if (_params.code !== undefined) {
-        _params.code = expandCode(_params.code);
-      }
-    }
+    expandCodeInAccounts(params);
     return this.proxy.setAccounts(params);
   }
 
   setAccount(params: LSWorldSetAccountParams) {
     return this.setAccounts([params]);
+  }
+
+  updateAccounts(params: LSWorldSetAccountParams[]) {
+    expandCodeInAccounts(params);
+    return this.proxy.updateAccounts(params);
+  }
+
+  updateAccount(params: LSWorldSetAccountParams) {
+    return this.updateAccounts([params]);
   }
 
   setCurrentBlockInfo(block: Block) {
@@ -168,6 +185,38 @@ export class LSWorld extends World {
 
   setPreviousBlockInfo(block: Block) {
     return this.proxy.setPreviousBlockInfo(block);
+  }
+
+  async advanceTimestamp(amount: number) {
+    const networkStatus = await this.getNetworkStatus();
+    return this.setCurrentBlockInfo({
+      ...networkStatus,
+      timestamp: networkStatus.blockTimestamp + amount,
+    });
+  }
+
+  async advanceNonce(amount: number) {
+    const networkStatus = await this.getNetworkStatus();
+    return this.setCurrentBlockInfo({
+      ...networkStatus,
+      nonce: networkStatus.nonce + amount,
+    });
+  }
+
+  async advanceRound(amount: number) {
+    const networkStatus = await this.getNetworkStatus();
+    return this.setCurrentBlockInfo({
+      ...networkStatus,
+      round: networkStatus.round + amount,
+    });
+  }
+
+  async advanceEpoch(amount: number) {
+    const networkStatus = await this.getNetworkStatus();
+    return this.setCurrentBlockInfo({
+      ...networkStatus,
+      epoch: networkStatus.epoch + amount,
+    });
   }
 
   resolveDeployContracts(txHashes: string[]) {
@@ -198,6 +247,27 @@ export class LSWorld extends World {
     return super.deployContract(tx).then((r) => this.addContractPostTx(r));
   }
 
+  addKvs(address: AddressLike, kvs: EncodableKvs) {
+    return this.updateAccount({
+      address,
+      kvs: [kvs],
+    });
+  }
+
+  addEsdts(address: AddressLike, esdts: EncodableEsdt[]) {
+    return this.updateAccount({
+      address,
+      kvs: [{ esdts }],
+    });
+  }
+
+  addMappers(address: AddressLike, mappers: EncodableMapper[]) {
+    return this.updateAccount({
+      address,
+      kvs: [{ mappers }],
+    });
+  }
+
   terminate() {
     this.server?.kill();
   }
@@ -226,12 +296,24 @@ export class LSWallet extends Wallet {
     return this.world.setAccount({ ...params, address: this });
   }
 
+  updateAccount(params: LSAccountSetAccountParams) {
+    return this.world.updateAccount({ ...params, address: this });
+  }
+
   createContract(params?: LSWalletCreateContractParams) {
     return this.world.createContract({ ...params, owner: this });
   }
 
   deployContract(tx: WalletDeployContractTx) {
     return this.world.deployContract({ ...tx, sender: this });
+  }
+
+  addKvs(kvs: EncodableKvs) {
+    return this.world.addKvs(this, kvs);
+  }
+
+  addEsdts(esdts: EncodableEsdt[]) {
+    return this.world.addEsdts(this, esdts);
   }
 }
 
@@ -245,6 +327,22 @@ export class LSContract extends Contract {
 
   setAccount(params: LSAccountSetAccountParams) {
     return this.world.setAccount({ ...params, address: this });
+  }
+
+  updateAccount(params: LSAccountSetAccountParams) {
+    return this.world.updateAccount({ ...params, address: this });
+  }
+
+  addKvs(kvs: EncodableKvs) {
+    return this.world.addKvs(this, kvs);
+  }
+
+  addEsdts(esdts: EncodableEsdt[]) {
+    return this.world.addEsdts(this, esdts);
+  }
+
+  addMappers(mappers: EncodableMapper[]) {
+    return this.world.addMappers(this, mappers);
   }
 }
 

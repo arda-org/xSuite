@@ -48,7 +48,8 @@
     "no-useless-rename": "error",
     "object-shorthand": "error",
     "prettier/prettier": "error",
-    "curly": ["error", "multi-line"]
+    "curly": ["error", "multi-line"],
+    "require-await": "error"
   },
   "ignorePatterns": ["xsuite/dist/"]
 }

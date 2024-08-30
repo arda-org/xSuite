@@ -1,13 +1,13 @@
 {
   "name": "xsuite",
-  "version": "0.0.83",
+  "version": "0.0.85",
   "license": "MIT",
   "bin": {
     "xsuite": "cli.js"
   },
   "scripts": {
-    "build": "rimraf ./dist && tsc",
-    "build-wasms": "bash build_wasms.sh",
+    "build": "rimraf dist && tsc",
+    "build-wasms": "xsuite build-reproducible contracts -rd --image multiversx/sdk-rust-contract-builder:v8.0.0",
     "verify-wasms": "pnpm build-wasms && (git status | grep -q \\\\.wasm && exit 1 || exit 0)",
     "test": "vitest run",
     "open-coverage": "open coverage/index.html",
@@ -40,9 +40,11 @@
     "bech32": "2.0.0",
     "chalk": "4.1.2",
     "commander": "12.0.0",
+    "glob": "^11.0.0",
     "open": "8.4.2",
     "protobufjs": "7.2.5",
-    "tar": "6.2.0"
+    "tar": "7.4.3",
+    "toml": "^3.0.0"
   },
   "devDependencies": {
     "@types/node": "20.11.16",
@@ -52,6 +54,7 @@
     "rimraf": "5.0.5",
     "tsx": "4.7.0",
     "typescript": "5.4.5",
+    "undici": "^6.19.8",
     "vitest": "^1.6.0"
   },
   "engines": {

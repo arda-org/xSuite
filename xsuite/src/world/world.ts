@@ -1,3 +1,4 @@
+import { d, e } from "../data";
 import { AddressLike, addressLikeToBechAddress } from "../data/addressLike";
 import { BytesLike } from "../data/bytesLike";
 import { Optional, Prettify, Replace } from "../helpers";
@@ -109,6 +110,10 @@ export class World {
     return new Contract({ address, world: this });
   }
 
+  getNetworkStatus(shard: number) {
+    return this.proxy.getNetworkStatus(shard);
+  }
+
   getAccountNonce(address: AddressLike) {
     return this.proxy.getAccountNonce(address);
   }
@@ -117,8 +122,22 @@ export class World {
     return this.proxy.getAccountBalance(address);
   }
 
+  async getAccountEsdtBalance(
+    address: AddressLike,
+    id: string,
+    nonce?: number,
+  ) {
+    const encV = await this.getAccountEsdtValue(address, id, nonce);
+    if (encV === "") return 0n;
+    return d.EsdtValue().fromTop(encV).amount ?? 0n;
+  }
+
   getAccountValue(address: AddressLike, key: BytesLike) {
     return this.proxy.getAccountValue(address, key);
+  }
+
+  getAccountEsdtValue(address: AddressLike, id: string, nonce?: number) {
+    return this.proxy.getAccountValue(address, e.EsdtKey(id, nonce));
   }
 
   getAccountKvs(address: AddressLike) {
@@ -177,7 +196,7 @@ export class World {
     return this.preTx(tx).then((tx) => this.proxy.sendUpgradeContract(tx));
   }
 
-  private async preTxs<T extends IncompleteTx>(txs: T[]) {
+  private preTxs<T extends IncompleteTx>(txs: T[]) {
     const noncePromises: Record<string, Promise<number>> = {};
     return Promise.all(
       txs.map(async (tx) => {
@@ -200,7 +219,7 @@ export class World {
     );
   }
 
-  private async preTx<T extends IncompleteTx>(tx: T) {
+  private preTx<T extends IncompleteTx>(tx: T) {
     return this.preTxs([tx]).then((r) => r[0]);
   }
 
@@ -364,8 +383,16 @@ export class Wallet extends Signer {
     return this.world.getAccountBalance(this);
   }
 
+  getAccountEsdtBalance(id: string, nonce?: number) {
+    return this.world.getAccountEsdtBalance(this, id, nonce);
+  }
+
   getAccountValue(key: BytesLike) {
     return this.world.getAccountValue(this, key);
+  }
+
+  getAccountEsdtValue(id: string, nonce?: number) {
+    return this.world.getAccountEsdtValue(this, id, nonce);
   }
 
   getAccountKvs() {
@@ -464,8 +491,16 @@ export class Contract extends Account {
     return this.world.getAccountBalance(this);
   }
 
+  getAccountEsdtBalance(id: string, nonce?: number) {
+    return this.world.getAccountEsdtBalance(this, id, nonce);
+  }
+
   getAccountValue(key: BytesLike) {
     return this.world.getAccountValue(this, key);
+  }
+
+  getAccountEsdtValue(id: string, nonce?: number) {
+    return this.world.getAccountEsdtValue(this, id, nonce);
   }
 
   getAccountKvs() {

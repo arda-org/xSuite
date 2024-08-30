@@ -36,7 +36,7 @@ beforeAll(async () => {
   walletState = await wallet.getSerializableAccount();
   contract = await wallet.createContract({
     balance: 10n,
-    code: "file:contracts/data/output/data.wasm",
+    code: "file:contracts/output-reproducible/data/data.wasm",
     codeMetadata: ["readable", "upgradeable"],
     kvs: {
       esdts: [
@@ -163,7 +163,7 @@ beforeAll(async () => {
   complexSysAccState = await world.sysAcc.getSerializableAccount();
 });
 
-afterAll(async () => {
+afterAll(() => {
   world.terminate();
 });
 
@@ -867,7 +867,7 @@ test("eKvsUnfiltered - empty mappers", () => {
   }
 });
 
-test("e.account", async () => {
+test("e.account", () => {
   expect(walletState).toEqual(
     e.account({
       address: wallet,
@@ -885,7 +885,7 @@ test("e.account", async () => {
       address: contract,
       nonce: 0,
       balance: 10,
-      code: readFileHex("contracts/data/output/data.wasm"),
+      code: readFileHex("contracts/output-reproducible/data/data.wasm"),
       codeHash: "some code hash",
       codeMetadata: ["readable", "upgradeable"],
       kvs: complexContractState.kvs,
@@ -1261,7 +1261,7 @@ test("d.vs - number of values and decoders not matching", () => {
   );
 });
 
-test("d.kvs", async () => {
+test("d.kvs", () => {
   expect(
     d
       .kvs({
@@ -1412,7 +1412,7 @@ test("d.account", () => {
     address: contract,
     nonce: 0,
     balance: 10n,
-    code: readFileHex("contracts/data/output/data.wasm"),
+    code: readFileHex("contracts/output-reproducible/data/data.wasm"),
     codeHash: "some code hash",
     codeMetadata: ["upgradeable", "readable"],
     kvs: expect.anything(),

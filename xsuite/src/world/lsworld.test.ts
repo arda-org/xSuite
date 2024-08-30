@@ -13,7 +13,7 @@ import { expandCode } from "./world";
 
 const fftId = "FFT-abcdef";
 const sftId = "SFT-abcdef";
-const worldCode = "file:contracts/world/output/world.wasm";
+const worldCode = "file:contracts/output-reproducible/world/world.wasm";
 const emptyAccount = {
   nonce: 0,
   balance: 0,
@@ -30,67 +30,49 @@ test.concurrent("LSWorld.start - port 3000", async () => {
   expect(world.proxy.proxyUrl).toEqual("http://127.0.0.1:3000");
 });
 
-test.concurrent(
-  "LSWorld.proxy.getAccountNonce on empty bech address",
-  async () => {
-    using world = await LSWorld.start();
-    expect(await world.proxy.getAccountNonce(zeroBechAddress)).toEqual(0);
-  },
-);
-
-test.concurrent(
-  "LSWorld.proxy.getAccountNonce on empty hex address",
-  async () => {
-    using world = await LSWorld.start();
-    expect(await world.proxy.getAccountNonce(zeroHexAddress)).toEqual(0);
-  },
-);
-
-test.concurrent(
-  "LSWorld.proxy.getAccountNonce on empty U8A address",
-  async () => {
-    using world = await LSWorld.start();
-    expect(await world.proxy.getAccountNonce(zeroU8AAddress)).toEqual(0);
-  },
-);
-
-test.concurrent(
-  "LSWorld.proxy.getAccountBalance on empty bech address",
-  async () => {
-    using world = await LSWorld.start();
-    expect(await world.proxy.getAccountBalance(zeroBechAddress)).toEqual(0n);
-  },
-);
-
-test.concurrent(
-  "LSWorld.proxy.getAccountBalance on empty hex address",
-  async () => {
-    using world = await LSWorld.start();
-    expect(await world.proxy.getAccountBalance(zeroHexAddress)).toEqual(0n);
-  },
-);
-
-test.concurrent(
-  "LSWorld.proxy.getAccountBalance on empty U8A address",
-  async () => {
-    using world = await LSWorld.start();
-    expect(await world.proxy.getAccountBalance(zeroU8AAddress)).toEqual(0n);
-  },
-);
-
-test.concurrent("LSWorld.proxy.getAccount on empty bech address", async () => {
+test.concurrent("LSWorld.getAccountNonce on empty bech address", async () => {
   using world = await LSWorld.start();
-  assertAccount(await world.proxy.getAccount(zeroBechAddress), emptyAccount);
+  expect(await world.getAccountNonce(zeroBechAddress)).toEqual(0);
 });
 
-test.concurrent("LSWorld.proxy.getAccount on empty hex address", async () => {
+test.concurrent("LSWorld.getAccountNonce on empty hex address", async () => {
   using world = await LSWorld.start();
-  assertAccount(await world.proxy.getAccount(zeroHexAddress), emptyAccount);
+  expect(await world.getAccountNonce(zeroHexAddress)).toEqual(0);
 });
 
-test.concurrent("LSWorld.proxy.getAccount on empty U8A address", async () => {
+test.concurrent("LSWorld.getAccountNonce on empty U8A address", async () => {
   using world = await LSWorld.start();
-  assertAccount(await world.proxy.getAccount(zeroU8AAddress), emptyAccount);
+  expect(await world.getAccountNonce(zeroU8AAddress)).toEqual(0);
+});
+
+test.concurrent("LSWorld.getAccountBalance on empty bech address", async () => {
+  using world = await LSWorld.start();
+  expect(await world.getAccountBalance(zeroBechAddress)).toEqual(0n);
+});
+
+test.concurrent("LSWorld.getAccountBalance on empty hex address", async () => {
+  using world = await LSWorld.start();
+  expect(await world.getAccountBalance(zeroHexAddress)).toEqual(0n);
+});
+
+test.concurrent("LSWorld.getAccountBalance on empty U8A address", async () => {
+  using world = await LSWorld.start();
+  expect(await world.getAccountBalance(zeroU8AAddress)).toEqual(0n);
+});
+
+test.concurrent("LSWorld.getAccount on empty bech address", async () => {
+  using world = await LSWorld.start();
+  assertAccount(await world.getAccount(zeroBechAddress), emptyAccount);
+});
+
+test.concurrent("LSWorld.getAccount on empty hex address", async () => {
+  using world = await LSWorld.start();
+  assertAccount(await world.getAccount(zeroHexAddress), emptyAccount);
+});
+
+test.concurrent("LSWorld.getAccount on empty U8A address", async () => {
+  using world = await LSWorld.start();
+  assertAccount(await world.getAccount(zeroU8AAddress), emptyAccount);
 });
 
 test.concurrent("LSWorld.new with defined chainId", () => {
@@ -209,6 +191,13 @@ test.concurrent("LSWorld.getAccountBalance", async () => {
   using world = await LSWorld.start();
   const wallet = await world.createWallet({ balance: 1234 });
   expect(await world.getAccountBalance(wallet)).toEqual(1234n);
+});
+
+test.concurrent("LSWorld.getAccountEsdtBalance", async () => {
+  using world = await LSWorld.start();
+  const { wallet } = await createAccounts(world);
+  const balance = await world.getAccountEsdtBalance(wallet, fftId);
+  expect(balance).toEqual(10n ** 18n);
 });
 
 test.concurrent("LSWorld.getAccountValue - non-present key", async () => {
@@ -355,6 +344,22 @@ test.concurrent("LSWorld.setAccount", async () => {
   });
 });
 
+test.concurrent("LSWorld.updateAccount", async () => {
+  using world = await LSWorld.start();
+  const wallet = await world.createWallet({
+    address: { shard: 1 },
+    balance: 10n ** 18n,
+    kvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
+  });
+  const before = await wallet.getAccount();
+  await world.updateAccount({
+    address: wallet,
+    balance: 10n ** 17n,
+  });
+  const after = await wallet.getAccount();
+  expect(after).toEqual({ ...before, balance: 10n ** 17n });
+});
+
 test.concurrent("LSWorld.setCurrentBlockInfo", async () => {
   using world = await LSWorld.start();
   const { contract } = await createAccounts(world);
@@ -385,6 +390,38 @@ test.concurrent("LSWorld.setPreviousBlockInfo", async () => {
     funcName: "get_prev_block_info",
   });
   assertVs(returnData, [e.U64(10), e.U64(20), e.U64(30), e.U64(40)]);
+});
+
+test.concurrent("LSWorld.advanceTimestamp", async () => {
+  using world = await LSWorld.start();
+  await world.setCurrentBlockInfo({ timestamp: 10 });
+  expect((await world.getNetworkStatus()).blockTimestamp).toEqual(10);
+  await world.advanceTimestamp(10);
+  expect((await world.getNetworkStatus()).blockTimestamp).toEqual(20);
+});
+
+test.concurrent("LSWorld.advanceNonce", async () => {
+  using world = await LSWorld.start();
+  await world.setCurrentBlockInfo({ nonce: 10 });
+  expect((await world.getNetworkStatus()).nonce).toEqual(10);
+  await world.advanceNonce(10);
+  expect((await world.getNetworkStatus()).nonce).toEqual(20);
+});
+
+test.concurrent("LSWorld.advanceRound", async () => {
+  using world = await LSWorld.start();
+  await world.setCurrentBlockInfo({ round: 10 });
+  expect((await world.getNetworkStatus()).round).toEqual(10);
+  await world.advanceRound(10);
+  expect((await world.getNetworkStatus()).round).toEqual(20);
+});
+
+test.concurrent("LSWorld.advanceEpoch", async () => {
+  using world = await LSWorld.start();
+  await world.setCurrentBlockInfo({ epoch: 10 });
+  expect((await world.getNetworkStatus()).epoch).toEqual(10);
+  await world.advanceEpoch(10);
+  expect((await world.getNetworkStatus()).epoch).toEqual(20);
 });
 
 test.concurrent("LSWorld.query - basic", async () => {
@@ -625,6 +662,76 @@ test.concurrent("LSWorld.callContract", async () => {
   });
 });
 
+test.concurrent("LSWorld.addKvs", async () => {
+  using world = await LSWorld.start();
+  const wallet = await world.createWallet({
+    balance: 10n ** 18n,
+    kvs: { "01": "02", "03": "04" },
+  });
+  await world.addKvs(wallet, {
+    "01": "05",
+    "06": "07",
+  });
+  assertAccount(await wallet.getAccount(), {
+    balance: 10n ** 18n,
+    kvs: { "01": "05", "03": "04", "06": "07" },
+  });
+});
+
+test.concurrent("LSWorld.addEsdts", async () => {
+  using world = await LSWorld.start();
+  const wallet = await world.createWallet({
+    balance: 10n ** 18n,
+    kvs: {
+      esdts: [
+        { id: "TOK1-123456", amount: 10n ** 18n },
+        { id: "TOK2-123456", amount: 10n ** 18n },
+      ],
+    },
+  });
+  await world.addEsdts(wallet, [
+    { id: "TOK1-123456", amount: 20n ** 18n },
+    { id: "TOK3-123456", amount: 10n ** 18n },
+  ]);
+  assertAccount(await wallet.getAccount(), {
+    balance: 10n ** 18n,
+    kvs: {
+      esdts: [
+        { id: "TOK1-123456", amount: 20n ** 18n },
+        { id: "TOK2-123456", amount: 10n ** 18n },
+        { id: "TOK3-123456", amount: 10n ** 18n },
+      ],
+    },
+  });
+});
+
+test.concurrent("LSWorld.addMappers", async () => {
+  using world = await LSWorld.start();
+  const wallet = await world.createWallet({
+    balance: 10n ** 18n,
+    kvs: {
+      mappers: [
+        { key: "key1", value: e.U(2) },
+        { key: "key3", value: e.U(4) },
+      ],
+    },
+  });
+  await world.addMappers(wallet, [
+    { key: "key1", value: e.U(4) },
+    { key: "key5", value: e.U(6) },
+  ]);
+  assertAccount(await wallet.getAccount(), {
+    balance: 10n ** 18n,
+    kvs: {
+      mappers: [
+        { key: "key1", value: e.U(4) },
+        { key: "key3", value: e.U(4) },
+        { key: "key5", value: e.U(6) },
+      ],
+    },
+  });
+});
+
 test.concurrent("LSWorld.terminate", async () => {
   using world = await LSWorld.start();
   expect(world.server?.killed).toEqual(false);
@@ -716,6 +823,13 @@ test.concurrent("LSWallet.getAccountBalance", async () => {
   expect(await wallet.getAccountBalance()).toEqual(10n ** 18n);
 });
 
+test.concurrent("LSWallet.getAccountEsdtBalance", async () => {
+  using world = await LSWorld.start();
+  const { wallet } = await createAccounts(world);
+  const balance = await wallet.getAccountEsdtBalance(fftId);
+  expect(balance).toEqual(10n ** 18n);
+});
+
 test.concurrent("LSWallet.getAccountValue", async () => {
   using world = await LSWorld.start();
   const wallet = await world.createWallet({ kvs: { "01": "11" } });
@@ -764,6 +878,19 @@ test.concurrent("LSWallet.setAccount & LSWallet.getAccount", async () => {
   await wallet.setAccount(before);
   const after = await wallet.getAccount();
   expect(after).toEqual(before);
+});
+
+test.concurrent("LSWallet.updateAccount", async () => {
+  using world = await LSWorld.start();
+  const wallet = await world.createWallet({
+    address: { shard: 1 },
+    balance: 10n ** 18n,
+    kvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
+  });
+  const before = await wallet.getAccount();
+  await wallet.updateAccount({ balance: 10n ** 17n });
+  const after = await wallet.getAccount();
+  expect(after).toEqual({ ...before, balance: 10n ** 17n });
 });
 
 test.concurrent("LSWallet.executeTx", async () => {
@@ -1010,6 +1137,49 @@ test.concurrent(
   },
 );
 
+test.concurrent("LSWallet.addKvs", async () => {
+  using world = await LSWorld.start();
+  const wallet = await world.createWallet({
+    balance: 10n ** 18n,
+    kvs: { "01": "02", "03": "04" },
+  });
+  await wallet.addKvs({
+    "01": "05",
+    "06": "07",
+  });
+  assertAccount(await wallet.getAccount(), {
+    balance: 10n ** 18n,
+    kvs: { "01": "05", "03": "04", "06": "07" },
+  });
+});
+
+test.concurrent("LSWallet.addEsdts", async () => {
+  using world = await LSWorld.start();
+  const wallet = await world.createWallet({
+    balance: 10n ** 18n,
+    kvs: {
+      esdts: [
+        { id: "TOK1-123456", amount: 10n ** 18n },
+        { id: "TOK2-123456", amount: 10n ** 18n },
+      ],
+    },
+  });
+  await wallet.addEsdts([
+    { id: "TOK1-123456", amount: 20n ** 18n },
+    { id: "TOK3-123456", amount: 10n ** 18n },
+  ]);
+  assertAccount(await wallet.getAccount(), {
+    balance: 10n ** 18n,
+    kvs: {
+      esdts: [
+        { id: "TOK1-123456", amount: 20n ** 18n },
+        { id: "TOK2-123456", amount: 10n ** 18n },
+        { id: "TOK3-123456", amount: 10n ** 18n },
+      ],
+    },
+  });
+});
+
 test.concurrent("LSContract.getAccountNonce", async () => {
   using world = await LSWorld.start();
   const { contract } = await createAccounts(world);
@@ -1020,6 +1190,13 @@ test.concurrent("LSContract.getAccountBalance", async () => {
   using world = await LSWorld.start();
   const { contract } = await createAccounts(world);
   expect(await contract.getAccountBalance()).toEqual(10n ** 18n);
+});
+
+test.concurrent("LSContract.getAccountEsdtBalance", async () => {
+  using world = await LSWorld.start();
+  const { contract } = await createAccounts(world);
+  const balance = await contract.getAccountEsdtBalance(fftId);
+  expect(balance).toEqual(10n ** 18n);
 });
 
 test.concurrent("LSContract.getAccountValue", async () => {
@@ -1083,6 +1260,23 @@ test.concurrent("LSContract.setAccount & LSContract.getAccount", async () => {
   expect(after).toEqual(before);
 });
 
+test.concurrent("LSContract.updateAccount", async () => {
+  using world = await LSWorld.start();
+  const contract = await world.createContract({
+    balance: 10n ** 18n,
+    code: worldCode,
+    codeMetadata: ["readable"],
+    kvs: {
+      esdts: [{ id: fftId, amount: 10n ** 18n }],
+      mappers: [{ key: "n", value: e.U64(2) }],
+    },
+  });
+  const before = await contract.getAccount();
+  await contract.updateAccount({ balance: 10n ** 17n });
+  const after = await contract.getAccount();
+  expect(after).toEqual({ ...before, balance: 10n ** 17n });
+});
+
 test.concurrent("LSContract.query", async () => {
   using world = await LSWorld.start();
   const { contract } = await createAccounts(world);
@@ -1091,6 +1285,76 @@ test.concurrent("LSContract.query", async () => {
     funcArgs: [e.U64(10)],
   });
   assertVs(returnData, [e.U64(20n)]);
+});
+
+test.concurrent("LSContract.addKvs", async () => {
+  using world = await LSWorld.start();
+  const contract = await world.createContract({
+    balance: 10n ** 18n,
+    kvs: { "01": "02", "03": "04" },
+  });
+  await contract.addKvs({
+    "01": "05",
+    "06": "07",
+  });
+  assertAccount(await contract.getAccount(), {
+    balance: 10n ** 18n,
+    kvs: { "01": "05", "03": "04", "06": "07" },
+  });
+});
+
+test.concurrent("LSContract.addEsdts", async () => {
+  using world = await LSWorld.start();
+  const contract = await world.createContract({
+    balance: 10n ** 18n,
+    kvs: {
+      esdts: [
+        { id: "TOK1-123456", amount: 10n ** 18n },
+        { id: "TOK2-123456", amount: 10n ** 18n },
+      ],
+    },
+  });
+  await contract.addEsdts([
+    { id: "TOK1-123456", amount: 20n ** 18n },
+    { id: "TOK3-123456", amount: 10n ** 18n },
+  ]);
+  assertAccount(await contract.getAccount(), {
+    balance: 10n ** 18n,
+    kvs: {
+      esdts: [
+        { id: "TOK1-123456", amount: 20n ** 18n },
+        { id: "TOK2-123456", amount: 10n ** 18n },
+        { id: "TOK3-123456", amount: 10n ** 18n },
+      ],
+    },
+  });
+});
+
+test.concurrent("LSContract.addMappers", async () => {
+  using world = await LSWorld.start();
+  const contract = await world.createContract({
+    balance: 10n ** 18n,
+    kvs: {
+      mappers: [
+        { key: "key1", value: e.U(2) },
+        { key: "key3", value: e.U(4) },
+      ],
+    },
+  });
+  await contract.addMappers([
+    { key: "key1", value: e.U(4) },
+    { key: "key5", value: e.U(6) },
+  ]);
+  assertAccount(await contract.getAccount(), {
+    balance: 10n ** 18n,
+    kvs: {
+      mappers: [
+        { key: "key1", value: e.U(4) },
+        { key: "key3", value: e.U(4) },
+        { key: "key5", value: e.U(6) },
+      ],
+    },
+  });
 });
 
 const createAccounts = async (world: LSWorld) => {
