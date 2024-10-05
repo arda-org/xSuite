@@ -69,7 +69,7 @@ const encodableAccountToSettableAccount = (account: EncodableAccount) => {
     codeHash: codeHash !== undefined ? hexToBase64(codeHash) : undefined,
     codeMetadata:
       codeMetadata !== undefined ? hexToBase64(codeMetadata) : undefined,
-    keys: kvs !== undefined ? e.kvs(kvs) : undefined, // TODO-MvX: better if called "pairs"
+    keys: kvs, // TODO-MvX: better if called "pairs"
     ownerAddress: owner,
   };
 };

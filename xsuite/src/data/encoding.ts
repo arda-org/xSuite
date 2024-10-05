@@ -254,7 +254,7 @@ export const e = {
       account.codeMetadata = eCodeMetadata(encodableAccount.codeMetadata);
     }
     if (encodableAccount.kvs !== undefined) {
-      account.kvs = e.kvs(encodableAccount.kvs);
+      account.kvs = eKvsUnfiltered(encodableAccount.kvs);
     }
     if (encodableAccount.owner !== undefined) {
       account.owner = addressLikeToBechAddress(encodableAccount.owner);
