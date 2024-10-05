@@ -360,6 +360,22 @@ test.concurrent("LSWorld.updateAccount", async () => {
   expect(after).toEqual({ ...before, balance: 10n ** 17n });
 });
 
+test.concurrent("LSWorld.updateAccount - remove key", async () => {
+  using world = await LSWorld.start();
+  const wallet = await world.createWallet({
+    kvs: { esdts: [{ id: fftId, amount: 10n ** 18n }] },
+  });
+  const before = await wallet.getAccount();
+  await world.updateAccount({
+    address: wallet,
+    kvs: {
+      esdts: [{ id: fftId, amount: 0n }],
+    },
+  });
+  const after = await wallet.getAccount();
+  expect(after).toEqual({ ...before, kvs: {} });
+});
+
 test.concurrent("LSWorld.setCurrentBlockInfo", async () => {
   using world = await LSWorld.start();
   const { contract } = await createAccounts(world);
