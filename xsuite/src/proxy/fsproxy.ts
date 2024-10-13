@@ -1,4 +1,4 @@
-import { EncodableAccount, e } from "../data/encoding";
+import { EncodableAccount, eAccountUnfiltered } from "../data/encoding";
 import { hexToBase64 } from "../data/utils";
 import { getValuesInOrder, Proxy } from "./proxy";
 
@@ -63,13 +63,14 @@ export class FSProxy extends Proxy {
 }
 
 const encodableAccountToSettableAccount = (account: EncodableAccount) => {
-  const { codeHash, codeMetadata, kvs, owner, ...rAcc } = e.account(account);
+  const { codeHash, codeMetadata, kvs, owner, ...rAcc } =
+    eAccountUnfiltered(account);
   return {
     ...rAcc,
     codeHash: codeHash !== undefined ? hexToBase64(codeHash) : undefined,
     codeMetadata:
       codeMetadata !== undefined ? hexToBase64(codeMetadata) : undefined,
-    keys: kvs !== undefined ? e.kvs(kvs) : undefined, // TODO-MvX: better if called "pairs"
+    keys: kvs, // TODO-MvX: better if called "pairs"
     ownerAddress: owner,
   };
 };
