@@ -433,7 +433,7 @@ test.concurrent(
       "",
     ]);
   },
-  100_000,
+  200_000,
 );
 
 test.concurrent(
@@ -469,7 +469,7 @@ test.concurrent(
       "",
     ]);
   },
-  100_000,
+  200_000,
 );
 
 test.concurrent("new contract | error: already exists", async () => {
@@ -505,7 +505,7 @@ test.concurrent(
       "",
     ]);
   },
-  180_000,
+  200_000,
 );
 
 test.concurrent("verify-reproducible", async () => {

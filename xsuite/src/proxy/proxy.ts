@@ -32,19 +32,6 @@ export class Proxy {
     this.pauseAfterSend = params.pauseAfterSend;
   }
 
-  private makeUrl(
-    path: string,
-    params: Record<string, { toString: () => string } | undefined> = {},
-  ) {
-    const url = new URL(path, this.proxyUrl);
-    for (const [k, v] of Object.entries(params)) {
-      if (v !== undefined && v !== null) {
-        url.searchParams.set(k, v.toString());
-      }
-    }
-    return url.toString();
-  }
-
   fetchRaw(path: string, data?: any) {
     const init: RequestInit = { headers: this.headers };
     if (data !== undefined) {
@@ -52,7 +39,7 @@ export class Proxy {
       init.body = JSON.stringify(data);
     }
     return fetch(
-      this.makeUrl(path, { blockNonce: this.blockNonce }),
+      this.proxyUrl + makePath(path, { blockNonce: this.blockNonce }),
       init,
     ).then((r) => r.json());
   }
@@ -333,7 +320,7 @@ export class Proxy {
 
   private async _getTx(txHash: string, { withResults }: GetTxRawOptions = {}) {
     const res = await this.fetch(
-      this.makeUrl(`/transaction/${txHash}`, { withResults }),
+      makePath(`/transaction/${txHash}`, { withResults }),
     );
     return res.transaction as Record<string, any>;
   }
@@ -348,7 +335,7 @@ export class Proxy {
     { shardId }: GetAccountOptions = {},
   ) {
     const res = await this.fetch(
-      this.makeUrl(`/address/${addressLikeToBechAddress(address)}/nonce`, {
+      makePath(`/address/${addressLikeToBechAddress(address)}/nonce`, {
         "forced-shard-id": shardId,
       }),
     );
@@ -360,7 +347,7 @@ export class Proxy {
     { shardId }: GetAccountOptions = {},
   ) {
     const res = await this.fetch(
-      this.makeUrl(`/address/${addressLikeToBechAddress(address)}/balance`, {
+      makePath(`/address/${addressLikeToBechAddress(address)}/balance`, {
         "forced-shard-id": shardId,
       }),
     );
@@ -373,7 +360,7 @@ export class Proxy {
     { shardId }: GetAccountOptions = {},
   ): Promise<string> {
     const res = await this.fetch(
-      this.makeUrl(
+      makePath(
         `/address/${addressLikeToBechAddress(address)}/key/${bytesLikeToHex(
           key,
         )}`,
@@ -390,7 +377,7 @@ export class Proxy {
     { shardId }: GetAccountOptions = {},
   ) {
     const res = await this.fetch(
-      this.makeUrl(`/address/${addressLikeToBechAddress(address)}/keys`, {
+      makePath(`/address/${addressLikeToBechAddress(address)}/keys`, {
         "forced-shard-id": shardId,
       }),
     );
@@ -402,7 +389,7 @@ export class Proxy {
     options?: GetAccountOptions,
   ) {
     const res = await this.fetch(
-      this.makeUrl(`/address/${addressLikeToBechAddress(address)}`, options),
+      makePath(`/address/${addressLikeToBechAddress(address)}`, options),
     );
     return getSerializableAccount(res.account);
   }
@@ -448,6 +435,24 @@ export class Proxy {
     return this.getAccount(address);
   }
 }
+
+const makePath = (
+  path: string,
+  params: Record<string, { toString: () => string } | undefined> = {},
+) => {
+  if (!path.startsWith("/")) {
+    throw new Error("Invalid path.");
+  }
+  const [basePath, existingQuery] = path.split("?");
+  const searchParams = new URLSearchParams(existingQuery);
+  for (const [k, v] of Object.entries(params)) {
+    if (v != null) {
+      searchParams.append(k, v.toString());
+    }
+  }
+  const newQuery = searchParams.toString();
+  return newQuery ? `${basePath}?${newQuery}` : basePath;
+};
 
 export class InteractionError extends Error {
   interaction: string;

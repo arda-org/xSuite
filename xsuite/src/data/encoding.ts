@@ -215,11 +215,7 @@ export const e = {
     return encodableVs.map(bytesLikeToHex);
   },
   kvs: Object.assign(
-    (encodableKvs: EncodableKvs): Kvs => {
-      const kvs = eKvsUnfiltered(encodableKvs);
-      for (const k in kvs) if (kvs[k] === "") delete kvs[k];
-      return kvs;
-    },
+    (encodableKvs: EncodableKvs) => filterKvs(eKvsUnfiltered(encodableKvs)),
     {
       Mapper: (...args: EncodableMapperKeyArgs) => ({
         Value: curryEKvsMapper(eKvsMapperValue)(args),
@@ -232,34 +228,12 @@ export const e = {
       Esdts: (esdts: EncodableEsdt[]) => eKvsEsdts(esdts),
     },
   ),
-  account: <T extends EncodableAccount>(
-    encodableAccount: T,
-  ): Prettify<PreserveDefinedness<T, Account>> => {
-    const account: Account = {
-      address: addressLikeToBechAddress(encodableAccount.address),
-    };
-    if (encodableAccount.nonce !== undefined) {
-      account.nonce = safeBigintToNumber(BigInt(encodableAccount.nonce));
+  account: <T extends EncodableAccount>(encodableAccount: T) => {
+    const account = eAccountUnfiltered(encodableAccount);
+    if (account.kvs !== undefined) {
+      account.kvs = filterKvs(account.kvs);
     }
-    if (encodableAccount.balance !== undefined) {
-      account.balance = encodableAccount.balance.toString();
-    }
-    if (encodableAccount.code !== undefined) {
-      account.code = encodableAccount.code;
-    }
-    if (encodableAccount.codeHash !== undefined) {
-      account.codeHash = encodableAccount.codeHash;
-    }
-    if (encodableAccount.codeMetadata !== undefined) {
-      account.codeMetadata = eCodeMetadata(encodableAccount.codeMetadata);
-    }
-    if (encodableAccount.kvs !== undefined) {
-      account.kvs = e.kvs(encodableAccount.kvs);
-    }
-    if (encodableAccount.owner !== undefined) {
-      account.owner = addressLikeToBechAddress(encodableAccount.owner);
-    }
-    return account as PreserveDefinedness<T, Account>;
+    return account;
   },
   /**
    * @deprecated Use `.TopBuffer` instead.
@@ -331,6 +305,12 @@ export const eKvsUnfiltered = (kvs: EncodableKvs): Kvs => {
   } else {
     return kvs;
   }
+};
+
+const filterKvs = (unfilteredKvs: Kvs): Kvs => {
+  const kvs = { ...unfilteredKvs };
+  for (const k in kvs) if (kvs[k] === "") delete kvs[k];
+  return kvs;
 };
 
 const eKvsMappers = (mappers: EncodableMapper[]): Kvs => {
@@ -571,6 +551,36 @@ export const eCodeMetadata = (codeMetadata: EncodableCodeMetadata): string => {
     bytes.push(byte0, byte1);
   }
   return e.Buffer(new Uint8Array(bytes)).toTopHex();
+};
+
+export const eAccountUnfiltered = <T extends EncodableAccount>(
+  encodableAccount: T,
+): Prettify<PreserveDefinedness<T, Account>> => {
+  const account: Account = {
+    address: addressLikeToBechAddress(encodableAccount.address),
+  };
+  if (encodableAccount.nonce !== undefined) {
+    account.nonce = safeBigintToNumber(BigInt(encodableAccount.nonce));
+  }
+  if (encodableAccount.balance !== undefined) {
+    account.balance = encodableAccount.balance.toString();
+  }
+  if (encodableAccount.code !== undefined) {
+    account.code = encodableAccount.code;
+  }
+  if (encodableAccount.codeHash !== undefined) {
+    account.codeHash = encodableAccount.codeHash;
+  }
+  if (encodableAccount.codeMetadata !== undefined) {
+    account.codeMetadata = eCodeMetadata(encodableAccount.codeMetadata);
+  }
+  if (encodableAccount.kvs !== undefined) {
+    account.kvs = eKvsUnfiltered(encodableAccount.kvs);
+  }
+  if (encodableAccount.owner !== undefined) {
+    account.owner = addressLikeToBechAddress(encodableAccount.owner);
+  }
+  return account as PreserveDefinedness<T, Account>;
 };
 
 const newEncodable = (

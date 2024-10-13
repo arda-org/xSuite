@@ -26,6 +26,24 @@ const emptyAccount = {
 };
 const baseExplorerUrl = "http://explorer.local";
 
+test.concurrent("FSWorld.proxy.blockNonce", async () => {
+  using world = await FSWorld.start();
+  const wallet = await world.createWallet({
+    balance: 10n ** 18n,
+  });
+  await wallet.setAccount({
+    balance: 2n * 10n ** 18n,
+  });
+  const proxy = new FSProxy({ proxyUrl: world.proxy.proxyUrl, blockNonce: 2 });
+  assertAccount(await proxy.getAccount(wallet), {
+    balance: 10n ** 18n,
+  });
+  proxy.blockNonce = undefined;
+  assertAccount(await proxy.getAccount(wallet), {
+    balance: 2n * 10n ** 18n,
+  });
+});
+
 test.concurrent("FSWorld.start - port 3000", async () => {
   using world = await FSWorld.start({ binaryPort: 3000 });
   expect(world.proxy.proxyUrl).toEqual("http://localhost:3000");
@@ -86,24 +104,6 @@ test.concurrent("FSWorld.getAccount on empty hex address", async () => {
 test.concurrent("FSWorld.getAccount on empty U8A address", async () => {
   using world = await FSWorld.start();
   assertAccount(await world.getAccount(zeroU8AAddress), emptyAccount);
-});
-
-test.concurrent("FSWorld.proxy.blockNonce", async () => {
-  using world = await FSWorld.start();
-  const wallet = await world.createWallet({
-    balance: 10n ** 18n,
-  });
-  await wallet.setAccount({
-    balance: 2n * 10n ** 18n,
-  });
-  const proxy = new FSProxy({ proxyUrl: world.proxy.proxyUrl, blockNonce: 2 });
-  assertAccount(await proxy.getAccount(wallet), {
-    balance: 10n ** 18n,
-  });
-  proxy.blockNonce = undefined;
-  assertAccount(await proxy.getAccount(wallet), {
-    balance: 2n * 10n ** 18n,
-  });
 });
 
 test.concurrent("FSWorld.new with defined chainId", () => {
@@ -354,6 +354,33 @@ test.concurrent("FSWorld.updateAccount", async () => {
   });
   const after = await wallet.getAccount();
   expect(after).toEqual({ ...before, balance: 10n ** 17n });
+});
+
+test.concurrent("FSWorld.updateAccount - remove key", async () => {
+  using world = await FSWorld.start();
+  const wallet = await world.createWallet({
+    kvs: {
+      esdts: [{ id: fftId, amount: 1 }],
+      mappers: [{ key: "mapper", value: e.U(1) }],
+      extraKvs: { "1234": "01" },
+    },
+  });
+  assertAccount(await wallet.getAccount(), {
+    kvs: {
+      esdts: [{ id: fftId, amount: 1 }],
+      mappers: [{ key: "mapper", value: e.U(1) }],
+      extraKvs: { "1234": "01" },
+    },
+  });
+  await world.updateAccount({
+    address: wallet,
+    kvs: {
+      esdts: [{ id: fftId, amount: 0 }],
+      mappers: [{ key: "mapper", value: null }],
+      extraKvs: { "1234": "" },
+    },
+  });
+  assertAccount(await wallet.getAccount(), { kvs: {} });
 });
 
 test.concurrent("FSWorld.query - basic", async () => {

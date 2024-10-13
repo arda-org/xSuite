@@ -1,5 +1,6 @@
 import { ChildProcess, spawn } from "node:child_process";
 import { fsproxyBinaryPath, fsproxyConfigsPath } from "@xsuite/full-simulnet";
+import { fullU8AAddress } from "../data/address";
 import { AddressLike, isAddressLike } from "../data/addressLike";
 import {
   EncodableAccount,
@@ -27,6 +28,7 @@ import {
 export class FSWorld extends World {
   proxy: FSProxy;
   server?: ChildProcess;
+  sysAcc: FSContract;
 
   constructor({
     proxy,
@@ -42,6 +44,7 @@ export class FSWorld extends World {
     super({ chainId: "chain", proxy, gasPrice, explorerUrl });
     this.proxy = proxy;
     this.server = server;
+    this.sysAcc = this.newContract(fullU8AAddress);
   }
 
   static new(options: FSWorldNewOptions) {
