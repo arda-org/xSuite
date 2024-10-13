@@ -1,4 +1,4 @@
-import { e, EncodableAccount } from "../data/encoding";
+import { EncodableAccount, eAccountUnfiltered } from "../data/encoding";
 import { getSerializableAccount, Proxy } from "./proxy";
 
 export class LSProxy extends Proxy {
@@ -12,7 +12,7 @@ export class LSProxy extends Proxy {
   setAccounts(accounts: EncodableAccount[]) {
     return this.fetch(
       "/admin/set-accounts",
-      accounts.map((a) => e.account(a)),
+      accounts.map((a) => eAccountUnfiltered(a)),
     ).then(() => {});
   }
 
@@ -23,7 +23,7 @@ export class LSProxy extends Proxy {
   updateAccounts(accounts: EncodableAccount[]) {
     return this.fetch(
       "/admin/update-accounts",
-      accounts.map((a) => e.account(a)),
+      accounts.map((a) => eAccountUnfiltered(a)),
     ).then(() => {});
   }
 
