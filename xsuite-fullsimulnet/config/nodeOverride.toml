@@ -105,4 +105,12 @@ OverridableConfigTomlValues = [
     { File = "enableEpochs.toml", Path = "EnableEpochs.FixGasRemainingForSaveKeyValueBuiltinFunctionEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.CurrentRandomnessOnSortingEnableEpoch", Value = "0" },
     { File = "enableEpochs.toml", Path = "EnableEpochs.AlwaysMergeContextsInEEIEnableEpoch", Value = "0" },
+    { File = "enableEpochs.toml", Path = "EnableEpochs.UseGasBoundedShouldFailExecutionEnableEpoch", Value = "0" },
+    { File = "enableEpochs.toml", Path = "EnableEpochs.DynamicESDTEnableEpoch", Value = "0" },
+    { File = "enableEpochs.toml", Path = "EnableEpochs.EGLDInMultiTransferEnableEpoch", Value = "0" },
+    { File = "enableEpochs.toml", Path = "EnableEpochs.CryptoOpcodesV2EnableEpoch", Value = "0" },
+    { File = "enableEpochs.toml", Path = "EnableEpochs.UnJailCleanupEnableEpoch", Value = "0" },
+    { File = "enableEpochs.toml", Path = "EnableEpochs.RelayedTransactionsV3EnableEpoch", Value = "0" },
+    { File = "enableEpochs.toml", Path = "EnableEpochs.FixRelayedBaseCostEnableEpoch", Value = "0" },
+    { File = "enableEpochs.toml", Path = "EnableEpochs.FixRelayedMoveBalanceToNonPayableSCEnableEpoch", Value = "0" },
 ]
