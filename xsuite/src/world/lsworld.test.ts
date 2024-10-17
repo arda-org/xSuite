@@ -1384,6 +1384,35 @@ test.concurrent("LSContract.addMappers", async () => {
   });
 });
 
+test.concurrent("EGLD+ESDT", async () => {
+  using world = await LSWorld.start();
+  const wallet = await world.createWallet({
+    balance: 10,
+    kvs: {
+      esdts: [{ id: "TEST-abcdef", amount: 10 }],
+    },
+  });
+  const wallet2 = await world.createWallet();
+  await wallet.transfer({
+    receiver: wallet2,
+    esdts: [
+      { id: "TEST-abcdef", amount: 10 },
+      { id: "EGLD-000000", amount: 10 },
+    ],
+    gasLimit: 10_000_000,
+  });
+  assertAccount(await wallet.getAccount(), {
+    balance: 0,
+    kvs: {},
+  });
+  assertAccount(await wallet2.getAccount(), {
+    balance: 10,
+    kvs: {
+      esdts: [{ id: "TEST-abcdef", amount: 10 }],
+    },
+  });
+});
+
 const createAccounts = async (world: LSWorld) => {
   const [wallet, wallet2, wallet3] = await world.createWallets([
     {
