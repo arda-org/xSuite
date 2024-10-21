@@ -10,5 +10,5 @@ if (process.env.CI) {
   ]);
 }
 
-await $`GOBIN="$(pwd)" go install -ldflags ${argv.ldflags} github.com/multiversx/mx-chain-simulator-go/cmd/chainsimulator@v1.7.13-patch2-fix1`;
+await $`GOBIN="$(pwd)" go install -ldflags ${argv.ldflags} github.com/multiversx/mx-chain-simulator-go/cmd/chainsimulator@0507df2631a6437ee5ce9dc1e2474c6946c12825`;
 await $`mv ./chainsimulator ../xsuite-fullsimulnet-${argv.os}-${argv.arch}/bin/fsproxy`;
