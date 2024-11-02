@@ -30,7 +30,7 @@ pub trait World {
     fn async_call_failing_endpoint(&self) {
         self.send()
             .contract_call::<()>(self.blockchain().get_sc_address(), b"failing_endpoint")
-            .with_gas_limit(500_000_000)
+            .with_gas_limit(5_000_000)
             .async_call_promise()
             .register_promise();
     }

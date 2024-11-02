@@ -1239,7 +1239,7 @@ test.concurrent(
       .callContract({
         callee: contract,
         funcName: "async_call_failing_endpoint",
-        gasLimit: 600_000_000,
+        gasLimit: 10_000_000,
       })
       .assertFail({
         code: "internalVMErrors",
