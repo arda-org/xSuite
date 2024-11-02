@@ -19,8 +19,20 @@ pub trait World {
     fn fund(&self) {}
 
     #[endpoint]
-    fn require_positive(&self, amount: u64) {
-        require!(amount > 0, "Amount is not positive.");
+    fn succeeding_endpoint(&self) {}
+
+    #[endpoint]
+    fn failing_endpoint(&self) {
+        require!(false, "Fail");
+    }
+
+    #[endpoint]
+    fn async_call_failing_endpoint(&self) {
+        self.send()
+            .contract_call::<()>(self.blockchain().get_sc_address(), b"failing_endpoint")
+            .with_gas_limit(500_000_000)
+            .async_call_promise()
+            .register_promise();
     }
 
     #[payable("EGLD")]

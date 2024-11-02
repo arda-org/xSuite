@@ -599,7 +599,7 @@ export class InteractionPromise<T> implements PromiseLike<T> {
   assertFail({
     code,
     message,
-  }: { code?: number | string; message?: string } = {}) {
+  }: { code?: number | string; message?: string | RegExp } = {}) {
     return this.then(() => {
       throw new Error("No failure.");
     }).catch((error) => {
@@ -611,7 +611,12 @@ export class InteractionPromise<T> implements PromiseLike<T> {
           `Failed with unexpected error code.\nExpected code: ${code}\nReceived code: ${error.code}`,
         );
       }
-      if (message !== undefined && message !== error.msg) {
+      if (
+        message !== undefined &&
+        (message instanceof RegExp
+          ? !message.test(error.msg)
+          : message !== error.msg)
+      ) {
         throw new Error(
           `Failed with unexpected error message.\nExpected message: ${message}\nReceived message: ${error.msg}`,
         );

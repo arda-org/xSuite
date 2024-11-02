@@ -490,10 +490,10 @@ test.concurrent("LSWorld.query.assertFail - correct parameters", async () => {
   await world
     .query({
       callee: contract,
-      funcName: "require_positive",
-      funcArgs: [e.U64(0)],
+      funcName: "failing_endpoint",
+      funcArgs: [],
     })
-    .assertFail({ code: 4, message: "Amount is not positive." });
+    .assertFail({ code: 4, message: "Fail" });
 });
 
 test.concurrent("LSWorld.executeTxs", async () => {
@@ -1101,11 +1101,11 @@ test.concurrent(
     await wallet
       .callContract({
         callee: contract,
-        funcName: "require_positive",
-        funcArgs: [e.U64(0)],
+        funcName: "failing_endpoint",
+        funcArgs: [],
         gasLimit: 10_000_000,
       })
-      .assertFail({ code: 4, message: "Amount is not positive." });
+      .assertFail({ code: 4, message: "Fail" });
   },
 );
 
@@ -1116,8 +1116,8 @@ test.concurrent("LSWallet.callContract.assertFail - wrong code", async () => {
     wallet
       .callContract({
         callee: contract,
-        funcName: "require_positive",
-        funcArgs: [e.U64(0)],
+        funcName: "failing_endpoint",
+        funcArgs: [],
         gasLimit: 10_000_000,
       })
       .assertFail({ code: 5 }),
@@ -1135,13 +1135,13 @@ test.concurrent(
       wallet
         .callContract({
           callee: contract,
-          funcName: "require_positive",
-          funcArgs: [e.U64(0)],
+          funcName: "failing_endpoint",
+          funcArgs: [],
           gasLimit: 10_000_000,
         })
         .assertFail({ message: "" }),
     ).rejects.toThrow(
-      "Failed with unexpected error message.\nExpected message: \nReceived message: Amount is not positive.",
+      "Failed with unexpected error message.\nExpected message: \nReceived message: Fail",
     );
   },
 );
@@ -1155,8 +1155,8 @@ test.concurrent(
       wallet
         .callContract({
           callee: contract,
-          funcName: "require_positive",
-          funcArgs: [e.U64(1)],
+          funcName: "succeeding_endpoint",
+          funcArgs: [],
           gasLimit: 10_000_000,
         })
         .assertFail(),
