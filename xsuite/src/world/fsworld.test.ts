@@ -422,10 +422,10 @@ test.concurrent("FSWorld.query.assertFail - correct parameters", async () => {
   await world
     .query({
       callee: contract,
-      funcName: "require_positive",
-      funcArgs: [e.U64(0)],
+      funcName: "failing_endpoint",
+      funcArgs: [],
     })
-    .assertFail({ code: "user error", message: "Amount is not positive." });
+    .assertFail({ code: "user error", message: "Fail" });
 });
 
 test.concurrent(
@@ -1131,11 +1131,11 @@ test.concurrent(
     await wallet
       .callContract({
         callee: contract,
-        funcName: "require_positive",
-        funcArgs: [e.U64(0)],
+        funcName: "failing_endpoint",
+        funcArgs: [],
         gasLimit: 10_000_000,
       })
-      .assertFail({ code: "signalError", message: "Amount is not positive." });
+      .assertFail({ code: "signalError", message: "Fail" });
   },
 );
 
@@ -1231,6 +1231,24 @@ test.concurrent(
 );
 
 test.concurrent(
+  "FSWallet.callContract.assertFail - failing intra-shard async call v2 without callback",
+  async () => {
+    using world = await FSWorld.start();
+    const { wallet, contract } = await createAccounts(world);
+    await wallet
+      .callContract({
+        callee: contract,
+        funcName: "async_call_failing_endpoint",
+        gasLimit: 10_000_000,
+      })
+      .assertFail({
+        code: "internalVMErrors",
+        message: /\[Fail\]/,
+      });
+  },
+);
+
+test.concurrent(
   "FSWallet.callContract.assertFail - succeeding async call v1 with failing callback",
   async () => {
     using world = await FSWorld.start();
@@ -1292,8 +1310,8 @@ test.concurrent("FSWallet.callContract.assertFail - wrong code", async () => {
     wallet
       .callContract({
         callee: contract,
-        funcName: "require_positive",
-        funcArgs: [e.U64(0)],
+        funcName: "failing_endpoint",
+        funcArgs: [],
         gasLimit: 10_000_000,
       })
       .assertFail({ code: 5 }),
@@ -1311,13 +1329,13 @@ test.concurrent(
       wallet
         .callContract({
           callee: contract,
-          funcName: "require_positive",
-          funcArgs: [e.U64(0)],
+          funcName: "failing_endpoint",
+          funcArgs: [],
           gasLimit: 10_000_000,
         })
         .assertFail({ message: "" }),
     ).rejects.toThrow(
-      "Failed with unexpected error message.\nExpected message: \nReceived message: Amount is not positive.",
+      "Failed with unexpected error message.\nExpected message: \nReceived message: Fail",
     );
   },
 );
@@ -1331,8 +1349,8 @@ test.concurrent(
       wallet
         .callContract({
           callee: contract,
-          funcName: "require_positive",
-          funcArgs: [e.U64(1)],
+          funcName: "succeeding_endpoint",
+          funcArgs: [],
           gasLimit: 10_000_000,
         })
         .assertFail(),

@@ -140,15 +140,7 @@ export class Proxy {
       const { returnCode, returnMessage } = tx.executionReceipt;
       throw new TxError(returnCode, returnMessage, tx);
     }
-    const events = tx?.logs?.events;
-    if (events) {
-      for (const event of events) {
-        if (event.identifier === "signalError") {
-          const error = atob(event.topics[1]);
-          throw new TxError("signalError", error, tx);
-        }
-      }
-    }
+    throwIfErrorInTxEvents(tx);
     const scrs = tx?.smartContractResults;
     if (scrs) {
       for (const scr of scrs) {
@@ -157,15 +149,7 @@ export class Proxy {
         }
       }
       for (const scr of scrs) {
-        const events = scr?.logs?.events;
-        if (events) {
-          for (const event of events) {
-            if (event.identifier === "signalError") {
-              const error = atob(event.topics[1]);
-              throw new TxError("signalError", error, tx);
-            }
-          }
-        }
+        throwIfErrorInTxEvents(scr);
       }
     }
     if (tx.status !== "success") {
@@ -435,6 +419,24 @@ export class Proxy {
     return this.getAccount(address);
   }
 }
+
+const throwIfErrorInTxEvents = (tx: any) => {
+  const events = tx?.logs?.events;
+  if (events) {
+    for (const event of events) {
+      if (event.identifier === "signalError") {
+        const error = atob(event.topics[1]);
+        throw new TxError("signalError", error, tx);
+      }
+    }
+    for (const event of events) {
+      if (event.identifier === "internalVMErrors") {
+        const error = atob(event.data);
+        throw new TxError("internalVMErrors", error, tx);
+      }
+    }
+  }
+};
 
 const makePath = (
   path: string,
