@@ -1,6 +1,7 @@
 import { Field, Type } from "protobufjs";
 import { PreserveDefinedness, Prettify } from "../helpers";
 import { Account } from "./account";
+import { Address } from "./address";
 import {
   AddressLike,
   addressLikeToU8AAddress,
@@ -138,7 +139,7 @@ export const e = {
   TopStr: (string: string) => {
     return newEncodable(e.Str(string).toTopU8A);
   },
-  Addr: (address: AddressLike) => {
+  Addr: (address: Address) => {
     address = addressLikeToU8AAddress(address);
     return newEncodable(() => address);
   },
