@@ -2,8 +2,8 @@ import { e } from "../data";
 import { zeroBechAddress } from "../data/address";
 import {
   AddressLike,
-  addressLikeToBechAddress,
-  addressLikeToHexAddress,
+  addressLikeToBech,
+  addressLikeToHex,
 } from "../data/addressLike";
 import { BytesLike, bytesLikeToHex } from "../data/bytesLike";
 import {
@@ -319,7 +319,7 @@ export class Proxy {
     { shardId }: GetAccountOptions = {},
   ) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBechAddress(address)}/nonce`, {
+      makePath(`/address/${addressLikeToBech(address)}/nonce`, {
         "forced-shard-id": shardId,
       }),
     );
@@ -331,7 +331,7 @@ export class Proxy {
     { shardId }: GetAccountOptions = {},
   ) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBechAddress(address)}/balance`, {
+      makePath(`/address/${addressLikeToBech(address)}/balance`, {
         "forced-shard-id": shardId,
       }),
     );
@@ -345,9 +345,7 @@ export class Proxy {
   ): Promise<string> {
     const res = await this.fetch(
       makePath(
-        `/address/${addressLikeToBechAddress(address)}/key/${bytesLikeToHex(
-          key,
-        )}`,
+        `/address/${addressLikeToBech(address)}/key/${bytesLikeToHex(key)}`,
         {
           "forced-shard-id": shardId,
         },
@@ -361,7 +359,7 @@ export class Proxy {
     { shardId }: GetAccountOptions = {},
   ) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBechAddress(address)}/keys`, {
+      makePath(`/address/${addressLikeToBech(address)}/keys`, {
         "forced-shard-id": shardId,
       }),
     );
@@ -373,7 +371,7 @@ export class Proxy {
     options?: GetAccountOptions,
   ) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBechAddress(address)}`, options),
+      makePath(`/address/${addressLikeToBech(address)}`, options),
     );
     return getSerializableAccount(res.account);
   }
@@ -503,7 +501,7 @@ const transferTxToTx = ({
     receiver = sender;
     const dataParts: string[] = [];
     dataParts.push("MultiESDTNFTTransfer");
-    dataParts.push(addressLikeToHexAddress(_receiver));
+    dataParts.push(addressLikeToHex(_receiver));
     dataParts.push(e.U(esdts.length).toTopHex());
     for (const esdt of esdts) {
       dataParts.push(e.Str(esdt.id).toTopHex());
@@ -548,7 +546,7 @@ const callContractTxToTx = ({
   if (esdts?.length) {
     receiver = sender;
     dataParts.push("MultiESDTNFTTransfer");
-    dataParts.push(addressLikeToHexAddress(callee));
+    dataParts.push(addressLikeToHex(callee));
     dataParts.push(e.U(esdts.length).toTopHex());
     for (const esdt of esdts) {
       dataParts.push(e.Str(esdt.id).toTopHex());
@@ -595,8 +593,8 @@ const broadTxToRawTx = async (tx: BroadTx): Promise<RawTx> => {
   const unsignedRawTx = {
     nonce: tx.nonce,
     value: (tx.value ?? 0n).toString(),
-    receiver: addressLikeToBechAddress(tx.receiver),
-    sender: addressLikeToBechAddress(tx.sender),
+    receiver: addressLikeToBech(tx.receiver),
+    sender: addressLikeToBech(tx.sender),
     gasPrice: tx.gasPrice,
     gasLimit: tx.gasLimit,
     data: tx.data === undefined ? undefined : btoa(tx.data),
@@ -614,12 +612,12 @@ const isRawTx = (tx: BroadTx): tx is RawTx => typeof tx.sender === "string";
 const broadQueryToRawQuery = (query: BroadQuery): RawQuery => {
   if ("callee" in query) {
     query = {
-      scAddress: addressLikeToBechAddress(query.callee),
+      scAddress: addressLikeToBech(query.callee),
       funcName: query.funcName,
       args: e.vs(query.funcArgs ?? []),
       caller:
         query.sender !== undefined
-          ? addressLikeToBechAddress(query.sender)
+          ? addressLikeToBech(query.sender)
           : undefined,
       value: query.value !== undefined ? query.value.toString() : undefined,
     };

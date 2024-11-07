@@ -1,5 +1,5 @@
 import { d, e } from "../data";
-import { AddressLike, addressLikeToBechAddress } from "../data/addressLike";
+import { AddressLike, addressLikeToBech } from "../data/addressLike";
 import { BytesLike } from "../data/bytesLike";
 import { Optional, Prettify, Replace } from "../helpers";
 import {
@@ -200,7 +200,7 @@ export class World {
     const noncePromises: Record<string, Promise<number>> = {};
     return Promise.all(
       txs.map(async (tx) => {
-        const address = addressLikeToBechAddress(tx.sender);
+        const address = addressLikeToBech(tx.sender);
         if (noncePromises[address] === undefined) {
           noncePromises[address] = this.proxy.getAccountNonce(tx.sender);
         } else {

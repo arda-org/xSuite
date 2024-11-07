@@ -4,7 +4,7 @@ import {
   addressByteLength,
   HRP,
   isAddress,
-  u8aAddressToBechAddress,
+  u8aAddressToBech,
 } from "./address";
 import { Encodable, isEncodable } from "./encoding";
 import { hexToU8A, u8aToHex } from "./utils";
@@ -14,9 +14,7 @@ export type AddressLike = Address | Encodable;
 export const isAddressLike = (value: unknown): value is AddressLike =>
   isAddress(value) || isEncodable(value);
 
-export const addressLikeToU8AAddress = (
-  addressLike: AddressLike,
-): Uint8Array => {
+export const addressLikeToU8A = (addressLike: AddressLike): Uint8Array => {
   if (addressLike === "") return new Uint8Array();
   if (typeof addressLike === "string") {
     if (addressLike.length === 2 * addressByteLength) {
@@ -36,9 +34,9 @@ export const addressLikeToU8AAddress = (
   return addressLike;
 };
 
-export const addressLikeToHexAddress = (addressLike: AddressLike) => {
-  return u8aToHex(addressLikeToU8AAddress(addressLike));
+export const addressLikeToHex = (addressLike: AddressLike) => {
+  return u8aToHex(addressLikeToU8A(addressLike));
 };
 
-export const addressLikeToBechAddress = (addressLike: AddressLike) =>
-  u8aAddressToBechAddress(addressLikeToU8AAddress(addressLike));
+export const addressLikeToBech = (addressLike: AddressLike) =>
+  u8aAddressToBech(addressLikeToU8A(addressLike));
