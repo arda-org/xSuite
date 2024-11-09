@@ -81,7 +81,7 @@ export class FSWorld extends World {
     explorerUrl?: string;
   } & ProxyParams = {}): Promise<FSWorld> {
     const { server, proxyUrl } = await startProxy(proxyParams);
-    return FSWorld.new({ proxyUrl, gasPrice, explorerUrl, server });
+    return this.new({ proxyUrl, gasPrice, explorerUrl, server });
   }
 
   async restartProxy(proxyParams: ProxyParams = {}) {

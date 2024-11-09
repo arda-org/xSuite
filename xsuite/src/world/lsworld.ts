@@ -107,7 +107,7 @@ export class LSWorld extends World {
       });
     });
 
-    return LSWorld.new({ proxyUrl, gasPrice, explorerUrl, server });
+    return this.new({ proxyUrl, gasPrice, explorerUrl, server });
   }
 
   newWallet(addressOrSigner: AddressLike | Signer): LSWallet {

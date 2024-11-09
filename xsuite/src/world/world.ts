@@ -83,15 +83,15 @@ export class World {
   }
 
   static newDevnet(options: WorldNewRealnetOptions = {}) {
-    return World.new({ chainId: devnetChainId, ...options });
+    return this.new({ chainId: devnetChainId, ...options });
   }
 
   static newTestnet(options: WorldNewRealnetOptions = {}) {
-    return World.new({ chainId: testnetChainId, ...options });
+    return this.new({ chainId: testnetChainId, ...options });
   }
 
   static newMainnet(options: WorldNewRealnetOptions = {}) {
-    return World.new({ chainId: mainnetChainId, ...options });
+    return this.new({ chainId: mainnetChainId, ...options });
   }
 
   newWallet(signer: Signer) {
