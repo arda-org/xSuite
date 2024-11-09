@@ -54,7 +54,7 @@ const DataConverter = () => {
   const addressMainnetState = JSON.stringify(query.data, null, 2);
 
   return (
-    <Box maxW="breakpoint-lg" mx="auto" px="2">
+    <Box maxW="breakpoint-2xl" mx="auto" px="4">
       <Box mb="4" />
       <Box textAlign="center">
         <Link asChild>
