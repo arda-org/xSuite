@@ -26,7 +26,7 @@ import React, {
 } from "react";
 import { e, d, B64 } from "xsuite/data";
 
-export default function Convert() {
+export default function DataConverter() {
   const [converterStates, setConverterStates] = useLocalStorage<
     ConverterState[]
   >("converterStates", []);
@@ -34,14 +34,14 @@ export default function Convert() {
   if (converterStates === undefined) return undefined;
 
   return (
-    <_Convert
+    <_DataConverter
       converterStates={converterStates}
       onChangeConverterStates={setConverterStates}
     />
   );
 }
 
-const _Convert = ({
+const _DataConverter = ({
   converterStates,
   onChangeConverterStates,
 }: {
