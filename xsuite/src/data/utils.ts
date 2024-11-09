@@ -1,5 +1,5 @@
 import { addressByteLength } from "./address";
-import { AddressLike, addressLikeToU8AAddress } from "./addressLike";
+import { AddressLike, addressLikeToU8A } from "./addressLike";
 
 export const u8aToHex = (u8a: Uint8Array) =>
   Array.from(u8a)
@@ -44,7 +44,7 @@ export const safeBigintToNumber = (n: bigint) => {
 };
 
 export const getAddressType = (address: AddressLike): AddressType => {
-  const u8aAddress = addressLikeToU8AAddress(address);
+  const u8aAddress = addressLikeToU8A(address);
   if (u8aStartsWith(u8aAddress, metaContractPrefix)) {
     return "metaContract";
   } else if (u8aStartsWith(u8aAddress, vmContractPrefix)) {
@@ -55,7 +55,7 @@ export const getAddressType = (address: AddressLike): AddressType => {
 };
 
 export const getAddressShard = (address: AddressLike): number => {
-  const u8aAddress = addressLikeToU8AAddress(address);
+  const u8aAddress = addressLikeToU8A(address);
   if (u8aStartsWith(u8aAddress, metaContractPrefix)) {
     return metaShard;
   }

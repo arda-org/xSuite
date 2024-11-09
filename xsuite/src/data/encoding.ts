@@ -1,10 +1,11 @@
 import { Field, Type } from "protobufjs";
 import { PreserveDefinedness, Prettify } from "../helpers";
 import { Account } from "./account";
+import { Address } from "./address";
 import {
   AddressLike,
-  addressLikeToU8AAddress,
-  addressLikeToBechAddress,
+  addressLikeToU8A,
+  addressLikeToBech,
 } from "./addressLike";
 import { Bytes, bytesToU8A } from "./bytes";
 import {
@@ -138,8 +139,8 @@ export const e = {
   TopStr: (string: string) => {
     return newEncodable(e.Str(string).toTopU8A);
   },
-  Addr: (address: AddressLike) => {
-    address = addressLikeToU8AAddress(address);
+  Addr: (address: Address) => {
+    address = addressLikeToU8A(address);
     return newEncodable(() => address);
   },
   Bool: (boolean: boolean) => e.U8(Number(boolean)),
@@ -481,7 +482,7 @@ const eKvsEsdt = ({ id, roles, lastNonce, ...rest }: EncodableEsdt): Kvs => {
         metadata.push(["Name", e.Str(name).toTopU8A()]);
       }
       if (creator !== undefined) {
-        metadata.push(["Creator", addressLikeToU8AAddress(creator)]);
+        metadata.push(["Creator", addressLikeToU8A(creator)]);
       }
       if (royalties !== undefined && royalties > 0) {
         metadata.push(["Royalties", royalties.toString()]);
@@ -557,7 +558,7 @@ export const eAccountUnfiltered = <T extends EncodableAccount>(
   encodableAccount: T,
 ): Prettify<PreserveDefinedness<T, Account>> => {
   const account: Account = {
-    address: addressLikeToBechAddress(encodableAccount.address),
+    address: addressLikeToBech(encodableAccount.address),
   };
   if (encodableAccount.nonce !== undefined) {
     account.nonce = safeBigintToNumber(BigInt(encodableAccount.nonce));
@@ -578,7 +579,7 @@ export const eAccountUnfiltered = <T extends EncodableAccount>(
     account.kvs = eKvsUnfiltered(encodableAccount.kvs);
   }
   if (encodableAccount.owner !== undefined) {
-    account.owner = addressLikeToBechAddress(encodableAccount.owner);
+    account.owner = addressLikeToBech(encodableAccount.owner);
   }
   return account as PreserveDefinedness<T, Account>;
 };

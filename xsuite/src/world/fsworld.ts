@@ -21,7 +21,7 @@ import {
   Contract,
   Wallet,
   WalletDeployContractTx,
-  WorldNewOptions,
+  WorldNewParams,
   WorldDeployContractTx,
 } from "./world";
 
@@ -47,11 +47,11 @@ export class FSWorld extends World {
     this.sysAcc = this.newContract(fullU8AAddress);
   }
 
-  static new(options: FSWorldNewOptions) {
-    if (options.chainId !== undefined) {
+  static new(params: FSWorldNewParams) {
+    if (params.chainId !== undefined) {
       throw new Error("chainId is not undefined.");
     }
-    const { proxyUrl, gasPrice, explorerUrl, server } = options;
+    const { proxyUrl, gasPrice, explorerUrl, server } = params;
     return new FSWorld({
       proxy: new FSProxy({ proxyUrl, explorerUrl }),
       gasPrice: gasPrice ?? 1_000_000_000,
@@ -81,7 +81,7 @@ export class FSWorld extends World {
     explorerUrl?: string;
   } & ProxyParams = {}): Promise<FSWorld> {
     const { server, proxyUrl } = await startProxy(proxyParams);
-    return FSWorld.new({ proxyUrl, gasPrice, explorerUrl, server });
+    return this.new({ proxyUrl, gasPrice, explorerUrl, server });
   }
 
   async restartProxy(proxyParams: ProxyParams = {}) {
@@ -382,7 +382,7 @@ const startProxy = async ({
   return { proxyUrl, server };
 };
 
-type FSWorldNewOptions =
+type FSWorldNewParams =
   | {
       chainId?: undefined;
       proxyUrl: string;
@@ -390,7 +390,7 @@ type FSWorldNewOptions =
       explorerUrl?: string;
       server?: ChildProcess;
     }
-  | WorldNewOptions;
+  | WorldNewParams;
 
 type FSWorldCreateAccountParams = Prettify<
   Replace<EncodableAccount, { address?: AddressLikeParams }>

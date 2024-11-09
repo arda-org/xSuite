@@ -1,5 +1,5 @@
 import { d, e } from "../data";
-import { AddressLike, addressLikeToBechAddress } from "../data/addressLike";
+import { AddressLike, addressLikeToBech } from "../data/addressLike";
 import { BytesLike } from "../data/bytesLike";
 import { Optional, Prettify, Replace } from "../helpers";
 import {
@@ -54,7 +54,7 @@ export class World {
     this.explorerUrl = explorerUrl;
   }
 
-  static new({ chainId, proxyUrl, gasPrice, explorerUrl }: WorldNewOptions) {
+  static new({ chainId, proxyUrl, gasPrice, explorerUrl }: WorldNewParams) {
     if (chainId === "D") {
       proxyUrl ??= devnetPublicProxyUrl;
       gasPrice ??= devnetMinGasPrice;
@@ -82,16 +82,16 @@ export class World {
     });
   }
 
-  static newDevnet(options: WorldNewRealnetOptions = {}) {
-    return World.new({ chainId: devnetChainId, ...options });
+  static newDevnet(params: WorldNewRealnetParams = {}) {
+    return this.new({ chainId: devnetChainId, ...params });
   }
 
-  static newTestnet(options: WorldNewRealnetOptions = {}) {
-    return World.new({ chainId: testnetChainId, ...options });
+  static newTestnet(params: WorldNewRealnetParams = {}) {
+    return this.new({ chainId: testnetChainId, ...params });
   }
 
-  static newMainnet(options: WorldNewRealnetOptions = {}) {
-    return World.new({ chainId: mainnetChainId, ...options });
+  static newMainnet(params: WorldNewRealnetParams = {}) {
+    return this.new({ chainId: mainnetChainId, ...params });
   }
 
   newWallet(signer: Signer) {
@@ -200,7 +200,7 @@ export class World {
     const noncePromises: Record<string, Promise<number>> = {};
     return Promise.all(
       txs.map(async (tx) => {
-        const address = addressLikeToBechAddress(tx.sender);
+        const address = addressLikeToBech(tx.sender);
         if (noncePromises[address] === undefined) {
           noncePromises[address] = this.proxy.getAccountNonce(tx.sender);
         } else {
@@ -635,10 +635,10 @@ export const expandCode = (code: string) => {
   return code;
 };
 
-export type WorldNewOptions = Prettify<
+export type WorldNewParams = Prettify<
   | ({
       chainId: "D" | "T" | "1";
-    } & WorldNewRealnetOptions)
+    } & WorldNewRealnetParams)
   | {
       chainId: string;
       proxyUrl: string;
@@ -647,7 +647,7 @@ export type WorldNewOptions = Prettify<
     }
 >;
 
-type WorldNewRealnetOptions = {
+type WorldNewRealnetParams = {
   proxyUrl?: string;
   gasPrice?: number;
   explorerUrl?: string;

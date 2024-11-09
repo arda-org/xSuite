@@ -1,5 +1,5 @@
-import { u8aAddressToBechAddress } from "../data/address";
-import { AddressLike, addressLikeToU8AAddress } from "../data/addressLike";
+import { u8aAddressToBech } from "../data/address";
+import { AddressLike, addressLikeToU8A } from "../data/addressLike";
 import { Encodable } from "../data/encoding";
 
 export class Account extends Encodable {
@@ -8,7 +8,7 @@ export class Account extends Encodable {
 
   constructor(address: AddressLike) {
     super();
-    this.u8a = addressLikeToU8AAddress(address);
+    this.u8a = addressLikeToU8A(address);
   }
 
   toTopU8A(): Uint8Array {
@@ -20,7 +20,7 @@ export class Account extends Encodable {
   }
 
   toString(): string {
-    return u8aAddressToBechAddress(this.u8a);
+    return u8aAddressToBech(this.u8a);
   }
 
   asymmetricMatch(compareTo: string) {

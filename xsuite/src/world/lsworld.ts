@@ -22,7 +22,7 @@ import {
   Contract,
   Wallet,
   WalletDeployContractTx,
-  WorldNewOptions,
+  WorldNewParams,
   WorldDeployContractTx,
 } from "./world";
 
@@ -48,11 +48,11 @@ export class LSWorld extends World {
     this.sysAcc = this.newContract(fullU8AAddress);
   }
 
-  static new(options: LSWorldNewOptions) {
-    if (options.chainId !== undefined) {
+  static new(params: LSWorldNewParams) {
+    if (params.chainId !== undefined) {
       throw new Error("chainId is not undefined.");
     }
-    const { proxyUrl, gasPrice, explorerUrl, server } = options;
+    const { proxyUrl, gasPrice, explorerUrl, server } = params;
     return new LSWorld({
       proxy: new LSProxy({ proxyUrl, explorerUrl }),
       gasPrice: gasPrice ?? 0,
@@ -107,7 +107,7 @@ export class LSWorld extends World {
       });
     });
 
-    return LSWorld.new({ proxyUrl, gasPrice, explorerUrl, server });
+    return this.new({ proxyUrl, gasPrice, explorerUrl, server });
   }
 
   newWallet(addressOrSigner: AddressLike | Signer): LSWallet {
@@ -346,7 +346,7 @@ export class LSContract extends Contract {
   }
 }
 
-type LSWorldNewOptions =
+type LSWorldNewParams =
   | {
       chainId?: undefined;
       proxyUrl: string;
@@ -354,7 +354,7 @@ type LSWorldNewOptions =
       explorerUrl?: string;
       server?: ChildProcess;
     }
-  | WorldNewOptions;
+  | WorldNewParams;
 
 type LSWorldCreateAccountParams = Prettify<
   Replace<EncodableAccount, { address?: AddressLikeParams }>

@@ -1,5 +1,5 @@
 import assert from "node:assert";
-import { AddressLike, addressLikeToBechAddress } from "../data/addressLike";
+import { AddressLike, addressLikeToBech } from "../data/addressLike";
 import {
   e,
   eKvsUnfiltered,
@@ -31,10 +31,7 @@ export const assertAccount = (
   }: ExpectedAccount,
 ) => {
   if (address !== undefined) {
-    assert.strictEqual(
-      actualAccount.address,
-      addressLikeToBechAddress(address),
-    );
+    assert.strictEqual(actualAccount.address, addressLikeToBech(address));
   }
   if (nonce !== undefined) {
     assert.strictEqual(actualAccount.nonce, nonce);
@@ -52,7 +49,7 @@ export const assertAccount = (
     assert.strictEqual(actualAccount.codeMetadata, eCodeMetadata(codeMetadata));
   }
   if (owner !== undefined) {
-    assert.strictEqual(actualAccount.owner, addressLikeToBechAddress(owner));
+    assert.strictEqual(actualAccount.owner, addressLikeToBech(owner));
   }
   if (kvs !== undefined) {
     assertKvs(actualAccount.kvs ?? {}, kvs);
