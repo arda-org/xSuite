@@ -54,7 +54,7 @@ export class World {
     this.explorerUrl = explorerUrl;
   }
 
-  static new({ chainId, proxyUrl, gasPrice, explorerUrl }: WorldNewOptions) {
+  static new({ chainId, proxyUrl, gasPrice, explorerUrl }: WorldNewParams) {
     if (chainId === "D") {
       proxyUrl ??= devnetPublicProxyUrl;
       gasPrice ??= devnetMinGasPrice;
@@ -82,16 +82,16 @@ export class World {
     });
   }
 
-  static newDevnet(options: WorldNewRealnetOptions = {}) {
-    return this.new({ chainId: devnetChainId, ...options });
+  static newDevnet(params: WorldNewRealnetParams = {}) {
+    return this.new({ chainId: devnetChainId, ...params });
   }
 
-  static newTestnet(options: WorldNewRealnetOptions = {}) {
-    return this.new({ chainId: testnetChainId, ...options });
+  static newTestnet(params: WorldNewRealnetParams = {}) {
+    return this.new({ chainId: testnetChainId, ...params });
   }
 
-  static newMainnet(options: WorldNewRealnetOptions = {}) {
-    return this.new({ chainId: mainnetChainId, ...options });
+  static newMainnet(params: WorldNewRealnetParams = {}) {
+    return this.new({ chainId: mainnetChainId, ...params });
   }
 
   newWallet(signer: Signer) {
@@ -635,10 +635,10 @@ export const expandCode = (code: string) => {
   return code;
 };
 
-export type WorldNewOptions = Prettify<
+export type WorldNewParams = Prettify<
   | ({
       chainId: "D" | "T" | "1";
-    } & WorldNewRealnetOptions)
+    } & WorldNewRealnetParams)
   | {
       chainId: string;
       proxyUrl: string;
@@ -647,7 +647,7 @@ export type WorldNewOptions = Prettify<
     }
 >;
 
-type WorldNewRealnetOptions = {
+type WorldNewRealnetParams = {
   proxyUrl?: string;
   gasPrice?: number;
   explorerUrl?: string;
