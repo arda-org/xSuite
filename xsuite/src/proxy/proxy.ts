@@ -14,6 +14,14 @@ import {
 import { Kvs } from "../data/kvs";
 import { base64ToHex, u8aToHex } from "../data/utils";
 import { Prettify } from "../helpers";
+import {
+  devnetExplorerUrl,
+  devnetPublicProxyUrl,
+  mainnetExplorerUrl,
+  mainnetPublicProxyUrl,
+  testnetExplorerUrl,
+  testnetPublicProxyUrl,
+} from "../interact/envChain";
 
 export class Proxy {
   proxyUrl: string;
@@ -30,6 +38,34 @@ export class Proxy {
     this.explorerUrl = params.explorerUrl ?? "";
     this.blockNonce = params.blockNonce;
     this.pauseAfterSend = params.pauseAfterSend;
+  }
+
+  static new(params: ProxyParams) {
+    return new Proxy(params);
+  }
+
+  static newDevnet(params: ProxyNewRealnetParams = {}) {
+    return this.new({
+      proxyUrl: devnetPublicProxyUrl,
+      explorerUrl: devnetExplorerUrl,
+      ...params,
+    });
+  }
+
+  static newTestnet(params: ProxyNewRealnetParams = {}) {
+    return this.new({
+      proxyUrl: testnetPublicProxyUrl,
+      explorerUrl: testnetExplorerUrl,
+      ...params,
+    });
+  }
+
+  static newMainnet(params: ProxyNewRealnetParams = {}) {
+    return this.new({
+      proxyUrl: mainnetPublicProxyUrl,
+      explorerUrl: mainnetExplorerUrl,
+      ...params,
+    });
   }
 
   fetchRaw(path: string, data?: any) {
@@ -689,16 +725,18 @@ export const getValuesInOrder = <T>(o: Record<string, T>) => {
 
 export const pendingErrorMessage = "Transaction still pending.";
 
-export type ProxyParams =
-  | string
-  | {
-      proxyUrl: string;
-      headers?: HeadersInit;
-      explorerUrl?: string;
-      blockNonce?: number;
-      // TODO-MvX: remove this when blockchain fixed
-      pauseAfterSend?: number;
-    };
+type ProxyParams = Prettify<
+  string | ({ proxyUrl: string } & ProxyNewRealnetParams)
+>;
+
+type ProxyNewRealnetParams = {
+  proxyUrl?: string;
+  headers?: HeadersInit;
+  explorerUrl?: string;
+  blockNonce?: number;
+  // TODO-MvX: remove this when blockchain fixed
+  pauseAfterSend?: number;
+};
 
 type BroadTx = Tx | RawTx;
 

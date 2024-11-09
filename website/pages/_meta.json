@@ -12,8 +12,6 @@
   "data-converter": {
     "title": "Data Converter",
     "type": "page",
-    "theme": {
-      "layout": "full"
-    }
+    "href": "/data-converter"
   }
 }
