@@ -25,17 +25,18 @@ import {
 
 export class Proxy {
   proxyUrl: string;
-  headers: HeadersInit;
   explorerUrl: string;
+  headers: HeadersInit;
+  fetcher?: Fetcher;
   blockNonce?: number;
-  // TODO-MvX: remove this when blockchain fixed
-  pauseAfterSend?: number;
+  pauseAfterSend?: number; // TODO-MvX: remove this when blockchain fixed
 
   constructor(params: ProxyParams) {
     params = typeof params === "string" ? { proxyUrl: params } : params;
     this.proxyUrl = params.proxyUrl;
-    this.headers = params.headers ?? {};
     this.explorerUrl = params.explorerUrl ?? "";
+    this.headers = params.headers ?? {};
+    this.fetcher = params.fetcher;
     this.blockNonce = params.blockNonce;
     this.pauseAfterSend = params.pauseAfterSend;
   }
@@ -74,7 +75,7 @@ export class Proxy {
       init.method = "POST";
       init.body = JSON.stringify(data);
     }
-    return fetch(
+    return (this.fetcher ?? fetch)(
       this.proxyUrl + makePath(path, { blockNonce: this.blockNonce }),
       init,
     ).then((r) => r.json());
@@ -731,12 +732,14 @@ type ProxyParams = Prettify<
 
 type ProxyNewRealnetParams = {
   proxyUrl?: string;
-  headers?: HeadersInit;
   explorerUrl?: string;
+  headers?: HeadersInit;
+  fetcher?: Fetcher;
   blockNonce?: number;
-  // TODO-MvX: remove this when blockchain fixed
-  pauseAfterSend?: number;
+  pauseAfterSend?: number; // TODO-MvX: remove this when blockchain fixed
 };
+
+type Fetcher = (input: string, init?: RequestInit) => Promise<Response>;
 
 type BroadTx = Tx | RawTx;
 
