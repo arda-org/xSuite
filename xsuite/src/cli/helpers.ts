@@ -54,8 +54,6 @@ export const pause = (ms: number) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
-export const defaultRustToolchain = "1.79.0";
+export const defaultRustToolchain = "stable";
 
 export const rustTarget = "wasm32-unknown-unknown";
-
-export const rustKey = `${defaultRustToolchain}-${rustTarget}`;
