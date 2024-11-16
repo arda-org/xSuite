@@ -50,9 +50,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: |
-            ~/.rustup/toolchains
-            ~/.cargo
-            target
+            ~/.cargo/
+            target/
           key: rust-${{ runner.os }}-${{ env.RUST_KEY }}-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: rust-${{ runner.os }}-
 
