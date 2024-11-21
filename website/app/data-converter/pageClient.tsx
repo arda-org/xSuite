@@ -10,7 +10,7 @@ import {
   defaultSystem,
   Clipboard,
   Input,
-  NativeSelect,
+  NativeSelect as ChakraNativeSelect,
   Button,
   Link,
 } from "@chakra-ui/react";
@@ -157,21 +157,18 @@ const ConverterBox = ({
       <Box mb="4" />
       <Box display="flex" gap="3" alignItems="center">
         Type
-        <NativeSelect.Root>
-          <NativeSelect.Field
-            value={inputType}
-            onChange={(e) =>
-              onChangeState({ inputType: e.currentTarget.value as any })
-            }
-          >
-            {Object.entries(dataTypes).map(([value, name]) => (
-              <option key={value} value={value}>
-                {name}
-              </option>
-            ))}
-          </NativeSelect.Field>
-          <NativeSelect.Indicator />
-        </NativeSelect.Root>
+        <NativeSelect
+          value={inputType}
+          onChange={(e) =>
+            onChangeState({ inputType: e.currentTarget.value as any })
+          }
+        >
+          {Object.entries(dataTypes).map(([value, name]) => (
+            <option key={value} value={value}>
+              {name}
+            </option>
+          ))}
+        </NativeSelect>
       </Box>
       <Box mb="3" />
       <Box>
@@ -202,21 +199,18 @@ const ConverterBox = ({
       <Box mb="3" />
       <Box display="flex" gap="3" alignItems="center">
         Type
-        <NativeSelect.Root>
-          <NativeSelect.Field
-            value={outputType}
-            onChange={(e) =>
-              onChangeState({ outputType: e.currentTarget.value as any })
-            }
-          >
-            {Object.entries(dataTypes).map(([value, name]) => (
-              <option key={value} value={value}>
-                {name}
-              </option>
-            ))}
-          </NativeSelect.Field>
-          <NativeSelect.Indicator />
-        </NativeSelect.Root>
+        <NativeSelect
+          value={outputType}
+          onChange={(e) =>
+            onChangeState({ outputType: e.currentTarget.value as any })
+          }
+        >
+          {Object.entries(dataTypes).map(([value, name]) => (
+            <option key={value} value={value}>
+              {name}
+            </option>
+          ))}
+        </NativeSelect>
       </Box>
       <Box mb="3" />
       <Box>
@@ -232,6 +226,21 @@ const ConverterBox = ({
         </Field.Root>
       </Box>
     </Box>
+  );
+};
+
+const NativeSelect = ({
+  value,
+  onChange,
+  children,
+  ...props
+}: Omit<ChakraNativeSelect.RootProps, "value" | "onChange" | "children"> &
+  Pick<ChakraNativeSelect.FieldProps, "value" | "onChange" | "children">) => {
+  return (
+    <ChakraNativeSelect.Root {...props}>
+      <ChakraNativeSelect.Field {...{ value, onChange, children }} />
+      <ChakraNativeSelect.Indicator />
+    </ChakraNativeSelect.Root>
   );
 };
 
