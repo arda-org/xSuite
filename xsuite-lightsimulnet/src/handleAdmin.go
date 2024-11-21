@@ -27,10 +27,7 @@ func (e *Executor) HandleAdminGetAllAccounts() (interface{}, error) {
 		return iAddress < jAddress
 	})
 	jData := map[string]interface{}{
-		"data": map[string]interface{}{
-			"accounts": accountsData,
-		},
-		"code": "successful",
+		"accounts": accountsData,
 	}
 	return jData, nil
 }
@@ -48,9 +45,7 @@ func (e *Executor) HandleAdminSetAccounts(r *http.Request) (interface{}, error) 
 			return nil, err
 		}
 	}
-	jData := map[string]interface{}{
-		"code": "successful",
-	}
+	jData := map[string]interface{}{}
 	return jData, nil
 }
 
@@ -67,9 +62,7 @@ func (e *Executor) HandleAdminUpdateAccounts(r *http.Request) (interface{}, erro
 			return nil, err
 		}
 	}
-	jData := map[string]interface{}{
-		"code": "successful",
-	}
+	jData := map[string]interface{}{}
 	return jData, nil
 }
 
@@ -87,9 +80,7 @@ func (e *Executor) HandleAdminSetCurrentBlockInfo(r *http.Request) (interface{},
 		BlockEpoch:     block.Epoch,
 		RandomSeed:     nil,
 	}
-	jData := map[string]interface{}{
-		"code": "successful",
-	}
+	jData := map[string]interface{}{}
 	return jData, nil
 }
 
@@ -107,9 +98,7 @@ func (e *Executor) HandleAdminSetPreviousBlockInfo(r *http.Request) (interface{}
 		BlockEpoch:     block.Epoch,
 		RandomSeed:     nil,
 	}
-	jData := map[string]interface{}{
-		"code": "successful",
-	}
+	jData := map[string]interface{}{}
 	return jData, nil
 }
 

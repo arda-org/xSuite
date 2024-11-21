@@ -955,6 +955,23 @@ test.concurrent("LSWallet.transfer - EGLD", async () => {
   });
 });
 
+// TODO-MvX: To run once Mandos is fixed
+test.todo("LSWallet.transfer - EGLD as ESDT", async () => {
+  using world = await LSWorld.start();
+  const { wallet, wallet2 } = await createAccounts(world);
+  const { fee } = await wallet.transfer({
+    receiver: wallet2,
+    esdts: [{ id: "EGLD-000000", amount: 10n ** 17n }],
+    gasLimit: 10_000_000,
+  });
+  assertAccount(await wallet.getAccount(), {
+    balance: 9n * 10n ** 17n - fee,
+  });
+  assertAccount(await wallet2.getAccount(), {
+    balance: 10n ** 17n,
+  });
+});
+
 test.concurrent("LSWallet.transfer - ESDTs", async () => {
   using world = await LSWorld.start();
   const { wallet, wallet2 } = await createAccounts(world);

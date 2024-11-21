@@ -351,93 +351,67 @@ export class Proxy {
     return res.status as string;
   }
 
-  async getAccountNonce(
-    address: AddressLike,
-    { shardId }: GetAccountOptions = {},
-  ) {
+  async getAccountNonce(address: AddressLike) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBech(address)}/nonce`, {
-        "forced-shard-id": shardId,
-      }),
+      `/address/${addressLikeToBech(address)}/nonce`,
     );
     return res.nonce as number;
   }
 
-  async getAccountBalance(
-    address: AddressLike,
-    { shardId }: GetAccountOptions = {},
-  ) {
+  async getAccountBalance(address: AddressLike) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBech(address)}/balance`, {
-        "forced-shard-id": shardId,
-      }),
+      `/address/${addressLikeToBech(address)}/balance`,
     );
     return BigInt(res.balance);
   }
 
-  async getAccountValue(
-    address: AddressLike,
-    key: BytesLike,
-    { shardId }: GetAccountOptions = {},
-  ): Promise<string> {
+  async getAccountValue(address: AddressLike, key: BytesLike): Promise<string> {
     const res = await this.fetch(
-      makePath(
-        `/address/${addressLikeToBech(address)}/key/${bytesLikeToHex(key)}`,
-        {
-          "forced-shard-id": shardId,
-        },
-      ),
+      `/address/${addressLikeToBech(address)}/key/${bytesLikeToHex(key)}`,
     );
     return res.value;
   }
 
-  async getAccountKvs(
-    address: AddressLike,
-    { shardId }: GetAccountOptions = {},
-  ) {
-    const res = await this.fetch(
-      makePath(`/address/${addressLikeToBech(address)}/keys`, {
-        "forced-shard-id": shardId,
-      }),
-    );
+  async getAccountKvs(address: AddressLike) {
+    const res = await this.fetch(`/address/${addressLikeToBech(address)}/keys`);
     return res.pairs as Kvs;
   }
 
-  async getSerializableAccountWithoutKvs(
+  getSerializableAccountWithoutKvs(address: AddressLike) {
+    return this._getSerializableAccount(address);
+  }
+
+  getSerializableAccount(address: AddressLike) {
+    return this._getSerializableAccount(address, { withKeys: true });
+  }
+
+  private async _getSerializableAccount(
     address: AddressLike,
-    options?: GetAccountOptions,
+    { withKeys }: GetAccountRawOptions = {},
   ) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBech(address)}`, options),
+      makePath(`/address/${addressLikeToBech(address)}`, { withKeys }),
     );
     return getSerializableAccount(res.account);
   }
 
-  getSerializableAccount(address: AddressLike, options?: GetAccountOptions) {
-    // TODO-MvX: When ?withKeys=true out, rewrite this part
-    return Promise.all([
-      this.getSerializableAccountWithoutKvs(address, options),
-      this.getAccountKvs(address, options),
-    ]).then(([account, kvs]) => ({ ...account, kvs }));
+  getAccountWithoutKvs(address: AddressLike) {
+    return this._getAccount(address);
   }
 
-  async getAccountWithoutKvs(
+  getAccount(address: AddressLike) {
+    return this._getAccount(address, { withKeys: true });
+  }
+
+  private async _getAccount(
     address: AddressLike,
-    options?: GetAccountOptions,
+    options?: GetAccountRawOptions,
   ) {
-    const { balance, ...account } = await this.getSerializableAccountWithoutKvs(
+    const { balance, ...account } = await this._getSerializableAccount(
       address,
       options,
     );
     return { balance: BigInt(balance), ...account };
-  }
-
-  getAccount(address: AddressLike, options?: GetAccountOptions) {
-    // TODO-MvX: When ?withKeys=true out, rewrite this part
-    return Promise.all([
-      this.getAccountWithoutKvs(address, options),
-      this.getAccountKvs(address, options),
-    ]).then(([account, kvs]) => ({ ...account, kvs }));
   }
 
   /**
@@ -843,7 +817,7 @@ type RawQuery = {
 
 type GetTxRawOptions = { withResults?: boolean };
 
-type GetAccountOptions = { shardId?: number };
+type GetAccountRawOptions = { withKeys?: boolean };
 
 type TxResult = Prettify<{
   hash: string;
