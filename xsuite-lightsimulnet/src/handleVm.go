@@ -71,14 +71,11 @@ func (e *Executor) HandleVmQuery(r *http.Request) (interface{}, error) {
 	}
 	jOutput := map[string]interface{}{
 		"data": map[string]interface{}{
-			"data": map[string]interface{}{
-				"returnData": b64ReturnData,
-				"returnCode": vmOutput.ReturnCode,
-				"returnMessage": vmOutput.ReturnMessage,
-				"executionLogs": logger.StopAndCollect(),
-			},
+			"returnData": b64ReturnData,
+			"returnCode": vmOutput.ReturnCode,
+			"returnMessage": vmOutput.ReturnMessage,
+			"executionLogs": logger.StopAndCollect(),
 		},
-		"code": "successful",
 	}
 	return jOutput, nil
 }

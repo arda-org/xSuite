@@ -31,10 +31,7 @@ func (e *Executor) HandleTransactionSend(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 	jOutput := map[string]interface{}{
-		"data": map[string]interface{}{
-			"txHash": txHash,
-		},
-		"code": "successful",
+		"txHash": txHash,
 	}
 	return jOutput, nil
 }
@@ -56,10 +53,7 @@ func (e *Executor) HandleTransactionSendMultiple(r *http.Request) (interface{}, 
 		}
 	}
 	jOutput := map[string]interface{}{
-		"data": map[string]interface{}{
-			"txsHashes": txsHashes,
-		},
-		"code": "successful",
+		"txsHashes": txsHashes,
 	}
 	return jOutput, nil
 }
@@ -295,28 +289,22 @@ func (e *Executor) executeTx(txHash string, rawTx RawTx) (error) {
 		new(big.Int).SetUint64(rawTx.GasPrice),
 	)
 	e.txResps[txHash] = map[string]interface{}{
-		"data": map[string]interface{}{
-			"transaction": map[string]interface{}{
-				"hash": txHash,
-				"status": "success",
-				"logs": logs,
-				"smartContractResults": smartContractResults,
-				"executionReceipt": map[string]interface{}{
-					"returnCode": vmOutput.ReturnCode,
-					"returnMessage": vmOutput.ReturnMessage,
-				},
-				"executionLogs": logger.StopAndCollect(),
-				"gasUsed": rawTx.GasLimit - vmOutput.GasRemaining,
-				"fee": fee.String(),
+		"transaction": map[string]interface{}{
+			"hash": txHash,
+			"status": "success",
+			"logs": logs,
+			"smartContractResults": smartContractResults,
+			"executionReceipt": map[string]interface{}{
+				"returnCode": vmOutput.ReturnCode,
+				"returnMessage": vmOutput.ReturnMessage,
 			},
+			"executionLogs": logger.StopAndCollect(),
+			"gasUsed": rawTx.GasLimit - vmOutput.GasRemaining,
+			"fee": fee.String(),
 		},
-		"code": "successful",
 	}
 	e.txProcessStatusResps[txHash] = map[string]interface{}{
-		"data": map[string]interface{}{
-			"status": processStatus,
-		},
-		"code": "successful",
+		"status": processStatus,
 	}
 	e.hashesOfTxsToKeep = append(e.hashesOfTxsToKeep, txHash)
 	if len(e.hashesOfTxsToKeep) > e.numberOfTxsToKeep {

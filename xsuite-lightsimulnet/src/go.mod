@@ -4,11 +4,11 @@ go 1.20
 
 require (
 	github.com/go-chi/chi v1.5.4
-	github.com/multiversx/mx-chain-core-go v1.2.20
-	github.com/multiversx/mx-chain-logger-go v1.0.14
-	github.com/multiversx/mx-chain-scenario-go v1.4.4-0.20240708183543-61f6e1880d1d
-	github.com/multiversx/mx-chain-vm-common-go v1.5.12
-	github.com/multiversx/mx-chain-vm-go v1.5.30-0.20240713084912-93532045748c
+	github.com/multiversx/mx-chain-core-go v1.2.22
+	github.com/multiversx/mx-chain-logger-go v1.0.15
+	github.com/multiversx/mx-chain-scenario-go v1.4.4
+	github.com/multiversx/mx-chain-vm-common-go v1.5.16
+	github.com/multiversx/mx-chain-vm-go v1.5.37
 )
 
 require (
@@ -24,8 +24,8 @@ require (
 	github.com/herumi/bls-go-binary v1.28.2 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
-	github.com/multiversx/mx-chain-crypto-go v1.2.11 // indirect
-	github.com/multiversx/mx-chain-storage-go v1.0.15 // indirect
+	github.com/multiversx/mx-chain-crypto-go v1.2.12 // indirect
+	github.com/multiversx/mx-chain-storage-go v1.0.16 // indirect
 	github.com/multiversx/mx-components-big-int v1.0.0 // indirect
 	github.com/pelletier/go-toml v1.9.3 // indirect
 	golang.org/x/crypto v0.3.0 // indirect
