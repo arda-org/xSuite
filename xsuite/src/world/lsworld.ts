@@ -98,13 +98,16 @@ export class LSWorld extends World {
     });
 
     const proxyUrl = await new Promise<string>((resolve) => {
-      server.stdout.on("data", (data: Buffer) => {
+      const onData = (data: Buffer) => {
         const addressRegex = /Server running on (http:\/\/[\w\d.:]+)/;
         const match = data.toString().match(addressRegex);
         if (match) {
           resolve(match[1]);
+          server.stdout.off("data", onData);
         }
-      });
+      };
+
+      server.stdout.on("data", onData);
     });
 
     return this.new({ proxyUrl, gasPrice, explorerUrl, server });
