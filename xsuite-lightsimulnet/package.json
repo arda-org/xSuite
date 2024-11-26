@@ -1,6 +1,6 @@
 {
   "name": "@xsuite/light-simulnet",
-  "version": "0.0.33",
+  "version": "0.0.35",
   "license": "MIT",
   "scripts": {
     "build": "run-script-os",
