@@ -27,28 +27,22 @@ import {
 
 export class FSWorld extends World {
   proxy: FSProxy;
-  proxyUrl: string;
-  nodeUrls: Record<string, string>;
   server?: ChildProcess;
   sysAcc: FSContract;
 
   constructor({
     proxy,
     gasPrice,
-    nodeUrls = {},
     explorerUrl,
     server,
   }: {
     proxy: FSProxy;
     gasPrice: number;
-    nodeUrls?: Record<string, string>;
     explorerUrl?: string;
     server?: ChildProcess;
   }) {
     super({ chainId: "chain", proxy, gasPrice, explorerUrl });
     this.proxy = proxy;
-    this.proxyUrl = this.proxy.proxyUrl;
-    this.nodeUrls = nodeUrls;
     this.server = server;
     this.sysAcc = this.newContract(fullU8AAddress);
   }
@@ -57,11 +51,10 @@ export class FSWorld extends World {
     if (params.chainId !== undefined) {
       throw new Error("chainId is not undefined.");
     }
-    const { proxyUrl, gasPrice, nodeUrls, explorerUrl, server } = params;
+    const { proxyUrl, gasPrice, explorerUrl, server } = params;
     return new FSWorld({
       proxy: new FSProxy({ proxyUrl, explorerUrl }),
       gasPrice: gasPrice ?? 1_000_000_000,
-      nodeUrls,
       explorerUrl,
       server,
     });
@@ -87,8 +80,8 @@ export class FSWorld extends World {
     gasPrice?: number;
     explorerUrl?: string;
   } & ProxyParams = {}): Promise<FSWorld> {
-    const { proxyUrl, nodeUrls, server } = await startProxy(proxyParams);
-    return this.new({ proxyUrl, nodeUrls, gasPrice, explorerUrl, server });
+    const { proxyUrl, server } = await startProxy(proxyParams);
+    return this.new({ proxyUrl, gasPrice, explorerUrl, server });
   }
 
   async restartProxy(proxyParams: ProxyParams = {}) {
@@ -227,6 +220,10 @@ export class FSWorld extends World {
       address,
       kvs: { mappers },
     });
+  }
+
+  getNodeUrls() {
+    return this.proxy.getNodeUrls();
   }
 
   terminate() {
@@ -375,25 +372,13 @@ const startProxy = async ({
     throw error;
   });
 
-  const nodeUrls: Record<string, string> = {};
-
   const proxyUrl = await new Promise<string>((resolve) => {
     const onData = (data: Buffer) => {
-      const dataStr = data.toString();
-
-      const nodeUrlRegex =
-        /node status +.{4,7}address.{4,7} = (http:\/\/[^\s]+) .{4,7}shard.{4,7} = (\d+)/g;
-      for (const match of [...dataStr.matchAll(nodeUrlRegex)]) {
-        const [, url, shard] = match;
-        nodeUrls[shard] = url;
-      }
-
-      const proxyHostRegex =
+      const addressRegex =
         /chain simulator's is accessible through the URL ([\w\d.:]+)/;
-      const match = dataStr.match(proxyHostRegex);
+      const match = data.toString().match(addressRegex);
       if (match) {
-        const [, host] = match;
-        resolve(`http://${host}`);
+        resolve(`http://${match[1]}`);
         server.stdout.off("data", onData);
       }
     };
@@ -401,7 +386,7 @@ const startProxy = async ({
     server.stdout.on("data", onData);
   });
 
-  return { proxyUrl, nodeUrls, server };
+  return { proxyUrl, server };
 };
 
 type FSWorldNewParams =
@@ -409,7 +394,6 @@ type FSWorldNewParams =
       chainId?: undefined;
       proxyUrl: string;
       gasPrice?: number;
-      nodeUrls?: Record<string, string>;
       explorerUrl?: string;
       server?: ChildProcess;
     }

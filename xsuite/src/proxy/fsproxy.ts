@@ -60,6 +60,15 @@ export class FSProxy extends Proxy {
   awaitTx(txHash: string) {
     return this.processTx(txHash);
   }
+
+  async getNodeUrls() {
+    const nodeUrls: Record<string, string> = {};
+    const res = await this.fetch("/simulator/observers");
+    for (const [a, b] of Object.entries<any>(res)) {
+      nodeUrls[a] = `http://localhost:${b["api-port"]}`;
+    }
+    return nodeUrls;
+  }
 }
 
 const encodableAccountToSettableAccount = (account: EncodableAccount) => {

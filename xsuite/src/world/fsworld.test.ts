@@ -44,21 +44,9 @@ test.concurrent("FSWorld.proxy.blockNonce", async () => {
   });
 });
 
-test.concurrent("FSWorld.start - URLs", async () => {
-  const localhostRegex = /^http:\/\/localhost:\d+$/;
-  using world = await FSWorld.start();
-  expect(world.proxyUrl).toMatch(localhostRegex);
-  expect(world.nodeUrls).toEqual({
-    "0": expect.stringMatching(localhostRegex),
-    "1": expect.stringMatching(localhostRegex),
-    "2": expect.stringMatching(localhostRegex),
-    "4294967295": expect.stringMatching(localhostRegex),
-  });
-});
-
 test.concurrent("FSWorld.start - port 3000", async () => {
   using world = await FSWorld.start({ binaryPort: 3000 });
-  expect(world.proxyUrl).toEqual("http://localhost:3000");
+  expect(world.proxy.proxyUrl).toEqual("http://localhost:3000");
 });
 
 test.concurrent("FSWorld.start - epoch, round, nonce", async () => {
@@ -725,6 +713,18 @@ test.concurrent("FSWorld.addMappers", async () => {
         { key: "key5", value: e.U(6) },
       ],
     },
+  });
+});
+
+test.concurrent("FSWorld.getNodeUrls", async () => {
+  const localhostRegex = /^http:\/\/localhost:\d+$/;
+  using world = await FSWorld.start();
+  expect(world.proxy.proxyUrl).toMatch(localhostRegex);
+  expect(await world.getNodeUrls()).toEqual({
+    "0": expect.stringMatching(localhostRegex),
+    "1": expect.stringMatching(localhostRegex),
+    "2": expect.stringMatching(localhostRegex),
+    "4294967295": expect.stringMatching(localhostRegex),
   });
 });
 
