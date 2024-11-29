@@ -24,10 +24,16 @@ const emptyAccount = {
   kvs: {},
 };
 const baseExplorerUrl = "http://explorer.local";
+const localhostRegex = /^http:\/\/127\.0\.0\.1:\d+$/;
 
 test.concurrent("LSWorld.start - port 3000", async () => {
   using world = await LSWorld.start({ binaryPort: 3000 });
   expect(world.proxy.proxyUrl).toEqual("http://127.0.0.1:3000");
+});
+
+test.concurrent("LSWorld.proxy.proxyUrl", async () => {
+  using world = await LSWorld.start();
+  expect(world.proxy.proxyUrl).toMatch(localhostRegex);
 });
 
 test.concurrent("LSWorld.getAccountNonce on empty bech address", async () => {

@@ -7,7 +7,6 @@ import {
   zeroU8AAddress,
 } from "../data/address";
 import { getAddressShard, getAddressType } from "../data/utils";
-import { FSProxy } from "../proxy";
 import { FSWorld } from "./fsworld";
 import { createAddressLike } from "./utils";
 import { expandCode } from "./world";
@@ -25,24 +24,7 @@ const emptyAccount = {
   kvs: {},
 };
 const baseExplorerUrl = "http://explorer.local";
-
-test.concurrent("FSWorld.proxy.blockNonce", async () => {
-  using world = await FSWorld.start();
-  const wallet = await world.createWallet({
-    balance: 10n ** 18n,
-  });
-  await wallet.setAccount({
-    balance: 2n * 10n ** 18n,
-  });
-  const proxy = new FSProxy({ proxyUrl: world.proxy.proxyUrl, blockNonce: 2 });
-  assertAccount(await proxy.getAccount(wallet), {
-    balance: 10n ** 18n,
-  });
-  proxy.blockNonce = undefined;
-  assertAccount(await proxy.getAccount(wallet), {
-    balance: 2n * 10n ** 18n,
-  });
-});
+const localhostRegex = /^http:\/\/localhost:\d+$/;
 
 test.concurrent("FSWorld.start - port 3000", async () => {
   using world = await FSWorld.start({ binaryPort: 3000 });
@@ -59,6 +41,29 @@ test.concurrent("FSWorld.start - epoch, round, nonce", async () => {
     round,
     nonce,
   });
+});
+
+test.concurrent("FSWorld.proxy.blockNonce", async () => {
+  using world = await FSWorld.start();
+  const wallet = await world.createWallet({
+    balance: 10n ** 18n,
+  });
+  await wallet.setAccount({
+    balance: 2n * 10n ** 18n,
+  });
+  world.proxy.blockNonce = 2;
+  assertAccount(await world.getAccount(wallet), {
+    balance: 10n ** 18n,
+  });
+  world.proxy.blockNonce = undefined;
+  assertAccount(await world.getAccount(wallet), {
+    balance: 2n * 10n ** 18n,
+  });
+});
+
+test.concurrent("FSWorld.proxy.proxyUrl", async () => {
+  using world = await FSWorld.start();
+  expect(world.proxy.proxyUrl).toMatch(localhostRegex);
 });
 
 test.concurrent("FSWorld.getAccountNonce on empty bech address", async () => {
@@ -717,15 +722,20 @@ test.concurrent("FSWorld.addMappers", async () => {
 });
 
 test.concurrent("FSWorld.getNodeUrls", async () => {
-  const localhostRegex = /^http:\/\/localhost:\d+$/;
   using world = await FSWorld.start();
-  expect(world.proxy.proxyUrl).toMatch(localhostRegex);
   expect(await world.getNodeUrls()).toEqual({
     "0": expect.stringMatching(localhostRegex),
     "1": expect.stringMatching(localhostRegex),
     "2": expect.stringMatching(localhostRegex),
     "4294967295": expect.stringMatching(localhostRegex),
   });
+});
+
+test.concurrent("FSWorld.getNodeUrl", async () => {
+  using world = await FSWorld.start();
+  expect(await world.getNodeUrl(0)).toEqual(
+    expect.stringMatching(localhostRegex),
+  );
 });
 
 test.concurrent("FSWorld.terminate", async () => {

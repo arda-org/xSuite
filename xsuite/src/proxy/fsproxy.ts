@@ -69,6 +69,11 @@ export class FSProxy extends Proxy {
     }
     return nodeUrls;
   }
+
+  async getNodeUrl(shard: number) {
+    const nodeUrls = await this.getNodeUrls();
+    return nodeUrls[shard];
+  }
 }
 
 const encodableAccountToSettableAccount = (account: EncodableAccount) => {

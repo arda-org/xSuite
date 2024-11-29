@@ -226,6 +226,10 @@ export class FSWorld extends World {
     return this.proxy.getNodeUrls();
   }
 
+  getNodeUrl(shard: number) {
+    return this.proxy.getNodeUrl(shard);
+  }
+
   terminate() {
     this.server?.kill();
   }
