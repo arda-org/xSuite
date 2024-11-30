@@ -31,7 +31,7 @@ import React, {
 import { FaPlus, FaArrowLeft, FaArrowRight, FaArrowDown } from "react-icons/fa";
 import { FaXmark } from "react-icons/fa6";
 import { LuClipboard } from "react-icons/lu";
-import { e, d, B64 } from "xsuite/data";
+import { e, d, B64, mainnetMvxProxyUrl } from "xsuite/data";
 import { Proxy } from "xsuite/proxy";
 
 export default function PageClient() {
@@ -47,9 +47,10 @@ export default function PageClient() {
 const DataConverter = () => {
   const converters = useConverters();
   const [address, setAddress] = useState("");
+  const [proxyUrl, setProxyUrl] = useState(mainnetMvxProxyUrl);
   const query = useQuery({
-    queryKey: ["address", address],
-    queryFn: () => proxy.getSerializableAccount(address),
+    queryKey: ["proxyUrl", proxyUrl, "address", address],
+    queryFn: () => new Proxy(proxyUrl).getSerializableAccount(address),
   });
   const addressMainnetState = JSON.stringify(query.data, null, 2);
 
@@ -78,11 +79,18 @@ const DataConverter = () => {
         ))}
       </Box>
       <Box mb="8" />
-      <Heading>Get address mainnet state</Heading>
+      <Heading>Get address state</Heading>
       <Box mb="8" />
       <Input
+        placeholder="Address"
         value={address}
         onChange={(e) => setAddress(e.currentTarget.value)}
+      />
+      <Box mb="4" />
+      <Input
+        placeholder="Proxy URL"
+        value={proxyUrl}
+        onChange={(e) => setProxyUrl(e.currentTarget.value)}
       />
       <Box mb="8" />
       <Clipboard.Root value={addressMainnetState}>
@@ -398,8 +406,6 @@ const convert = (
 const genId = () => Math.random();
 
 const queryClient = new QueryClient();
-
-const proxy = Proxy.newMainnet();
 
 const dataTypes = {
   hex: "Hex",

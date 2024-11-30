@@ -1,21 +1,21 @@
 import { d, e } from "../data";
 import { AddressLike, addressLikeToBech } from "../data/addressLike";
 import { BytesLike } from "../data/bytesLike";
-import { Optional, Prettify, Replace } from "../helpers";
 import {
   devnetChainId,
-  devnetExplorerUrl,
+  devnetMvxExplorerUrl,
   devnetMinGasPrice,
-  devnetPublicProxyUrl,
+  devnetMvxProxyUrl,
   testnetChainId,
-  testnetExplorerUrl,
+  testnetMvxExplorerUrl,
   testnetMinGasPrice,
-  testnetPublicProxyUrl,
+  testnetMvxProxyUrl,
   mainnetChainId,
-  mainnetExplorerUrl,
+  mainnetMvxExplorerUrl,
   mainnetMinGasPrice,
-  mainnetPublicProxyUrl,
-} from "../interact/envChain";
+  mainnetMvxProxyUrl,
+} from "../data/constants";
+import { Optional, Prettify, Replace } from "../helpers";
 import {
   CallContractTx,
   DeployContractTx,
@@ -56,17 +56,17 @@ export class World {
 
   static new({ chainId, proxyUrl, gasPrice, explorerUrl }: WorldNewParams) {
     if (chainId === "D") {
-      proxyUrl ??= devnetPublicProxyUrl;
+      proxyUrl ??= devnetMvxProxyUrl;
       gasPrice ??= devnetMinGasPrice;
-      explorerUrl ??= devnetExplorerUrl;
+      explorerUrl ??= devnetMvxExplorerUrl;
     } else if (chainId === "T") {
-      proxyUrl ??= testnetPublicProxyUrl;
+      proxyUrl ??= testnetMvxProxyUrl;
       gasPrice ??= testnetMinGasPrice;
-      explorerUrl ??= testnetExplorerUrl;
+      explorerUrl ??= testnetMvxExplorerUrl;
     } else if (chainId === "1") {
-      proxyUrl ??= mainnetPublicProxyUrl;
+      proxyUrl ??= mainnetMvxProxyUrl;
       gasPrice ??= mainnetMinGasPrice;
-      explorerUrl ??= mainnetExplorerUrl;
+      explorerUrl ??= mainnetMvxExplorerUrl;
     }
     if (proxyUrl === undefined) {
       throw new Error("proxyUrl is not defined.");

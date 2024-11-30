@@ -7,6 +7,14 @@ import {
 } from "../data/addressLike";
 import { BytesLike, bytesLikeToHex } from "../data/bytesLike";
 import {
+  devnetMvxExplorerUrl,
+  devnetMvxProxyUrl,
+  mainnetMvxExplorerUrl,
+  mainnetMvxProxyUrl,
+  testnetMvxExplorerUrl,
+  testnetMvxProxyUrl,
+} from "../data/constants";
+import {
   Encodable,
   EncodableCodeMetadata,
   eCodeMetadata,
@@ -14,14 +22,6 @@ import {
 import { Kvs } from "../data/kvs";
 import { base64ToHex, u8aToHex } from "../data/utils";
 import { Prettify } from "../helpers";
-import {
-  devnetExplorerUrl,
-  devnetPublicProxyUrl,
-  mainnetExplorerUrl,
-  mainnetPublicProxyUrl,
-  testnetExplorerUrl,
-  testnetPublicProxyUrl,
-} from "../interact/envChain";
 
 export class Proxy {
   proxyUrl: string;
@@ -47,24 +47,24 @@ export class Proxy {
 
   static newDevnet(params: ProxyNewRealnetParams = {}) {
     return this.new({
-      proxyUrl: devnetPublicProxyUrl,
-      explorerUrl: devnetExplorerUrl,
+      proxyUrl: devnetMvxProxyUrl,
+      explorerUrl: devnetMvxExplorerUrl,
       ...params,
     });
   }
 
   static newTestnet(params: ProxyNewRealnetParams = {}) {
     return this.new({
-      proxyUrl: testnetPublicProxyUrl,
-      explorerUrl: testnetExplorerUrl,
+      proxyUrl: testnetMvxProxyUrl,
+      explorerUrl: testnetMvxExplorerUrl,
       ...params,
     });
   }
 
   static newMainnet(params: ProxyNewRealnetParams = {}) {
     return this.new({
-      proxyUrl: mainnetPublicProxyUrl,
-      explorerUrl: mainnetExplorerUrl,
+      proxyUrl: mainnetMvxProxyUrl,
+      explorerUrl: mainnetMvxExplorerUrl,
       ...params,
     });
   }
