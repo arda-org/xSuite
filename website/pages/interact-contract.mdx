@@ -123,7 +123,7 @@ const loadWallet = () => world.newWalletFromFile("wallet.json");
 const program = new Command();
 ```
 
-Here we define the `world` object using `World.new()` which takes the `proxyUrl`, `chainId` and `gasPrice` as arguments. Using the `envChain` utility we can easily get the appropriate `publicProxyUrl` (i.e. https://devnet-gateway.multiversx.com/ for Devnet) and chain `id` depending on the current `CHAIN` environment variable value that is set in the `scripts` section of our `package.json` file.
+Here we define the `world` object using `World.new()` which takes the `proxyUrl`, `chainId` and `gasPrice` as arguments. Using the `envChain` utility we can easily get the appropriate `mvxProxyUrl` (i.e. https://devnet-gateway.multiversx.com/ for Devnet) and chain `id` depending on the current `CHAIN` environment variable value that is set in the `scripts` section of our `package.json` file.
 
 We then declare the function `loadWallet` to load a wallet from a `.json` file using the `world.newWalletFromFile()` function. The reason we don't call this directly is that we will get a password prompt after running this function, and we only want to trigger that after `commander` handles our custom command.
 

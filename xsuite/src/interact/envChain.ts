@@ -1,18 +1,17 @@
-export const devnetChainId = "D";
-export const testnetChainId = "T";
-export const mainnetChainId = "1";
-
-export const devnetPublicProxyUrl = "https://devnet-gateway.multiversx.com";
-export const testnetPublicProxyUrl = "https://testnet-gateway.multiversx.com";
-export const mainnetPublicProxyUrl = "https://gateway.multiversx.com";
-
-export const devnetMinGasPrice = 1_000_000_000;
-export const testnetMinGasPrice = 1_000_000_000;
-export const mainnetMinGasPrice = 1_000_000_000;
-
-export const devnetExplorerUrl = "https://devnet-explorer.multiversx.com";
-export const testnetExplorerUrl = "https://testnet-explorer.multiversx.com";
-export const mainnetExplorerUrl = "https://explorer.multiversx.com";
+import {
+  devnetChainId,
+  devnetMinGasPrice,
+  devnetMvxExplorerUrl,
+  devnetMvxProxyUrl,
+  mainnetChainId,
+  mainnetMinGasPrice,
+  mainnetMvxExplorerUrl,
+  mainnetMvxProxyUrl,
+  testnetChainId,
+  testnetMinGasPrice,
+  testnetMvxExplorerUrl,
+  testnetMvxProxyUrl,
+} from "../data/constants";
 
 export const envChain = {
   name: (): ChainName => {
@@ -38,11 +37,11 @@ export const envChain = {
       testnet: testnetChainId,
       mainnet: mainnetChainId,
     } as const),
-  publicProxyUrl: () =>
+  mvxProxyUrl: () =>
     envChain.select({
-      devnet: devnetPublicProxyUrl,
-      testnet: testnetPublicProxyUrl,
-      mainnet: mainnetPublicProxyUrl,
+      devnet: devnetMvxProxyUrl,
+      testnet: testnetMvxProxyUrl,
+      mainnet: mainnetMvxProxyUrl,
     } as const),
   minGasPrice: () =>
     envChain.select({
@@ -50,12 +49,20 @@ export const envChain = {
       testnet: testnetMinGasPrice,
       mainnet: mainnetMinGasPrice,
     } as const),
-  explorerUrl: () =>
+  mvxExplorerUrl: () =>
     envChain.select({
-      devnet: devnetExplorerUrl,
-      testnet: testnetExplorerUrl,
-      mainnet: mainnetExplorerUrl,
+      devnet: devnetMvxExplorerUrl,
+      testnet: testnetMvxExplorerUrl,
+      mainnet: mainnetMvxExplorerUrl,
     } as const),
+  /**
+   * @deprecated Use `.mvxProxyUrl` instead.
+   */
+  publicProxyUrl: () => envChain.mvxProxyUrl(),
+  /**
+   * @deprecated Use `.mvxExplorerUrl` instead.
+   */
+  explorerUrl: () => envChain.mvxExplorerUrl(),
 };
 
 const isChainName = (chain: any): chain is ChainName => {

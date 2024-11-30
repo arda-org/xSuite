@@ -7,6 +7,14 @@ import {
 } from "../data/addressLike";
 import { BytesLike, bytesLikeToHex } from "../data/bytesLike";
 import {
+  devnetMvxExplorerUrl,
+  devnetMvxProxyUrl,
+  mainnetMvxExplorerUrl,
+  mainnetMvxProxyUrl,
+  testnetMvxExplorerUrl,
+  testnetMvxProxyUrl,
+} from "../data/constants";
+import {
   Encodable,
   EncodableCodeMetadata,
   eCodeMetadata,
@@ -14,28 +22,21 @@ import {
 import { Kvs } from "../data/kvs";
 import { base64ToHex, u8aToHex } from "../data/utils";
 import { Prettify } from "../helpers";
-import {
-  devnetExplorerUrl,
-  devnetPublicProxyUrl,
-  mainnetExplorerUrl,
-  mainnetPublicProxyUrl,
-  testnetExplorerUrl,
-  testnetPublicProxyUrl,
-} from "../interact/envChain";
 
 export class Proxy {
   proxyUrl: string;
-  headers: HeadersInit;
   explorerUrl: string;
+  headers: HeadersInit;
+  fetcher?: Fetcher;
   blockNonce?: number;
-  // TODO-MvX: remove this when blockchain fixed
-  pauseAfterSend?: number;
+  pauseAfterSend?: number; // TODO-MvX: remove this when blockchain fixed
 
   constructor(params: ProxyParams) {
     params = typeof params === "string" ? { proxyUrl: params } : params;
     this.proxyUrl = params.proxyUrl;
-    this.headers = params.headers ?? {};
     this.explorerUrl = params.explorerUrl ?? "";
+    this.headers = params.headers ?? {};
+    this.fetcher = params.fetcher;
     this.blockNonce = params.blockNonce;
     this.pauseAfterSend = params.pauseAfterSend;
   }
@@ -46,24 +47,24 @@ export class Proxy {
 
   static newDevnet(params: ProxyNewRealnetParams = {}) {
     return this.new({
-      proxyUrl: devnetPublicProxyUrl,
-      explorerUrl: devnetExplorerUrl,
+      proxyUrl: devnetMvxProxyUrl,
+      explorerUrl: devnetMvxExplorerUrl,
       ...params,
     });
   }
 
   static newTestnet(params: ProxyNewRealnetParams = {}) {
     return this.new({
-      proxyUrl: testnetPublicProxyUrl,
-      explorerUrl: testnetExplorerUrl,
+      proxyUrl: testnetMvxProxyUrl,
+      explorerUrl: testnetMvxExplorerUrl,
       ...params,
     });
   }
 
   static newMainnet(params: ProxyNewRealnetParams = {}) {
     return this.new({
-      proxyUrl: mainnetPublicProxyUrl,
-      explorerUrl: mainnetExplorerUrl,
+      proxyUrl: mainnetMvxProxyUrl,
+      explorerUrl: mainnetMvxExplorerUrl,
       ...params,
     });
   }
@@ -74,7 +75,7 @@ export class Proxy {
       init.method = "POST";
       init.body = JSON.stringify(data);
     }
-    return fetch(
+    return (this.fetcher ?? fetch)(
       this.proxyUrl + makePath(path, { blockNonce: this.blockNonce }),
       init,
     ).then((r) => r.json());
@@ -350,93 +351,67 @@ export class Proxy {
     return res.status as string;
   }
 
-  async getAccountNonce(
-    address: AddressLike,
-    { shardId }: GetAccountOptions = {},
-  ) {
+  async getAccountNonce(address: AddressLike) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBech(address)}/nonce`, {
-        "forced-shard-id": shardId,
-      }),
+      `/address/${addressLikeToBech(address)}/nonce`,
     );
     return res.nonce as number;
   }
 
-  async getAccountBalance(
-    address: AddressLike,
-    { shardId }: GetAccountOptions = {},
-  ) {
+  async getAccountBalance(address: AddressLike) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBech(address)}/balance`, {
-        "forced-shard-id": shardId,
-      }),
+      `/address/${addressLikeToBech(address)}/balance`,
     );
     return BigInt(res.balance);
   }
 
-  async getAccountValue(
-    address: AddressLike,
-    key: BytesLike,
-    { shardId }: GetAccountOptions = {},
-  ): Promise<string> {
+  async getAccountValue(address: AddressLike, key: BytesLike): Promise<string> {
     const res = await this.fetch(
-      makePath(
-        `/address/${addressLikeToBech(address)}/key/${bytesLikeToHex(key)}`,
-        {
-          "forced-shard-id": shardId,
-        },
-      ),
+      `/address/${addressLikeToBech(address)}/key/${bytesLikeToHex(key)}`,
     );
     return res.value;
   }
 
-  async getAccountKvs(
-    address: AddressLike,
-    { shardId }: GetAccountOptions = {},
-  ) {
-    const res = await this.fetch(
-      makePath(`/address/${addressLikeToBech(address)}/keys`, {
-        "forced-shard-id": shardId,
-      }),
-    );
+  async getAccountKvs(address: AddressLike) {
+    const res = await this.fetch(`/address/${addressLikeToBech(address)}/keys`);
     return res.pairs as Kvs;
   }
 
-  async getSerializableAccountWithoutKvs(
+  getSerializableAccountWithoutKvs(address: AddressLike) {
+    return this._getSerializableAccount(address);
+  }
+
+  getSerializableAccount(address: AddressLike) {
+    return this._getSerializableAccount(address, { withKeys: true });
+  }
+
+  private async _getSerializableAccount(
     address: AddressLike,
-    options?: GetAccountOptions,
+    { withKeys }: GetAccountRawOptions = {},
   ) {
     const res = await this.fetch(
-      makePath(`/address/${addressLikeToBech(address)}`, options),
+      makePath(`/address/${addressLikeToBech(address)}`, { withKeys }),
     );
     return getSerializableAccount(res.account);
   }
 
-  getSerializableAccount(address: AddressLike, options?: GetAccountOptions) {
-    // TODO-MvX: When ?withKeys=true out, rewrite this part
-    return Promise.all([
-      this.getSerializableAccountWithoutKvs(address, options),
-      this.getAccountKvs(address, options),
-    ]).then(([account, kvs]) => ({ ...account, kvs }));
+  getAccountWithoutKvs(address: AddressLike) {
+    return this._getAccount(address);
   }
 
-  async getAccountWithoutKvs(
+  getAccount(address: AddressLike) {
+    return this._getAccount(address, { withKeys: true });
+  }
+
+  private async _getAccount(
     address: AddressLike,
-    options?: GetAccountOptions,
+    options?: GetAccountRawOptions,
   ) {
-    const { balance, ...account } = await this.getSerializableAccountWithoutKvs(
+    const { balance, ...account } = await this._getSerializableAccount(
       address,
       options,
     );
     return { balance: BigInt(balance), ...account };
-  }
-
-  getAccount(address: AddressLike, options?: GetAccountOptions) {
-    // TODO-MvX: When ?withKeys=true out, rewrite this part
-    return Promise.all([
-      this.getAccountWithoutKvs(address, options),
-      this.getAccountKvs(address, options),
-    ]).then(([account, kvs]) => ({ ...account, kvs }));
   }
 
   /**
@@ -731,12 +706,14 @@ type ProxyParams = Prettify<
 
 type ProxyNewRealnetParams = {
   proxyUrl?: string;
-  headers?: HeadersInit;
   explorerUrl?: string;
+  headers?: HeadersInit;
+  fetcher?: Fetcher;
   blockNonce?: number;
-  // TODO-MvX: remove this when blockchain fixed
-  pauseAfterSend?: number;
+  pauseAfterSend?: number; // TODO-MvX: remove this when blockchain fixed
 };
+
+type Fetcher = (input: string, init?: RequestInit) => Promise<Response>;
 
 type BroadTx = Tx | RawTx;
 
@@ -840,7 +817,7 @@ type RawQuery = {
 
 type GetTxRawOptions = { withResults?: boolean };
 
-type GetAccountOptions = { shardId?: number };
+type GetAccountRawOptions = { withKeys?: boolean };
 
 type TxResult = Prettify<{
   hash: string;

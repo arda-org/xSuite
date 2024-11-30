@@ -10,7 +10,7 @@ import { Context } from "../context";
 import { getAddressShard } from "../data/utils";
 import { Keystore } from "../world/signer";
 import { getCli } from "./cli";
-import { defaultRustToolchain, rustTarget, rustKey } from "./helpers";
+import { defaultRustToolchain, rustTarget } from "./helpers";
 import { getBinaryOs } from "./testScenCmd";
 
 setGlobalDispatcher(new Agent({ connect: { timeout: 100_000 } }));
@@ -336,7 +336,10 @@ test.concurrent(
 test.concurrent("install-rust-key", async () => {
   using c = newContext();
   await c.cmd("install-rust-key");
-  expect(c.flushStdout().split("\n")).toEqual([rustKey, ""]);
+  expect(c.flushStdout().split("\n")).toEqual([
+    expect.stringMatching(new RegExp(`rustc[a-z0-9]+-${rustTarget}`)),
+    "",
+  ]);
 });
 
 test.concurrent("install-rust", async () => {
@@ -346,8 +349,9 @@ test.concurrent("install-rust", async () => {
     chalk.blue(
       `Installing Rust: toolchain ${defaultRustToolchain} & target ${rustTarget}...`,
     ),
+    chalk.cyan(`$ ${process.env.HOME}/.cargo/bin/rustup default stable`),
     chalk.cyan(
-      `$ curl --proto =https --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- --default-toolchain ${defaultRustToolchain} -t ${rustTarget} -y`,
+      `$ ${process.env.HOME}/.cargo/bin/rustup target add wasm32-unknown-unknown`,
     ),
     "",
   ]);

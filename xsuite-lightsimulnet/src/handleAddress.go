@@ -16,15 +16,13 @@ func (e *Executor) HandleAddress(r *http.Request) (interface{}, error) {
 		return nil, err
 	}
 	worldAccount := e.getWorldAccount(address)
-	accountData, err := e.getAccountData(worldAccount, false)
+	withKeys := r.URL.Query().Get("withKeys") == "true"
+	accountData, err := e.getAccountData(worldAccount, withKeys)
 	if err != nil {
 		return nil, err
 	}
 	jData := map[string]interface{}{
-		"data": map[string]interface{}{
-			"account": accountData,
-		},
-		"code": "successful",
+		"account": accountData,
 	}
 	return jData, nil
 }
@@ -37,10 +35,7 @@ func (e *Executor) HandleAddressNonce(r *http.Request) (interface{}, error) {
 	}
 	worldAccount := e.getWorldAccount(address)
 	jData := map[string]interface{}{
-		"data": map[string]interface{}{
-			"nonce": worldAccount.Nonce,
-		},
-		"code": "successful",
+		"nonce": worldAccount.Nonce,
 	}
 	return jData, nil
 }
@@ -53,10 +48,7 @@ func (e *Executor) HandleAddressBalance(r *http.Request) (interface{}, error) {
 	}
 	worldAccount := e.getWorldAccount(address)
 	jData := map[string]interface{}{
-		"data": map[string]interface{}{
-			"balance": worldAccount.Balance.String(),
-		},
-		"code": "successful",
+		"balance": worldAccount.Balance.String(),
 	}
 	return jData, nil
 }
@@ -75,10 +67,7 @@ func (e *Executor) HandleAddressKey(r *http.Request) (interface{}, error) {
 	worldAccount := e.getWorldAccount(address)
 	value := e.getAccountValueData(worldAccount, bytesKey)
 	jData := map[string]interface{}{
-		"data": map[string]interface{}{
-			"value": value,
-		},
-		"code": "successful",
+		"value": value,
 	}
 	return jData, nil
 }
@@ -92,10 +81,7 @@ func (e *Executor) HandleAddressKeys(r *http.Request) (interface{}, error) {
 	worldAccount := e.getWorldAccount(address)
 	accountKeysData := e.getAccountKvsData(worldAccount)
 	jData := map[string]interface{}{
-		"data": map[string]interface{}{
-			"pairs": accountKeysData,
-		},
-		"code": "successful",
+		"pairs": accountKeysData,
 	}
 	return jData, nil
 }

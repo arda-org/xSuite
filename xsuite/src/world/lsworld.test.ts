@@ -24,10 +24,16 @@ const emptyAccount = {
   kvs: {},
 };
 const baseExplorerUrl = "http://explorer.local";
+const localhostRegex = /^http:\/\/127\.0\.0\.1:\d+$/;
 
 test.concurrent("LSWorld.start - port 3000", async () => {
   using world = await LSWorld.start({ binaryPort: 3000 });
   expect(world.proxy.proxyUrl).toEqual("http://127.0.0.1:3000");
+});
+
+test.concurrent("LSWorld.proxy.proxyUrl", async () => {
+  using world = await LSWorld.start();
+  expect(world.proxy.proxyUrl).toMatch(localhostRegex);
 });
 
 test.concurrent("LSWorld.getAccountNonce on empty bech address", async () => {
@@ -945,6 +951,23 @@ test.concurrent("LSWallet.transfer - EGLD", async () => {
   const { fee } = await wallet.transfer({
     receiver: wallet2,
     value: 10n ** 17n,
+    gasLimit: 10_000_000,
+  });
+  assertAccount(await wallet.getAccount(), {
+    balance: 9n * 10n ** 17n - fee,
+  });
+  assertAccount(await wallet2.getAccount(), {
+    balance: 10n ** 17n,
+  });
+});
+
+// TODO-MvX: To run once Mandos is fixed
+test.todo("LSWallet.transfer - EGLD as ESDT", async () => {
+  using world = await LSWorld.start();
+  const { wallet, wallet2 } = await createAccounts(world);
+  const { fee } = await wallet.transfer({
+    receiver: wallet2,
+    esdts: [{ id: "EGLD-000000", amount: 10n ** 17n }],
     gasLimit: 10_000_000,
   });
   assertAccount(await wallet.getAccount(), {

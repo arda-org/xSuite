@@ -55,21 +55,65 @@ test("envChain.id - mainnet", () => {
   expect(envChain.id()).toEqual("1");
 });
 
-test("envChain.publicProxyUrl - devnet", () => {
+test("envChain.mvxProxyUrl - devnet", () => {
   process.env.CHAIN = "devnet";
-  expect(envChain.publicProxyUrl()).toEqual(
+  expect(envChain.mvxProxyUrl()).toEqual(
     "https://devnet-gateway.multiversx.com",
   );
 });
 
-test("envChain.publicProxyUrl - testnet", () => {
+test("envChain.mvxProxyUrl - testnet", () => {
   process.env.CHAIN = "testnet";
-  expect(envChain.publicProxyUrl()).toEqual(
+  expect(envChain.mvxProxyUrl()).toEqual(
     "https://testnet-gateway.multiversx.com",
   );
 });
 
-test("envChain.publicProxyUrl - mainnet", () => {
+test("envChain.mvxProxyUrl - mainnet", () => {
+  process.env.CHAIN = "mainnet";
+  expect(envChain.mvxProxyUrl()).toEqual("https://gateway.multiversx.com");
+});
+
+test("envChain.minGasPrice - devnet", () => {
+  process.env.CHAIN = "devnet";
+  expect(envChain.minGasPrice()).toEqual(1_000_000_000);
+});
+
+test("envChain.minGasPrice - testnet", () => {
+  process.env.CHAIN = "testnet";
+  expect(envChain.minGasPrice()).toEqual(1_000_000_000);
+});
+
+test("envChain.minGasPrice - mainnet", () => {
+  process.env.CHAIN = "mainnet";
+  expect(envChain.minGasPrice()).toEqual(1_000_000_000);
+});
+
+test("envChain.mvxExplorerUrl - devnet", () => {
+  process.env.CHAIN = "devnet";
+  expect(envChain.mvxExplorerUrl()).toEqual(
+    "https://devnet-explorer.multiversx.com",
+  );
+});
+
+test("envChain.mvxExplorerUrl - testnet", () => {
+  process.env.CHAIN = "testnet";
+  expect(envChain.mvxExplorerUrl()).toEqual(
+    "https://testnet-explorer.multiversx.com",
+  );
+});
+
+test("envChain.mvxExplorerUrl - mainnet", () => {
+  process.env.CHAIN = "mainnet";
+  expect(envChain.mvxExplorerUrl()).toEqual("https://explorer.multiversx.com");
+});
+
+test("envChain.publicProxyUrl", () => {
   process.env.CHAIN = "mainnet";
   expect(envChain.publicProxyUrl()).toEqual("https://gateway.multiversx.com");
+});
+
+test("envChain.publicExplorerUrl", () => {
+  process.env.CHAIN = "mainnet";
+  expect(envChain.explorerUrl()).toEqual("https://explorer.multiversx.com");
 });

@@ -80,7 +80,7 @@ export class FSWorld extends World {
     gasPrice?: number;
     explorerUrl?: string;
   } & ProxyParams = {}): Promise<FSWorld> {
-    const { server, proxyUrl } = await startProxy(proxyParams);
+    const { proxyUrl, server } = await startProxy(proxyParams);
     return this.new({ proxyUrl, gasPrice, explorerUrl, server });
   }
 
@@ -220,6 +220,14 @@ export class FSWorld extends World {
       address,
       kvs: { mappers },
     });
+  }
+
+  getNodeUrls() {
+    return this.proxy.getNodeUrls();
+  }
+
+  getNodeUrl(shard: number) {
+    return this.proxy.getNodeUrl(shard);
   }
 
   terminate() {
@@ -369,14 +377,17 @@ const startProxy = async ({
   });
 
   const proxyUrl = await new Promise<string>((resolve) => {
-    server.stdout.on("data", (data: Buffer) => {
+    const onData = (data: Buffer) => {
       const addressRegex =
         /chain simulator's is accessible through the URL ([\w\d.:]+)/;
       const match = data.toString().match(addressRegex);
       if (match) {
         resolve(`http://${match[1]}`);
+        server.stdout.off("data", onData);
       }
-    });
+    };
+
+    server.stdout.on("data", onData);
   });
 
   return { proxyUrl, server };

@@ -60,6 +60,20 @@ export class FSProxy extends Proxy {
   awaitTx(txHash: string) {
     return this.processTx(txHash);
   }
+
+  async getNodeUrls() {
+    const nodeUrls: Record<string, string> = {};
+    const res = await this.fetch("/simulator/observers");
+    for (const [a, b] of Object.entries<any>(res)) {
+      nodeUrls[a] = `http://localhost:${b["api-port"]}`;
+    }
+    return nodeUrls;
+  }
+
+  async getNodeUrl(shard: number) {
+    const nodeUrls = await this.getNodeUrls();
+    return nodeUrls[shard];
+  }
 }
 
 const encodableAccountToSettableAccount = (account: EncodableAccount) => {
@@ -70,7 +84,7 @@ const encodableAccountToSettableAccount = (account: EncodableAccount) => {
     codeHash: codeHash !== undefined ? hexToBase64(codeHash) : undefined,
     codeMetadata:
       codeMetadata !== undefined ? hexToBase64(codeMetadata) : undefined,
-    keys: kvs, // TODO-MvX: better if called "pairs"
+    pairs: kvs,
     ownerAddress: owner,
   };
 };
