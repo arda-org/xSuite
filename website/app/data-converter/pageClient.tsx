@@ -52,7 +52,9 @@ const DataConverter = () => {
     queryKey: ["proxyUrl", proxyUrl, "address", address],
     queryFn: () => new Proxy(proxyUrl).getSerializableAccount(address),
   });
-  const addressMainnetState = JSON.stringify(query.data, null, 2);
+  const addressMainnetState = query.data
+    ? JSON.stringify(query.data, null, 2)
+    : undefined;
 
   return (
     <Box maxW="breakpoint-2xl" mx="auto" px="4">
@@ -102,8 +104,10 @@ const DataConverter = () => {
         </Clipboard.Trigger>
       </Clipboard.Root>
       <Box mb="8" />
-      <Box as="pre" overflow="auto">
-        {addressMainnetState}
+      <Box>
+        {addressMainnetState !== undefined
+          ? `Chars: ${addressMainnetState.length}`
+          : undefined}
       </Box>
       <Box mb="8" />
     </Box>
