@@ -3,7 +3,7 @@ const path = require("node:path");
 const fsproxyBinaryPath = (() => {
   const { platform, arch } = process;
   if (
-    ["linux", "darmin"].includes(platform) &&
+    ["linux", "darwin"].includes(platform) &&
     ["x64", "arm64"].includes(arch)
   ) {
     return require.resolve(
