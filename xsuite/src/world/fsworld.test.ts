@@ -1098,6 +1098,28 @@ test.concurrent("FSWallet.callContract - change the state", async () => {
 });
 
 test.concurrent(
+  "FSWallet.callContract - transfer ESDT to non-existent account",
+  async () => {
+    using world = await FSWorld.start();
+    const { wallet, contract } = await createAccounts(world);
+    const nonExistentWallet = world.newWallet(createAddressLike("wallet"));
+    await wallet.callContract({
+      callee: contract,
+      funcName: "transfer_received",
+      funcArgs: [nonExistentWallet],
+      esdts: [{ id: fftId, amount: 10n ** 17n }],
+      gasLimit: 10_000_000,
+    });
+    assertAccount(await wallet.getAccount(), {
+      hasKvs: { esdts: [{ id: fftId, amount: 9n * 10n ** 17n }] },
+    });
+    assertAccount(await nonExistentWallet.getAccount(), {
+      hasKvs: { esdts: [{ id: fftId, amount: 10n ** 17n }] },
+    });
+  },
+);
+
+test.concurrent(
   "FSWallet.callContract - succeeding async call v2",
   async () => {
     using world = await FSWorld.start();

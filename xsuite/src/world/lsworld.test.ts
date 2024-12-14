@@ -1099,6 +1099,29 @@ test.concurrent("LSWallet.callContract - change the state", async () => {
   });
 });
 
+// TODO-MvX: To run once Mandos is fixed
+test.todo(
+  "LSWallet.callContract - transfer ESDT to non-existent account",
+  async () => {
+    using world = await LSWorld.start();
+    const { wallet, contract } = await createAccounts(world);
+    const nonExistentWallet = world.newWallet(createAddressLike("wallet"));
+    await wallet.callContract({
+      callee: contract,
+      funcName: "transfer_received",
+      funcArgs: [nonExistentWallet],
+      esdts: [{ id: fftId, amount: 10n ** 17n }],
+      gasLimit: 10_000_000,
+    });
+    assertAccount(await wallet.getAccount(), {
+      hasKvs: { esdts: [{ id: fftId, amount: 9n * 10n ** 17n }] },
+    });
+    assertAccount(await nonExistentWallet.getAccount(), {
+      hasKvs: { esdts: [{ id: fftId, amount: 10n ** 17n }] },
+    });
+  },
+);
+
 test.concurrent("LSWallet.callContract - failure", async () => {
   using world = await LSWorld.start();
   const { wallet, contract } = await createAccounts(world);
