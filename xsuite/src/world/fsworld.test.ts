@@ -43,6 +43,21 @@ test.concurrent("FSWorld.start - epoch, round, nonce", async () => {
   });
 });
 
+test.concurrent("FSWorld.start - gasPrice 0", async () => {
+  using world = await FSWorld.start({ gasPrice: 0 });
+  const wallet = await world.createWallet({
+    balance: 10n ** 18n,
+  });
+  await wallet.transfer({
+    receiver: wallet,
+    value: 1,
+    gasLimit: 50_000,
+  });
+  assertAccount(await wallet.getAccount(), {
+    balance: 10n ** 18n,
+  });
+});
+
 test.concurrent("FSWorld.proxy.blockNonce", async () => {
   using world = await FSWorld.start();
   const wallet = await world.createWallet({
@@ -52,11 +67,11 @@ test.concurrent("FSWorld.proxy.blockNonce", async () => {
     balance: 2n * 10n ** 18n,
   });
   world.proxy.blockNonce = 2;
-  assertAccount(await world.getAccount(wallet), {
+  assertAccount(await wallet.getAccount(), {
     balance: 10n ** 18n,
   });
   world.proxy.blockNonce = undefined;
-  assertAccount(await world.getAccount(wallet), {
+  assertAccount(await wallet.getAccount(), {
     balance: 2n * 10n ** 18n,
   });
 });

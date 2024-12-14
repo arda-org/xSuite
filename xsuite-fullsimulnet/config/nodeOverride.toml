@@ -12,6 +12,7 @@
 OverridableConfigTomlValues = [
     { File = "config.toml", Path = "VirtualMachine.Execution.WasmVMVersions", Value = [{ StartEpoch = 0, Version = "v1.5" }] },
     { File = "config.toml", Path = "VirtualMachine.Querying.WasmVMVersions", Value = [{ StartEpoch = 0, Version = "v1.5" }] },
+    { File = "economics.toml", Path = "FeeSettings.MinGasPrice", Value = "0"},
     { File = "enableEpochs.toml", Path = "EnableEpochs.SCDeployEnableEpoch", Value = 0 },
     { File = "enableEpochs.toml", Path = "EnableEpochs.BuiltInFunctionsEnableEpoch", Value = 0 },
     { File = "enableEpochs.toml", Path = "EnableEpochs.RelayedTransactionsEnableEpoch", Value = 0 },
