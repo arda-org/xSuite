@@ -26,6 +26,8 @@ import {
   UpgradeContractTx,
   Proxy,
   InteractionError,
+  ProxyNewRealnetParams,
+  ProxyNewParams,
 } from "../proxy/proxy";
 import { Account } from "./account";
 import { KeystoreSigner, Signer } from "./signer";
@@ -39,22 +41,11 @@ export class World {
 
   constructor({
     chainId,
-    proxy,
     gasPrice,
-    explorerUrl = "",
-  }: {
-    chainId: string;
-    proxy: Proxy;
-    gasPrice: number;
-    explorerUrl?: string;
-  }) {
-    this.proxy = proxy;
-    this.chainId = chainId;
-    this.gasPrice = gasPrice;
-    this.explorerUrl = explorerUrl;
-  }
-
-  static new({ chainId, proxyUrl, gasPrice, explorerUrl }: WorldNewParams) {
+    proxyUrl,
+    explorerUrl,
+    ...proxyParams
+  }: WorldNewParams) {
     if (chainId === "D") {
       proxyUrl ??= devnetMvxProxyUrl;
       gasPrice ??= devnetMinGasPrice;
@@ -74,12 +65,20 @@ export class World {
     if (gasPrice === undefined) {
       throw new Error("gasPrice is not defined.");
     }
-    return new World({
-      chainId,
-      proxy: new Proxy({ proxyUrl, explorerUrl, pauseAfterSend: 1_000 }),
-      gasPrice,
+    explorerUrl ??= "";
+    this.chainId = chainId;
+    this.proxy = new Proxy({
+      proxyUrl,
       explorerUrl,
+      pauseAfterSend: 1_000,
+      ...proxyParams,
     });
+    this.gasPrice = gasPrice;
+    this.explorerUrl = explorerUrl;
+  }
+
+  static new(params: WorldNewParams) {
+    return new World(params);
   }
 
   static newDevnet(params: WorldNewRealnetParams = {}) {
@@ -636,22 +635,11 @@ export const expandCode = (code: string) => {
 };
 
 export type WorldNewParams = Prettify<
-  | ({
-      chainId: "D" | "T" | "1";
-    } & WorldNewRealnetParams)
-  | {
-      chainId: string;
-      proxyUrl: string;
-      gasPrice: number;
-      explorerUrl?: string;
-    }
+  | ({ chainId: "D" | "T" | "1"; gasPrice?: number } & ProxyNewRealnetParams)
+  | ({ chainId: string; gasPrice: number } & ProxyNewParams)
 >;
 
-type WorldNewRealnetParams = {
-  proxyUrl?: string;
-  gasPrice?: number;
-  explorerUrl?: string;
-};
+type WorldNewRealnetParams = Prettify<Omit<WorldNewParams, "chainId">>;
 
 type IncompleteTx = {
   sender: AddressLike;

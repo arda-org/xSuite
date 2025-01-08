@@ -21,7 +21,7 @@ import {
 } from "../data/encoding";
 import { Kvs } from "../data/kvs";
 import { base64ToHex, u8aToHex } from "../data/utils";
-import { Prettify } from "../helpers";
+import { Optional, Prettify } from "../helpers";
 
 export class Proxy {
   proxyUrl: string;
@@ -31,7 +31,7 @@ export class Proxy {
   blockNonce?: number;
   pauseAfterSend?: number; // TODO-MvX: remove this when blockchain fixed
 
-  constructor(params: ProxyParams) {
+  constructor(params: ProxyNewParamsExtended) {
     params = typeof params === "string" ? { proxyUrl: params } : params;
     this.proxyUrl = params.proxyUrl;
     this.explorerUrl = params.explorerUrl ?? "";
@@ -41,7 +41,7 @@ export class Proxy {
     this.pauseAfterSend = params.pauseAfterSend;
   }
 
-  static new(params: ProxyParams) {
+  static new(params: ProxyNewParamsExtended) {
     return new Proxy(params);
   }
 
@@ -700,18 +700,20 @@ export const getValuesInOrder = <T>(o: Record<string, T>) => {
 
 export const pendingErrorMessage = "Transaction still pending.";
 
-type ProxyParams = Prettify<
-  string | ({ proxyUrl: string } & ProxyNewRealnetParams)
->;
+type ProxyNewParamsExtended = string | ProxyNewParams;
 
-type ProxyNewRealnetParams = {
-  proxyUrl?: string;
+export type ProxyNewParams = {
+  proxyUrl: string;
   explorerUrl?: string;
   headers?: HeadersInit;
   fetcher?: Fetcher;
   blockNonce?: number;
-  pauseAfterSend?: number; // TODO-MvX: remove this when blockchain fixed
+  pauseAfterSend?: number; // TODO-MvX: remove this when blockchain fixed } & ProxyNewRealnetParams
 };
+
+export type ProxyNewRealnetParams = Prettify<
+  Optional<ProxyNewParams, "proxyUrl">
+>;
 
 type Fetcher = (input: string, init?: RequestInit) => Promise<Response>;
 
