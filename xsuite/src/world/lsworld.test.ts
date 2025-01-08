@@ -26,9 +26,9 @@ const emptyAccount = {
 const baseExplorerUrl = "http://explorer.local";
 const localhostRegex = /^http:\/\/127\.0\.0\.1:\d+$/;
 
-test.concurrent("LSWorld.start - port 3000", async () => {
-  using world = await LSWorld.start({ binaryPort: 3000 });
-  expect(world.proxy.proxyUrl).toEqual("http://127.0.0.1:3000");
+test.concurrent("LSWorld.start - port 12345", async () => {
+  using world = await LSWorld.start({ binaryPort: 12345 });
+  expect(world.proxy.proxyUrl).toEqual("http://127.0.0.1:12345");
 });
 
 test.concurrent("LSWorld.proxy.proxyUrl", async () => {

@@ -26,9 +26,9 @@ const emptyAccount = {
 const baseExplorerUrl = "http://explorer.local";
 const localhostRegex = /^http:\/\/localhost:\d+$/;
 
-test.concurrent("FSWorld.start - port 3000", async () => {
-  using world = await FSWorld.start({ binaryPort: 3000 });
-  expect(world.proxy.proxyUrl).toEqual("http://localhost:3000");
+test.concurrent("FSWorld.start - port 12345", async () => {
+  using world = await FSWorld.start({ binaryPort: 12345 });
+  expect(world.proxy.proxyUrl).toEqual("http://localhost:12345");
 });
 
 test.concurrent("FSWorld.start - epoch, round, nonce", async () => {
