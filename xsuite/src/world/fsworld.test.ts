@@ -26,9 +26,9 @@ const emptyAccount = {
 const baseExplorerUrl = "http://explorer.local";
 const localhostRegex = /^http:\/\/localhost:\d+$/;
 
-test.concurrent("FSWorld.start - port 3000", async () => {
-  using world = await FSWorld.start({ binaryPort: 3000 });
-  expect(world.proxy.proxyUrl).toEqual("http://localhost:3000");
+test.concurrent("FSWorld.start - port 12345", async () => {
+  using world = await FSWorld.start({ binaryPort: 12345 });
+  expect(world.proxy.proxyUrl).toEqual("http://localhost:12345");
 });
 
 test.concurrent("FSWorld.start - epoch, round, nonce", async () => {
@@ -1096,6 +1096,28 @@ test.concurrent("FSWallet.callContract - change the state", async () => {
     },
   });
 });
+
+test.concurrent(
+  "FSWallet.callContract - transfer ESDT to non-existent account",
+  async () => {
+    using world = await FSWorld.start();
+    const { wallet, contract } = await createAccounts(world);
+    const nonExistentWallet = world.newWallet(createAddressLike("wallet"));
+    await wallet.callContract({
+      callee: contract,
+      funcName: "transfer_received",
+      funcArgs: [nonExistentWallet],
+      esdts: [{ id: fftId, amount: 10n ** 17n }],
+      gasLimit: 10_000_000,
+    });
+    assertAccount(await wallet.getAccount(), {
+      hasKvs: { esdts: [{ id: fftId, amount: 9n * 10n ** 17n }] },
+    });
+    assertAccount(await nonExistentWallet.getAccount(), {
+      hasKvs: { esdts: [{ id: fftId, amount: 10n ** 17n }] },
+    });
+  },
+);
 
 test.concurrent(
   "FSWallet.callContract - succeeding async call v2",

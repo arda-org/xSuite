@@ -38,10 +38,10 @@ const action = async () => {
 export function getBinaryOs() {
   switch (process.platform) {
     case "linux":
-      return "ubuntu-20.04";
+      return "ubuntu-22.04";
     /* istanbul ignore next */
     case "darwin":
-      return "macos-12";
+      return "macos-13";
     /* istanbul ignore next */
     default:
       throw new Error(`Unsupported platform: ${process.platform}`);

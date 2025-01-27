@@ -10,6 +10,7 @@ import {
 } from "../data/encoding";
 import { Prettify, Replace } from "../helpers";
 import { FSProxy } from "../proxy";
+import { ProxyNewParams } from "../proxy/proxy";
 import { DummySigner, Signer } from "./signer";
 import {
   AddressLikeParams,
@@ -30,34 +31,23 @@ export class FSWorld extends World {
   server?: ChildProcess;
   sysAcc: FSContract;
 
-  constructor({
-    proxy,
-    gasPrice,
-    explorerUrl,
-    server,
-  }: {
-    proxy: FSProxy;
-    gasPrice: number;
-    explorerUrl?: string;
-    server?: ChildProcess;
-  }) {
-    super({ chainId: "chain", proxy, gasPrice, explorerUrl });
-    this.proxy = proxy;
+  constructor(params: FSWorldNewParams) {
+    if (params.chainId !== undefined) {
+      throw new Error("chainId is not undefined.");
+    }
+    const { chainId, gasPrice, server, ...proxyParams } = params;
+    super({
+      chainId: chainId ?? "chain",
+      gasPrice: gasPrice ?? 1_000_000_000,
+      ...proxyParams,
+    });
+    this.proxy = new FSProxy(proxyParams);
     this.server = server;
     this.sysAcc = this.newContract(fullU8AAddress);
   }
 
   static new(params: FSWorldNewParams) {
-    if (params.chainId !== undefined) {
-      throw new Error("chainId is not undefined.");
-    }
-    const { proxyUrl, gasPrice, explorerUrl, server } = params;
-    return new FSWorld({
-      proxy: new FSProxy({ proxyUrl, explorerUrl }),
-      gasPrice: gasPrice ?? 1_000_000_000,
-      explorerUrl,
-      server,
-    });
+    return new FSWorld(params);
   }
 
   static newDevnet(): World {
@@ -393,15 +383,14 @@ const startProxy = async ({
   return { proxyUrl, server };
 };
 
-type FSWorldNewParams =
-  | {
+type FSWorldNewParams = Prettify<
+  | ({
       chainId?: undefined;
-      proxyUrl: string;
       gasPrice?: number;
-      explorerUrl?: string;
       server?: ChildProcess;
-    }
-  | WorldNewParams;
+    } & ProxyNewParams)
+  | WorldNewParams
+>;
 
 type FSWorldCreateAccountParams = Prettify<
   Replace<EncodableAccount, { address?: AddressLikeParams }>

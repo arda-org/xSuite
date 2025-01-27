@@ -11,6 +11,7 @@ import {
 import { Prettify, Replace } from "../helpers";
 import { LSProxy } from "../proxy";
 import { Block } from "../proxy/lsproxy";
+import { ProxyNewParams } from "../proxy/proxy";
 import { DummySigner, Signer } from "./signer";
 import {
   AddressLikeParams,
@@ -31,34 +32,23 @@ export class LSWorld extends World {
   server?: ChildProcess;
   sysAcc: LSContract;
 
-  constructor({
-    proxy,
-    gasPrice,
-    explorerUrl,
-    server,
-  }: {
-    proxy: LSProxy;
-    gasPrice: number;
-    explorerUrl?: string;
-    server?: ChildProcess;
-  }) {
-    super({ chainId: "S", proxy, gasPrice, explorerUrl });
-    this.proxy = proxy;
+  constructor(params: LSWorldNewParams) {
+    if (params.chainId !== undefined) {
+      throw new Error("chainId is not undefined.");
+    }
+    const { chainId, gasPrice, server, ...proxyParams } = params;
+    super({
+      chainId: chainId ?? "S",
+      gasPrice: gasPrice ?? 0,
+      ...proxyParams,
+    });
+    this.proxy = new LSProxy(proxyParams);
     this.server = server;
     this.sysAcc = this.newContract(fullU8AAddress);
   }
 
   static new(params: LSWorldNewParams) {
-    if (params.chainId !== undefined) {
-      throw new Error("chainId is not undefined.");
-    }
-    const { proxyUrl, gasPrice, explorerUrl, server } = params;
-    return new LSWorld({
-      proxy: new LSProxy({ proxyUrl, explorerUrl }),
-      gasPrice: gasPrice ?? 0,
-      explorerUrl,
-      server,
-    });
+    return new LSWorld(params);
   }
 
   static newDevnet(): World {
@@ -349,15 +339,14 @@ export class LSContract extends Contract {
   }
 }
 
-type LSWorldNewParams =
-  | {
+type LSWorldNewParams = Prettify<
+  | ({
       chainId?: undefined;
-      proxyUrl: string;
       gasPrice?: number;
-      explorerUrl?: string;
       server?: ChildProcess;
-    }
-  | WorldNewParams;
+    } & ProxyNewParams)
+  | WorldNewParams
+>;
 
 type LSWorldCreateAccountParams = Prettify<
   Replace<EncodableAccount, { address?: AddressLikeParams }>

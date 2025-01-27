@@ -10,13 +10,13 @@ jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-12]
+        os: [ubuntu-22.04, macos-13]
         include:
           - os: ubuntu-22.04
             wasmer_lib: libwasmer_linux_amd64.so
             wasmer2_lib: libvmexeccapi.so
             flags: -ldflags "-extldflags '-Wl,-rpath,\$ORIGIN'"
-          - os: macos-12
+          - os: macos-13
             wasmer_lib: libwasmer_darwin_amd64.dylib
             wasmer2_lib: libvmexeccapi.dylib
             flags: -ldflags "-extldflags '-Wl,-rpath,@loader_path'"
@@ -56,7 +56,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-22.04, macos-12]
+        os: [ubuntu-22.04, macos-13]
 
     runs-on: ${{ matrix.os }}
 
