@@ -708,7 +708,7 @@ export type ProxyNewParams = {
   headers?: HeadersInit;
   fetcher?: Fetcher;
   blockNonce?: number;
-  pauseAfterSend?: number; // TODO-MvX: remove this when blockchain fixed } & ProxyNewRealnetParams
+  pauseAfterSend?: number; // TODO-MvX: remove this when blockchain fixed
 };
 
 export type ProxyNewRealnetParams = Prettify<
