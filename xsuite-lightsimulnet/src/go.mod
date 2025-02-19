@@ -6,7 +6,7 @@ require (
 	github.com/go-chi/chi v1.5.4
 	github.com/multiversx/mx-chain-core-go v1.2.22
 	github.com/multiversx/mx-chain-logger-go v1.0.15
-	github.com/multiversx/mx-chain-scenario-go v1.4.4
+	github.com/multiversx/mx-chain-scenario-go v1.5.0
 	github.com/multiversx/mx-chain-vm-common-go v1.5.16
 	github.com/multiversx/mx-chain-vm-go v1.5.37
 )
