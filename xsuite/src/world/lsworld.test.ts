@@ -81,7 +81,14 @@ test.concurrent("LSWorld.getAccount on empty U8A address", async () => {
   assertAccount(await world.getAccount(zeroU8AAddress), emptyAccount);
 });
 
-test.concurrent("LSWorld.new with defined chainId", () => {
+test.concurrent("LSWorld.new - startSimulnet", async () => {
+  using simulnet = await LSWorld.startSimulnet();
+  const world = LSWorld.new({ proxyUrl: simulnet.proxyUrl });
+  const wallet = await world.createWallet({ balance: 1 });
+  assertAccount(await wallet.getAccount(), { balance: 1 });
+});
+
+test.concurrent("LSWorld.new - defined chainId", () => {
   expect(() => LSWorld.new({ chainId: "D" })).toThrow(
     "chainId is not undefined.",
   );
@@ -769,9 +776,9 @@ test.concurrent("LSWorld.addMappers", async () => {
 
 test.concurrent("LSWorld.terminate", async () => {
   using world = await LSWorld.start();
-  expect(world.server?.killed).toEqual(false);
+  expect(world.simulnet?.killed).toEqual(false);
   world.terminate();
-  expect(world.server?.killed).toEqual(true);
+  expect(world.simulnet?.killed).toEqual(true);
 });
 
 test.concurrent("LSWallet.query", async () => {

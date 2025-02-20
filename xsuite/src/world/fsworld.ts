@@ -28,26 +28,26 @@ import {
 
 export class FSWorld extends World {
   proxy: FSProxy;
-  server?: ChildProcess;
+  simulnet?: ChildProcess;
   sysAcc: FSContract;
 
   constructor(params: FSWorldNewParams) {
     if (params.chainId !== undefined) {
       throw new Error("chainId is not undefined.");
     }
-    const { chainId, gasPrice, server, ...proxyParams } = params;
+    const { chainId, gasPrice, simulnet, ...proxyParams } = params;
     super({
       chainId: chainId ?? "chain",
       gasPrice: gasPrice ?? 1_000_000_000,
       ...proxyParams,
     });
     this.proxy = new FSProxy(proxyParams);
-    this.server = server;
+    this.simulnet = simulnet;
     this.sysAcc = this.newContract(fullU8AAddress);
   }
 
   static new(params: FSWorldNewParams) {
-    return new FSWorld(params);
+    return new this(params);
   }
 
   static newDevnet(): World {
@@ -65,20 +65,29 @@ export class FSWorld extends World {
   static async start({
     gasPrice,
     explorerUrl,
-    ...proxyParams
+    ...simulnetParams
   }: {
     gasPrice?: number;
     explorerUrl?: string;
-  } & ProxyParams = {}): Promise<FSWorld> {
-    const { proxyUrl, server } = await startProxy(proxyParams);
-    return this.new({ proxyUrl, gasPrice, explorerUrl, server });
+  } & SimulnetParams = {}): Promise<FSWorld> {
+    const simulnet = await this.startSimulnet(simulnetParams);
+    return this.new({
+      proxyUrl: simulnet.proxyUrl,
+      gasPrice,
+      explorerUrl,
+      simulnet,
+    });
   }
 
-  async restartProxy(proxyParams: ProxyParams = {}) {
-    this.server?.kill();
-    const { proxyUrl, server } = await startProxy(proxyParams);
-    this.proxy.proxyUrl = proxyUrl;
-    this.server = server;
+  static startSimulnet(simulnetParams: SimulnetParams = {}) {
+    return startSimulnet(simulnetParams);
+  }
+
+  async restartSimulnet(simulnetParams: SimulnetParams = {}) {
+    this.simulnet?.kill();
+    const simulnet = await FSWorld.startSimulnet(simulnetParams);
+    this.proxy.proxyUrl = simulnet.proxyUrl;
+    this.simulnet = simulnet;
   }
 
   newWallet(addressOrSigner: AddressLike | Signer): FSWallet {
@@ -221,7 +230,7 @@ export class FSWorld extends World {
   }
 
   terminate() {
-    this.server?.kill();
+    this.simulnet?.kill();
   }
 
   [Symbol.dispose]() {
@@ -291,7 +300,7 @@ export class FSContract extends Contract {
   }
 }
 
-const startProxy = async ({
+const startSimulnet = async ({
   binaryPath,
   binaryPort,
   binaryConfigPath,
@@ -306,7 +315,7 @@ const startProxy = async ({
   saveLogs,
   logsLevel,
   logsPath,
-}: ProxyParams) => {
+}: SimulnetParams) => {
   binaryPath ??= fsproxyBinaryPath;
   binaryPort ??= 0;
   binaryConfigPath ??= `${fsproxyConfigsPath}/config.toml`;
@@ -356,13 +365,13 @@ const startProxy = async ({
       logsPath,
     );
   }
-  const server = spawn(binaryPath, args);
+  const simulnet = spawn(binaryPath, args);
 
-  server.stderr.on("data", (data: Buffer) => {
+  simulnet.stderr.on("data", (data: Buffer) => {
     throw new Error(data.toString());
   });
 
-  server.on("error", (error) => {
+  simulnet.on("error", (error) => {
     throw error;
   });
 
@@ -373,21 +382,21 @@ const startProxy = async ({
       const match = data.toString().match(addressRegex);
       if (match) {
         resolve(`http://${match[1]}`);
-        server.stdout.off("data", onData);
+        simulnet.stdout.off("data", onData);
       }
     };
 
-    server.stdout.on("data", onData);
+    simulnet.stdout.on("data", onData);
   });
 
-  return { proxyUrl, server };
+  return Object.assign(simulnet, { proxyUrl });
 };
 
 type FSWorldNewParams = Prettify<
   | ({
       chainId?: undefined;
       gasPrice?: number;
-      server?: ChildProcess;
+      simulnet?: ChildProcess;
     } & ProxyNewParams)
   | WorldNewParams
 >;
@@ -408,7 +417,7 @@ type FSWalletCreateContractParams = Prettify<
   Omit<FSWorldCreateAccountParams, "owner">
 >;
 
-type ProxyParams = {
+type SimulnetParams = {
   binaryPath?: string;
   binaryPort?: number;
   binaryConfigPath?: string;

@@ -42,7 +42,7 @@ export class Proxy {
   }
 
   static new(params: ProxyNewParamsExtended) {
-    return new Proxy(params);
+    return new this(params);
   }
 
   static newDevnet(params: ProxyNewRealnetParams = {}) {
