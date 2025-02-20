@@ -108,7 +108,7 @@ export const makeU8AAddress = ({
   return new Uint8Array([
     ...prefix,
     ...numberToByteList(counter, addressByteLength - prefix.length - 1),
-    shard !== undefined ? shard : counter % 256,
+    shard !== undefined ? shard : counter % numShards,
   ]);
 };
 
