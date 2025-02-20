@@ -1,6 +1,6 @@
 {
   "name": "@xsuite/full-simulnet-darwin-amd64",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "os": [
     "darwin"
   ],

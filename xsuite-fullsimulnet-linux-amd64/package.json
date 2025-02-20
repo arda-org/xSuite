@@ -1,6 +1,6 @@
 {
   "name": "@xsuite/full-simulnet-linux-amd64",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "os": [
     "linux"
   ],
