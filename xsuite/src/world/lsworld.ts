@@ -320,11 +320,19 @@ export class LSContract extends Contract {
   }
 }
 
-const startSimulnet = async ({ binaryPath, binaryPort }: SimulnetParams) => {
+const startSimulnet = async ({
+  binaryPath,
+  binaryPort,
+  extraArgs,
+}: SimulnetParams) => {
   binaryPath ??= lsproxyBinaryPath;
   binaryPort ??= 0;
 
-  const simulnet = spawn(binaryPath, ["--server-port", `${binaryPort}`]);
+  const args: string[] = ["--server-port", `${binaryPort}`];
+  if (extraArgs) {
+    args.push(...extraArgs);
+  }
+  const simulnet = spawn(binaryPath, args);
 
   simulnet.stderr.on("data", (data: Buffer) => {
     throw new Error(data.toString());
@@ -378,4 +386,5 @@ type LSWalletCreateContractParams = Prettify<
 type SimulnetParams = {
   binaryPath?: string;
   binaryPort?: number;
+  extraArgs?: string[];
 };
