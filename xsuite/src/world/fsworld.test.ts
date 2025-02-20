@@ -126,7 +126,14 @@ test.concurrent("FSWorld.getAccount on empty U8A address", async () => {
   assertAccount(await world.getAccount(zeroU8AAddress), emptyAccount);
 });
 
-test.concurrent("FSWorld.new with defined chainId", () => {
+test.concurrent("FSWorld.new - startSimulnet", async () => {
+  using simulnet = await FSWorld.startSimulnet();
+  const world = FSWorld.new({ proxyUrl: simulnet.proxyUrl });
+  const wallet = await world.createWallet({ balance: 1 });
+  assertAccount(await wallet.getAccount(), { balance: 1 });
+});
+
+test.concurrent("FSWorld.new - defined chainId", () => {
   expect(() => FSWorld.new({ chainId: "D" })).toThrow(
     "chainId is not undefined.",
   );
@@ -764,9 +771,9 @@ test.concurrent("FSWorld.getNodeUrl", async () => {
 
 test.concurrent("FSWorld.terminate", async () => {
   using world = await FSWorld.start();
-  expect(world.server?.killed).toEqual(false);
+  expect(world.simulnet?.killed).toEqual(false);
   world.terminate();
-  expect(world.server?.killed).toEqual(true);
+  expect(world.simulnet?.killed).toEqual(true);
 });
 
 test.concurrent("FSWallet.query", async () => {
