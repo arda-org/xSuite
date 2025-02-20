@@ -315,6 +315,7 @@ const startSimulnet = async ({
   saveLogs,
   logsLevel,
   logsPath,
+  extraArgs,
 }: SimulnetParams) => {
   binaryPath ??= fsproxyBinaryPath;
   binaryPort ??= 0;
@@ -364,6 +365,9 @@ const startSimulnet = async ({
       "--path-log-save",
       logsPath,
     );
+  }
+  if (extraArgs) {
+    args.push(...extraArgs);
   }
   const simulnet = spawn(binaryPath, args);
 
@@ -432,4 +436,5 @@ type SimulnetParams = {
   saveLogs?: boolean;
   logsLevel?: string;
   logsPath?: string;
+  extraArgs?: string[];
 };

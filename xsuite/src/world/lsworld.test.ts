@@ -31,6 +31,12 @@ test.concurrent("LSWorld.start - port 12345", async () => {
   expect(world.proxy.proxyUrl).toEqual("http://127.0.0.1:12345");
 });
 
+test.concurrent("FSWorld.start - extraArgs", async () => {
+  const extraArgs = ["--server-port", "23456"];
+  using world = await LSWorld.start({ extraArgs });
+  expect(world.simulnet!.spawnargs.slice(-2)).toEqual(extraArgs);
+});
+
 test.concurrent("LSWorld.proxy.proxyUrl", async () => {
   using world = await LSWorld.start();
   expect(world.proxy.proxyUrl).toMatch(localhostRegex);

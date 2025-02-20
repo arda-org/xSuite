@@ -58,6 +58,12 @@ test.concurrent("FSWorld.start - gasPrice 0", async () => {
   });
 });
 
+test.concurrent("FSWorld.start - extraArgs", async () => {
+  const extraArgs = ["--server-port", "23456"];
+  using world = await FSWorld.start({ extraArgs });
+  expect(world.simulnet!.spawnargs.slice(-2)).toEqual(extraArgs);
+});
+
 test.concurrent("FSWorld.proxy.blockNonce", async () => {
   using world = await FSWorld.start();
   const wallet = await world.createWallet({
