@@ -3,6 +3,12 @@ import { hexToBase64 } from "../data/utils";
 import { getValuesInOrder, Proxy } from "./proxy";
 
 export class FSProxy extends Proxy {
+  constructor(...[params]: ConstructorParameters<typeof Proxy>) {
+    params = typeof params === "string" ? { proxyUrl: params } : params;
+    params.pauseAfterSend ??= 0;
+    super(params);
+  }
+
   async getInitialAddresses() {
     const res = await this.fetch("/simulator/initial-wallets");
     return {
