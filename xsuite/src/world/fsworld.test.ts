@@ -471,7 +471,7 @@ test.concurrent("FSWorld.query.assertFail - correct parameters", async () => {
 });
 
 test.concurrent(
-  "FSWorld.sendTx & FSWorld.resolveTx.assertPending & FSWorld.resolveTx.assertSucceed",
+  "FSWorld.sendTx & FSWorld.resolveTx.assertSucceed",
   async () => {
     using world = await FSWorld.start({ gasPrice: 0 });
     const wallet1 = await world.createWallet({ balance: 1 });
@@ -482,8 +482,6 @@ test.concurrent(
       value: 1,
       gasLimit: 10_000_000,
     });
-    await world.resolveTx(txHash).assertPending();
-    await world.awaitTx(txHash);
     await world.resolveTx(txHash).assertSucceed();
     assertAccount(await wallet1.getAccount(), {
       balance: 0,
@@ -565,6 +563,288 @@ test.concurrent("FSWorld.transfer", async () => {
     balance: 1,
   });
 });
+
+test.concurrent(
+  "FSWorld.transfer - duration of 0-EGLDTransfer-0 that succeeds",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet1 = await world.createWallet({
+      address: { shard: 0 },
+      balance: 1,
+    });
+    const wallet2 = await world.createWallet({
+      address: { shard: 0 },
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet1.transfer({
+      receiver: wallet2,
+      value: 1,
+      gasLimit: 50_000,
+    });
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1);
+    assertAccount(await wallet1.getAccount(), { balance: 0 });
+    assertAccount(await wallet2.getAccount(), { balance: 1 });
+  },
+);
+
+test.concurrent(
+  "FSWorld.transfer - duration of 0-EGLDTransfer-0 that fails",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet1 = await world.createWallet({
+      address: { shard: 0 },
+    });
+    const wallet2 = await world.createWallet({
+      address: { shard: 0 },
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet1
+      .transfer({
+        receiver: wallet2,
+        value: 1,
+        gasLimit: 50_000,
+      })
+      .assertFail({ code: "invalid", message: "insufficient funds" });
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1);
+    assertAccount(await wallet1.getAccount(), { balance: 0 });
+    assertAccount(await wallet2.getAccount(), { balance: 0 });
+  },
+);
+
+test.concurrent(
+  "FSWorld.transfer - duration of 0-EGLDTransfer-1 that succeeds",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet1 = await world.createWallet({
+      address: { shard: 0 },
+      balance: 1,
+    });
+    const wallet2 = await world.createWallet({
+      address: { shard: 1 },
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet1.transfer({
+      receiver: wallet2,
+      value: 1,
+      gasLimit: 50_000,
+    });
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1 + 3);
+    assertAccount(await wallet1.getAccount(), { balance: 0 });
+    assertAccount(await wallet2.getAccount(), { balance: 1 });
+  },
+);
+
+test.concurrent(
+  "FSWorld.transfer - duration of 0-EGLDTransfer-1 that fails in 0",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet1 = await world.createWallet({
+      address: { shard: 0 },
+    });
+    const wallet2 = await world.createWallet({
+      address: { shard: 1 },
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet1
+      .transfer({
+        receiver: wallet2,
+        value: 1,
+        gasLimit: 50_000,
+      })
+      .assertFail({ code: "invalid", message: "insufficient funds" });
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1);
+    assertAccount(await wallet1.getAccount(), { balance: 0 });
+    assertAccount(await wallet2.getAccount(), { balance: 0 });
+  },
+);
+
+test.concurrent(
+  "FSWorld.transfer - duration of 0-EGLDTransfer-1 that fails in 1",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet = await world.createWallet({
+      address: { shard: 0 },
+      balance: 1,
+    });
+    const contract = await world.createContract({
+      address: { shard: 1 },
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet
+      .transfer({
+        receiver: contract,
+        value: 1,
+        gasLimit: 50_000,
+      })
+      .assertFail({
+        code: "signalError",
+        message: "sending value to non payable contract",
+      });
+    await world.generateBlocks(3);
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1 + 3 * 2);
+    assertAccount(await wallet.getAccount(), { balance: 1 });
+    assertAccount(await contract.getAccount(), { balance: 0 });
+  },
+);
+
+test.concurrent(
+  "FSWorld.transfer - duration of 0-FFTTransfer-0 that succeeds",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet1 = await world.createWallet({
+      address: { shard: 0 },
+      kvs: { esdts: [{ id: fftId, amount: 1 }] },
+    });
+    const wallet2 = await world.createWallet({
+      address: { shard: 0 },
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet1.transfer({
+      receiver: wallet2,
+      esdts: [{ id: fftId, amount: 1 }],
+      gasLimit: 1_000_000,
+    });
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1);
+    assertAccount(await wallet1.getAccount(), {
+      kvs: {},
+    });
+    assertAccount(await wallet2.getAccount(), {
+      kvs: { esdts: [{ id: fftId, amount: 1 }] },
+    });
+  },
+);
+
+test.concurrent(
+  "FSWorld.transfer - duration of 0-FFTTransfer-0 that fails",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet1 = await world.createWallet({
+      address: { shard: 0 },
+    });
+    const wallet2 = await world.createWallet({
+      address: { shard: 0 },
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet1
+      .transfer({
+        receiver: wallet2,
+        esdts: [{ id: fftId, amount: 1 }],
+        gasLimit: 1_000_000,
+      })
+      .assertFail({
+        code: "signalError",
+        message: `new NFT data on sender for token ${fftId}`,
+      });
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1);
+    assertAccount(await wallet1.getAccount(), {
+      kvs: {},
+    });
+    assertAccount(await wallet2.getAccount(), {
+      kvs: {},
+    });
+  },
+);
+
+test.concurrent(
+  "FSWorld.transfer - duration of 0-FFTTransfer-1 that succeeds",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet1 = await world.createWallet({
+      address: { shard: 0 },
+      kvs: { esdts: [{ id: fftId, amount: 1 }] },
+    });
+    const wallet2 = await world.createWallet({
+      address: { shard: 1 },
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet1.transfer({
+      receiver: wallet2,
+      esdts: [{ id: fftId, amount: 1 }],
+      gasLimit: 1_000_000,
+    });
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1 + 3);
+    assertAccount(await wallet1.getAccount(), {
+      kvs: {},
+    });
+    assertAccount(await wallet2.getAccount(), {
+      kvs: { esdts: [{ id: fftId, amount: 1 }] },
+    });
+  },
+);
+
+test.concurrent(
+  "FSWorld.transfer - duration of 0-FFTTransfer-1 that fails in 0",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet1 = await world.createWallet({
+      address: { shard: 0 },
+    });
+    const wallet2 = await world.createWallet({
+      address: { shard: 1 },
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet1
+      .transfer({
+        receiver: wallet2,
+        esdts: [{ id: fftId, amount: 1 }],
+        gasLimit: 1_000_000,
+      })
+      .assertFail({
+        code: "signalError",
+        message: `new NFT data on sender for token ${fftId}`,
+      });
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1);
+    assertAccount(await wallet1.getAccount(), {
+      kvs: {},
+    });
+    assertAccount(await wallet2.getAccount(), {
+      kvs: {},
+    });
+  },
+);
+
+test.concurrent(
+  "FSWorld.transfer - duration of 0-FFTTransfer-1 that fails in 1",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet = await world.createWallet({
+      address: { shard: 0 },
+      kvs: { esdts: [{ id: fftId, amount: 1 }] },
+    });
+    const contract = await world.createContract({
+      address: { shard: 1 },
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet
+      .transfer({
+        receiver: contract,
+        esdts: [{ id: fftId, amount: 1 }],
+        gasLimit: 1_000_000,
+      })
+      .assertFail({
+        code: "returnMessage",
+        message: "sending value to non payable contract",
+      });
+    await world.generateBlocks(3);
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1 + 3 * 2);
+    assertAccount(await wallet.getAccount(), {
+      kvs: { esdts: [{ id: fftId, amount: 1 }] },
+    });
+    assertAccount(await contract.getAccount(), {
+      kvs: {},
+    });
+  },
+);
 
 test.concurrent(
   "FSWorld.transfer - invalid tx - gasLimit too low",
@@ -693,6 +973,338 @@ test.concurrent("FSWorld.callContract", async () => {
     },
   });
 });
+
+test.concurrent(
+  "FSWorld.callContract - duration of 0-call-0 that succeeds",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet = await world.createWallet({
+      address: { shard: 0 },
+    });
+    const contract = await world.createContract({
+      address: { shard: 0 },
+      code: worldCode,
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet.callContract({
+      callee: contract,
+      funcName: "succeeding_endpoint",
+      gasLimit: 10_000_000,
+    });
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1);
+  },
+);
+
+test.concurrent(
+  "FSWorld.callContract - duration of 0-call-0 that fails",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet = await world.createWallet({
+      address: { shard: 0 },
+    });
+    const contract = await world.createContract({
+      address: { shard: 0 },
+      code: worldCode,
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet
+      .callContract({
+        callee: contract,
+        funcName: "failing_endpoint",
+        gasLimit: 10_000_000,
+      })
+      .assertFail({ code: "signalError", message: "Fail" });
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1);
+  },
+);
+
+test.concurrent(
+  "FSWorld.callContract - duration of 0-call-1 that succeeds",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet = await world.createWallet({
+      address: { shard: 0 },
+    });
+    const contract = await world.createContract({
+      address: { shard: 1 },
+      code: worldCode,
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet.callContract({
+      callee: contract,
+      funcName: "succeeding_endpoint",
+      gasLimit: 10_000_000,
+    });
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1 + 3);
+  },
+);
+
+test.concurrent(
+  "FSWorld.callContract - duration of 0-call-1 that fails in 0",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet = await world.createWallet({
+      address: { shard: 0 },
+    });
+    const contract = await world.createContract({
+      address: { shard: 1 },
+      code: worldCode,
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet
+      .callContract({
+        callee: contract,
+        funcName: "failing_endpoint",
+        value: 1,
+        gasLimit: 10_000_000,
+      })
+      .assertFail({ code: "invalid", message: "insufficient funds" });
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1);
+  },
+);
+
+test.concurrent(
+  "FSWorld.callContract - duration of 0-call-1 that fails in 1",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet = await world.createWallet({
+      address: { shard: 0 },
+    });
+    const contract = await world.createContract({
+      address: { shard: 1 },
+      code: worldCode,
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet
+      .callContract({
+        callee: contract,
+        funcName: "failing_endpoint",
+        gasLimit: 10_000_000,
+      })
+      .assertFail({ code: "signalError", message: "Fail" });
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1 + 3);
+  },
+);
+
+test.concurrent(
+  "FSWorld.callContract - duration of 0-call-1-EGLDTransfer-2 that succeeds",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet1 = await world.createWallet({
+      address: { shard: 0 },
+      balance: 1,
+    });
+    const contract = await world.createContract({
+      address: { shard: 1 },
+      code: worldCode,
+    });
+    const wallet2 = await world.createWallet({
+      address: { shard: 2 },
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet1.callContract({
+      callee: contract,
+      funcName: "transfer_received",
+      funcArgs: [wallet2],
+      value: 1,
+      gasLimit: 10_000_000,
+    });
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1 + 3 * 2);
+    assertAccount(await wallet1.getAccount(), {
+      balance: 0,
+    });
+    assertAccount(await contract.getAccount(), {
+      balance: 0,
+    });
+    assertAccount(await wallet2.getAccount(), {
+      balance: 1,
+    });
+  },
+);
+
+test.concurrent(
+  "FSWorld.callContract - duration of 0-call-1-EGLDTransfer-2 that fails in 2",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet = await world.createWallet({
+      address: { shard: 0 },
+      balance: 1,
+    });
+    const contract1 = await world.createContract({
+      address: { shard: 1 },
+      code: worldCode,
+    });
+    const contract2 = await world.createContract({
+      address: { shard: 2 },
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet
+      .callContract({
+        callee: contract1,
+        funcName: "transfer_received",
+        funcArgs: [contract2],
+        value: 1,
+        gasLimit: 10_000_000,
+      })
+      .assertFail({
+        code: "returnMessage",
+        message: "sending value to non payable contract",
+      });
+    await world.generateBlocks(3);
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1 + 3 * 3);
+    assertAccount(await wallet.getAccount(), {
+      balance: 0,
+    });
+    assertAccount(await contract1.getAccount(), {
+      balance: 1,
+    });
+    assertAccount(await contract2.getAccount(), {
+      balance: 0,
+    });
+  },
+);
+
+test.concurrent(
+  "FSWorld.callContract - duration of 0-call-1-FFTTransfer-2 that succeeds",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet1 = await world.createWallet({
+      address: { shard: 0 },
+      kvs: { esdts: [{ id: fftId, amount: 1 }] },
+    });
+    const contract = await world.createContract({
+      address: { shard: 1 },
+      code: worldCode,
+    });
+    const wallet2 = await world.createWallet({
+      address: { shard: 2 },
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet1.callContract({
+      callee: contract,
+      funcName: "transfer_received",
+      funcArgs: [wallet2],
+      esdts: [{ id: fftId, amount: 1 }],
+      gasLimit: 10_000_000,
+    });
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(20); // TODO-MvX: should be 7 when completedTxEvent bug fixed in proxy
+    assertAccount(await wallet1.getAccount(), {
+      kvs: { esdts: [{ id: fftId, amount: 0 }] },
+    });
+    assertAccount(await contract.getAccount(), {
+      kvs: { esdts: [{ id: fftId, amount: 0 }] },
+    });
+    assertAccount(await wallet2.getAccount(), {
+      kvs: { esdts: [{ id: fftId, amount: 1 }] },
+    });
+  },
+);
+
+test.concurrent(
+  "FSWorld.callContract - duration of 0-call-1-FFTTransfer-2 that fails in 2",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet = await world.createWallet({
+      address: { shard: 0 },
+      kvs: { esdts: [{ id: fftId, amount: 1 }] },
+    });
+    const contract1 = await world.createContract({
+      address: { shard: 1 },
+      code: worldCode,
+    });
+    const contract2 = await world.createContract({
+      address: { shard: 2 },
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet
+      .callContract({
+        callee: contract1,
+        funcName: "transfer_received",
+        funcArgs: [contract2],
+        esdts: [{ id: fftId, amount: 1 }],
+        gasLimit: 10_000_000,
+      })
+      .assertFail({
+        code: "returnMessage",
+        message: "sending value to non payable contract",
+      });
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1 + 3 * 3);
+    assertAccount(await wallet.getAccount(), {
+      kvs: { esdts: [{ id: fftId, amount: 0 }] },
+    });
+    assertAccount(await contract1.getAccount(), {
+      kvs: { esdts: [{ id: fftId, amount: 1 }] },
+    });
+    assertAccount(await contract2.getAccount(), {
+      kvs: { esdts: [{ id: fftId, amount: 0 }] },
+    });
+  },
+);
+
+test.concurrent(
+  "FSWorld.callContract - duration of 0-call-1-call-2 that succeeds",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet = await world.createWallet({
+      address: { shard: 0 },
+      balance: 5n * 10n ** 16n,
+    });
+    const contract = await wallet.createContract({
+      address: { shard: 1 },
+      code: worldCode,
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    const { returnData } = await wallet.callContract({
+      callee: contract,
+      funcName: "issue_token_with_succeeding_callback_v2",
+      value: 5n * 10n ** 16n,
+      gasLimit: 100_000_000,
+    });
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1 + 3 * 2);
+    expect(returnData.length).toEqual(1);
+    expect(d.Tuple(d.Str(), d.U()).fromTop(returnData[0])).toEqual([
+      expect.stringContaining("TEST"),
+      1n,
+    ]);
+  },
+);
+
+test.concurrent(
+  "FSWorld.callContract - duration of 0-call-1-call-2 that fails in 2",
+  async () => {
+    using world = await FSWorld.start({ gasPrice: 0 });
+    const wallet = await world.createWallet({
+      address: { shard: 0 },
+    });
+    const contract = await wallet.createContract({
+      address: { shard: 1 },
+      code: worldCode,
+    });
+    const { nonce: nonceBefore } = await world.getNetworkStatus(0);
+    await wallet
+      .callContract({
+        callee: contract,
+        funcName: "issue_token_without_callback_v2",
+        gasLimit: 100_000_000,
+      })
+      .assertFail({
+        code: "returnMessage",
+        message: "callValue not equals with baseIssuingCost",
+      });
+    const { nonce: nonceAfter } = await world.getNetworkStatus(0);
+    expect(nonceAfter - nonceBefore).toEqual(1 + 3 * 2 - 1);
+  },
+);
 
 test.concurrent("FSWorld.addKvs", async () => {
   using world = await FSWorld.start();

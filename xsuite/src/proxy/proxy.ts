@@ -20,7 +20,7 @@ import {
   eCodeMetadata,
 } from "../data/encoding";
 import { Kvs } from "../data/kvs";
-import { base64ToHex, u8aToHex } from "../data/utils";
+import { base64ToHex, getAddressShard, u8aToHex } from "../data/utils";
 import { Optional, Prettify } from "../helpers";
 
 export class Proxy {
@@ -151,54 +151,62 @@ export class Proxy {
     return this.sendTx(upgradeContractTxToTx(tx));
   }
 
-  async awaitTx(txHash: string) {
-    let res = await this.getTxProcessStatus(txHash);
-    while (res === "pending") {
-      await new Promise((r) => setTimeout(r, 1000));
-      res = await this.getTxProcessStatus(txHash);
+  async resolveTxResult(txHash: string): Promise<TxResult> {
+    let elapsedBlocks = 0;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const txDataStartTime = Date.now();
+      let txData = await this.getTxData(txHash);
+      const hash: string = txData.hash;
+      const explorerUrl = `${this.explorerUrl}/transactions/${hash}`;
+      txData = { explorerUrl, hash, ...txData };
+      const error = findErrorInTxData(txData);
+      if (error) {
+        return {
+          type: "fail",
+          errorCode: error.code,
+          errorMessage: error.message,
+          tx: txData,
+        };
+      }
+      const success = findSuccessInTxData(txData, elapsedBlocks);
+      if (success) {
+        const gasUsed: number = txData.gasUsed;
+        const fee: bigint = BigInt(txData.fee);
+        return {
+          type: "success",
+          explorerUrl,
+          hash,
+          gasUsed,
+          fee,
+          tx: txData,
+        };
+      }
+      elapsedBlocks += await this.beforeNextTxData(txDataStartTime);
     }
   }
 
-  async awaitTxs(txHashes: string[]) {
+  async beforeNextTxData(lastTxDataStartTime: number) {
+    const blocks = 1 / 6;
+    const duration = lastTxDataStartTime + 6_000 * blocks - Date.now();
+    if (duration > 0) await new Promise((r) => setTimeout(r, duration));
+    return blocks;
+  }
+
+  async resolveTxResults(txHashes: string[]): Promise<TxResult[]> {
+    const txResults: TxResult[] = [];
     for (const txHash of txHashes) {
-      await this.awaitTx(txHash);
+      txResults.push(await this.resolveTxResult(txHash));
     }
+    return txResults;
   }
 
-  async resolveTx(txHash: string): Promise<TxResult> {
-    if ((await this.getTxProcessStatus(txHash)) === "pending") {
-      throw new Error(pendingErrorMessage);
-    }
-    let tx = await this.getTx(txHash);
-    const hash: string = tx.hash;
-    const explorerUrl = `${this.explorerUrl}/transactions/${hash}`;
-    tx = { explorerUrl, hash, ...tx };
-    if (tx.executionReceipt?.returnCode) {
-      const { returnCode, returnMessage } = tx.executionReceipt;
-      throw new TxError(returnCode, returnMessage, tx);
-    }
-    throwIfErrorInTxEvents(tx);
-    const scrs = tx?.smartContractResults;
-    if (scrs) {
-      for (const scr of scrs) {
-        if (scr.returnMessage) {
-          throw new TxError("returnMessage", scr.returnMessage, tx);
-        }
-      }
-      for (const scr of scrs) {
-        throwIfErrorInTxEvents(scr);
-      }
-    }
-    if (tx.status !== "success") {
-      throw new TxError("errorStatus", tx.status, tx);
-    }
-    const gasUsed: number = tx.gasUsed;
-    const fee: bigint = BigInt(tx.fee);
-    return { explorerUrl, hash, gasUsed, fee, tx };
+  async resolveTx(txHash: string): Promise<TxSuccessResult> {
+    return assertTxSuccess(await this.resolveTxResult(txHash));
   }
 
-  resolveTxs(txHashes: string[]) {
-    return Promise.all(txHashes.map((h) => this.resolveTx(h)));
+  async resolveTxs(txHashes: string[]) {
+    return (await this.resolveTxResults(txHashes)).map(assertTxSuccess);
   }
 
   resolveTransfer(txHash: string) {
@@ -209,7 +217,9 @@ export class Proxy {
     return this.resolveTxs(txHashes);
   }
 
-  async resolveDeployContract(txHash: string): Promise<DeployContractResult> {
+  async resolveDeployContract(
+    txHash: string,
+  ): Promise<DeployContractSuccessResult> {
     const res = await this.resolveTx(txHash);
     const returnData = getTxReturnData(res.tx);
     const address = res.tx.logs.events.find(
@@ -222,7 +232,9 @@ export class Proxy {
     return Promise.all(txHashes.map((h) => this.resolveDeployContract(h)));
   }
 
-  async resolveCallContract(txHash: string): Promise<CallContractResult> {
+  async resolveCallContract(
+    txHash: string,
+  ): Promise<CallContractSuccessResult> {
     const res = await this.resolveTx(txHash);
     const returnData = getTxReturnData(res.tx);
     return { ...res, returnData };
@@ -242,69 +254,56 @@ export class Proxy {
 
   async executeTxs(txs: BroadTx[]) {
     const txHashes = await this.sendTxs(txs);
-    await this.awaitTxs(txHashes);
     return this.resolveTxs(txHashes);
   }
 
   async executeTx(tx: BroadTx) {
     const txHash = await this.sendTx(tx);
-    await this.awaitTx(txHash);
     return this.resolveTx(txHash);
   }
 
   async doTransfers(txs: TransferTx[]) {
-    const txHashs = await this.sendTransfers(txs);
-    await this.awaitTxs(txHashs);
-    return this.resolveTransfers(txHashs);
+    const txHashes = await this.sendTransfers(txs);
+    return this.resolveTransfers(txHashes);
   }
 
   async transfer(tx: TransferTx) {
     const txHash = await this.sendTransfer(tx);
-    await this.awaitTx(txHash);
     return this.resolveTransfer(txHash);
   }
 
   async deployContracts(txs: DeployContractTx[]) {
     const txHashes = await this.sendDeployContracts(txs);
-    await this.awaitTxs(txHashes);
     return this.resolveDeployContracts(txHashes);
   }
 
   async deployContract(tx: DeployContractTx) {
     const txHash = await this.sendDeployContract(tx);
-    await this.awaitTx(txHash);
     return this.resolveDeployContract(txHash);
   }
 
   async callContracts(txs: CallContractTx[]) {
     const txHashes = await this.sendCallContracts(txs);
-    await this.awaitTxs(txHashes);
     return this.resolveCallContracts(txHashes);
   }
 
   async callContract(tx: CallContractTx) {
     const txHash = await this.sendCallContract(tx);
-    await this.awaitTx(txHash);
     return this.resolveCallContract(txHash);
   }
 
   async upgradeContracts(txs: UpgradeContractTx[]) {
     const txHashes = await this.sendUpgradeContracts(txs);
-    await this.awaitTxs(txHashes);
     return this.resolveUpgradeContracts(txHashes);
   }
 
   async upgradeContract(tx: UpgradeContractTx) {
     const txHash = await this.sendUpgradeContract(tx);
-    await this.awaitTx(txHash);
     return this.resolveUpgradeContract(txHash);
   }
 
-  async query(query: BroadQuery): Promise<QueryResult> {
-    const { data } = await this.fetch(
-      "/vm-values/query",
-      broadQueryToRawQuery(query),
-    );
+  async query(query: BroadQuery): Promise<QuerySuccessResult> {
+    const data = await this._getQueryData(query);
     if (![0, "ok"].includes(data.returnCode)) {
       throw new QueryError(data.returnCode, data.returnMessage, data);
     }
@@ -312,6 +311,14 @@ export class Proxy {
       returnData: data.returnData.map(base64ToHex),
       query: data,
     };
+  }
+
+  private async _getQueryData(query: BroadQuery) {
+    const res = await this.fetch(
+      "/vm-values/query",
+      broadQueryToRawQuery(query),
+    );
+    return res.data as QueryData;
   }
 
   async getNetworkStatus(shard: number): Promise<NetworkStatus> {
@@ -331,19 +338,22 @@ export class Proxy {
     };
   }
 
-  getTx(txHash: string) {
-    return this._getTx(txHash, { withResults: true });
+  getTxData(txHash: string) {
+    return this._getTxData(txHash, { withResults: true });
   }
 
-  getTxWithoutResults(txHash: string) {
-    return this._getTx(txHash);
+  getTxDataWithoutResults(txHash: string) {
+    return this._getTxData(txHash);
   }
 
-  private async _getTx(txHash: string, { withResults }: GetTxRawOptions = {}) {
+  private async _getTxData(
+    txHash: string,
+    { withResults }: GetTxRawOptions = {},
+  ) {
     const res = await this.fetch(
       makePath(`/transaction/${txHash}`, { withResults }),
     );
-    return res.transaction as Record<string, any>;
+    return res.transaction as TxData;
   }
 
   async getTxProcessStatus(txHash: string) {
@@ -427,22 +437,91 @@ export class Proxy {
   getAccountWithKvs(address: AddressLike) {
     return this.getAccount(address);
   }
+
+  /**
+   * @deprecated Use `.getTxData` instead.
+   */
+  getTx(txHash: string) {
+    return this.getTxData(txHash);
+  }
+
+  /**
+   * @deprecated Use `.getTxDataWithoutResults` instead.
+   */
+  getTxWithoutResults(txHash: string) {
+    return this.getTxDataWithoutResults(txHash);
+  }
 }
 
-const throwIfErrorInTxEvents = (tx: any) => {
-  const events = tx?.logs?.events;
+const findErrorInTxData = (txData: any): TxErrorDetails | undefined => {
+  if (txData.executionReceipt?.returnCode) {
+    const { returnCode, returnMessage } = txData.executionReceipt;
+    return { code: returnCode, message: returnMessage };
+  }
+  const events = txData.logs?.events;
   if (events) {
     for (const event of events) {
       if (event.identifier === "signalError") {
-        const error = atob(event.topics[1]);
-        throw new TxError("signalError", error, tx);
+        const data = atob(event.topics[1]);
+        return { code: "signalError", message: data };
       }
     }
     for (const event of events) {
       if (event.identifier === "internalVMErrors") {
-        const error = atob(event.data);
-        throw new TxError("internalVMErrors", error, tx);
+        const data = atob(event.data);
+        return { code: "internalVMErrors", message: data };
       }
+    }
+  }
+  const scrs = txData.smartContractResults;
+  if (scrs) {
+    for (const scr of scrs) {
+      if (scr.returnMessage) {
+        return { code: "returnMessage", message: scr.returnMessage };
+      }
+    }
+    for (const scr of scrs) {
+      const error = findErrorInTxData(scr);
+      if (error) return error;
+    }
+  }
+  if (
+    txData.status &&
+    txData.status !== "success" &&
+    txData.status !== "pending"
+  ) {
+    return { code: txData.status, message: txData.receipt?.data ?? "" };
+  }
+};
+
+const findSuccessInTxData = (
+  txData: any,
+  elapsedBlocks: number,
+): true | undefined => {
+  if (elapsedBlocks >= 20) return true; // TODO-MvX: remove this when completedTxEvent fix in proxy
+  if (txData.status && !txData.logs && !txData.smartContractResults) {
+    if (getAddressShard(txData.sender) === getAddressShard(txData.receiver)) {
+      if (elapsedBlocks >= 1) return true;
+    } else {
+      if (elapsedBlocks >= 4) return true;
+    }
+  }
+  const events = txData.logs?.events;
+  if (events) {
+    for (const event of events) {
+      if (
+        event.identifier === "completedTxEvent" ||
+        event.identifier === "SCDeploy"
+      ) {
+        return true;
+      }
+    }
+  }
+  const scrs = txData.smartContractResults;
+  if (scrs) {
+    for (const scr of scrs) {
+      const success = findSuccessInTxData(scr, elapsedBlocks);
+      if (success) return success;
     }
   }
 };
@@ -469,34 +548,34 @@ export class InteractionError extends Error {
   interaction: string;
   code: number | string;
   msg: string;
-  result: any;
+  data: any;
 
   constructor(
     interaction: string,
     code: number | string,
     message: string,
-    result: any,
+    data: any,
   ) {
     super(
       `${interaction} failed: ${code} - ${message} - Result:\n` +
-        JSON.stringify(result, null, 2),
+        JSON.stringify(data, null, 2),
     );
     this.interaction = interaction;
     this.code = code;
     this.msg = message;
-    this.result = result;
+    this.data = data;
   }
 }
 
 class TxError extends InteractionError {
-  constructor(code: number | string, message: string, result: any) {
-    super("Transaction", code, message, result);
+  constructor(code: number | string, message: string, data: any) {
+    super("Transaction", code, message, data);
   }
 }
 
 class QueryError extends InteractionError {
-  constructor(code: number | string, message: string, result: any) {
-    super("Query", code, message, result);
+  constructor(code: number | string, message: string, data: any) {
+    super("Query", code, message, data);
   }
 }
 
@@ -658,6 +737,15 @@ export const getSerializableAccount = (rawAccount: any) => {
   };
 };
 
+const assertTxSuccess = (txResult: TxResult): TxSuccessResult => {
+  if (txResult.type === "fail") {
+    throw new TxError(txResult.errorCode, txResult.errorMessage, txResult.tx);
+  }
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { type, ...txSuccessResult } = txResult;
+  return txSuccessResult;
+};
+
 const getTxReturnData = (tx: any): string[] => {
   const returnData: string[] = [];
   const scrs = tx?.smartContractResults;
@@ -697,8 +785,6 @@ export const getValuesInOrder = <T>(o: Record<string, T>) => {
   }
   return values;
 };
-
-export const pendingErrorMessage = "Transaction still pending.";
 
 type ProxyNewParamsExtended = string | ProxyNewParams;
 
@@ -821,27 +907,45 @@ type GetTxRawOptions = { withResults?: boolean };
 
 type GetAccountRawOptions = { withKeys?: boolean };
 
-type TxResult = Prettify<{
+type TxData = Record<string, any>;
+
+type TxResult = Prettify<
+  ({ type: "success" } & TxSuccessResult) | ({ type: "fail" } & TxErrorResult)
+>;
+
+type TxErrorDetails = { code: string; message: string };
+
+type TxSuccessResult = Prettify<{
   hash: string;
   explorerUrl: string;
   gasUsed: number;
   fee: bigint;
-  tx: { [x: string]: any };
+  tx: TxData;
 }>;
 
-type DeployContractResult = Prettify<
-  TxResult & {
+type TxErrorResult = Prettify<{
+  errorCode: number | string;
+  errorMessage: string;
+  tx: TxData;
+}>;
+
+type DeployContractSuccessResult = Prettify<
+  TxSuccessResult & {
     returnData: string[];
     address: string;
   }
 >;
 
-type CallContractResult = Prettify<TxResult & { returnData: string[] }>;
+type CallContractSuccessResult = Prettify<
+  TxSuccessResult & { returnData: string[] }
+>;
 
-type QueryResult = {
+type QueryData = Record<string, any>;
+
+type QuerySuccessResult = Prettify<{
   returnData: string[];
-  query: { [x: string]: any };
-};
+  query: QueryData;
+}>;
 
 type NetworkStatus = {
   blockTimestamp: number;
