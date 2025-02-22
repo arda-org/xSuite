@@ -375,6 +375,13 @@ export class Proxy {
     return BigInt(res.balance);
   }
 
+  async getAccountUsername(address: AddressLike) {
+    const res = await this.fetch(
+      `/address/${addressLikeToBech(address)}/username`,
+    );
+    return res.username as string;
+  }
+
   async getAccountValue(address: AddressLike, key: BytesLike): Promise<string> {
     const res = await this.fetch(
       `/address/${addressLikeToBech(address)}/key/${bytesLikeToHex(key)}`,
