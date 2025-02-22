@@ -498,7 +498,7 @@ const findSuccessInTxData = (
   txData: any,
   elapsedBlocks: number,
 ): true | undefined => {
-  if (elapsedBlocks >= 20) return true; // TODO-MvX: remove this when completedTxEvent fix in proxy
+  if (elapsedBlocks >= 11) return true; // TODO-MvX: remove this when completedTxEvent fix in proxy
   if (txData.status && !txData.logs && !txData.smartContractResults) {
     if (getAddressShard(txData.sender) === getAddressShard(txData.receiver)) {
       if (elapsedBlocks >= 1) return true;
