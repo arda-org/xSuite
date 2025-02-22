@@ -38,7 +38,7 @@ export class Proxy {
     this.headers = params.headers ?? {};
     this.fetcher = params.fetcher;
     this.blockNonce = params.blockNonce;
-    this.pauseAfterSend = params.pauseAfterSend;
+    this.pauseAfterSend = params.pauseAfterSend ?? 1_000;
   }
 
   static new(params: ProxyNewParamsExtended) {

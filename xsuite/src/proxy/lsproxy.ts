@@ -2,6 +2,12 @@ import { EncodableAccount, eAccountUnfiltered } from "../data/encoding";
 import { getSerializableAccount, Proxy } from "./proxy";
 
 export class LSProxy extends Proxy {
+  constructor(...[params]: ConstructorParameters<typeof Proxy>) {
+    params = typeof params === "string" ? { proxyUrl: params } : params;
+    params.pauseAfterSend ??= 0;
+    super(params);
+  }
+
   async getAllSerializableAccounts() {
     const res = await this.fetch("/admin/get-all-accounts");
     return (res.accounts as any[])

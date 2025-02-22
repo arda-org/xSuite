@@ -66,12 +66,7 @@ export class World {
     }
     explorerUrl ??= "";
     this.chainId = chainId;
-    this.proxy = new Proxy({
-      proxyUrl,
-      explorerUrl,
-      pauseAfterSend: 1_000,
-      ...proxyParams,
-    });
+    this.proxy = new Proxy({ proxyUrl, explorerUrl, ...proxyParams });
     this.gasPrice = gasPrice;
     this.explorerUrl = explorerUrl;
   }
