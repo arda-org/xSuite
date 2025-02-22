@@ -57,8 +57,10 @@ export class FSProxy extends Proxy {
     ).then(() => {});
   }
 
-  awaitTx(txHash: string) {
-    return this.processTx(txHash);
+  async beforeNextTxData() {
+    const blocks = 1;
+    await this.generateBlocks(blocks);
+    return blocks;
   }
 
   async getNodeUrls() {
