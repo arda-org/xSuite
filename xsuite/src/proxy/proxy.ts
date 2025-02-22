@@ -29,7 +29,6 @@ export class Proxy {
   headers: HeadersInit;
   fetcher?: Fetcher;
   blockNonce?: number;
-  pauseAfterSend?: number; // TODO-MvX: remove this when blockchain fixed
 
   constructor(params: ProxyNewParamsExtended) {
     params = typeof params === "string" ? { proxyUrl: params } : params;
@@ -38,7 +37,6 @@ export class Proxy {
     this.headers = params.headers ?? {};
     this.fetcher = params.fetcher;
     this.blockNonce = params.blockNonce;
-    this.pauseAfterSend = params.pauseAfterSend ?? 1_000;
   }
 
   static new(params: ProxyNewParamsExtended) {
@@ -103,19 +101,11 @@ export class Proxy {
         `Only ${txsHashesSent.length} of ${rawTxs.length} transactions were sent. The other ones were invalid.`,
       );
     }
-    // TODO-MvX: remove this when blockchain fixed
-    if (this.pauseAfterSend) {
-      await new Promise((r) => setTimeout(r, this.pauseAfterSend));
-    }
     return txsHashesSent;
   }
 
   async sendTx(tx: BroadTx) {
     const res = await this.fetch("/transaction/send", await broadTxToRawTx(tx));
-    // TODO-MvX: remove this when blockchain fixed
-    if (this.pauseAfterSend) {
-      await new Promise((r) => setTimeout(r, this.pauseAfterSend));
-    }
     return res.txHash as string;
   }
 
@@ -156,31 +146,40 @@ export class Proxy {
     // eslint-disable-next-line no-constant-condition
     while (true) {
       const txDataStartTime = Date.now();
-      let txData = await this.getTxData(txHash);
-      const hash: string = txData.hash;
-      const explorerUrl = `${this.explorerUrl}/transactions/${hash}`;
-      txData = { explorerUrl, hash, ...txData };
-      const error = findErrorInTxData(txData);
-      if (error) {
-        return {
-          type: "fail",
-          errorCode: error.code,
-          errorMessage: error.message,
-          tx: txData,
-        };
+      let txData: TxData | undefined;
+      try {
+        txData = await this.getTxData(txHash);
+      } catch (e) {
+        if (elapsedBlocks >= 1) {
+          throw e;
+        }
       }
-      const success = findSuccessInTxData(txData, elapsedBlocks);
-      if (success) {
-        const gasUsed: number = txData.gasUsed;
-        const fee: bigint = BigInt(txData.fee);
-        return {
-          type: "success",
-          explorerUrl,
-          hash,
-          gasUsed,
-          fee,
-          tx: txData,
-        };
+      if (txData) {
+        const hash: string = txData.hash;
+        const explorerUrl = `${this.explorerUrl}/transactions/${hash}`;
+        txData = { explorerUrl, hash, ...txData };
+        const error = findErrorInTxData(txData);
+        if (error) {
+          return {
+            type: "fail",
+            errorCode: error.code,
+            errorMessage: error.message,
+            tx: txData,
+          };
+        }
+        const success = findSuccessInTxData(txData, elapsedBlocks);
+        if (success) {
+          const gasUsed: number = txData.gasUsed;
+          const fee: bigint = BigInt(txData.fee);
+          return {
+            type: "success",
+            explorerUrl,
+            hash,
+            gasUsed,
+            fee,
+            tx: txData,
+          };
+        }
       }
       elapsedBlocks += await this.beforeNextTxData(txDataStartTime);
     }
@@ -801,7 +800,6 @@ export type ProxyNewParams = {
   headers?: HeadersInit;
   fetcher?: Fetcher;
   blockNonce?: number;
-  pauseAfterSend?: number; // TODO-MvX: remove this when blockchain fixed
 };
 
 export type ProxyNewRealnetParams = Prettify<
