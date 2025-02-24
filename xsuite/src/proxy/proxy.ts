@@ -20,7 +20,7 @@ import {
   eCodeMetadata,
 } from "../data/encoding";
 import { Kvs } from "../data/kvs";
-import { base64ToHex, getAddressShard, u8aToHex } from "../data/utils";
+import { base64ToHex, u8aToHex } from "../data/utils";
 import { Optional, Prettify } from "../helpers";
 
 export class Proxy {
@@ -505,12 +505,12 @@ const findSuccessInTxData = (
   elapsedBlocks: number,
 ): true | undefined => {
   if (elapsedBlocks >= 11) return true; // TODO-MvX: remove this when completedTxEvent fix in proxy
-  if (txData.status && !txData.logs && !txData.smartContractResults) {
-    if (getAddressShard(txData.sender) === getAddressShard(txData.receiver)) {
-      if (elapsedBlocks >= 1) return true;
-    } else {
-      if (elapsedBlocks >= 4) return true;
-    }
+  if (
+    txData.status === "success" &&
+    !txData.logs &&
+    !txData.smartContractResults
+  ) {
+    return true;
   }
   const events = txData.logs?.events;
   if (events) {
