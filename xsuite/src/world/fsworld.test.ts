@@ -1195,7 +1195,7 @@ test.concurrent(
       gasLimit: 10_000_000,
     });
     const { nonce: nonceAfter } = await world.getNetworkStatus(0);
-    expect(nonceAfter - nonceBefore).toEqual(11); // TODO-MvX: should be 7 when completedTxEvent bug fixed in proxy
+    expect(nonceAfter - nonceBefore).toEqual(1 + 3 * 2);
     assertAccount(await wallet1.getAccount(), {
       kvs: { esdts: [{ id: fftId, amount: 0 }] },
     });
@@ -1236,6 +1236,7 @@ test.concurrent(
         code: "returnMessage",
         message: "sending value to non payable contract",
       });
+    await world.generateBlocks(3);
     const { nonce: nonceAfter } = await world.getNetworkStatus(0);
     expect(nonceAfter - nonceBefore).toEqual(1 + 3 * 3);
     assertAccount(await wallet.getAccount(), {

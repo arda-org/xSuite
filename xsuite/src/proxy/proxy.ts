@@ -167,7 +167,7 @@ export class Proxy {
             tx: txData,
           };
         }
-        const success = findSuccessInTxData(txData, elapsedBlocks);
+        const success = findSuccessInTxData(txData);
         if (success) {
           const gasUsed: number = txData.gasUsed;
           const fee: bigint = BigInt(txData.fee);
@@ -500,11 +500,7 @@ const findErrorInTxData = (txData: any): TxErrorDetails | undefined => {
   }
 };
 
-const findSuccessInTxData = (
-  txData: any,
-  elapsedBlocks: number,
-): true | undefined => {
-  if (elapsedBlocks >= 11) return true; // TODO-MvX: remove this when completedTxEvent fix in proxy
+const findSuccessInTxData = (txData: any): true | undefined => {
   if (
     txData.status === "success" &&
     !txData.logs &&
@@ -526,7 +522,7 @@ const findSuccessInTxData = (
   const scrs = txData.smartContractResults;
   if (scrs) {
     for (const scr of scrs) {
-      const success = findSuccessInTxData(scr, elapsedBlocks);
+      const success = findSuccessInTxData(scr);
       if (success) return success;
     }
   }
