@@ -29,26 +29,26 @@ import {
 
 export class LSWorld extends World {
   proxy: LSProxy;
-  server?: ChildProcess;
+  simulnet?: ChildProcess;
   sysAcc: LSContract;
 
   constructor(params: LSWorldNewParams) {
     if (params.chainId !== undefined) {
       throw new Error("chainId is not undefined.");
     }
-    const { chainId, gasPrice, server, ...proxyParams } = params;
+    const { chainId, gasPrice, simulnet, ...proxyParams } = params;
     super({
       chainId: chainId ?? "S",
       gasPrice: gasPrice ?? 0,
       ...proxyParams,
     });
     this.proxy = new LSProxy(proxyParams);
-    this.server = server;
+    this.simulnet = simulnet;
     this.sysAcc = this.newContract(fullU8AAddress);
   }
 
   static new(params: LSWorldNewParams) {
-    return new LSWorld(params);
+    return new this(params);
   }
 
   static newDevnet(): World {
@@ -66,41 +66,22 @@ export class LSWorld extends World {
   static async start({
     gasPrice,
     explorerUrl,
-    binaryPath,
-    binaryPort,
+    ...simulnetParams
   }: {
     gasPrice?: number;
     explorerUrl?: string;
-    binaryPath?: string;
-    binaryPort?: number;
-  } = {}): Promise<LSWorld> {
-    binaryPath ??= lsproxyBinaryPath;
-    binaryPort ??= 0;
-
-    const server = spawn(binaryPath, ["--server-port", `${binaryPort}`]);
-
-    server.stderr.on("data", (data: Buffer) => {
-      throw new Error(data.toString());
+  } & SimulnetParams = {}): Promise<LSWorld> {
+    const simulnet = await this.startSimulnet(simulnetParams);
+    return this.new({
+      proxyUrl: simulnet.proxyUrl,
+      gasPrice,
+      explorerUrl,
+      simulnet,
     });
+  }
 
-    server.on("error", (error) => {
-      throw error;
-    });
-
-    const proxyUrl = await new Promise<string>((resolve) => {
-      const onData = (data: Buffer) => {
-        const addressRegex = /Server running on (http:\/\/[\w\d.:]+)/;
-        const match = data.toString().match(addressRegex);
-        if (match) {
-          resolve(match[1]);
-          server.stdout.off("data", onData);
-        }
-      };
-
-      server.stdout.on("data", onData);
-    });
-
-    return this.new({ proxyUrl, gasPrice, explorerUrl, server });
+  static startSimulnet(simulnetParams: SimulnetParams = {}) {
+    return startSimulnet(simulnetParams);
   }
 
   newWallet(addressOrSigner: AddressLike | Signer): LSWallet {
@@ -262,7 +243,7 @@ export class LSWorld extends World {
   }
 
   terminate() {
-    this.server?.kill();
+    this.simulnet?.kill();
   }
 
   [Symbol.dispose]() {
@@ -339,11 +320,49 @@ export class LSContract extends Contract {
   }
 }
 
+const startSimulnet = async ({
+  binaryPath,
+  binaryPort,
+  extraArgs,
+}: SimulnetParams) => {
+  binaryPath ??= lsproxyBinaryPath;
+  binaryPort ??= 0;
+
+  const args: string[] = ["--server-port", `${binaryPort}`];
+  if (extraArgs) {
+    args.push(...extraArgs);
+  }
+  const simulnet = spawn(binaryPath, args);
+
+  simulnet.stderr.on("data", (data: Buffer) => {
+    throw new Error(data.toString());
+  });
+
+  simulnet.on("error", (error) => {
+    throw error;
+  });
+
+  const proxyUrl = await new Promise<string>((resolve) => {
+    const onData = (data: Buffer) => {
+      const addressRegex = /Server running on (http:\/\/[\w\d.:]+)/;
+      const match = data.toString().match(addressRegex);
+      if (match) {
+        resolve(match[1]);
+        simulnet.stdout.off("data", onData);
+      }
+    };
+
+    simulnet.stdout.on("data", onData);
+  });
+
+  return Object.assign(simulnet, { proxyUrl });
+};
+
 type LSWorldNewParams = Prettify<
   | ({
       chainId?: undefined;
       gasPrice?: number;
-      server?: ChildProcess;
+      simulnet?: ChildProcess;
     } & ProxyNewParams)
   | WorldNewParams
 >;
@@ -363,3 +382,9 @@ type LSAccountSetAccountParams = Prettify<
 type LSWalletCreateContractParams = Prettify<
   Omit<LSWorldCreateAccountParams, "owner">
 >;
+
+type SimulnetParams = {
+  binaryPath?: string;
+  binaryPort?: number;
+  extraArgs?: string[];
+};

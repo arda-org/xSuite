@@ -12,7 +12,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	model "github.com/multiversx/mx-chain-scenario-go/scenario/model"
 	worldmock "github.com/multiversx/mx-chain-scenario-go/worldmock"
 )

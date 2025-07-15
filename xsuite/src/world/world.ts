@@ -19,7 +19,6 @@ import { Optional, Prettify, Replace } from "../helpers";
 import {
   CallContractTx,
   DeployContractTx,
-  pendingErrorMessage,
   Query,
   TransferTx,
   Tx,
@@ -67,12 +66,7 @@ export class World {
     }
     explorerUrl ??= "";
     this.chainId = chainId;
-    this.proxy = new Proxy({
-      proxyUrl,
-      explorerUrl,
-      pauseAfterSend: 1_000,
-      ...proxyParams,
-    });
+    this.proxy = new Proxy({ proxyUrl, explorerUrl, ...proxyParams });
     this.gasPrice = gasPrice;
     this.explorerUrl = explorerUrl;
   }
@@ -222,14 +216,6 @@ export class World {
     return this.preTxs([tx]).then((r) => r[0]);
   }
 
-  awaitTxs(txHashes: string[]) {
-    return this.proxy.awaitTxs(txHashes);
-  }
-
-  awaitTx(txHash: string) {
-    return this.proxy.awaitTx(txHash);
-  }
-
   resolveTxs(txHashes: string[]) {
     return this.proxy.resolveTxs(txHashes);
   }
@@ -352,6 +338,20 @@ export class World {
    */
   getAccountWithKvs(address: AddressLike) {
     return this.getAccount(address);
+  }
+
+  /**
+   * @deprecated Use `.proxy.resolveTxResult` instead.
+   */
+  async awaitTx(txHash: string) {
+    await this.proxy.resolveTxResult(txHash);
+  }
+
+  /**
+   * @deprecated Use `.proxy.resolveTxResults` instead.
+   */
+  async awaitTxs(txHashes: string[]) {
+    await this.proxy.resolveTxResults(txHashes);
   }
 }
 
@@ -577,16 +577,6 @@ export class InteractionPromise<T> implements PromiseLike<T> {
       | null,
   ) {
     return this.then(null, onrejected);
-  }
-
-  assertPending() {
-    return this.then(() => {
-      throw new Error("Not pending.");
-    }).catch((error) => {
-      if (!(error instanceof Error) || error.message !== pendingErrorMessage) {
-        throw error;
-      }
-    });
   }
 
   assertSucceed() {
