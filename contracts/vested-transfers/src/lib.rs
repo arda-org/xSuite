@@ -25,7 +25,7 @@ pub trait Contract {
         for milestone in &release_schedule {
             require!(milestone.epoch > last_epoch, "Milestones epochs are not in strictly increasing order from current epoch.");
             last_epoch = milestone.epoch;
-            total_amount += milestone.amount;
+            total_amount += milestone.amount.clone();
         }
         require!(total_amount == payment.amount, "Release schedule amounts don't sum up to total amount.");
         let index = self.max_transfer_index().get() + 1;
@@ -58,7 +58,7 @@ pub trait Contract {
     fn claim_transfer_past_milestones(&self, transfer: &mut Transfer<Self::Api>) {
         let current_epoch = self.blockchain().get_block_epoch();
         while transfer.release_schedule.len() > 0 {
-            let milestone = transfer.release_schedule.get(0);
+            let milestone = transfer.release_schedule.get(0).clone();
             if milestone.epoch > current_epoch {
                 break;
             }
@@ -85,7 +85,7 @@ pub trait Contract {
     fn get_transfer_remaining_amount(&self, transfer: &Transfer<Self::Api>) -> BigUint {
         let mut remaining_amount = BigUint::zero();
         for milestone in &transfer.release_schedule {
-            remaining_amount += milestone.amount;
+            remaining_amount += milestone.amount.clone();
         }
         remaining_amount
     }
@@ -131,13 +131,13 @@ pub trait Contract {
 
 const MAX_NUM_MILESTONES: usize = 20;
 
+#[type_abi]
 #[derive(
     TopEncode,
     TopDecode,
     PartialEq,
     NestedEncode,
     NestedDecode,
-    TypeAbi,
     Clone,
 )]
 pub struct Transfer<M: ManagedTypeApi> {
@@ -150,6 +150,7 @@ pub struct Transfer<M: ManagedTypeApi> {
 
 type ReleaseSchedule<M> = ManagedVec<M, ReleaseMilestone<M>>;
 
+#[type_abi]
 #[derive(
     ManagedVecItem,
     TopEncode,
@@ -157,7 +158,6 @@ type ReleaseSchedule<M> = ManagedVec<M, ReleaseMilestone<M>>;
     PartialEq,
     NestedEncode,
     NestedDecode,
-    TypeAbi,
     Clone,
 )]
 pub struct ReleaseMilestone<M: ManagedTypeApi> {

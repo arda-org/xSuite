@@ -1747,7 +1747,7 @@ test.concurrent("FSWallet.callContract - with return (writeLog)", async () => {
     funcName: "get_back_transfers",
     gasLimit: 10_000_000,
   });
-  assertVs(returnData, [e.Tuple(e.U(0), e.List())]);
+  assertVs(returnData, [e.List()]);
 });
 
 test.concurrent("FSWallet.callContract - change the state", async () => {
