@@ -79,16 +79,19 @@ const action = (
     logError("No valid contract found.");
     return;
   }
-  const args = ["run", "--target-dir", targetDir, "build"];
+  const rootArgs = ["build", "--target-dir", targetDir];
+  const metaArgs = ["run", "--target-dir", targetDir, "build"];
   if (locked) {
-    args.push("--locked");
+    rootArgs.push("--locked");
+    metaArgs.push("--locked");
   }
-  args.push("--target-dir", targetDir);
+  metaArgs.push("--target-dir", targetDir);
   const numDirs = dirs.length;
   logTitle(`Building contract${numDirs > 1 ? "s" : ""}...`);
   for (const [i, dir] of dirs.entries()) {
     log(`(${i + 1}/${numDirs}) Building "${path.resolve(dir)}"...`);
-    logAndRunCommand("cargo", args, { cwd: path.join(dir, "meta") });
+    logAndRunCommand("cargo", rootArgs, { cwd: dir });
+    logAndRunCommand("cargo", metaArgs, { cwd: path.join(dir, "meta") });
   }
 };
 

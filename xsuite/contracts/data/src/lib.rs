@@ -134,7 +134,8 @@ pub trait Data {
     fn user(&self, key: ManagedBuffer) -> UserMapper;
 }
 
-#[derive(ManagedVecItem, TypeAbi, NestedEncode, NestedDecode, TopEncode, TopDecode)]
+#[type_abi]
+#[derive(ManagedVecItem, NestedEncode, NestedDecode, TopEncode, TopDecode)]
 struct MapKeyValue<M: ManagedTypeApi> {
     key: ManagedBuffer<M>,
     value: u64,

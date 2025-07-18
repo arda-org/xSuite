@@ -38,7 +38,7 @@ pub trait World {
     #[payable("EGLD")]
     #[endpoint]
     fn get_value(&self) -> BigUint {
-        self.call_value().egld_value().clone_value()
+        self.call_value().egld().clone_value()
     }
 
     #[endpoint]
@@ -84,9 +84,8 @@ pub trait World {
     }
 
     #[endpoint]
-    fn get_back_transfers(&self) -> (BigUint, MultiEsdtPayment<Self::Api>) {
-        let BackTransfers { total_egld_amount, esdt_payments } = self.blockchain().get_back_transfers();
-        (total_egld_amount, esdt_payments)
+    fn get_back_transfers(&self) -> MultiEgldOrEsdtPayment<Self::Api> {
+        self.blockchain().get_back_transfers().payments
     }
 
     #[payable("EGLD")]
@@ -155,7 +154,7 @@ pub trait World {
         self.send()
             .esdt_system_sc_proxy()
             .issue_fungible(
-                self.call_value().egld_value().clone_value(),
+                self.call_value().egld().clone_value(),
                 &ManagedBuffer::new_from_bytes(b"TEST"),
                 &ManagedBuffer::new_from_bytes(b"TEST"),
                 &BigUint::from(1u32),
@@ -165,12 +164,14 @@ pub trait World {
 
     #[promises_callback]
     fn succeeding_callback_v2(&self) -> (TokenIdentifier, BigUint) {
-        self.call_value().single_fungible_esdt()
+        let (token_id, token_amount) = self.call_value().single_fungible_esdt();
+        (token_id.clone_value(), token_amount.clone_value())
     }
 
     #[callback]
     fn succeeding_callback_v1(&self) -> (TokenIdentifier, BigUint) {
-        self.call_value().single_fungible_esdt()
+        let (token_id, token_amount) = self.call_value().single_fungible_esdt();
+        (token_id.clone_value(), token_amount.clone_value())
     }
 
     #[promises_callback]
