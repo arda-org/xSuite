@@ -796,7 +796,7 @@ test("Too many milestones.", async () => {
     funcName: "createTransfer",
     funcArgs: [receiver1, e.List(...milestones)],
     value: limit * 1_000,
-    gasLimit: 10_000_000,
+    gasLimit: 11_000_000,
   });
   assertAccount(await contract.getAccount(), {
     balance: limit * 1_000,

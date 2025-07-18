@@ -330,7 +330,7 @@ test.concurrent(
       "",
     ]);
   },
-  100_000,
+  200_000,
 );
 
 test.concurrent("install-rust-key", async () => {
@@ -358,7 +358,7 @@ test.concurrent("install-rust", async () => {
 });
 
 test.concurrent(
-  "new contract && build --locked && build -r && test-rust && test-scen",
+  "new contract",
   async () => {
     using c = newContext();
 
@@ -394,6 +394,22 @@ test.concurrent(
       chalk.cyan("  npm run build"),
       "",
     ]);
+  },
+  200_000,
+);
+
+test.concurrent(
+  "build --locked && build -r && test-rust && test-scen",
+  async () => {
+    using c = newContext();
+
+    const dir = "contract";
+    const absDirPath = path.resolve(c.cwd(), dir);
+    fs.cpSync(
+      path.join(__dirname, "..", "..", "..", "contracts", "blank"),
+      absDirPath,
+      { recursive: true },
+    );
 
     const targetDir = path.join(__dirname, "..", "..", "..", "target");
     c.setCwd(absDirPath);
@@ -402,6 +418,7 @@ test.concurrent(
     expect(c.flushStdout().split("\n")).toEqual([
       chalk.blue("Building contract..."),
       `(1/1) Building "${absDirPath}"...`,
+      chalk.cyan(`$ cargo build --target-dir ${targetDir} --locked`),
       chalk.cyan(
         `$ cargo run --target-dir ${targetDir} build --locked --target-dir ${targetDir}`,
       ),
@@ -412,6 +429,7 @@ test.concurrent(
     expect(c.flushStdout().split("\n")).toEqual([
       chalk.blue("Building contract..."),
       `(1/1) Building "${absDirPath}"...`,
+      chalk.cyan(`$ cargo build --target-dir ${targetDir}`),
       chalk.cyan(
         `$ cargo run --target-dir ${targetDir} build --target-dir ${targetDir}`,
       ),
@@ -494,7 +512,7 @@ test.concurrent(
 
     fs.cpSync("contracts/data", tmpDir, { recursive: true });
     await c.cmd(
-      "build-reproducible --image multiversx/sdk-rust-contract-builder:v8.0.0",
+      "build-reproducible --image multiversx/sdk-rust-contract-builder:v11.0.0",
     );
 
     const userId = process.getuid?.();
@@ -504,7 +522,7 @@ test.concurrent(
     expect(c.flushStdout().split("\n")).toEqual([
       'Building contract "data"...',
       chalk.cyan(
-        `$ docker run ${userArg}--rm --volume ${tmpDir}/output-reproducible:/output --volume ${tmpDir}:/project --volume /tmp/multiversx_sdk_rust_contract_builder/rust-cargo-target-dir:/rust/cargo-target-dir --volume /tmp/multiversx_sdk_rust_contract_builder/rust-registry:/rust/registry --volume /tmp/multiversx_sdk_rust_contract_builder/rust-git:/rust/git multiversx/sdk-rust-contract-builder:v8.0.0 --project project --contract data`,
+        `$ docker run ${userArg}--rm --volume ${tmpDir}/output-reproducible:/output --volume ${tmpDir}:/project --volume /tmp/multiversx_sdk_rust_contract_builder/rust-cargo-target-dir:/rust/cargo-target-dir --volume /tmp/multiversx_sdk_rust_contract_builder/rust-registry:/rust/registry --volume /tmp/multiversx_sdk_rust_contract_builder/rust-git:/rust/git multiversx/sdk-rust-contract-builder:v11.0.0 --project project --contract data`,
       ),
       "",
     ]);

@@ -8,4 +8,4 @@ publish = false
 path = ".."
 
 [dependencies.multiversx-sc-meta-lib]
-version = "0.53.2"
+version = "0.59.0"
