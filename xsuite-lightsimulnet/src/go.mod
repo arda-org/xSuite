@@ -1,14 +1,14 @@
 module lsproxy
 
-go 1.20
+go 1.23
 
 require (
 	github.com/go-chi/chi/v5 v5.2.1
-	github.com/multiversx/mx-chain-core-go v1.3.1
-	github.com/multiversx/mx-chain-logger-go v1.0.15
-	github.com/multiversx/mx-chain-scenario-go v1.5.0
-	github.com/multiversx/mx-chain-vm-common-go v1.5.16
-	github.com/multiversx/mx-chain-vm-go v1.5.40
+	github.com/multiversx/mx-chain-core-go v1.4.0
+	github.com/multiversx/mx-chain-logger-go v1.1.0
+	github.com/multiversx/mx-chain-scenario-go v1.6.0
+	github.com/multiversx/mx-chain-vm-common-go v1.6.0
+	github.com/multiversx/mx-chain-vm-go v1.5.43
 )
 
 require (
@@ -24,9 +24,9 @@ require (
 	github.com/herumi/bls-go-binary v1.28.2 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
-	github.com/multiversx/mx-chain-crypto-go v1.2.12 // indirect
-	github.com/multiversx/mx-chain-storage-go v1.0.16 // indirect
-	github.com/multiversx/mx-components-big-int v1.0.0 // indirect
+	github.com/multiversx/mx-chain-crypto-go v1.3.0 // indirect
+	github.com/multiversx/mx-chain-storage-go v1.1.0 // indirect
+	github.com/multiversx/mx-components-big-int v1.1.0 // indirect
 	github.com/pelletier/go-toml v1.9.3 // indirect
 	golang.org/x/crypto v0.3.0 // indirect
 	golang.org/x/sys v0.2.0 // indirect

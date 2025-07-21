@@ -17,9 +17,8 @@ type Executor struct {
 }
 
 func NewExecutor() (*Executor, error) {
-	vmBuilder := vmScenario.NewScenarioVMHostBuilder()
-	scenexec := executor.NewScenarioExecutor(vmBuilder)
-	err := scenexec.InitVM(model.GasScheduleV4)
+	scenexec := vmScenario.DefaultScenarioExecutor()
+	err := scenexec.InitVM(model.GasScheduleDefault)
 	if err != nil {
 		return nil, err
 	}

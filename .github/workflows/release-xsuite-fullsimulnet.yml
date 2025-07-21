@@ -21,7 +21,7 @@ jobs:
       - name: Use Golang
         uses: actions/setup-go@v5
         with:
-          go-version: "1.20"
+          go-version: "1.23"
           cache-dependency-path: xsuite-fullsimulnet/build-binary.mjs
 
       - name: Build xsuite-fullsimulnet
@@ -56,7 +56,7 @@ jobs:
 
       - name: Use Node.js & pnpm
         uses: ./.github/actions/node-pnpm
-      
+
       - name: Test xsuite-fullsimulnet
         run: pnpm test-xsuite-fullsimulnet
 
