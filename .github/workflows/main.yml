@@ -27,7 +27,7 @@ jobs:
       - name: Use Golang
         uses: actions/setup-go@v5
         with:
-          go-version: "1.20"
+          go-version: "1.23"
           cache-dependency-path: |
             xsuite-fullsimulnet/build-binary.mjs
             xsuite-lightsimulnet/src/go.sum
